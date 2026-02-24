@@ -26,8 +26,8 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 
 private val sectionCornerRadius = 18.dp
 private val actionButtonCornerRadius = 12.dp
-private const val PlaceholderSectionAlpha: Float = 0.55f
-private const val PlaceholderSurfaceAlpha: Float = 0.35f
+private const val PLACEHOLDER_SECTION_ALPHA: Float = 0.55f
+private const val PLACEHOLDER_SURFACE_ALPHA: Float = 0.35f
 
 val PlaceholderSpacingSmall = 8.dp
 val PlaceholderSpacingMedium = 12.dp
@@ -60,7 +60,7 @@ fun PlaceholderSectionCard(
         modifier = modifier
             .fillMaxWidth()
             .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = PlaceholderSurfaceAlpha),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = PLACEHOLDER_SURFACE_ALPHA),
                 shape = RoundedCornerShape(sectionCornerRadius),
             )
             .padding(16.dp),
@@ -105,7 +105,7 @@ fun PlaceholderActionButton(
     val backgroundColor = if (emphasized) {
         MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 1f else 0.4f)
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) PlaceholderSectionAlpha else 0.25f)
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) PLACEHOLDER_SECTION_ALPHA else 0.25f)
     }
     val contentColor = if (emphasized) {
         MaterialTheme.colorScheme.onPrimary

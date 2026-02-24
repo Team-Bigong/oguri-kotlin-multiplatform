@@ -7,7 +7,7 @@ import com.bigong.oguri.core.navigation.RouteModel
 import com.bigong.oguri.feature.calendar.ui.StrategyCalendarRoute
 
 object CalendarNavGraph {
-    private const val DefaultStrategyCalendarYear: Int = 2026
+    private const val DEFAULT_STRATEGY_CALENDAR_YEAR: Int = 2026
 
     fun register(
         navGraphBuilder: NavGraphBuilder,
@@ -16,7 +16,7 @@ object CalendarNavGraph {
         navGraphBuilder.composable<RouteModel.StrategyCalendar> {
             StrategyCalendarRoute(
                 annualLeaveStrategyRepository = appGraph.annualLeaveStrategyRepository,
-                year = DefaultStrategyCalendarYear,
+                year = DEFAULT_STRATEGY_CALENDAR_YEAR,
             )
         }
     }

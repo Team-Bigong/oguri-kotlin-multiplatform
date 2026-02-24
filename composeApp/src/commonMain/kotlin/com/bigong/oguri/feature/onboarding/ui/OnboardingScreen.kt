@@ -39,7 +39,7 @@ import oguri.composeapp.generated.resources.onboarding_work_schedule_five
 import oguri.composeapp.generated.resources.onboarding_work_schedule_six
 import org.jetbrains.compose.resources.stringResource
 
-private const val AnnualLeaveStep: Int = 1
+private const val ANNUAL_LEAVE_STEP: Int = 1
 
 @Composable
 fun OnboardingRoute(
@@ -56,12 +56,12 @@ fun OnboardingRoute(
         onSelectUserRoleType = userStateRepository::updateUserRoleType,
         onMinusAnnualLeave = {
             userStateRepository.updateRemainingAnnualLeaveDays(
-                userState.remainingAnnualLeaveDays - AnnualLeaveStep,
+                userState.remainingAnnualLeaveDays - ANNUAL_LEAVE_STEP,
             )
         },
         onPlusAnnualLeave = {
             userStateRepository.updateRemainingAnnualLeaveDays(
-                userState.remainingAnnualLeaveDays + AnnualLeaveStep,
+                userState.remainingAnnualLeaveDays + ANNUAL_LEAVE_STEP,
             )
         },
         onSelectWorkScheduleType = userStateRepository::updateWorkScheduleType,

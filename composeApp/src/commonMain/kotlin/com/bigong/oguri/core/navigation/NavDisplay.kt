@@ -36,8 +36,8 @@ private val BottomNavigationVerticalPadding = 12.dp
 private val BottomNavigationItemVerticalPadding = 12.dp
 private val BottomNavigationItemHorizontalPadding = 8.dp
 private val SnackbarTopPadding = 12.dp
-private const val BottomNavigationSelectedAlpha: Float = 0.16f
-private const val BottomNavigationUnselectedAlpha: Float = 0.06f
+private const val BOTTOM_NAVIGATION_SELECTED_ALPHA: Float = 0.16f
+private const val BOTTOM_NAVIGATION_UNSELECTED_ALPHA: Float = 0.06f
 
 @Composable
 fun NavDisplay(
@@ -119,9 +119,9 @@ private fun BottomNavigationBar(
                     routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
                 } == true
                 val containerColor = if (isSelected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = BottomNavigationSelectedAlpha)
+                    MaterialTheme.colorScheme.primary.copy(alpha = BOTTOM_NAVIGATION_SELECTED_ALPHA)
                 } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = BottomNavigationUnselectedAlpha)
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = BOTTOM_NAVIGATION_UNSELECTED_ALPHA)
                 }
                 val contentColor = if (isSelected) {
                     MaterialTheme.colorScheme.primary

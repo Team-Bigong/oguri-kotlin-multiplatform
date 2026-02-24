@@ -14,8 +14,8 @@ import oguri.composeapp.generated.resources.support_inquiry_type_other
 import org.jetbrains.compose.resources.getString
 
 object SupportEmailDraftFactory {
-    private const val AppVersionText: String = "1.0.0"
-    private const val DummyDeviceModelText: String = "Dummy Device"
+    private const val APP_VERSION_TEXT: String = "1.0.0"
+    private const val DUMMY_DEVICE_MODEL_TEXT: String = "Dummy Device"
 
     suspend fun create(
         supportInquiryType: SupportInquiryType,
@@ -40,9 +40,9 @@ object SupportEmailDraftFactory {
         val bodyText: String = getString(
             Res.string.support_email_body_template,
             inquiryTypeLabelText,
-            AppVersionText,
+            APP_VERSION_TEXT,
             getPlatform().name,
-            DummyDeviceModelText,
+            DUMMY_DEVICE_MODEL_TEXT,
         )
 
         return SupportEmailDraft(

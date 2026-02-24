@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 
 object InMemoryUserStateRepository : UserStateRepository {
-    private const val MinimumAnnualLeaveDays: Int = 0
-    private const val MaximumAnnualLeaveDays: Int = 30
+    private const val MINIMUM_ANNUAL_LEAVE_DAYS: Int = 0
+    private const val MAXIMUM_ANNUAL_LEAVE_DAYS: Int = 30
 
     private val mutableUserStateFlow: MutableStateFlow<UserState> =
         MutableStateFlow(value = UserState())
@@ -25,8 +25,8 @@ object InMemoryUserStateRepository : UserStateRepository {
 
     override fun updateRemainingAnnualLeaveDays(remainingAnnualLeaveDays: Int) {
         val clampedAnnualLeaveDays: Int = remainingAnnualLeaveDays.coerceIn(
-            minimumValue = MinimumAnnualLeaveDays,
-            maximumValue = MaximumAnnualLeaveDays,
+            minimumValue = MINIMUM_ANNUAL_LEAVE_DAYS,
+            maximumValue = MAXIMUM_ANNUAL_LEAVE_DAYS,
         )
         mutableUserStateFlow.update { previousState: UserState ->
             previousState.copy(remainingAnnualLeaveDays = clampedAnnualLeaveDays)
