@@ -33,6 +33,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.platform.PlatformBackHandler
+import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import dev.zacsweers.metro.createGraph
 import kotlinx.coroutines.launch
@@ -76,39 +77,44 @@ fun NavDisplay(
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                containerColor = MaterialTheme.colorScheme.background,
-                contentWindowInsets = WindowInsets(0, 0, 0, 0),
-                bottomBar = {
-                    if (shouldShowBottomNavigation) {
-                        BottomNavigationBar(
-                            currentDestination = currentDestination,
-                            onDestinationClick = { destination: BottomNavigationDestination ->
-                                navigator.navigateToBottomNavigationDestination(destination)
-                            },
-                        )
-                    }
-                },
-                snackbarHost = {},
-            ) { contentPaddingValues ->
-                MainNavHost(
-                    appGraph = appGraph,
-                    navigator = navigator,
-                    contentPaddingValues = contentPaddingValues,
+        PlatformBackGestureContainer(
+            enabled = !isOnMainTabRoot,
+            onBack = { navigator.popBackStack() },
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    containerColor = MaterialTheme.colorScheme.background,
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0),
+                    bottomBar = {
+                        if (shouldShowBottomNavigation) {
+                            BottomNavigationBar(
+                                currentDestination = currentDestination,
+                                onDestinationClick = { destination: BottomNavigationDestination ->
+                                    navigator.navigateToBottomNavigationDestination(destination)
+                                },
+                            )
+                        }
+                    },
+                    snackbarHost = {},
+                ) { contentPaddingValues ->
+                    MainNavHost(
+                        appGraph = appGraph,
+                        navigator = navigator,
+                        contentPaddingValues = contentPaddingValues,
+                        snackbarHostState = snackbarHostState,
+                    )
+                }
+
+                TopInjectedSnackbarHost(
                     snackbarHostState = snackbarHostState,
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .statusBarsPadding()
+                        .padding(top = SnackbarTopPadding)
+                        .padding(horizontal = 16.dp),
                 )
             }
-
-            TopInjectedSnackbarHost(
-                snackbarHostState = snackbarHostState,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .statusBarsPadding()
-                    .padding(top = SnackbarTopPadding)
-                    .padding(horizontal = 16.dp),
-            )
         }
 
         key(currentDestination?.route, isOnMainTabRoot) {
