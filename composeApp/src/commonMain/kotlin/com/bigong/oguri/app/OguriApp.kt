@@ -8,8 +8,10 @@ import com.bigong.oguri.core.navigation.NavDisplay
 @Composable
 fun OguriApp(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
+    onExitApp: () -> Unit = {},
 ) {
     NavDisplay(
         snackbarHostState = snackbarHostState,
+        onExitApp = onExitApp,
     )
 }

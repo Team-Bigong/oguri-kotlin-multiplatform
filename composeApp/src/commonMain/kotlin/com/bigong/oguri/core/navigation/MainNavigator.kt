@@ -72,6 +72,10 @@ class MainNavigator(
             }
         }
     }
+
+    fun popBackStack(): Boolean {
+        return navHostController.popBackStack()
+    }
 }
 
 @Composable

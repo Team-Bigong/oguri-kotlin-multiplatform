@@ -2,6 +2,7 @@
     <string name="bottom_navigation_home">Home</string>
     <string name="bottom_navigation_calendar">Calendar</string>
     <string name="bottom_navigation_my">My</string>
+    <string name="navigation_back_press_exit_message">Press back again to exit</string>
 
     <string name="snackbar_home_top_test">Top snackbar from Home</string>
     <string name="snackbar_support_feature_pending">Email compose for feature suggestion will be connected in the next step.</string>

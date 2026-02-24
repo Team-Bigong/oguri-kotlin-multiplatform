@@ -14,7 +14,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            OguriApp()
+            OguriApp(
+                onExitApp = ::finish,
+            )
         }
     }
 }

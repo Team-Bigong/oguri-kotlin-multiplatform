@@ -18,7 +18,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -26,9 +32,16 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
+import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import dev.zacsweers.metro.createGraph
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 import org.jetbrains.compose.resources.stringResource
+import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 
 private val BottomNavigationCornerRadius = 20.dp
 private val BottomNavigationHorizontalPadding = 16.dp
@@ -38,17 +51,29 @@ private val BottomNavigationItemHorizontalPadding = 8.dp
 private val SnackbarTopPadding = 12.dp
 private const val BOTTOM_NAVIGATION_SELECTED_ALPHA: Float = 0.16f
 private const val BOTTOM_NAVIGATION_UNSELECTED_ALPHA: Float = 0.06f
+private val ExitBackPressWindow = 2.seconds
 
 @Composable
 fun NavDisplay(
     snackbarHostState: SnackbarHostState,
+    onExitApp: () -> Unit = {},
 ) {
     OguriTheme {
         val navigator: MainNavigator = rememberMainNavigator()
         val appGraph: AppGraph = remember { createGraph<AppGraph>() }
         val currentDestination: NavDestination? = navigator.currentDestination()
+        val coroutineScope = rememberCoroutineScope()
+        val exitSnackbarMessage: String = stringResource(Res.string.navigation_back_press_exit_message)
+        var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation: Boolean = RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
             isBottomNavigationDestinationSelected(currentDestination, destination)
+        }
+        val isOnMainTabRoot: Boolean = isMainTabRootDestination(currentDestination)
+
+        LaunchedEffect(currentDestination?.route) {
+            if (!isOnMainTabRoot) {
+                lastMainBackPressedMark = null
+            }
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -84,6 +109,24 @@ fun NavDisplay(
                     .padding(top = SnackbarTopPadding)
                     .padding(horizontal = 16.dp),
             )
+        }
+
+        key(currentDestination?.route, isOnMainTabRoot) {
+            PlatformBackHandler(enabled = isOnMainTabRoot) {
+                val nowMark: TimeMark = TimeSource.Monotonic.markNow()
+                val previousMark: TimeMark? = lastMainBackPressedMark
+                val isWithinExitWindow: Boolean = previousMark != null && previousMark.elapsedNow() < ExitBackPressWindow
+
+                if (isWithinExitWindow) {
+                    onExitApp()
+                    return@PlatformBackHandler
+                }
+
+                lastMainBackPressedMark = nowMark
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(message = exitSnackbarMessage)
+                }
+            }
         }
     }
 }
@@ -162,6 +205,15 @@ private fun isBottomNavigationDestinationSelected(
         val routeText: String = navDestination.route ?: return@any false
         routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
     } == true
+}
+
+private fun isMainTabRootDestination(
+    currentDestination: NavDestination?,
+): Boolean {
+    val currentRouteText: String = currentDestination?.route ?: return false
+    return RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
+        currentRouteText == destination.routeSerialName
+    }
 }
 
 @Composable
