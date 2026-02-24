@@ -3,7 +3,7 @@ package com.bigong.oguri.core.di
 import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
 import com.bigong.oguri.data.di.StrategyDataDiContainer
 import com.bigong.oguri.data.repository.AnnualLeaveStrategyRepository
-import com.bigong.oguri.data.repository.UserMvpStateRepository
+import com.bigong.oguri.data.repository.UserStateRepository
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
 import io.ktor.client.HttpClient
@@ -18,7 +18,7 @@ import kotlinx.serialization.json.Json
 @DependencyGraph(bindingContainers = [StrategyDataDiContainer::class])
 interface AppGraph {
     val annualLeaveStrategyRepository: AnnualLeaveStrategyRepository
-    val userMvpStateRepository: UserMvpStateRepository
+    val userStateRepository: UserStateRepository
 
     @Provides
     fun provideAppConfiguration(): AppConfiguration {

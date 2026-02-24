@@ -1,13 +1,13 @@
 package com.bigong.oguri.data.repository
 
 import com.bigong.oguri.data.model.LoginProviderType
-import com.bigong.oguri.data.model.UserMvpState
+import com.bigong.oguri.data.model.UserState
 import com.bigong.oguri.data.model.UserRoleType
 import com.bigong.oguri.data.model.WorkScheduleType
 import kotlinx.coroutines.flow.StateFlow
 
-interface UserMvpStateRepository {
-    val userMvpStateFlow: StateFlow<UserMvpState>
+interface UserStateRepository {
+    val userStateFlow: StateFlow<UserState>
 
     fun updateUserRoleType(userRoleType: UserRoleType)
 

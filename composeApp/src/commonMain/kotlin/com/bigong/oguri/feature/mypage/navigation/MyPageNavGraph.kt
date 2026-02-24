@@ -47,7 +47,7 @@ private fun MyPageNavEntry(
     val logoutMessage: String = stringResource(Res.string.mypage_snackbar_logout)
 
     MyPageRoute(
-        userMvpStateRepository = appGraph.userMvpStateRepository,
+        userStateRepository = appGraph.userStateRepository,
         onSupportInquiryClick = navigator::navigateToSupportInquiryType,
         onShowDummySnackbar = {
             coroutineScope.launch {

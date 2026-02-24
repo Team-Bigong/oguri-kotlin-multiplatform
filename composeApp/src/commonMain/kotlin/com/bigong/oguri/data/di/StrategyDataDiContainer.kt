@@ -4,8 +4,8 @@ import com.bigong.oguri.data.remote.KtorStrategyRemoteDataSource
 import com.bigong.oguri.data.remote.StrategyRemoteDataSource
 import com.bigong.oguri.data.repository.AnnualLeaveStrategyRepository
 import com.bigong.oguri.data.repository.DefaultAnnualLeaveStrategyRepository
-import com.bigong.oguri.data.repository.InMemoryUserMvpStateRepository
-import com.bigong.oguri.data.repository.UserMvpStateRepository
+import com.bigong.oguri.data.repository.InMemoryUserStateRepository
+import com.bigong.oguri.data.repository.UserStateRepository
 import dev.zacsweers.metro.BindingContainer
 import dev.zacsweers.metro.Provides
 import io.ktor.client.HttpClient
@@ -27,7 +27,7 @@ object StrategyDataDiContainer {
     }
 
     @Provides
-    fun provideUserMvpStateRepository(): UserMvpStateRepository {
-        return InMemoryUserMvpStateRepository
+    fun provideUserStateRepository(): UserStateRepository {
+        return InMemoryUserStateRepository
     }
 }

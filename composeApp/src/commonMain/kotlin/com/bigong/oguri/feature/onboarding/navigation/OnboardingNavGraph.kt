@@ -15,7 +15,7 @@ object OnboardingNavGraph {
     ) {
         navGraphBuilder.composable<RouteModel.Onboarding> {
             OnboardingRoute(
-                userMvpStateRepository = appGraph.userMvpStateRepository,
+                userStateRepository = appGraph.userStateRepository,
                 onCalculateStrategyClick = {
                     navigator.navHostController.navigate(RouteModel.Home) {
                         popUpTo(RouteModel.Onboarding) {

@@ -17,11 +17,11 @@ object LoginNavGraph {
         navGraphBuilder.composable<RouteModel.Login> {
             LoginRoute(
                 onLoginClick = { loginProviderType: LoginProviderType ->
-                    appGraph.userMvpStateRepository.updateLoginProviderType(loginProviderType)
+                    appGraph.userStateRepository.updateLoginProviderType(loginProviderType)
                     navigator.navigateToOnboarding()
                 },
                 onGuestBrowseClick = {
-                    appGraph.userMvpStateRepository.updateLoginProviderType(LoginProviderType.GUEST)
+                    appGraph.userStateRepository.updateLoginProviderType(LoginProviderType.GUEST)
                     navigator.navHostController.navigate(RouteModel.Home) {
                         popUpTo(RouteModel.Login) {
                             inclusive = true

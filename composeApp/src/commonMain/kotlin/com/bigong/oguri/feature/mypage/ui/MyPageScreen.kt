@@ -12,9 +12,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.bigong.oguri.data.model.LoginProviderType
-import com.bigong.oguri.data.model.UserMvpState
+import com.bigong.oguri.data.model.UserState
 import com.bigong.oguri.data.model.WorkScheduleType
-import com.bigong.oguri.data.repository.UserMvpStateRepository
+import com.bigong.oguri.data.repository.UserStateRepository
 import com.bigong.oguri.feature.common.ui.PlaceholderActionButton
 import com.bigong.oguri.feature.common.ui.PlaceholderHeader
 import com.bigong.oguri.feature.common.ui.PlaceholderRowItem
@@ -59,39 +59,39 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MyPageRoute(
-    userMvpStateRepository: UserMvpStateRepository,
+    userStateRepository: UserStateRepository,
     onSupportInquiryClick: () -> Unit,
     onShowDummySnackbar: (String) -> Unit,
     onShowProToggleSnackbar: (Boolean) -> Unit,
     onShowLogoutSnackbar: () -> Unit,
 ) {
-    val userMvpStateFlow: StateFlow<UserMvpState> = userMvpStateRepository.userMvpStateFlow
-    val userMvpState: UserMvpState by userMvpStateFlow.collectAsState()
+    val userStateFlow: StateFlow<UserState> = userStateRepository.userStateFlow
+    val userState: UserState by userStateFlow.collectAsState()
 
     MyPageScreen(
-        userMvpState = userMvpState,
+        userState = userState,
         onIncreaseAnnualLeave = {
-            userMvpStateRepository.updateRemainingAnnualLeaveDays(userMvpState.remainingAnnualLeaveDays + 1)
+            userStateRepository.updateRemainingAnnualLeaveDays(userState.remainingAnnualLeaveDays + 1)
         },
         onDecreaseAnnualLeave = {
-            userMvpStateRepository.updateRemainingAnnualLeaveDays(userMvpState.remainingAnnualLeaveDays - 1)
+            userStateRepository.updateRemainingAnnualLeaveDays(userState.remainingAnnualLeaveDays - 1)
         },
         onToggleWorkSchedule = {
-            val nextWorkScheduleType = if (userMvpState.workScheduleType == WorkScheduleType.FIVE_DAYS) {
+            val nextWorkScheduleType = if (userState.workScheduleType == WorkScheduleType.FIVE_DAYS) {
                 WorkScheduleType.SIX_DAYS
             } else {
                 WorkScheduleType.FIVE_DAYS
             }
-            userMvpStateRepository.updateWorkScheduleType(nextWorkScheduleType)
+            userStateRepository.updateWorkScheduleType(nextWorkScheduleType)
         },
         onTogglePro = {
-            userMvpStateRepository.toggleProSubscription()
-            onShowProToggleSnackbar(!userMvpState.isProSubscribed)
+            userStateRepository.toggleProSubscription()
+            onShowProToggleSnackbar(!userState.isProSubscribed)
         },
         onSupportInquiryClick = onSupportInquiryClick,
         onDummyActionClick = onShowDummySnackbar,
         onLogoutClick = {
-            userMvpStateRepository.logout()
+            userStateRepository.logout()
             onShowLogoutSnackbar()
         },
     )
@@ -99,7 +99,7 @@ fun MyPageRoute(
 
 @Composable
 fun MyPageScreen(
-    userMvpState: UserMvpState,
+    userState: UserState,
     onIncreaseAnnualLeave: () -> Unit,
     onDecreaseAnnualLeave: () -> Unit,
     onToggleWorkSchedule: () -> Unit,
@@ -132,7 +132,7 @@ fun MyPageScreen(
                 PlaceholderSectionTitle(text = stringResource(Res.string.mypage_section_account))
                 PlaceholderRowItem(
                     titleText = stringResource(Res.string.mypage_line_leave),
-                    trailingText = stringResource(Res.string.onboarding_leave_days_value, userMvpState.remainingAnnualLeaveDays),
+                    trailingText = stringResource(Res.string.onboarding_leave_days_value, userState.remainingAnnualLeaveDays),
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -147,7 +147,7 @@ fun MyPageScreen(
                 }
                 PlaceholderRowItem(
                     titleText = stringResource(Res.string.mypage_login_info_title),
-                    trailingText = loginProviderLabelText(userMvpState.loginProviderType),
+                    trailingText = loginProviderLabelText(userState.loginProviderType),
                 )
             }
         }
@@ -156,22 +156,22 @@ fun MyPageScreen(
                 PlaceholderSectionTitle(text = stringResource(Res.string.mypage_section_strategy_settings))
                 PlaceholderRowItem(
                     titleText = stringResource(Res.string.mypage_saved_strategy_title),
-                    trailingText = stringResource(Res.string.mypage_saved_strategy_count, userMvpState.savedStrategyIdentifierList.size),
+                    trailingText = stringResource(Res.string.mypage_saved_strategy_count, userState.savedStrategyIdentifierList.size),
                 )
-                userMvpState.savedStrategyIdentifierList.take(3).forEach { strategyIdentifier: String ->
+                userState.savedStrategyIdentifierList.take(3).forEach { strategyIdentifier: String ->
                     PlaceholderRowItem(titleText = strategyIdentifier, onClick = { onDummyActionClick(strategyIdentifier) })
                 }
                 PlaceholderRowItem(titleText = stringResource(Res.string.mypage_line_work_pattern))
                 Row(horizontalArrangement = Arrangement.spacedBy(PlaceholderSpacingSmall)) {
                     PlaceholderSelectableChip(
                         labelText = stringResource(Res.string.onboarding_work_schedule_five),
-                        isSelected = userMvpState.workScheduleType == WorkScheduleType.FIVE_DAYS,
+                        isSelected = userState.workScheduleType == WorkScheduleType.FIVE_DAYS,
                         onClick = onToggleWorkSchedule,
                         modifier = Modifier.weight(1f),
                     )
                     PlaceholderSelectableChip(
                         labelText = stringResource(Res.string.onboarding_work_schedule_six),
-                        isSelected = userMvpState.workScheduleType == WorkScheduleType.SIX_DAYS,
+                        isSelected = userState.workScheduleType == WorkScheduleType.SIX_DAYS,
                         onClick = onToggleWorkSchedule,
                         modifier = Modifier.weight(1f),
                     )
@@ -185,13 +185,13 @@ fun MyPageScreen(
                 PlaceholderRowItem(titleText = stringResource(Res.string.mypage_pro_pdf))
                 PlaceholderRowItem(titleText = stringResource(Res.string.mypage_pro_analysis))
                 PlaceholderActionButton(
-                    labelText = if (userMvpState.isProSubscribed) {
+                    labelText = if (userState.isProSubscribed) {
                         stringResource(Res.string.mypage_pro_manage)
                     } else {
                         stringResource(Res.string.mypage_pro_start)
                     },
                     onClick = onTogglePro,
-                    emphasized = !userMvpState.isProSubscribed,
+                    emphasized = !userState.isProSubscribed,
                 )
             }
         }

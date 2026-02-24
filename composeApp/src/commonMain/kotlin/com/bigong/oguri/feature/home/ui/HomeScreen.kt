@@ -17,11 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.data.model.HomeStrategyRecommendation
 import com.bigong.oguri.data.model.MonthlyStrategyEfficiency
-import com.bigong.oguri.data.model.UserMvpState
+import com.bigong.oguri.data.model.UserState
 import com.bigong.oguri.data.model.UserRoleType
 import com.bigong.oguri.data.model.WorkScheduleType
 import com.bigong.oguri.data.repository.AnnualLeaveStrategyRepository
-import com.bigong.oguri.data.repository.UserMvpStateRepository
+import com.bigong.oguri.data.repository.UserStateRepository
 import com.bigong.oguri.feature.common.ui.PlaceholderActionButton
 import com.bigong.oguri.feature.common.ui.PlaceholderBannerAd
 import com.bigong.oguri.feature.common.ui.PlaceholderHeader
@@ -62,7 +62,7 @@ private sealed interface HomeRouteUiState {
 @Composable
 fun HomeRoute(
     annualLeaveStrategyRepository: AnnualLeaveStrategyRepository,
-    userMvpStateRepository: UserMvpStateRepository,
+    userStateRepository: UserStateRepository,
     onStrategyDetailClick: (String) -> Unit,
     onShowSnackbarClick: () -> Unit,
 ) {
@@ -76,11 +76,11 @@ fun HomeRoute(
             HomeRouteUiState.Error
         }
     }
-    val userMvpStateFlow: StateFlow<UserMvpState> = userMvpStateRepository.userMvpStateFlow
-    val userMvpState: UserMvpState by userMvpStateFlow.collectAsState()
+    val userStateFlow: StateFlow<UserState> = userStateRepository.userStateFlow
+    val userState: UserState by userStateFlow.collectAsState()
 
     HomeScreen(
-        userMvpState = userMvpState,
+        userState = userState,
         homeRouteUiState = homeRouteUiState,
         onStrategyDetailClick = onStrategyDetailClick,
         onShowSnackbarClick = onShowSnackbarClick,
@@ -89,7 +89,7 @@ fun HomeRoute(
 
 @Composable
 private fun HomeScreen(
-    userMvpState: UserMvpState,
+    userState: UserState,
     homeRouteUiState: HomeRouteUiState,
     onStrategyDetailClick: (String) -> Unit,
     onShowSnackbarClick: () -> Unit,
@@ -110,9 +110,9 @@ private fun HomeScreen(
                 lines = listOf(
                     stringResource(
                         Res.string.home_profile_summary,
-                        userRoleLabelText(userMvpState.userRoleType),
-                        workScheduleLabelText(userMvpState.workScheduleType),
-                        userMvpState.remainingAnnualLeaveDays,
+                        userRoleLabelText(userState.userRoleType),
+                        workScheduleLabelText(userState.workScheduleType),
+                        userState.remainingAnnualLeaveDays,
                     ),
                 ),
             )

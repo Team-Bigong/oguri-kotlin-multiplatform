@@ -42,7 +42,7 @@ private fun HomeNavEntry(
 
     HomeRoute(
         annualLeaveStrategyRepository = appGraph.annualLeaveStrategyRepository,
-        userMvpStateRepository = appGraph.userMvpStateRepository,
+        userStateRepository = appGraph.userStateRepository,
         onStrategyDetailClick = navigator::navigateToStrategyDetail,
         onShowSnackbarClick = {
             coroutineScope.launch {

@@ -14,7 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.bigong.oguri.data.model.UserRoleType
 import com.bigong.oguri.data.model.WorkScheduleType
-import com.bigong.oguri.data.repository.UserMvpStateRepository
+import com.bigong.oguri.data.repository.UserStateRepository
 import com.bigong.oguri.feature.common.ui.PlaceholderActionButton
 import com.bigong.oguri.feature.common.ui.PlaceholderHeader
 import com.bigong.oguri.feature.common.ui.PlaceholderSectionCard
@@ -43,30 +43,30 @@ private const val AnnualLeaveStep: Int = 1
 
 @Composable
 fun OnboardingRoute(
-    userMvpStateRepository: UserMvpStateRepository,
+    userStateRepository: UserStateRepository,
     onCalculateStrategyClick: () -> Unit,
 ) {
-    val userMvpStateFlow: StateFlow<com.bigong.oguri.data.model.UserMvpState> = userMvpStateRepository.userMvpStateFlow
-    val userMvpState by userMvpStateFlow.collectAsState()
+    val userStateFlow: StateFlow<com.bigong.oguri.data.model.UserState> = userStateRepository.userStateFlow
+    val userState by userStateFlow.collectAsState()
 
     OnboardingScreen(
-        userRoleType = userMvpState.userRoleType,
-        remainingAnnualLeaveDays = userMvpState.remainingAnnualLeaveDays,
-        workScheduleType = userMvpState.workScheduleType,
-        onSelectUserRoleType = userMvpStateRepository::updateUserRoleType,
+        userRoleType = userState.userRoleType,
+        remainingAnnualLeaveDays = userState.remainingAnnualLeaveDays,
+        workScheduleType = userState.workScheduleType,
+        onSelectUserRoleType = userStateRepository::updateUserRoleType,
         onMinusAnnualLeave = {
-            userMvpStateRepository.updateRemainingAnnualLeaveDays(
-                userMvpState.remainingAnnualLeaveDays - AnnualLeaveStep,
+            userStateRepository.updateRemainingAnnualLeaveDays(
+                userState.remainingAnnualLeaveDays - AnnualLeaveStep,
             )
         },
         onPlusAnnualLeave = {
-            userMvpStateRepository.updateRemainingAnnualLeaveDays(
-                userMvpState.remainingAnnualLeaveDays + AnnualLeaveStep,
+            userStateRepository.updateRemainingAnnualLeaveDays(
+                userState.remainingAnnualLeaveDays + AnnualLeaveStep,
             )
         },
-        onSelectWorkScheduleType = userMvpStateRepository::updateWorkScheduleType,
+        onSelectWorkScheduleType = userStateRepository::updateWorkScheduleType,
         onCalculateStrategyClick = {
-            userMvpStateRepository.completeOnboarding()
+            userStateRepository.completeOnboarding()
             onCalculateStrategyClick()
         },
     )
