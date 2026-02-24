@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.navigation.NavDestination
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -27,26 +26,6 @@ class MainNavigator(
         navHostController.navigate(RouteModel.Onboarding)
     }
 
-    fun navigateToHomeClearingLogin() {
-        navHostController.navigate(RouteModel.Home) {
-            popUpTo(RouteModel.Login) {
-                inclusive = true
-            }
-        }
-    }
-
-    fun navigateToHomeClearingOnboarding() {
-        navHostController.navigate(RouteModel.Home) {
-            popUpTo(RouteModel.Onboarding) {
-                inclusive = true
-            }
-        }
-    }
-
-    fun navigateToHome() {
-        navHostController.navigate(RouteModel.Home)
-    }
-
     fun navigateToStrategyDetail(
         strategyIdentifier: String,
     ) {
@@ -64,17 +43,24 @@ class MainNavigator(
     fun navigateToBottomNavigationDestination(
         destination: BottomNavigationDestination,
     ) {
-        navHostController.navigate(destination.routeModel) {
-            launchSingleTop = true
-            restoreState = true
-            popUpTo(navHostController.graph.findStartDestination().id) {
-                saveState = true
-            }
-        }
+        navigateToMainTabRoot(destination.routeModel)
     }
 
     fun popBackStack(): Boolean {
         return navHostController.popBackStack()
+    }
+
+    private fun navigateToMainTabRoot(
+        routeModel: RouteModel,
+    ) {
+        navHostController.navigate(routeModel) {
+            launchSingleTop = true
+            restoreState = false
+            popUpTo(navHostController.graph.id) {
+                inclusive = false
+                saveState = false
+            }
+        }
     }
 }
 
