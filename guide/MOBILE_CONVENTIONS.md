@@ -48,6 +48,10 @@
 ### 2.1 Route / Screen 분리
 - `Route`: 상태 수집, 이벤트 처리, DI 접근, navigation callback 호출
 - `Screen`: 순수 UI. 외부 의존성 접근 금지.
+- `ViewModel`: `ui` 패키지 루트에 별도 파일로 분리한다. (`HomeViewModel.kt`)
+- `UiState`: `ui/model` 패키지에 별도 파일로 둔다. (`HomeUiState.kt`)
+- 화면 내부 서브 컴포넌트는 `ui/component` 패키지로 분리한다. (`HomeComponents.kt`)
+- `presentation` 패키지는 사용하지 않는다. (MVP shared 기준)
 
 표준 시그니처:
 - `Screen(uiState: UiState, onAction: (UiAction) -> Unit)`

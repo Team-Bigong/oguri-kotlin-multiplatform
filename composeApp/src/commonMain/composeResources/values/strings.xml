@@ -10,6 +10,7 @@
 
     <string name="common_loading">Loading...</string>
     <string name="common_retry_later">Please try again later.</string>
+    <string name="common_retry">Retry</string>
 
     <string name="splash_title">Oguri</string>
     <string name="splash_subtitle">Travel changes when you use annual leave strategically.</string>

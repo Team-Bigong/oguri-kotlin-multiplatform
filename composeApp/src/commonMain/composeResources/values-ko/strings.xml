@@ -10,6 +10,7 @@
 
     <string name="common_loading">불러오는 중...</string>
     <string name="common_retry_later">잠시 후 다시 시도해 주세요.</string>
+    <string name="common_retry">다시 불러오기</string>
 
     <string name="splash_title">오구리</string>
     <string name="splash_subtitle">연차를 전략적으로 쓰면 여행이 달라집니다.</string>

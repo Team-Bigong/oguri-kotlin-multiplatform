@@ -88,16 +88,16 @@ feature-home-ui/
 ├─ ui/
 │  ├─ HomeRoute.kt                 # Screen entry, state collection
 │  ├─ HomeScreen.kt                # Pure UI
-│  ├─ HomeComponents.kt            # Reusable components
-│  └─ HomeStrings.kt               # 화면 전용 문자열 키(리소스 연결)
-├─ presentation/
-│  ├─ HomeViewModel.kt             # 공통 ViewModel
-│  ├─ HomeUiState.kt               # immutable state
-│  ├─ HomeUiEvent.kt               # one-shot event
-│  └─ HomeAction.kt                # user intent/action
+│  ├─ HomeViewModel.kt             # ViewModel (ui 루트)
+│  ├─ model/
+│  │  └─ HomeUiState.kt            # immutable state
+│  ├─ component/
+│  │  └─ HomeComponents.kt         # 화면 내부 컴포넌트
+│  └─ HomeStrings.kt               # 화면 전용 문자열 키(리소스 연결, 선택)
 └─ navigation/
 └─ HomeNavigation.kt            # route, deep link(선택)
 
+> MVP shared 규칙: `presentation` 패키지를 따로 두지 않고, `ui` 내부(`ui`, `ui/model`, `ui/component`)로 정리한다.
 > ViewModel은 `commonMain`에 두고, 플랫폼별 UI 호스트(Android Activity / iOS SwiftUI)가 이를 사용한다.
 
 ---
