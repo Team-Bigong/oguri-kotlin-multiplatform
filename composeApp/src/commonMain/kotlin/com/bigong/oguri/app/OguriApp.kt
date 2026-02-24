@@ -1,4 +1,4 @@
-package com.bigong.oguri
+package com.bigong.oguri.app
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.bigong.oguri.Greeting
 import org.jetbrains.compose.resources.painterResource
 
 import oguri.composeapp.generated.resources.Res
