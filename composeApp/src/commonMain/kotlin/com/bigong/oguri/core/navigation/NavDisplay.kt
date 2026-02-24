@@ -18,14 +18,17 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hierarchy
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import dev.zacsweers.metro.createGraph
+import org.jetbrains.compose.resources.stringResource
 
 private val BottomNavigationCornerRadius = 20.dp
 private val BottomNavigationHorizontalPadding = 16.dp
@@ -41,11 +44,11 @@ fun NavDisplay(
     snackbarHostState: SnackbarHostState,
 ) {
     OguriTheme {
-        val navHostController = rememberNavController()
-        val navBackStackEntry by navHostController.currentBackStackEntryAsState()
-        val currentRoutePath: String? = navBackStackEntry?.destination?.route
-        val shouldShowBottomNavigation: Boolean = RouteModels.bottomNavigationDestinations.any { destination ->
-            destination.routeModel.routePath == currentRoutePath
+        val navigator: MainNavigator = rememberMainNavigator()
+        val appGraph: AppGraph = remember { createGraph<AppGraph>() }
+        val currentDestination: NavDestination? = navigator.currentDestination()
+        val shouldShowBottomNavigation: Boolean = RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
+            isBottomNavigationDestinationSelected(currentDestination, destination)
         }
 
         Box(modifier = Modifier.fillMaxSize()) {
@@ -56,9 +59,9 @@ fun NavDisplay(
                 bottomBar = {
                     if (shouldShowBottomNavigation) {
                         BottomNavigationBar(
-                            currentRoutePath = currentRoutePath,
-                            onDestinationClick = { destination ->
-                                navHostController.navigateToBottomNavigationDestination(destination)
+                            currentDestination = currentDestination,
+                            onDestinationClick = { destination: BottomNavigationDestination ->
+                                navigator.navigateToBottomNavigationDestination(destination)
                             },
                         )
                     }
@@ -66,7 +69,8 @@ fun NavDisplay(
                 snackbarHost = {},
             ) { contentPaddingValues ->
                 MainNavHost(
-                    navHostController = navHostController,
+                    appGraph = appGraph,
+                    navigator = navigator,
                     contentPaddingValues = contentPaddingValues,
                     snackbarHostState = snackbarHostState,
                 )
@@ -86,7 +90,7 @@ fun NavDisplay(
 
 @Composable
 private fun BottomNavigationBar(
-    currentRoutePath: String?,
+    currentDestination: NavDestination?,
     onDestinationClick: (BottomNavigationDestination) -> Unit,
 ) {
     Box(
@@ -109,8 +113,11 @@ private fun BottomNavigationBar(
                 .padding(horizontal = 8.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            RouteModels.bottomNavigationDestinations.forEach { destination ->
-                val isSelected: Boolean = destination.routeModel.routePath == currentRoutePath
+            RouteModels.bottomNavigationDestinations.forEach { destination: BottomNavigationDestination ->
+                val isSelected: Boolean = currentDestination?.hierarchy?.any { navDestination: NavDestination ->
+                    val routeText: String = navDestination.route ?: return@any false
+                    routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
+                } == true
                 val containerColor = if (isSelected) {
                     MaterialTheme.colorScheme.primary.copy(alpha = BottomNavigationSelectedAlpha)
                 } else {
@@ -137,7 +144,7 @@ private fun BottomNavigationBar(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = destination.labelText,
+                        text = stringResource(destination.labelResource),
                         color = contentColor,
                         style = OguriTheme.typography.labelLarge,
                     )
@@ -145,6 +152,16 @@ private fun BottomNavigationBar(
             }
         }
     }
+}
+
+private fun isBottomNavigationDestinationSelected(
+    currentDestination: NavDestination?,
+    destination: BottomNavigationDestination,
+): Boolean {
+    return currentDestination?.hierarchy?.any { navDestination: NavDestination ->
+        val routeText: String = navDestination.route ?: return@any false
+        routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
+    } == true
 }
 
 @Composable

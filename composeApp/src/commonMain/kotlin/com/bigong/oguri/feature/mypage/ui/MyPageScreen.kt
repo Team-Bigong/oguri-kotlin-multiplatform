@@ -1,42 +1,227 @@
 package com.bigong.oguri.feature.mypage.ui
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import com.bigong.oguri.data.model.LoginProviderType
+import com.bigong.oguri.data.model.UserMvpState
+import com.bigong.oguri.data.model.WorkScheduleType
+import com.bigong.oguri.data.repository.UserMvpStateRepository
 import com.bigong.oguri.feature.common.ui.PlaceholderActionButton
-import com.bigong.oguri.feature.common.ui.PlaceholderInfoCard
-import com.bigong.oguri.feature.common.ui.PlaceholderScreenFrame
-import com.bigong.oguri.feature.common.ui.PlaceholderSpacingMedium
+import com.bigong.oguri.feature.common.ui.PlaceholderHeader
+import com.bigong.oguri.feature.common.ui.PlaceholderRowItem
+import com.bigong.oguri.feature.common.ui.PlaceholderSectionCard
+import com.bigong.oguri.feature.common.ui.PlaceholderSectionTitle
+import com.bigong.oguri.feature.common.ui.PlaceholderSelectableChip
+import com.bigong.oguri.feature.common.ui.PlaceholderSpacingLarge
+import com.bigong.oguri.feature.common.ui.PlaceholderSpacingSmall
+import kotlinx.coroutines.flow.StateFlow
+import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.mypage_faq
+import oguri.composeapp.generated.resources.mypage_line_leave
+import oguri.composeapp.generated.resources.mypage_line_work_pattern
+import oguri.composeapp.generated.resources.mypage_login_info_apple
+import oguri.composeapp.generated.resources.mypage_login_info_guest
+import oguri.composeapp.generated.resources.mypage_login_info_kakao
+import oguri.composeapp.generated.resources.mypage_login_info_none
+import oguri.composeapp.generated.resources.mypage_login_info_title
+import oguri.composeapp.generated.resources.mypage_logout
+import oguri.composeapp.generated.resources.mypage_notice
+import oguri.composeapp.generated.resources.mypage_open_source
+import oguri.composeapp.generated.resources.mypage_privacy
+import oguri.composeapp.generated.resources.mypage_pro_ad_remove
+import oguri.composeapp.generated.resources.mypage_pro_analysis
+import oguri.composeapp.generated.resources.mypage_pro_manage
+import oguri.composeapp.generated.resources.mypage_pro_pdf
+import oguri.composeapp.generated.resources.mypage_pro_start
+import oguri.composeapp.generated.resources.mypage_saved_strategy_count
+import oguri.composeapp.generated.resources.mypage_saved_strategy_title
+import oguri.composeapp.generated.resources.mypage_section_account
+import oguri.composeapp.generated.resources.mypage_section_pro
+import oguri.composeapp.generated.resources.mypage_section_strategy_settings
+import oguri.composeapp.generated.resources.mypage_section_support_info
+import oguri.composeapp.generated.resources.mypage_suggest
+import oguri.composeapp.generated.resources.mypage_terms
+import oguri.composeapp.generated.resources.mypage_title
+import oguri.composeapp.generated.resources.mypage_user_title
+import oguri.composeapp.generated.resources.onboarding_leave_days_value
+import oguri.composeapp.generated.resources.onboarding_work_schedule_five
+import oguri.composeapp.generated.resources.onboarding_work_schedule_six
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MyPageRoute(
+    userMvpStateRepository: UserMvpStateRepository,
     onSupportInquiryClick: () -> Unit,
+    onShowDummySnackbar: (String) -> Unit,
+    onShowProToggleSnackbar: (Boolean) -> Unit,
+    onShowLogoutSnackbar: () -> Unit,
 ) {
-    MyPageScreen(onSupportInquiryClick = onSupportInquiryClick)
+    val userMvpStateFlow: StateFlow<UserMvpState> = userMvpStateRepository.userMvpStateFlow
+    val userMvpState: UserMvpState by userMvpStateFlow.collectAsState()
+
+    MyPageScreen(
+        userMvpState = userMvpState,
+        onIncreaseAnnualLeave = {
+            userMvpStateRepository.updateRemainingAnnualLeaveDays(userMvpState.remainingAnnualLeaveDays + 1)
+        },
+        onDecreaseAnnualLeave = {
+            userMvpStateRepository.updateRemainingAnnualLeaveDays(userMvpState.remainingAnnualLeaveDays - 1)
+        },
+        onToggleWorkSchedule = {
+            val nextWorkScheduleType = if (userMvpState.workScheduleType == WorkScheduleType.FIVE_DAYS) {
+                WorkScheduleType.SIX_DAYS
+            } else {
+                WorkScheduleType.FIVE_DAYS
+            }
+            userMvpStateRepository.updateWorkScheduleType(nextWorkScheduleType)
+        },
+        onTogglePro = {
+            userMvpStateRepository.toggleProSubscription()
+            onShowProToggleSnackbar(!userMvpState.isProSubscribed)
+        },
+        onSupportInquiryClick = onSupportInquiryClick,
+        onDummyActionClick = onShowDummySnackbar,
+        onLogoutClick = {
+            userMvpStateRepository.logout()
+            onShowLogoutSnackbar()
+        },
+    )
 }
 
 @Composable
 fun MyPageScreen(
+    userMvpState: UserMvpState,
+    onIncreaseAnnualLeave: () -> Unit,
+    onDecreaseAnnualLeave: () -> Unit,
+    onToggleWorkSchedule: () -> Unit,
+    onTogglePro: () -> Unit,
     onSupportInquiryClick: () -> Unit,
+    onDummyActionClick: (String) -> Unit,
+    onLogoutClick: () -> Unit,
 ) {
-    PlaceholderScreenFrame(
-        screenTitleText = "마이페이지",
-        screenSubtitleText = "계정 / 전략 설정 / Pro / 지원",
+    val noticeText: String = stringResource(Res.string.mypage_notice)
+    val faqText: String = stringResource(Res.string.mypage_faq)
+    val suggestText: String = stringResource(Res.string.mypage_suggest)
+    val termsText: String = stringResource(Res.string.mypage_terms)
+    val privacyText: String = stringResource(Res.string.mypage_privacy)
+    val openSourceText: String = stringResource(Res.string.mypage_open_source)
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .safeDrawingPadding(),
+        verticalArrangement = Arrangement.spacedBy(PlaceholderSpacingLarge),
     ) {
-        PlaceholderInfoCard(
-            lines = listOf(
-                "남은 연차 수정",
-                "근무 형태 변경",
-                "Pro 시작하기",
-                "건의하기",
-            ),
-        )
-        Spacer(modifier = Modifier.height(PlaceholderSpacingMedium))
-        PlaceholderActionButton(
-            labelText = "문의 유형 선택으로 이동",
-            onClick = onSupportInquiryClick,
-            emphasized = false,
-        )
+        item {
+            PlaceholderHeader(
+                screenTitleText = stringResource(Res.string.mypage_user_title),
+                screenSubtitleText = stringResource(Res.string.mypage_title),
+            )
+        }
+        item {
+            PlaceholderSectionCard {
+                PlaceholderSectionTitle(text = stringResource(Res.string.mypage_section_account))
+                PlaceholderRowItem(
+                    titleText = stringResource(Res.string.mypage_line_leave),
+                    trailingText = stringResource(Res.string.onboarding_leave_days_value, userMvpState.remainingAnnualLeaveDays),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(PlaceholderSpacingSmall),
+                ) {
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) {
+                        PlaceholderActionButton(labelText = "-1", onClick = onDecreaseAnnualLeave, emphasized = false)
+                    }
+                    androidx.compose.foundation.layout.Box(modifier = Modifier.weight(1f)) {
+                        PlaceholderActionButton(labelText = "+1", onClick = onIncreaseAnnualLeave, emphasized = false)
+                    }
+                }
+                PlaceholderRowItem(
+                    titleText = stringResource(Res.string.mypage_login_info_title),
+                    trailingText = loginProviderLabelText(userMvpState.loginProviderType),
+                )
+            }
+        }
+        item {
+            PlaceholderSectionCard {
+                PlaceholderSectionTitle(text = stringResource(Res.string.mypage_section_strategy_settings))
+                PlaceholderRowItem(
+                    titleText = stringResource(Res.string.mypage_saved_strategy_title),
+                    trailingText = stringResource(Res.string.mypage_saved_strategy_count, userMvpState.savedStrategyIdentifierList.size),
+                )
+                userMvpState.savedStrategyIdentifierList.take(3).forEach { strategyIdentifier: String ->
+                    PlaceholderRowItem(titleText = strategyIdentifier, onClick = { onDummyActionClick(strategyIdentifier) })
+                }
+                PlaceholderRowItem(titleText = stringResource(Res.string.mypage_line_work_pattern))
+                Row(horizontalArrangement = Arrangement.spacedBy(PlaceholderSpacingSmall)) {
+                    PlaceholderSelectableChip(
+                        labelText = stringResource(Res.string.onboarding_work_schedule_five),
+                        isSelected = userMvpState.workScheduleType == WorkScheduleType.FIVE_DAYS,
+                        onClick = onToggleWorkSchedule,
+                        modifier = Modifier.weight(1f),
+                    )
+                    PlaceholderSelectableChip(
+                        labelText = stringResource(Res.string.onboarding_work_schedule_six),
+                        isSelected = userMvpState.workScheduleType == WorkScheduleType.SIX_DAYS,
+                        onClick = onToggleWorkSchedule,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+            }
+        }
+        item {
+            PlaceholderSectionCard {
+                PlaceholderSectionTitle(text = stringResource(Res.string.mypage_section_pro))
+                PlaceholderRowItem(titleText = stringResource(Res.string.mypage_pro_ad_remove))
+                PlaceholderRowItem(titleText = stringResource(Res.string.mypage_pro_pdf))
+                PlaceholderRowItem(titleText = stringResource(Res.string.mypage_pro_analysis))
+                PlaceholderActionButton(
+                    labelText = if (userMvpState.isProSubscribed) {
+                        stringResource(Res.string.mypage_pro_manage)
+                    } else {
+                        stringResource(Res.string.mypage_pro_start)
+                    },
+                    onClick = onTogglePro,
+                    emphasized = !userMvpState.isProSubscribed,
+                )
+            }
+        }
+        item {
+            PlaceholderSectionCard {
+                PlaceholderSectionTitle(text = stringResource(Res.string.mypage_section_support_info))
+                PlaceholderRowItem(titleText = noticeText, onClick = { onDummyActionClick(noticeText) })
+                PlaceholderRowItem(titleText = faqText, onClick = { onDummyActionClick(faqText) })
+                PlaceholderRowItem(titleText = suggestText, onClick = onSupportInquiryClick)
+                PlaceholderRowItem(titleText = termsText, onClick = { onDummyActionClick(termsText) })
+                PlaceholderRowItem(titleText = privacyText, onClick = { onDummyActionClick(privacyText) })
+                PlaceholderRowItem(titleText = openSourceText, onClick = { onDummyActionClick(openSourceText) })
+            }
+        }
+        item {
+            PlaceholderActionButton(
+                labelText = stringResource(Res.string.mypage_logout),
+                onClick = onLogoutClick,
+                emphasized = false,
+            )
+        }
+    }
+}
+
+@Composable
+private fun loginProviderLabelText(loginProviderType: LoginProviderType): String {
+    return when (loginProviderType) {
+        LoginProviderType.NONE -> stringResource(Res.string.mypage_login_info_none)
+        LoginProviderType.GUEST -> stringResource(Res.string.mypage_login_info_guest)
+        LoginProviderType.KAKAO -> stringResource(Res.string.mypage_login_info_kakao)
+        LoginProviderType.APPLE -> stringResource(Res.string.mypage_login_info_apple)
     }
 }

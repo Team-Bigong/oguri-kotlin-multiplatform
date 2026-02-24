@@ -16,7 +16,10 @@
 - 현재 구현 기준(shared `composeApp`):
     - `MainNavHost`에서 전체 그래프를 관리
     - `NavDisplay`에서 테마 + Scaffold + 바텀 네비 + 상단 스낵바 호스트를 관리
-    - 라우트 모델은 `core/navigation/RouteModels.kt`의 `data object` / `data class`로 정의
+    - 라우트 모델은 `core/navigation/RouteModels.kt`의 `@Serializable data object` / `@Serializable data class`로 정의
+    - `MainNavigator`(`core/navigation`)가 `NavHostController` 래핑 및 공통 이동 API를 제공
+    - 각 feature의 route 등록/화면 진입 wiring은 `feature/*/navigation/*NavGraph.kt`에서 담당
+    - Navigation Compose 타입 세이프 라우팅 사용: `composable<Route>()`, `navigate(Route())`, `toRoute<Route>()`
 
 권장 라우트 ID (축약 금지):
 - `home`
@@ -28,6 +31,15 @@
 - 1.0.0에서는 “읽기 전용 딥링크”만 허용한다.
     - 예: 특정 전략 상세로 진입
 - 딥링크 파싱은 shared에서 수행하고, 실제 라우팅은 app 레벨에서 실행한다(콜백).
+
+---
+
+## 1.5) MVP 초기 구현 규칙 (임시)
+- 1.0.0 초기 구현 단계에서는 `domain` 레이어를 생략하고, `ui`가 `data`를 직접 사용한다.
+- 단, 패키지 구조는 `data/*`, `core.di/*`, `feature/*`를 유지해서 이후 `domain` 도입 시 이동 비용을 줄인다.
+- 네트워크는 `Ktor HttpClient`로 실제 구성하되, 서버 미구현 동안에는 data layer에서 더미 응답을 반환한다.
+- DI는 `Metro`를 사용하며, 루트 그래프는 `core/di`에 둔다. (`data/di`, 추후 `feature/*/di` 확장 예정)
+- 사용자 노출 문자열은 `const val`로 두지 않고 `composeResources` 문자열 리소스로 관리한다. (기본/ko 분리)
 
 ---
 
@@ -123,6 +135,9 @@
 - shared는 “메일 열기”를 직접 하지 않는다.
 - shared는 `UiEvent.OpenSupportEmail(subject, body)`만 발행한다.
 - Android/iOS 앱이 최상단에서 네이티브로 처리한다.
+- MVP 와이어프레임 임시 구현 상태:
+    - 문의 유형 선택 후 제목/본문 자동 생성 프리뷰까지 shared에서 구현
+    - 실제 메일 앱 실행은 더미 스낵바로 대체 (서버/브리지 구현 전)
 
 ---
 
@@ -177,6 +192,11 @@
     - Git에 커밋 금지
     - CI secret 또는 로컬 ignored 파일
     - 스토어용과 개발용 분리
+
+### 8.3 MVP 더미 데이터 규칙 (서버 미구현)
+- `Ktor HttpClient`는 실제로 구성한다.
+- 서버 API 미구현 동안 `data/remote`에서 네트워크 지연만 시뮬레이션하고 더미 응답을 반환한다.
+- 홈/전략 상세/전략 캘린더는 동일한 더미 전략 데이터 계열을 사용해 화면 간 일관성을 유지한다.
 
 ---
 

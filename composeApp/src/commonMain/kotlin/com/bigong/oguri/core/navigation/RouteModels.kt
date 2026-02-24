@@ -1,52 +1,46 @@
 package com.bigong.oguri.core.navigation
 
+import kotlin.reflect.KClass
+import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.StringResource
+import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.bottom_navigation_calendar
+import oguri.composeapp.generated.resources.bottom_navigation_home
+import oguri.composeapp.generated.resources.bottom_navigation_my
+
 sealed interface RouteModel {
-    val routePath: String
+    @Serializable
+    data object Splash : RouteModel
 
-    data object Splash : RouteModel {
-        override val routePath: String = "splash"
-    }
+    @Serializable
+    data object Login : RouteModel
 
-    data object Login : RouteModel {
-        override val routePath: String = "login"
-    }
+    @Serializable
+    data object Onboarding : RouteModel
 
-    data object Onboarding : RouteModel {
-        override val routePath: String = "onboarding"
-    }
+    @Serializable
+    data object Home : RouteModel
 
-    data object Home : RouteModel {
-        override val routePath: String = "home"
-    }
-
+    @Serializable
     data class StrategyDetail(
         val strategyIdentifier: String,
-    ) : RouteModel {
-        override val routePath: String = "strategy_detail/$strategyIdentifier"
+    ) : RouteModel
 
-        companion object {
-            const val baseRoute: String = "strategy_detail"
-            const val strategyIdentifierArgument: String = "strategyIdentifier"
-            const val routePattern: String = "$baseRoute/{$strategyIdentifierArgument}"
-        }
-    }
+    @Serializable
+    data object StrategyCalendar : RouteModel
 
-    data object StrategyCalendar : RouteModel {
-        override val routePath: String = "strategy_calendar"
-    }
+    @Serializable
+    data object MyPage : RouteModel
 
-    data object MyPage : RouteModel {
-        override val routePath: String = "my_page"
-    }
-
-    data object SupportInquiryType : RouteModel {
-        override val routePath: String = "support_inquiry_type"
-    }
+    @Serializable
+    data object SupportInquiryType : RouteModel
 }
 
 data class BottomNavigationDestination(
     val routeModel: RouteModel,
-    val labelText: String,
+    val routeClass: KClass<out RouteModel>,
+    val routeSerialName: String,
+    val labelResource: StringResource,
 )
 
 object RouteModels {
@@ -54,15 +48,21 @@ object RouteModels {
         listOf(
             BottomNavigationDestination(
                 routeModel = RouteModel.Home,
-                labelText = "홈",
+                routeClass = RouteModel.Home::class,
+                routeSerialName = RouteModel.Home.serializer().descriptor.serialName,
+                labelResource = Res.string.bottom_navigation_home,
             ),
             BottomNavigationDestination(
                 routeModel = RouteModel.StrategyCalendar,
-                labelText = "캘린더",
+                routeClass = RouteModel.StrategyCalendar::class,
+                routeSerialName = RouteModel.StrategyCalendar.serializer().descriptor.serialName,
+                labelResource = Res.string.bottom_navigation_calendar,
             ),
             BottomNavigationDestination(
                 routeModel = RouteModel.MyPage,
-                labelText = "마이",
+                routeClass = RouteModel.MyPage::class,
+                routeSerialName = RouteModel.MyPage.serializer().descriptor.serialName,
+                labelResource = Res.string.bottom_navigation_my,
             ),
         )
 }
