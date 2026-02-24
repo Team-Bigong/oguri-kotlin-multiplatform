@@ -13,6 +13,10 @@
 - 탭: `Home`, `Calendar`, `My`
 - 탭 간 이동은 “상태 유지”를 기본으로 한다.
 - 상세 화면은 탭 라우트 밖에서 `push`로 이동한다.
+- 현재 구현 기준(shared `composeApp`):
+    - `MainNavHost`에서 전체 그래프를 관리
+    - `NavDisplay`에서 테마 + Scaffold + 바텀 네비 + 상단 스낵바 호스트를 관리
+    - 라우트 모델은 `core/navigation/RouteModels.kt`의 `data object` / `data class`로 정의
 
 권장 라우트 ID (축약 금지):
 - `home`
