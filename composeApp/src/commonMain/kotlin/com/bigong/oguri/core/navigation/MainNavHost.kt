@@ -1,5 +1,8 @@
 package com.bigong.oguri.core.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,6 +20,8 @@ import com.bigong.oguri.feature.splash.navigation.SplashNavGraph
 import com.bigong.oguri.feature.strategy.navigation.StrategyNavGraph
 import com.bigong.oguri.feature.support.navigation.SupportNavGraph
 
+private const val NAVIGATION_FADE_DURATION_MILLIS: Int = 180
+
 @Composable
 fun MainNavHost(
     appGraph: AppGraph,
@@ -30,6 +35,18 @@ fun MainNavHost(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPaddingValues),
+        enterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
     ) {
         SplashNavGraph.register(navGraphBuilder = this, navigator = navigator)
         LoginNavGraph.register(navGraphBuilder = this, navigator = navigator, appGraph = appGraph)
