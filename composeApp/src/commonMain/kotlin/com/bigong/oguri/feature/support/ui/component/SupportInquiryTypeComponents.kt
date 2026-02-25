@@ -22,9 +22,7 @@ import oguri.composeapp.generated.resources.support_step_select_title
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-internal fun InquiryTypeSelectionSection(
-    onSelectInquiryType: (SupportInquiryType) -> Unit,
-) {
+internal fun InquiryTypeSelectionSection(onSelectInquiryType: (SupportInquiryType) -> Unit) {
     PlaceholderSectionCard {
         PlaceholderSectionTitle(text = stringResource(Res.string.support_step_select_title))
         PlaceholderActionButton(

@@ -32,17 +32,17 @@ import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
-import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
+import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import dev.zacsweers.metro.createGraph
 import kotlinx.coroutines.launch
+import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.navigation_back_press_exit_message
+import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
-import org.jetbrains.compose.resources.stringResource
-import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 
 private val BottomNavigationCornerRadius = 20.dp
 private val BottomNavigationHorizontalPadding = 16.dp
@@ -66,9 +66,10 @@ fun NavDisplay(
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage: String = stringResource(Res.string.navigation_back_press_exit_message)
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
-        val shouldShowBottomNavigation: Boolean = RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
-            isBottomNavigationDestinationSelected(currentDestination, destination)
-        }
+        val shouldShowBottomNavigation: Boolean =
+            RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
+                isBottomNavigationDestinationSelected(currentDestination, destination)
+            }
         val isOnMainTabRoot: Boolean = isMainTabRootDestination(currentDestination)
 
         LaunchedEffect(currentDestination?.route) {
@@ -108,11 +109,12 @@ fun NavDisplay(
 
                 TopInjectedSnackbarHost(
                     snackbarHostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .statusBarsPadding()
-                        .padding(top = SnackbarTopPadding)
-                        .padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .statusBarsPadding()
+                            .padding(top = SnackbarTopPadding)
+                            .padding(horizontal = 16.dp),
                 )
             }
         }
@@ -143,53 +145,57 @@ private fun BottomNavigationBar(
     onDestinationClick: (BottomNavigationDestination) -> Unit,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
-            .navigationBarsPadding()
-            .padding(
-                horizontal = BottomNavigationHorizontalPadding,
-                vertical = BottomNavigationVerticalPadding,
-            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.background)
+                .navigationBarsPadding()
+                .padding(
+                    horizontal = BottomNavigationHorizontalPadding,
+                    vertical = BottomNavigationVerticalPadding,
+                ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(BottomNavigationCornerRadius),
-                )
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(BottomNavigationCornerRadius),
+                    ).padding(horizontal = 8.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             RouteModels.bottomNavigationDestinations.forEach { destination: BottomNavigationDestination ->
-                val isSelected: Boolean = currentDestination?.hierarchy?.any { navDestination: NavDestination ->
-                    val routeText: String = navDestination.route ?: return@any false
-                    routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
-                } == true
-                val containerColor = if (isSelected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = BOTTOM_NAVIGATION_SELECTED_ALPHA)
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = BOTTOM_NAVIGATION_UNSELECTED_ALPHA)
-                }
-                val contentColor = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
+                val isSelected: Boolean =
+                    currentDestination?.hierarchy?.any { navDestination: NavDestination ->
+                        val routeText: String = navDestination.route ?: return@any false
+                        routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
+                    } == true
+                val containerColor =
+                    if (isSelected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = BOTTOM_NAVIGATION_SELECTED_ALPHA)
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = BOTTOM_NAVIGATION_UNSELECTED_ALPHA)
+                    }
+                val contentColor =
+                    if (isSelected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
 
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .background(
-                            color = containerColor,
-                            shape = RoundedCornerShape(14.dp),
-                        )
-                        .noRippleClickable(onClick = { onDestinationClick(destination) })
-                        .padding(
-                            horizontal = BottomNavigationItemHorizontalPadding,
-                            vertical = BottomNavigationItemVerticalPadding,
-                        ),
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .background(
+                                color = containerColor,
+                                shape = RoundedCornerShape(14.dp),
+                            ).noRippleClickable(onClick = { onDestinationClick(destination) })
+                            .padding(
+                                horizontal = BottomNavigationItemHorizontalPadding,
+                                vertical = BottomNavigationItemVerticalPadding,
+                            ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -213,9 +219,7 @@ private fun isBottomNavigationDestinationSelected(
     } == true
 }
 
-private fun isMainTabRootDestination(
-    currentDestination: NavDestination?,
-): Boolean {
+private fun isMainTabRootDestination(currentDestination: NavDestination?): Boolean {
     val currentRouteText: String = currentDestination?.route ?: return false
     return RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
         currentRouteText == destination.routeSerialName

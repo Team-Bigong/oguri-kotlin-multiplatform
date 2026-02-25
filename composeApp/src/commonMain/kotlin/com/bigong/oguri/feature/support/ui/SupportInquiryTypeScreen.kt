@@ -26,9 +26,10 @@ fun SupportInquiryTypeScreen(
     onOpenSupportEmail: (SupportEmailDraft) -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding(),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .safeDrawingPadding(),
         verticalArrangement = Arrangement.spacedBy(PlaceholderSpacingLarge),
     ) {
         PlaceholderHeader(

@@ -7,11 +7,7 @@ import com.bigong.oguri.data.model.StrategyDetailData
 interface StrategyRemoteDataSource {
     suspend fun getHomeStrategyRecommendation(): HomeStrategyRecommendation
 
-    suspend fun getStrategyDetail(
-        strategyIdentifier: String,
-    ): StrategyDetailData
+    suspend fun getStrategyDetail(strategyIdentifier: String): StrategyDetailData
 
-    suspend fun getStrategyCalendar(
-        year: Int,
-    ): StrategyCalendarData
+    suspend fun getStrategyCalendar(year: Int): StrategyCalendarData
 }

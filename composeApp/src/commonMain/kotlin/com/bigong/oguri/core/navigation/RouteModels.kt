@@ -1,12 +1,12 @@
 package com.bigong.oguri.core.navigation
 
-import kotlin.reflect.KClass
 import kotlinx.serialization.Serializable
-import org.jetbrains.compose.resources.StringResource
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.bottom_navigation_calendar
 import oguri.composeapp.generated.resources.bottom_navigation_home
 import oguri.composeapp.generated.resources.bottom_navigation_my
+import org.jetbrains.compose.resources.StringResource
+import kotlin.reflect.KClass
 
 sealed interface RouteModel {
     @Serializable
@@ -49,19 +49,28 @@ object RouteModels {
             BottomNavigationDestination(
                 routeModel = RouteModel.Home,
                 routeClass = RouteModel.Home::class,
-                routeSerialName = RouteModel.Home.serializer().descriptor.serialName,
+                routeSerialName =
+                    RouteModel.Home
+                        .serializer()
+                        .descriptor.serialName,
                 labelResource = Res.string.bottom_navigation_home,
             ),
             BottomNavigationDestination(
                 routeModel = RouteModel.StrategyCalendar,
                 routeClass = RouteModel.StrategyCalendar::class,
-                routeSerialName = RouteModel.StrategyCalendar.serializer().descriptor.serialName,
+                routeSerialName =
+                    RouteModel.StrategyCalendar
+                        .serializer()
+                        .descriptor.serialName,
                 labelResource = Res.string.bottom_navigation_calendar,
             ),
             BottomNavigationDestination(
                 routeModel = RouteModel.MyPage,
                 routeClass = RouteModel.MyPage::class,
-                routeSerialName = RouteModel.MyPage.serializer().descriptor.serialName,
+                routeSerialName =
+                    RouteModel.MyPage
+                        .serializer()
+                        .descriptor.serialName,
                 labelResource = Res.string.bottom_navigation_my,
             ),
         )

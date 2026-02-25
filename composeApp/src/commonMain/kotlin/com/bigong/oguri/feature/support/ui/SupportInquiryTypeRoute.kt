@@ -8,12 +8,11 @@ import com.bigong.oguri.feature.common.ui.rememberRouteViewModel
 import com.bigong.oguri.feature.support.ui.model.SupportInquiryUiState
 
 @Composable
-fun SupportInquiryTypeRoute(
-    onOpenSupportEmail: (SupportEmailDraft) -> Unit,
-) {
-    val supportInquiryTypeViewModel: SupportInquiryTypeViewModel = rememberRouteViewModel {
-        SupportInquiryTypeViewModel()
-    }
+fun SupportInquiryTypeRoute(onOpenSupportEmail: (SupportEmailDraft) -> Unit) {
+    val supportInquiryTypeViewModel: SupportInquiryTypeViewModel =
+        rememberRouteViewModel {
+            SupportInquiryTypeViewModel()
+        }
     val supportInquiryUiState: SupportInquiryUiState by supportInquiryTypeViewModel.supportInquiryUiStateFlow.collectAsState()
 
     SupportInquiryTypeScreen(

@@ -23,18 +23,17 @@ class KtorStrategyRemoteDataSource(
             endDateText = "10/12",
             annualLeaveDaysUsed = 2,
             totalVacationDaysSecured = 7,
-            topEfficiencyMonths = listOf(
-                MonthlyStrategyEfficiency(monthLabelText = "10월", securedVacationDays = 7),
-                MonthlyStrategyEfficiency(monthLabelText = "9월", securedVacationDays = 8),
-                MonthlyStrategyEfficiency(monthLabelText = "5월", securedVacationDays = 4),
-            ),
+            topEfficiencyMonths =
+                listOf(
+                    MonthlyStrategyEfficiency(monthLabelText = "10월", securedVacationDays = 7),
+                    MonthlyStrategyEfficiency(monthLabelText = "9월", securedVacationDays = 8),
+                    MonthlyStrategyEfficiency(monthLabelText = "5월", securedVacationDays = 4),
+                ),
             recommendedDestinations = listOf("오사카", "다낭", "제주"),
         )
     }
 
-    override suspend fun getStrategyDetail(
-        strategyIdentifier: String,
-    ): StrategyDetailData {
+    override suspend fun getStrategyDetail(strategyIdentifier: String): StrategyDetailData {
         delay(timeMillis = NETWORK_SIMULATION_DELAY_MILLIS)
 
         val ignoredClientReference: HttpClient = httpClient
@@ -49,9 +48,7 @@ class KtorStrategyRemoteDataSource(
         )
     }
 
-    override suspend fun getStrategyCalendar(
-        year: Int,
-    ): StrategyCalendarData {
+    override suspend fun getStrategyCalendar(year: Int): StrategyCalendarData {
         delay(timeMillis = NETWORK_SIMULATION_DELAY_MILLIS)
 
         val ignoredClientReference: HttpClient = httpClient
@@ -59,11 +56,12 @@ class KtorStrategyRemoteDataSource(
 
         return StrategyCalendarData(
             year = year,
-            monthlyHighlights = listOf(
-                MonthlyStrategyEfficiency(monthLabelText = "5월", securedVacationDays = 4),
-                MonthlyStrategyEfficiency(monthLabelText = "9월", securedVacationDays = 8),
-                MonthlyStrategyEfficiency(monthLabelText = "10월", securedVacationDays = 7),
-            ),
+            monthlyHighlights =
+                listOf(
+                    MonthlyStrategyEfficiency(monthLabelText = "5월", securedVacationDays = 4),
+                    MonthlyStrategyEfficiency(monthLabelText = "9월", securedVacationDays = 8),
+                    MonthlyStrategyEfficiency(monthLabelText = "10월", securedVacationDays = 7),
+                ),
         )
     }
 

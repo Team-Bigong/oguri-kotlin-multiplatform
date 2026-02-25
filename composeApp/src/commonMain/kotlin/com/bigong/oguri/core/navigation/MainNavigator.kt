@@ -26,9 +26,7 @@ class MainNavigator(
         navHostController.navigate(RouteModel.Onboarding)
     }
 
-    fun navigateToStrategyDetail(
-        strategyIdentifier: String,
-    ) {
+    fun navigateToStrategyDetail(strategyIdentifier: String) {
         navHostController.navigate(RouteModel.StrategyDetail(strategyIdentifier = strategyIdentifier))
     }
 
@@ -40,19 +38,13 @@ class MainNavigator(
         navHostController.navigate(RouteModel.SupportInquiryType)
     }
 
-    fun navigateToBottomNavigationDestination(
-        destination: BottomNavigationDestination,
-    ) {
+    fun navigateToBottomNavigationDestination(destination: BottomNavigationDestination) {
         navigateToMainTabRoot(destination.routeModel)
     }
 
-    fun popBackStack(): Boolean {
-        return navHostController.popBackStack()
-    }
+    fun popBackStack(): Boolean = navHostController.popBackStack()
 
-    private fun navigateToMainTabRoot(
-        routeModel: RouteModel,
-    ) {
+    private fun navigateToMainTabRoot(routeModel: RouteModel) {
         navHostController.navigate(routeModel) {
             launchSingleTop = true
             restoreState = false

@@ -42,9 +42,10 @@ fun HomeScreen(
     onShowSnackbarClick: () -> Unit,
 ) {
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .safeDrawingPadding(),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .safeDrawingPadding(),
         verticalArrangement = Arrangement.spacedBy(PlaceholderSpacingLarge),
     ) {
         item {
@@ -54,37 +55,47 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.height(PlaceholderSpacingMedium))
             PlaceholderInfoCard(
-                lines = listOf(
-                    stringResource(
-                        Res.string.home_profile_summary,
-                        userRoleLabelText(homeUiState.userState.userRoleType),
-                        workScheduleLabelText(homeUiState.userState.workScheduleType),
-                        homeUiState.userState.remainingAnnualLeaveDays,
+                lines =
+                    listOf(
+                        stringResource(
+                            Res.string.home_profile_summary,
+                            userRoleLabelText(homeUiState.userState.userRoleType),
+                            workScheduleLabelText(homeUiState.userState.workScheduleType),
+                            homeUiState.userState.remainingAnnualLeaveDays,
+                        ),
                     ),
-                ),
             )
         }
         item {
             when {
-                homeUiState.isLoading -> PlaceholderInfoCard(lines = listOf(stringResource(Res.string.common_loading)))
-                homeUiState.isError -> PlaceholderSectionCard {
-                    PlaceholderInfoCard(
-                        lines = listOf(
-                            stringResource(Res.string.home_error_message),
-                            stringResource(Res.string.common_retry_later),
-                        ),
-                    )
-                    PlaceholderActionButton(
-                        labelText = stringResource(Res.string.common_retry),
-                        onClick = onRetryClick,
-                        emphasized = false,
+                homeUiState.isLoading -> {
+                    PlaceholderInfoCard(lines = listOf(stringResource(Res.string.common_loading)))
+                }
+
+                homeUiState.isError -> {
+                    PlaceholderSectionCard {
+                        PlaceholderInfoCard(
+                            lines =
+                                listOf(
+                                    stringResource(Res.string.home_error_message),
+                                    stringResource(Res.string.common_retry_later),
+                                ),
+                        )
+                        PlaceholderActionButton(
+                            labelText = stringResource(Res.string.common_retry),
+                            onClick = onRetryClick,
+                            emphasized = false,
+                        )
+                    }
+                }
+
+                homeUiState.recommendation != null -> {
+                    BestStrategySection(
+                        recommendation = homeUiState.recommendation,
+                        onStrategyDetailClick = onStrategyDetailClick,
+                        onShowSnackbarClick = onShowSnackbarClick,
                     )
                 }
-                homeUiState.recommendation != null -> BestStrategySection(
-                    recommendation = homeUiState.recommendation,
-                    onStrategyDetailClick = onStrategyDetailClick,
-                    onShowSnackbarClick = onShowSnackbarClick,
-                )
             }
         }
         homeUiState.recommendation?.let { recommendation: HomeStrategyRecommendation ->

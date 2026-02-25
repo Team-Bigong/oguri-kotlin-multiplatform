@@ -57,22 +57,20 @@ fun PlaceholderSectionCard(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = PLACEHOLDER_SURFACE_ALPHA),
-                shape = RoundedCornerShape(sectionCornerRadius),
-            )
-            .padding(16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = PLACEHOLDER_SURFACE_ALPHA),
+                    shape = RoundedCornerShape(sectionCornerRadius),
+                ).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(PlaceholderSpacingSmall),
         content = content,
     )
 }
 
 @Composable
-fun PlaceholderSectionTitle(
-    text: String,
-) {
+fun PlaceholderSectionTitle(text: String) {
     Text(
         text = text,
         style = OguriTheme.typography.cardTitle,
@@ -81,9 +79,7 @@ fun PlaceholderSectionTitle(
 }
 
 @Composable
-fun PlaceholderInfoCard(
-    lines: List<String>,
-) {
+fun PlaceholderInfoCard(lines: List<String>) {
     PlaceholderSectionCard {
         lines.forEach { lineText: String ->
             Text(
@@ -102,26 +98,28 @@ fun PlaceholderActionButton(
     emphasized: Boolean = true,
     enabled: Boolean = true,
 ) {
-    val backgroundColor = if (emphasized) {
-        MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 1f else 0.4f)
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) PLACEHOLDER_SECTION_ALPHA else 0.25f)
-    }
-    val contentColor = if (emphasized) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
+    val backgroundColor =
+        if (emphasized) {
+            MaterialTheme.colorScheme.primary.copy(alpha = if (enabled) 1f else 0.4f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (enabled) PLACEHOLDER_SECTION_ALPHA else 0.25f)
+        }
+    val contentColor =
+        if (emphasized) {
+            MaterialTheme.colorScheme.onPrimary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        }
 
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                color = backgroundColor,
-                shape = RoundedCornerShape(actionButtonCornerRadius),
-            )
-            .noRippleClickable(onClick = onClick, enabled = enabled)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(
+                    color = backgroundColor,
+                    shape = RoundedCornerShape(actionButtonCornerRadius),
+                ).noRippleClickable(onClick = onClick, enabled = enabled)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -141,19 +139,21 @@ fun PlaceholderSelectableChip(
     modifier: Modifier = Modifier,
 ) {
     val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-    val backgroundColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
+    val backgroundColor =
+        if (isSelected) {
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        }
     val textColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
 
     Box(
-        modifier = modifier
-            .background(backgroundColor, RoundedCornerShape(12.dp))
-            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(12.dp))
-            .noRippleClickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier =
+            modifier
+                .background(backgroundColor, RoundedCornerShape(12.dp))
+                .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(12.dp))
+                .noRippleClickable(onClick = onClick)
+                .padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -180,14 +180,14 @@ fun PlaceholderStepper(
             PlaceholderActionButton(labelText = "-", onClick = onMinusClick, emphasized = false)
         }
         Box(
-            modifier = Modifier
-                .weight(2f)
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(12.dp),
-                )
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-                .padding(horizontal = 12.dp, vertical = 14.dp),
+            modifier =
+                Modifier
+                    .weight(2f)
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(12.dp),
+                    ).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(
@@ -209,16 +209,18 @@ fun PlaceholderRowItem(
     trailingText: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
-    val rowModifier = if (onClick != null) {
-        Modifier.noRippleClickable(onClick = onClick)
-    } else {
-        Modifier
-    }
+    val rowModifier =
+        if (onClick != null) {
+            Modifier.noRippleClickable(onClick = onClick)
+        } else {
+            Modifier
+        }
 
     Row(
-        modifier = rowModifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
+        modifier =
+            rowModifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -248,23 +250,21 @@ fun PlaceholderRowItem(
 }
 
 @Composable
-fun PlaceholderBannerAd(
-    labelText: String,
-) {
+fun PlaceholderBannerAd(labelText: String) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(PlaceholderSpacingSmall),
     ) {
         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(72.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(14.dp),
-                )
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(72.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surface,
+                        shape = RoundedCornerShape(14.dp),
+                    ).border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp)),
             contentAlignment = Alignment.Center,
         ) {
             Text(
