@@ -16,7 +16,6 @@ object OguriTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalTypography.current
-
     val colors: OguriColorPalette
         @Composable
         @ReadOnlyComposable
@@ -30,13 +29,13 @@ private val LocalColorPalette =
 
 val LightOguriMaterialColorScheme: ColorScheme =
     lightColorScheme(
-        primary = LightOguriColorPalette.brandMint,
-        onPrimary = LightOguriColorPalette.textOnBrand,
-        primaryContainer = LightOguriColorPalette.brandMintContainer,
+        primary = LightOguriColorPalette.mint,
+        onPrimary = LightOguriColorPalette.textOnMint,
+        primaryContainer = LightOguriColorPalette.mintContainer,
         onPrimaryContainer = Mint90,
-        secondary = LightOguriColorPalette.accentOrange,
-        onSecondary = LightOguriColorPalette.textOnAccent,
-        secondaryContainer = LightOguriColorPalette.accentOrangeContainer,
+        secondary = LightOguriColorPalette.orange,
+        onSecondary = LightOguriColorPalette.textOnOrange,
+        secondaryContainer = LightOguriColorPalette.orangeContainer,
         onSecondaryContainer = Orange80,
         tertiary = Mint80,
         onTertiary = Neutral0,
@@ -48,7 +47,7 @@ val LightOguriMaterialColorScheme: ColorScheme =
         onSurface = LightOguriColorPalette.textPrimary,
         surfaceVariant = LightOguriColorPalette.backgroundTertiary,
         onSurfaceVariant = LightOguriColorPalette.textSecondary,
-        surfaceTint = LightOguriColorPalette.brandMint,
+        surfaceTint = LightOguriColorPalette.mint,
         outline = LightOguriColorPalette.borderStrong,
         outlineVariant = LightOguriColorPalette.borderSubtle,
         error = LightOguriColorPalette.error,
@@ -59,13 +58,13 @@ val LightOguriMaterialColorScheme: ColorScheme =
 
 val DarkOguriMaterialColorScheme: ColorScheme =
     darkColorScheme(
-        primary = DarkOguriColorPalette.brandMint,
-        onPrimary = DarkOguriColorPalette.textOnBrand,
-        primaryContainer = DarkOguriColorPalette.brandMintContainer,
+        primary = DarkOguriColorPalette.mint,
+        onPrimary = DarkOguriColorPalette.textOnMint,
+        primaryContainer = DarkOguriColorPalette.mintContainer,
         onPrimaryContainer = Mint20,
-        secondary = DarkOguriColorPalette.accentOrange,
-        onSecondary = DarkOguriColorPalette.textOnAccent,
-        secondaryContainer = DarkOguriColorPalette.accentOrangeContainer,
+        secondary = DarkOguriColorPalette.orange,
+        onSecondary = DarkOguriColorPalette.textOnOrange,
+        secondaryContainer = DarkOguriColorPalette.orangeContainer,
         onSecondaryContainer = Orange20,
         tertiary = Mint30,
         onTertiary = Neutral100,
@@ -77,7 +76,7 @@ val DarkOguriMaterialColorScheme: ColorScheme =
         onSurface = DarkOguriColorPalette.textPrimary,
         surfaceVariant = DarkOguriColorPalette.backgroundTertiary,
         onSurfaceVariant = DarkOguriColorPalette.textSecondary,
-        surfaceTint = DarkOguriColorPalette.brandMint,
+        surfaceTint = DarkOguriColorPalette.mint,
         outline = DarkOguriColorPalette.borderStrong,
         outlineVariant = DarkOguriColorPalette.borderSubtle,
         error = DarkOguriColorPalette.error,
@@ -93,12 +92,11 @@ fun OguriTheme(
     content: @Composable () -> Unit,
 ) {
     @Suppress("UNUSED_VARIABLE")
-    val ignoredDynamicColor = dynamicColor
-    val typographySystem = rememberOguriTypographySystem()
+    val ignoredDynamicColor: Boolean = dynamicColor
+    val typographySystem: OguriTypographySystem = rememberOguriTypographySystem()
     val materialTypography = rememberOguriMaterialTypography(typographySystem)
-    val colorPalette = if (darkTheme) DarkOguriColorPalette else LightOguriColorPalette
-    val colorScheme = if (darkTheme) DarkOguriMaterialColorScheme else LightOguriMaterialColorScheme
-
+    val colorPalette: OguriColorPalette = if (darkTheme) DarkOguriColorPalette else LightOguriColorPalette
+    val colorScheme: ColorScheme = if (darkTheme) DarkOguriMaterialColorScheme else LightOguriMaterialColorScheme
     CompositionLocalProvider(
         LocalTypography provides typographySystem,
         LocalColorPalette provides colorPalette,
