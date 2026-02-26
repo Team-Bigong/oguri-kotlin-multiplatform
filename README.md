@@ -1,3 +1,5 @@
+<meta name="agd-partner-manual-verification" />
+
 This is a Kotlin Multiplatform project targeting Android, iOS, Server.
 
 * [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
