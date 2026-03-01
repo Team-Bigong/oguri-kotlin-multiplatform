@@ -16,10 +16,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.RecommendPeriod
+import com.bigong.oguri.feature.home.ui.component.HomeAdvertisementCard
 import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
 import com.bigong.oguri.feature.home.ui.component.HomeGuideHeader
@@ -27,16 +27,9 @@ import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader
 import com.bigong.oguri.feature.home.ui.component.HomeMoreRecommendationButton
 import com.bigong.oguri.feature.home.ui.component.HomePlaceCard
-import com.bigong.oguri.feature.home.ui.component.HomeProductCard
 import com.bigong.oguri.feature.home.ui.component.HomeStrategyCard
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.home_ad_activity_title
-import oguri.composeapp.generated.resources.home_ad_activity_title_highlight
-import oguri.composeapp.generated.resources.home_ad_hotel_title
-import oguri.composeapp.generated.resources.home_ad_hotel_title_highlight
-import oguri.composeapp.generated.resources.home_ad_plane_title
-import oguri.composeapp.generated.resources.home_ad_plane_title_highlight
 import oguri.composeapp.generated.resources.home_cta_more_recommend
 import oguri.composeapp.generated.resources.home_error_retry
 import oguri.composeapp.generated.resources.home_greeting_name
@@ -48,6 +41,7 @@ import oguri.composeapp.generated.resources.home_guide_trip_products_highlight
 import oguri.composeapp.generated.resources.home_hint_place_cards
 import oguri.composeapp.generated.resources.home_hint_trip_products
 import oguri.composeapp.generated.resources.home_loading
+import oguri.composeapp.generated.resources.home_more_recommendation_subtitle
 import oguri.composeapp.generated.resources.home_tab_rank_one
 import oguri.composeapp.generated.resources.home_tab_rank_three
 import oguri.composeapp.generated.resources.home_tab_rank_two
@@ -61,6 +55,7 @@ fun HomeScreen(
     onRankSelected: (Int) -> Unit,
     onSavedChanged: (Boolean) -> Unit,
     onRetryClick: () -> Unit,
+    onAdvertisementClick: (String) -> Unit,
 ) {
     if (homeUiState.isLoading) {
         HomeLoadingContent(message = stringResource(Res.string.home_loading))
@@ -148,7 +143,7 @@ fun HomeScreen(
                 }
             }
             item {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 HomeGuideHeader(
                     iconResource = Res.drawable.ic_shopping_bag,
                     titleText = stringResource(Res.string.home_guide_trip_products),
@@ -159,17 +154,16 @@ fun HomeScreen(
             }
             items(items = currentPeriod.advertisements) { advertisement: Advertisement ->
                 Spacer(modifier = Modifier.height(18.dp))
-                HomeProductCard(
-                    imageUrl = advertisement.url,
-                    titleText = advertisementTitleText(advertisement = advertisement),
-                    highlightedText = advertisementHighlightedText(advertisement = advertisement),
-                    highlightedColor = Mint70,
+                HomeAdvertisementCard(
+                    advertisement = advertisement,
                     modifier = Modifier.padding(horizontal = 20.dp),
+                    onClick = onAdvertisementClick,
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(height = 24.dp))
+                Spacer(modifier = Modifier.height(height = 28.dp))
                 HomeMoreRecommendationButton(
+                    subtitleText = stringResource(Res.string.home_more_recommendation_subtitle),
                     text = stringResource(Res.string.home_cta_more_recommend),
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
@@ -178,19 +172,3 @@ fun HomeScreen(
         }
     }
 }
-
-@Composable
-private fun advertisementTitleText(advertisement: Advertisement): String =
-    when (advertisement.platform) {
-        "hotel" -> stringResource(Res.string.home_ad_hotel_title)
-        "plane" -> stringResource(Res.string.home_ad_plane_title)
-        else -> stringResource(Res.string.home_ad_activity_title)
-    }
-
-@Composable
-private fun advertisementHighlightedText(advertisement: Advertisement): String =
-    when (advertisement.platform) {
-        "hotel" -> stringResource(Res.string.home_ad_hotel_title_highlight)
-        "plane" -> stringResource(Res.string.home_ad_plane_title_highlight)
-        else -> stringResource(Res.string.home_ad_activity_title_highlight)
-    }

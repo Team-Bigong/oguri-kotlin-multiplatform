@@ -6,6 +6,7 @@ import com.bigong.oguri.data.remote.model.response.PlaceResponse
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
 import dev.zacsweers.metro.Inject
 import com.bigong.oguri.domain.model.Advertisement
+import com.bigong.oguri.domain.model.AdvertisementPlatform
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.model.RecommendPeriod
 import com.bigong.oguri.domain.repository.HomeRepository
@@ -48,7 +49,7 @@ private fun PlaceResponse.toDomain(): Place {
 
 private fun AdvertisementResponse.toDomain(): Advertisement {
     return Advertisement(
-        platform = platform,
+        platform = AdvertisementPlatform.from(value = platform),
         url = url,
     )
 }

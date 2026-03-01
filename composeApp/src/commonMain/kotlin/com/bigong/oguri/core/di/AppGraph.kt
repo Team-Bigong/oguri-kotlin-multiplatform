@@ -2,7 +2,6 @@ package com.bigong.oguri.core.di
 
 import com.bigong.oguri.data.remote.HomeRemoteDataSource
 import com.bigong.oguri.data.remote.KtorHomeRemoteDataSource
-import com.bigong.oguri.data.remote.model.HomeImageUrlCollection
 import com.bigong.oguri.data.repository.DefaultHomeRepository
 import com.bigong.oguri.domain.repository.HomeRepository
 import com.bigong.oguri.feature.home.ui.HomeViewModel
@@ -25,7 +24,6 @@ interface AppGraph {
     fun interface Factory {
         fun create(
             @Provides httpClient: HttpClient,
-            @Provides homeImageUrlCollection: HomeImageUrlCollection,
         ): AppGraph
     }
 }

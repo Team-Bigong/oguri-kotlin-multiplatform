@@ -22,12 +22,13 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 
 @Composable
 fun HomeMoreRecommendationButton(
+    subtitleText: String,
     text: String,
     modifier: Modifier = Modifier,
 ) {
     Column {
         Text(
-            text = "딱 맞는 연휴가 없었나요?",
+            text = subtitleText,
             style = OguriTheme.typography.caption,
             color = Neutral50,
             textAlign = TextAlign.Center,

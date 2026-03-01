@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.Advertisement
+import com.bigong.oguri.domain.model.AdvertisementPlatform
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.model.RecommendPeriod
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
@@ -53,16 +54,16 @@ private fun HomeScreenPreview() {
                         ),
                         advertisements = listOf(
                             Advertisement(
-                                platform = "hotel",
-                                url = "https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_hotel_1.jpg?alt=media&token=c41d7e52-469b-4b25-83fb-0ce154cf66a3",
+                                platform = AdvertisementPlatform.AGODA,
+                                url = "https://www.agoda.com/",
                             ),
                             Advertisement(
-                                platform = "plane",
-                                url = "https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_plane_1.jpg?alt=media&token=fbc6c5ca-acee-48f5-8e7f-6294630d4822",
+                                platform = AdvertisementPlatform.SKYSCANNER,
+                                url = "https://www.skyscanner.co.kr/",
                             ),
                             Advertisement(
-                                platform = "activity",
-                                url = "https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_activity_1.jpg?alt=media&token=0fcdba9e-c1b6-4d9c-a37f-4f4d5d749653",
+                                platform = AdvertisementPlatform.KLOOK,
+                                url = "https://www.klook.com/ko/",
                             ),
                         ),
                     ),
@@ -71,6 +72,7 @@ private fun HomeScreenPreview() {
             onRankSelected = {},
             onSavedChanged = {},
             onRetryClick = {},
+            onAdvertisementClick = {},
         )
     }
 }

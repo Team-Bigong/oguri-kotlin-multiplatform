@@ -32,6 +32,7 @@
 - 각 `Screen`과 각 `ui/component` 컴포넌트는 프리뷰를 제공한다.
 - 공통 소스셋 제한으로 `commonMain` 프리뷰가 어려운 경우 `androidMain` 프리뷰 파일로 대체한다.
 - 클릭은 기본적으로 `noRippleClickable`을 사용한다.
+- 혼합 스타일 텍스트는 `getStyledText`만 사용한다. (`getColoredText` 사용 금지)
 
 ## 패키지 규칙
 - `presentation` 패키지를 사용하지 않는다.
@@ -39,3 +40,4 @@
 - `UiState`는 `ui/model`에 둔다.
 - 화면 내부 컴포넌트는 `ui/component`에 둔다.
 - `data` 레이어 네트워크 모델은 `model/request`, `model/response`로 분리한다.
+- 광고 모델의 `url`은 목적지 링크로 사용하고, 광고 이미지 선택은 UI 레이어에서 `platform` 기준으로 처리한다.

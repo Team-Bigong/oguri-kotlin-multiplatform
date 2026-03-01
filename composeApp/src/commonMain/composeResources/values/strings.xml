@@ -31,6 +31,7 @@
     <string name="home_ad_activity_title">Shall we find fun activities with Klook?</string>
     <string name="home_ad_activity_title_highlight">fun activities</string>
 
+    <string name="home_more_recommendation_subtitle">Couldn’t find the perfect holiday?</string>
     <string name="home_cta_more_recommend">See more recommendations</string>
     <string name="home_loading">Loading recommendations...</string>
     <string name="home_error_retry">Failed to load recommendations. Tap to retry.</string>

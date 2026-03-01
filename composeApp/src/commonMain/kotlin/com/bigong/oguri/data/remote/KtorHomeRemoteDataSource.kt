@@ -1,6 +1,5 @@
 package com.bigong.oguri.data.remote
 
-import com.bigong.oguri.data.remote.model.HomeImageUrlCollection
 import com.bigong.oguri.data.remote.model.request.GetRecommendPeriodsRequest
 import com.bigong.oguri.data.remote.model.response.AdvertisementResponse
 import com.bigong.oguri.data.remote.model.response.PlaceResponse
@@ -17,7 +16,6 @@ import kotlinx.coroutines.delay
 @Inject
 class KtorHomeRemoteDataSource(
     private val httpClient: HttpClient,
-    private val homeImageUrlCollection: HomeImageUrlCollection,
 ) : HomeRemoteDataSource {
     override suspend fun getRecommendPeriodResponses(): List<RecommendPeriodResponse> {
         val request: GetRecommendPeriodsRequest = GetRecommendPeriodsRequest(
@@ -34,24 +32,10 @@ class KtorHomeRemoteDataSource(
         }
 
         delay(280)
-        return createDummyRecommendPeriods(homeImageUrlCollection = homeImageUrlCollection)
+        return createDummyRecommendPeriods()
     }
 
-    private fun createDummyRecommendPeriods(
-        homeImageUrlCollection: HomeImageUrlCollection,
-    ): List<RecommendPeriodResponse> {
-        fun randomHotelImageUrl(): String {
-            return homeImageUrlCollection.hotelImageUrls[Random.nextInt(homeImageUrlCollection.hotelImageUrls.size)]
-        }
-
-        fun randomPlaneImageUrl(): String {
-            return homeImageUrlCollection.planeImageUrls[Random.nextInt(homeImageUrlCollection.planeImageUrls.size)]
-        }
-
-        fun randomActivityImageUrl(): String {
-            return homeImageUrlCollection.activityImageUrls[Random.nextInt(homeImageUrlCollection.activityImageUrls.size)]
-        }
-
+    private fun createDummyRecommendPeriods(): List<RecommendPeriodResponse> {
         val placeThumbnailUrl =
             "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg"
 
@@ -90,9 +74,9 @@ class KtorHomeRemoteDataSource(
                 totalTripCount = 5,
                 places = commonPlaces,
                 advertisements = listOf(
-                    AdvertisementResponse(platform = "hotel", url = randomHotelImageUrl()),
-                    AdvertisementResponse(platform = "plane", url = randomPlaneImageUrl()),
-                    AdvertisementResponse(platform = "activity", url = randomActivityImageUrl()),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK),
                 ),
             ),
             RecommendPeriodResponse(
@@ -105,9 +89,9 @@ class KtorHomeRemoteDataSource(
                 totalTripCount = 6,
                 places = commonPlaces,
                 advertisements = listOf(
-                    AdvertisementResponse(platform = "hotel", url = randomHotelImageUrl()),
-                    AdvertisementResponse(platform = "plane", url = randomPlaneImageUrl()),
-                    AdvertisementResponse(platform = "activity", url = randomActivityImageUrl()),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK),
                 ),
             ),
             RecommendPeriodResponse(
@@ -120,11 +104,46 @@ class KtorHomeRemoteDataSource(
                 totalTripCount = 7,
                 places = commonPlaces,
                 advertisements = listOf(
-                    AdvertisementResponse(platform = "hotel", url = randomHotelImageUrl()),
-                    AdvertisementResponse(platform = "plane", url = randomPlaneImageUrl()),
-                    AdvertisementResponse(platform = "activity", url = randomActivityImageUrl()),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER),
+                    randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK),
                 ),
             ),
         )
     }
+
+    private fun randomDestinationAdvertisementResponse(platform: String): AdvertisementResponse {
+        val destinationUrls: List<String> =
+            when (platform) {
+                ADVERTISEMENT_PLATFORM_AGODA -> HOTEL_DESTINATION_URLS
+                ADVERTISEMENT_PLATFORM_SKYSCANNER -> PLANE_DESTINATION_URLS
+                else -> ACTIVITY_DESTINATION_URLS
+            }
+        return AdvertisementResponse(
+            platform = platform,
+            url = destinationUrls[Random.nextInt(destinationUrls.size)],
+        )
+    }
 }
+
+private const val ADVERTISEMENT_PLATFORM_AGODA: String = "agoda"
+private const val ADVERTISEMENT_PLATFORM_SKYSCANNER: String = "skyscanner"
+private const val ADVERTISEMENT_PLATFORM_KLOOK: String = "klook"
+
+private val HOTEL_DESTINATION_URLS: List<String> =
+    listOf(
+        "https://www.agoda.com/",
+        "https://www.booking.com/",
+    )
+
+private val PLANE_DESTINATION_URLS: List<String> =
+    listOf(
+        "https://www.skyscanner.co.kr/",
+        "https://www.kayak.com/flights",
+    )
+
+private val ACTIVITY_DESTINATION_URLS: List<String> =
+    listOf(
+        "https://www.klook.com/ko/",
+        "https://www.getyourguide.com/",
+    )

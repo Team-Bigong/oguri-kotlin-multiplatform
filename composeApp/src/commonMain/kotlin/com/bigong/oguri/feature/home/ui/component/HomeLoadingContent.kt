@@ -7,8 +7,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import androidx.compose.material3.Text
 
@@ -30,7 +30,7 @@ fun HomeLoadingContent(
         Text(
             text = message,
             style = OguriTheme.typography.bodyLarge,
-            color = Color(0xFF5D6670),
+            color = Neutral50,
         )
     }
 }

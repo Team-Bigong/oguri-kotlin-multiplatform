@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
@@ -44,7 +45,7 @@ fun HomeGuideHeader(
             Text(
                 text =
                     titleText.getStyledText(
-                        style = TextStyle(color = Mint70),
+                        style = TextStyle(color = Mint70, fontWeight = FontWeight.Bold),
                         highlightedText,
                     ),
                 modifier = Modifier.padding(top = 2.dp),

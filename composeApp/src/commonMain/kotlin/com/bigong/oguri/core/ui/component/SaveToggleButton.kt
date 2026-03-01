@@ -3,6 +3,7 @@ package com.bigong.oguri.core.ui.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,13 +32,13 @@ fun SaveToggleButton(
             modifier
                 .size(48.dp)
                 .noRippleClickable(onClick = { onCheckedChange(!checked) })
-                .padding(horizontal = 16.dp),
+                .padding(14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Image(
             painter = painterResource(if (checked) Res.drawable.ic_save_checked else Res.drawable.ic_save_unchecked),
             contentDescription = null,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

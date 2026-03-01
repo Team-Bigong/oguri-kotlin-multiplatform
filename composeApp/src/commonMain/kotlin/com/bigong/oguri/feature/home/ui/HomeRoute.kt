@@ -17,5 +17,6 @@ fun HomeRoute(
         onRankSelected = homeViewModel::selectRank,
         onSavedChanged = homeViewModel::toggleSaved,
         onRetryClick = homeViewModel::loadRecommendPeriods,
+        onAdvertisementClick = homeViewModel::openAdvertisement,
     )
 }

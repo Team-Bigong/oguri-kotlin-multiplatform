@@ -11,8 +11,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint10
+import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 
@@ -35,19 +37,19 @@ fun HomeErrorContent(
         Text(
             text = message,
             style = OguriTheme.typography.bodyLarge,
-            color = Color(0xFF5D6670),
+            color = Neutral50,
         )
 
         Box(
             modifier = Modifier
-                .background(color = Color(0xFFDDE7E7), shape = RoundedCornerShape(size = 10.dp))
+                .background(color = Mint10, shape = RoundedCornerShape(size = 10.dp))
                 .noRippleClickable(onClick = onRetryClick)
                 .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
             Text(
                 text = retryText,
                 style = OguriTheme.typography.labelLarge,
-                color = Color(0xFF43B9A8),
+                color = Mint70,
             )
         }
     }

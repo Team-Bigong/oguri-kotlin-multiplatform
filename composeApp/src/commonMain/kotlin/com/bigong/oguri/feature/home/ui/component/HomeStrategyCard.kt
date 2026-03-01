@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Mint70
@@ -22,7 +24,7 @@ import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.SaveToggleButton
-import com.bigong.oguri.core.util.extension.getColoredText
+import com.bigong.oguri.core.util.extension.getStyledText
 import com.bigong.oguri.domain.model.RecommendPeriod
 import kotlinx.datetime.LocalDate
 import oguri.composeapp.generated.resources.Res
@@ -88,8 +90,11 @@ fun HomeStrategyCard(
                         stringResource(
                             Res.string.home_strategy_holiday_with,
                             currentPeriod.holiday.joinToString(separator = " · "),
-                        ).getColoredText(
-                            color = Mint70,
+                        ).getStyledText(
+                            style = TextStyle(
+                                color = Mint70,
+                                fontWeight = FontWeight.Bold,
+                            ),
                             currentPeriod.holiday.joinToString(separator = " · "),
                         ),
                     style = OguriTheme.typography.cardSubtitle,

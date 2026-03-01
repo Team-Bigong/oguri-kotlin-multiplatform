@@ -64,6 +64,11 @@ class HomeViewModel(
         homeUiState = homeUiState.copy(savedRankSet = nextSavedRankSet)
     }
 
+    @Suppress("UNUSED_PARAMETER")
+    fun openAdvertisement(destinationUrl: String) {
+        // TODO: Emit one-shot event and handle external link at app root.
+    }
+
     override fun onCleared() {
         viewModelScope.cancel()
         super.onCleared()

@@ -40,7 +40,6 @@ import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.util.extension.noRippleClickable
-import com.bigong.oguri.data.remote.model.HomeImageUrlCollection
 import dev.zacsweers.metro.createGraphFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -52,13 +51,6 @@ import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
-import oguri.composeapp.generated.resources.url_activity_1
-import oguri.composeapp.generated.resources.url_activity_2
-import oguri.composeapp.generated.resources.url_activity_3
-import oguri.composeapp.generated.resources.url_hotel_1
-import oguri.composeapp.generated.resources.url_hotel_2
-import oguri.composeapp.generated.resources.url_plane_1
-import oguri.composeapp.generated.resources.url_plane_2
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -77,22 +69,7 @@ fun NavDisplay(
     OguriTheme {
         val navigator: MainNavigator = rememberMainNavigator()
         val currentDestination: NavDestination? = navigator.currentDestination()
-        val homeImageUrlCollection: HomeImageUrlCollection = HomeImageUrlCollection(
-            hotelImageUrls = listOf(
-                stringResource(Res.string.url_hotel_1),
-                stringResource(Res.string.url_hotel_2),
-            ),
-            planeImageUrls = listOf(
-                stringResource(Res.string.url_plane_1),
-                stringResource(Res.string.url_plane_2),
-            ),
-            activityImageUrls = listOf(
-                stringResource(Res.string.url_activity_1),
-                stringResource(Res.string.url_activity_2),
-                stringResource(Res.string.url_activity_3),
-            ),
-        )
-        val appGraph: AppGraph = remember(homeImageUrlCollection) {
+        val appGraph: AppGraph = remember {
             val appGraphFactory = createGraphFactory<AppGraph.Factory>()
             val httpClient = HttpClient(providePlatformHttpClientEngineFactory()) {
                 install(ContentNegotiation) {
@@ -105,7 +82,6 @@ fun NavDisplay(
             }
             appGraphFactory.create(
                 httpClient = httpClient,
-                homeImageUrlCollection = homeImageUrlCollection,
             )
         }
         val coroutineScope = rememberCoroutineScope()

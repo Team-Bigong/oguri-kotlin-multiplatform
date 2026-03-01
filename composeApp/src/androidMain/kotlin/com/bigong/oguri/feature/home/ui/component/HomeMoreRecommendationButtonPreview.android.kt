@@ -8,6 +8,9 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 @Composable
 private fun HomeMoreRecommendationButtonPreview() {
     OguriTheme {
-        HomeMoreRecommendationButton(text = "다른 추천 보기")
+        HomeMoreRecommendationButton(
+            subtitleText = "딱 맞는 연휴가 없었나요?",
+            text = "다른 추천 보기",
+        )
     }
 }
