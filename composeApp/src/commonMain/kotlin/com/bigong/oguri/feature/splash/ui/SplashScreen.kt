@@ -9,8 +9,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral5
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_app_text
 import oguri.composeapp.generated.resources.img_oguri_walking
@@ -19,9 +19,10 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun SplashScreen() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF3F3F3)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Neutral5),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

@@ -152,7 +152,10 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
-            items(items = currentPeriod.advertisements) { advertisement: Advertisement ->
+            items(
+                items = currentPeriod.advertisements,
+                key = { advertisement: Advertisement -> "${advertisement.platform.name}:${advertisement.url}" },
+            ) { advertisement: Advertisement ->
                 Spacer(modifier = Modifier.height(18.dp))
                 HomeAdvertisementCard(
                     advertisement = advertisement,
