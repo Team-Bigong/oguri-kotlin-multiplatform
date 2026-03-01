@@ -11,7 +11,6 @@ import io.ktor.http.URLBuilder
 import io.ktor.http.takeFrom
 import io.ktor.util.date.GMTDate
 import kotlinx.coroutines.delay
-import kotlin.random.Random
 
 @Inject
 class KtorHomeRemoteDataSource(
@@ -75,9 +74,9 @@ class KtorHomeRemoteDataSource(
                 places = commonPlaces,
                 advertisements =
                     listOf(
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA),
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER),
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA, url = AGODA_DESTINATION_URL),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER, url = SKYSCANNER_DESTINATION_URL),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK, url = KLOOK_DESTINATION_URL),
                     ),
             ),
             RecommendPeriodResponse(
@@ -91,9 +90,9 @@ class KtorHomeRemoteDataSource(
                 places = commonPlaces,
                 advertisements =
                     listOf(
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA),
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER),
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA, url = AGODA_DESTINATION_URL),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER, url = SKYSCANNER_DESTINATION_URL),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK, url = KLOOK_DESTINATION_URL),
                     ),
             ),
             RecommendPeriodResponse(
@@ -107,46 +106,21 @@ class KtorHomeRemoteDataSource(
                 places = commonPlaces,
                 advertisements =
                     listOf(
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA),
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER),
-                        randomDestinationAdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA, url = AGODA_DESTINATION_URL),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER, url = SKYSCANNER_DESTINATION_URL),
+                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK, url = KLOOK_DESTINATION_URL),
                     ),
             ),
         )
     }
 
-    private fun randomDestinationAdvertisementResponse(platform: String): AdvertisementResponse {
-        val destinationUrls: List<String> =
-            when (platform) {
-                ADVERTISEMENT_PLATFORM_AGODA -> HOTEL_DESTINATION_URLS
-                ADVERTISEMENT_PLATFORM_SKYSCANNER -> PLANE_DESTINATION_URLS
-                else -> ACTIVITY_DESTINATION_URLS
-            }
-        return AdvertisementResponse(
-            platform = platform,
-            url = destinationUrls[Random.nextInt(destinationUrls.size)],
-        )
+    companion object {
+        private const val ADVERTISEMENT_PLATFORM_AGODA: String = "agoda"
+        private const val ADVERTISEMENT_PLATFORM_SKYSCANNER: String = "skyscanner"
+        private const val ADVERTISEMENT_PLATFORM_KLOOK: String = "klook"
+
+        private const val AGODA_DESTINATION_URL: String = "https://www.agoda.com/"
+        private const val SKYSCANNER_DESTINATION_URL: String = "https://www.skyscanner.co.kr/"
+        private const val KLOOK_DESTINATION_URL: String = "https://www.klook.com/ko/"
     }
 }
-
-private const val ADVERTISEMENT_PLATFORM_AGODA: String = "agoda"
-private const val ADVERTISEMENT_PLATFORM_SKYSCANNER: String = "skyscanner"
-private const val ADVERTISEMENT_PLATFORM_KLOOK: String = "klook"
-
-private val HOTEL_DESTINATION_URLS: List<String> =
-    listOf(
-        "https://www.agoda.com/",
-        "https://www.booking.com/",
-    )
-
-private val PLANE_DESTINATION_URLS: List<String> =
-    listOf(
-        "https://www.skyscanner.co.kr/",
-        "https://www.kayak.com/flights",
-    )
-
-private val ACTIVITY_DESTINATION_URLS: List<String> =
-    listOf(
-        "https://www.klook.com/ko/",
-        "https://www.getyourguide.com/",
-    )
