@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface DestinationImageRepository : JpaRepository<DestinationImage, Int>
+interface DestinationImageRepository : JpaRepository<DestinationImage, Int> {
+    fun findByDestinationIdAndIsThumbnailTrue(destinationId: Int): DestinationImage?
+}

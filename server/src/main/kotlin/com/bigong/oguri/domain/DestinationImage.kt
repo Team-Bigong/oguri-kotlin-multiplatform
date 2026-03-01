@@ -16,6 +16,9 @@ class DestinationImage(
     @Column(nullable = false, columnDefinition = "TEXT")
     var imageUrl: String,
 
+    @Column(name = "is_thumbnail")
+    var isThumbnail: Boolean = false,
+
     @Column(name = "sort_order")
     var sortOrder: Int = 1
 )
