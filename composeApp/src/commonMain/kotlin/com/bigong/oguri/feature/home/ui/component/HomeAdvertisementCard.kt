@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +47,6 @@ import oguri.composeapp.generated.resources.url_plane_1
 import oguri.composeapp.generated.resources.url_plane_2
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import kotlin.random.Random
 
 private val HOME_ADVERTISEMENT_CARD_CORNER_RADIUS = 8.dp
 
@@ -59,11 +57,8 @@ fun HomeAdvertisementCard(
     onClick: (String) -> Unit = {},
 ) {
     val imageUrls: List<String> = advertisementImageUrls(advertisement = advertisement)
-    val randomImageIndex: Int =
-        remember(advertisement.platform, advertisement.url, imageUrls.size) {
-            Random.nextInt(from = 0, until = imageUrls.size)
-        }
-    val imageUrl: String = imageUrls[randomImageIndex]
+    val stableImageIndex: Int = advertisementStableImageIndex(advertisement = advertisement, candidateSize = imageUrls.size)
+    val imageUrl: String = imageUrls[stableImageIndex]
     val titleText: String = advertisementTitleText(advertisement = advertisement)
     val highlightedText: String = advertisementHighlightedText(advertisement = advertisement)
     val highlightedColor: Color = advertisementHighlightColor(advertisement = advertisement)
@@ -164,3 +159,14 @@ private fun advertisementHighlightColor(advertisement: Advertisement): Color =
         AdvertisementPlatform.KLOOK -> Orange50
         AdvertisementPlatform.UNKNOWN -> Neutral100
     }
+
+private fun advertisementStableImageIndex(
+    advertisement: Advertisement,
+    candidateSize: Int,
+): Int {
+    if (candidateSize <= 1) {
+        return 0
+    }
+    val stableHash: Int = "${advertisement.platform.name}:${advertisement.url}".hashCode()
+    return ((stableHash % candidateSize) + candidateSize) % candidateSize
+}
