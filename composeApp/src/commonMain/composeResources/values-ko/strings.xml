@@ -5,7 +5,7 @@
 
     <string name="navigation_back_press_exit_message">뒤로가기를 한 번 더 누르면 종료됩니다</string>
 
-    <string name="home_greeting_name">0 조합, 오구리만 알고 있었어요</string>
+    <string name="home_greeting_name">이 조합, 오구리만 알고 있었어요</string>
     <string name="home_greeting_question">이번엔 이렇게 쉬어볼까요?</string>
 
     <string name="home_tab_rank_one">1순위</string>

@@ -5,7 +5,7 @@
 
     <string name="navigation_back_press_exit_message">Press back again to exit</string>
 
-    <string name="home_greeting_name">0 Joap, only Oguri knows this.</string>
+    <string name="home_greeting_name">This Combination, only Oguri knows this.</string>
     <string name="home_greeting_question">How about resting like this this time?</string>
 
     <string name="home_tab_rank_one">1st</string>
