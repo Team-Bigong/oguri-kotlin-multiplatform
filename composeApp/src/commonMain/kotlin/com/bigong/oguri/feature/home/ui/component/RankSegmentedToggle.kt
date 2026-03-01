@@ -33,9 +33,10 @@ fun RankSegmentedToggle(
     selectedRank: Int,
     onRankSelected: (Int) -> Unit,
     rankLabels: List<String>,
+    modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(height = RANK_TOGGLE_CONTAINER_HEIGHT)
             .background(

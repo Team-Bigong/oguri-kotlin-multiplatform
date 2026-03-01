@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,7 @@ fun HomePlaceCard(
 ) {
     Column(
         modifier = modifier
+            .clip(shape = RoundedCornerShape(size = HOME_PLACE_CARD_CORNER_RADIUS))
             .background(color = Color(0xFFDDE7E7), shape = RoundedCornerShape(size = HOME_PLACE_CARD_CORNER_RADIUS)),
     ) {
         NetworkImage(

@@ -5,11 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,11 +48,21 @@ fun HomeStrategyCard(
             .padding(all = 12.dp),
         verticalArrangement = Arrangement.spacedBy(space = 10.dp),
     ) {
-        RankSegmentedToggle(
-            selectedRank = selectedRank,
-            onRankSelected = onRankSelected,
-            rankLabels = rankLabels,
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RankSegmentedToggle(
+                selectedRank = selectedRank,
+                onRankSelected = onRankSelected,
+                rankLabels = rankLabels,
+                modifier = Modifier.weight(weight = 1f),
+            )
+            Spacer(modifier = Modifier.width(width = 8.dp))
+            SaveToggleButton(
+                checked = selectedRank in savedRankSet,
+                onCheckedChange = onSavedChanged,
+            )
+        }
 
         Box(modifier = Modifier.fillMaxWidth()) {
             Column(
@@ -89,12 +101,6 @@ fun HomeStrategyCard(
                     color = Color(0xFF8B98A6),
                 )
             }
-
-            SaveToggleButton(
-                checked = selectedRank in savedRankSet,
-                onCheckedChange = onSavedChanged,
-                modifier = Modifier.align(alignment = Alignment.TopEnd),
-            )
 
             Image(
                 painter = painterResource(Res.drawable.img_oguri_parasol),
