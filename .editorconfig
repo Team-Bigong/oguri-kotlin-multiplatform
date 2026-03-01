@@ -1,0 +1,13 @@
+[*]
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+charset = utf-8
+
+# Disable license-header rule which causes HEADER_KEYWORD error
+ktlint_standard_license-header = disabled
+ktlint_standard_license_header = disabled
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_no_wildcard_imports = disabled
+ktlint_code_style = ktlint_official
