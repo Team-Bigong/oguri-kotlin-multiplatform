@@ -2,10 +2,13 @@ spring:
   application:
     name: oguri-api
 
+  config:
+    import: "optional:application-local.yaml"
+
   datasource:
-    url: jdbc:postgresql://dpg-d6fgfl3uibrs73enkrjg-a.oregon-postgres.render.com:5432/oguri_postgres?sslmode=require
-    username: oguri_postgres_user
-    password: QhkOtLboo9XvYEfFPSyj9KLKqJMIcVGF
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/oguri}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
