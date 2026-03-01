@@ -170,7 +170,7 @@ fun HomeScreen(
                     text = stringResource(Res.string.home_cta_more_recommend),
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
-                Spacer(modifier = Modifier.height(height = 32.dp))
+                Spacer(modifier = Modifier.height(height = 24.dp))
             }
         }
     }

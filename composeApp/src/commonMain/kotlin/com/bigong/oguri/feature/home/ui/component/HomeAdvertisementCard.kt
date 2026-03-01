@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.InfoBlue
+import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
@@ -58,7 +59,7 @@ fun HomeAdvertisementCard(
                 .clip(shape = RoundedCornerShape(size = HOME_ADVERTISEMENT_CARD_CORNER_RADIUS))
                 .noRippleClickable(onClick = { onClick(advertisement.url) })
                 .background(
-                    color = Mint5,
+                    color = Mint10,
                     shape = RoundedCornerShape(size = HOME_ADVERTISEMENT_CARD_CORNER_RADIUS),
                 ),
     ) {

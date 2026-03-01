@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -29,13 +30,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
-import com.bigong.oguri.core.di.AppGraph
+import com.bigong.oguri.core.designsystem.Neutral20
+import com.bigong.oguri.core.designsystem.Neutral40
+import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
@@ -46,19 +51,16 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.TimeMark
-import kotlin.time.TimeSource
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.TimeMark
+import kotlin.time.TimeSource
 
-private val BottomNavigationCornerRadius = 20.dp
-private val BottomNavigationHorizontalPadding = 12.dp
 private val BottomNavigationVerticalPadding = 8.dp
 private val SnackbarTopPadding = 10.dp
-private const val BOTTOM_NAVIGATION_SELECTED_ALPHA: Float = 0.14f
 private val EXIT_BACK_PRESS_WINDOW = 2.seconds
 
 @Composable
@@ -69,21 +71,23 @@ fun NavDisplay(
     OguriTheme {
         val navigator: MainNavigator = rememberMainNavigator()
         val currentDestination: NavDestination? = navigator.currentDestination()
-        val appGraph: AppGraph = remember {
-            val appGraphFactory = createGraphFactory<AppGraph.Factory>()
-            val httpClient = HttpClient(providePlatformHttpClientEngineFactory()) {
-                install(ContentNegotiation) {
-                    json(
-                        Json {
-                            ignoreUnknownKeys = true
-                        },
-                    )
-                }
+        val appGraph: AppGraph =
+            remember {
+                val appGraphFactory = createGraphFactory<AppGraph.Factory>()
+                val httpClient =
+                    HttpClient(providePlatformHttpClientEngineFactory()) {
+                        install(ContentNegotiation) {
+                            json(
+                                Json {
+                                    ignoreUnknownKeys = true
+                                },
+                            )
+                        }
+                    }
+                appGraphFactory.create(
+                    httpClient = httpClient,
+                )
             }
-            appGraphFactory.create(
-                httpClient = httpClient,
-            )
-        }
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage: String = stringResource(Res.string.navigation_back_press_exit_message)
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
@@ -98,21 +102,14 @@ fun NavDisplay(
             onBack = { navigator.popBackStack() },
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                                MaterialTheme.colorScheme.background,
-                            ),
-                        ),
-                    ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(Neutral5),
             ) {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    containerColor = Transparent,
                     contentWindowInsets = WindowInsets(0, 0, 0, 0),
                     bottomBar = {
                         if (shouldShowBottomNavigation) {
@@ -135,11 +132,12 @@ fun NavDisplay(
 
                 TopInjectedSnackbarHost(
                     snackbarHostState = snackbarHostState,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .statusBarsPadding()
-                        .padding(top = SnackbarTopPadding)
-                        .padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .statusBarsPadding()
+                            .padding(top = SnackbarTopPadding)
+                            .padding(horizontal = 16.dp),
                 )
             }
         }
@@ -179,54 +177,45 @@ private fun BottomNavigationBar(
     currentDestination: NavDestination?,
     onDestinationClick: (BottomNavigationDestination) -> Unit,
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .navigationBarsPadding()
-            .padding(
-                horizontal = BottomNavigationHorizontalPadding,
-                vertical = BottomNavigationVerticalPadding,
-            ),
-    ) {
+    Column {
+        HorizontalDivider(thickness = 1.dp, color = Neutral20)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(BottomNavigationCornerRadius))
-                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.22f))
-                .padding(vertical = 6.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(Neutral5)
+                    .padding(top = 2.dp)
+                    .padding(horizontal = 18.dp)
+                    .navigationBarsPadding(),
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
             RouteModels.bottomNavigationDestinations.forEach { destination: BottomNavigationDestination ->
-                val isSelected: Boolean = currentDestination?.hierarchy?.any { navDestination: NavDestination ->
-                    val routeText: String = navDestination.route ?: return@any false
-                    routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
-                } == true
+                val isSelected: Boolean =
+                    currentDestination?.hierarchy?.any { navDestination: NavDestination ->
+                        val routeText: String = navDestination.route ?: return@any false
+                        routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
+                    } == true
 
-                val tintColor = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                }
-                val backgroundColor = if (isSelected) {
-                    MaterialTheme.colorScheme.primary.copy(alpha = BOTTOM_NAVIGATION_SELECTED_ALPHA)
-                } else {
-                    androidx.compose.ui.graphics.Color.Transparent
-                }
+                val tintColor =
+                    if (isSelected) {
+                        Neutral90
+                    } else {
+                        Neutral40
+                    }
 
                 Column(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(backgroundColor)
-                        .noRippleClickable(onClick = { onDestinationClick(destination) })
-                        .padding(horizontal = 18.dp, vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .noRippleClickable(onClick = { onDestinationClick(destination) })
+                            .padding(horizontal = 18.dp, vertical = 10.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Image(
                         painter = painterResource(destination.iconResource),
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(24.dp),
+                        colorFilter = ColorFilter.tint(tintColor),
                     )
                     Text(
                         text = stringResource(destination.labelResource),
