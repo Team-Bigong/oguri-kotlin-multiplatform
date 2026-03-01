@@ -11,11 +11,11 @@ import oguri.composeapp.generated.resources.ic_app_text
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun HomeLogoHeader() {
+fun HomeLogoHeader(modifier: Modifier = Modifier) {
     Spacer(modifier = Modifier.height(height = 10.dp))
     Image(
         painter = painterResource(resource = Res.drawable.ic_app_text),
         contentDescription = null,
-        modifier = Modifier.height(height = 34.dp),
+        modifier = modifier.height(height = 34.dp),
     )
 }

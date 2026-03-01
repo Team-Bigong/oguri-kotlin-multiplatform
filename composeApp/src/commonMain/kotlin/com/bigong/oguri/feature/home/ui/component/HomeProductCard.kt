@@ -13,46 +13,55 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkImage
 import com.bigong.oguri.core.util.extension.getStyledText
 
-private val HOME_PRODUCT_CARD_CORNER_RADIUS = 14.dp
-private val HOME_PRODUCT_HIGHLIGHT_COLOR = Color(0xFF43B9A8)
+private val HOME_PRODUCT_CARD_CORNER_RADIUS = 8.dp
 
 @Composable
 fun HomeProductCard(
     imageUrl: String,
     titleText: String,
     highlightedText: String,
+    highlightedColor: Color,
+    modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape = RoundedCornerShape(size = HOME_PRODUCT_CARD_CORNER_RADIUS))
-            .background(
-                color = Color(0xFFDDE7E7),
-                shape = RoundedCornerShape(size = HOME_PRODUCT_CARD_CORNER_RADIUS),
-            ),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(shape = RoundedCornerShape(size = HOME_PRODUCT_CARD_CORNER_RADIUS))
+                .background(
+                    color = Mint5,
+                    shape = RoundedCornerShape(size = HOME_PRODUCT_CARD_CORNER_RADIUS),
+                ),
     ) {
         NetworkImage(
             imageUrl = imageUrl,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(height = 142.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(height = 128.dp),
         )
         Text(
-            text = titleText.getStyledText(
-                style = TextStyle(
-                    color = HOME_PRODUCT_HIGHLIGHT_COLOR,
-                    fontWeight = FontWeight.Bold,
+            text =
+                titleText.getStyledText(
+                    style =
+                        TextStyle(
+                            color = highlightedColor,
+                            fontWeight = FontWeight.Bold,
+                        ),
+                    highlightedText,
                 ),
-                highlightedText,
-            ),
-            style = OguriTheme.typography.cardTitle,
-            color = Color(0xFF1A2229),
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            style = OguriTheme.typography.cardSubtitle,
+            color = Neutral100,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(vertical = 8.dp).fillMaxWidth(),
         )
     }
 }

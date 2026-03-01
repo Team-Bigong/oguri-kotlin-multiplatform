@@ -4,21 +4,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.getStyledText
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-
-private val HOME_GUIDE_HIGHLIGHT_COLOR = Color(0xFF43B9A8)
 
 @Composable
 fun HomeGuideHeader(
@@ -26,32 +28,34 @@ fun HomeGuideHeader(
     titleText: String,
     highlightedText: String,
     subtitleText: String,
+    modifier: Modifier = Modifier,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
         verticalAlignment = Alignment.Top,
+        modifier = modifier,
     ) {
         Image(
             painter = painterResource(resource = iconResource),
             contentDescription = null,
-            modifier = Modifier.size(size = 20.dp),
+            modifier = Modifier.size(size = 24.dp),
         )
         Column {
             Text(
-                text = titleText.getStyledText(
-                    style = TextStyle(
-                        color = HOME_GUIDE_HIGHLIGHT_COLOR,
-                        fontWeight = FontWeight.Bold,
+                text =
+                    titleText.getStyledText(
+                        style = TextStyle(color = Mint70),
+                        highlightedText,
                     ),
-                    highlightedText,
-                ),
+                modifier = Modifier.padding(top = 2.dp),
                 style = OguriTheme.typography.cardTitle,
-                color = Color(0xFF14181F),
+                color = Neutral100,
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = subtitleText,
-                style = OguriTheme.typography.bodyMedium,
-                color = Color(0xFF94A0AC),
+                style = OguriTheme.typography.labelMedium,
+                color = Neutral50,
             )
         }
     }

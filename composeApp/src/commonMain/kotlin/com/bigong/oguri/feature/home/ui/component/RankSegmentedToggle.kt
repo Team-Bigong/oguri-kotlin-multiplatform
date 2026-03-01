@@ -16,16 +16,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 
-private val RANK_TOGGLE_CONTAINER_HEIGHT = 38.dp
-private val RANK_TOGGLE_TRACK_COLOR = Color(0xFFF2F4F5)
-private val RANK_TOGGLE_INDICATOR_COLOR = Color(0xFFBFEDE5)
-private val RANK_TOGGLE_SELECTED_TEXT_COLOR = Color(0xFF162227)
-private val RANK_TOGGLE_UNSELECTED_TEXT_COLOR = Color(0xFF2C3740)
+private val RANK_TOGGLE_CONTAINER_HEIGHT = 26.dp
 private const val RANK_TOGGLE_ANIMATION_DURATION_MILLIS: Int = 220
 
 @Composable
@@ -36,52 +34,51 @@ fun RankSegmentedToggle(
     modifier: Modifier = Modifier,
 ) {
     BoxWithConstraints(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(height = RANK_TOGGLE_CONTAINER_HEIGHT)
-            .background(
-                color = RANK_TOGGLE_TRACK_COLOR,
-                shape = RoundedCornerShape(999.dp),
-            )
-            .padding(3.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(height = RANK_TOGGLE_CONTAINER_HEIGHT)
+                .background(
+                    color = Neutral0,
+                    shape = RoundedCornerShape(999.dp),
+                ).padding(2.dp),
     ) {
         val segmentWidth = maxWidth / rankLabels.size
         val targetOffset = segmentWidth * (selectedRank - 1)
-        val animatedOffset = animateDpAsState(
-            targetValue = targetOffset,
-            animationSpec = tween(durationMillis = RANK_TOGGLE_ANIMATION_DURATION_MILLIS),
-            label = "rank_segment_offset",
-        )
+        val animatedOffset =
+            animateDpAsState(
+                targetValue = targetOffset,
+                animationSpec = tween(durationMillis = RANK_TOGGLE_ANIMATION_DURATION_MILLIS),
+                label = "rank_segment_offset",
+            )
 
         Box(
-            modifier = Modifier
-                .offset(x = animatedOffset.value)
-                .width(segmentWidth)
-                .height(height = RANK_TOGGLE_CONTAINER_HEIGHT - 6.dp)
-                .background(
-                    color = RANK_TOGGLE_INDICATOR_COLOR,
-                    shape = RoundedCornerShape(999.dp),
-                ),
+            modifier =
+                Modifier
+                    .offset(x = animatedOffset.value)
+                    .width(segmentWidth)
+                    .height(height = RANK_TOGGLE_CONTAINER_HEIGHT)
+                    .background(
+                        color = Mint40,
+                        shape = RoundedCornerShape(999.dp),
+                    ),
         )
 
         Row(modifier = Modifier.fillMaxWidth()) {
             rankLabels.forEachIndexed { index: Int, rankLabelText: String ->
                 val rank = index + 1
                 Box(
-                    modifier = Modifier
-                        .width(segmentWidth)
-                        .noRippleClickable(onClick = { onRankSelected(rank) })
-                        .height(height = RANK_TOGGLE_CONTAINER_HEIGHT - 6.dp),
+                    modifier =
+                        Modifier
+                            .width(segmentWidth)
+                            .noRippleClickable(onClick = { onRankSelected(rank) })
+                            .height(height = RANK_TOGGLE_CONTAINER_HEIGHT),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
                         text = rankLabelText,
-                        style = OguriTheme.typography.labelLarge,
-                        color = if (selectedRank == rank) {
-                            RANK_TOGGLE_SELECTED_TEXT_COLOR
-                        } else {
-                            RANK_TOGGLE_UNSELECTED_TEXT_COLOR
-                        },
+                        style = OguriTheme.typography.labelMedium,
+                        color = Neutral100,
                     )
                 }
             }
