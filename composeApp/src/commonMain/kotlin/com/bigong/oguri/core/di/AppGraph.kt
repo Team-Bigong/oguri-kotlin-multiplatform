@@ -1,58 +1,31 @@
 package com.bigong.oguri.core.di
 
-import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
-import com.bigong.oguri.data.di.StrategyDataDiContainer
-import com.bigong.oguri.data.repository.AnnualLeaveStrategyRepository
-import com.bigong.oguri.data.repository.UserStateRepository
+import com.bigong.oguri.data.remote.HomeRemoteDataSource
+import com.bigong.oguri.data.remote.KtorHomeRemoteDataSource
+import com.bigong.oguri.data.remote.model.HomeImageUrlCollection
+import com.bigong.oguri.data.repository.DefaultHomeRepository
+import com.bigong.oguri.domain.repository.HomeRepository
+import com.bigong.oguri.feature.home.ui.HomeViewModel
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
+import dev.zacsweers.metro.Provider
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.http.URLProtocol
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.json.Json
 
-@DependencyGraph(bindingContainers = [StrategyDataDiContainer::class])
+@DependencyGraph
 interface AppGraph {
-    val annualLeaveStrategyRepository: AnnualLeaveStrategyRepository
-    val userStateRepository: UserStateRepository
+    val homeViewModelProvider: Provider<HomeViewModel>
 
     @Provides
-    fun provideAppConfiguration(): AppConfiguration {
-        return AppConfiguration(
-            baseUrl = "https://api.oguri.example",
-        )
-    }
+    fun provideHomeRemoteDataSource(implementation: KtorHomeRemoteDataSource): HomeRemoteDataSource = implementation
 
     @Provides
-    fun provideHttpClient(
-        appConfiguration: AppConfiguration,
-    ): HttpClient {
-        return HttpClient(engineFactory = providePlatformHttpClientEngineFactory()) {
-            install(ContentNegotiation) {
-                json(
-                    json = Json {
-                        ignoreUnknownKeys = true
-                        isLenient = true
-                    },
-                )
-            }
-            install(Logging) {
-                level = LogLevel.INFO
-            }
-            defaultRequest {
-                url {
-                    protocol = URLProtocol.HTTPS
-                    host = appConfiguration.baseUrl.removePrefix("https://")
-                }
-            }
-        }
+    fun provideHomeRepository(implementation: DefaultHomeRepository): HomeRepository = implementation
+
+    @DependencyGraph.Factory
+    fun interface Factory {
+        fun create(
+            @Provides httpClient: HttpClient,
+            @Provides homeImageUrlCollection: HomeImageUrlCollection,
+        ): AppGraph
     }
 }
-
-data class AppConfiguration(
-    val baseUrl: String,
-)

@@ -48,8 +48,11 @@ kotlin {
             implementation(libs.jetbrains.navigation.compose)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.contentNegotiation)
-            implementation(libs.ktor.client.logging)
             implementation(libs.ktor.serialization.kotlinxJson)
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+            implementation(libs.coil.svg)
+            implementation(libs.kotlinx.datetime)
             implementation(projects.shared)
         }
         commonTest.dependencies {

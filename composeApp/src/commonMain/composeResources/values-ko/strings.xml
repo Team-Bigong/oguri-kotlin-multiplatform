@@ -1,151 +1,43 @@
 <resources>
     <string name="bottom_navigation_home">홈</string>
     <string name="bottom_navigation_calendar">캘린더</string>
-    <string name="bottom_navigation_my">마이</string>
+    <string name="bottom_navigation_my">마이페이지</string>
+
     <string name="navigation_back_press_exit_message">뒤로가기를 한 번 더 누르면 종료됩니다</string>
 
-    <string name="snackbar_home_top_test">홈에서 상단 스낵바 호출</string>
-    <string name="snackbar_support_feature_pending">기능 제안 메일 연결은 다음 단계에서 구현합니다.</string>
-    <string name="snackbar_support_bug_pending">오류 신고 메일 연결은 다음 단계에서 구현합니다.</string>
-    <string name="snackbar_support_other_pending">기타 문의 메일 연결은 다음 단계에서 구현합니다.</string>
+    <string name="home_greeting_name">0 조합, 오구리만 알고 있었어요</string>
+    <string name="home_greeting_question">이번엔 이렇게 쉬어볼까요?</string>
 
-    <string name="common_loading">불러오는 중...</string>
-    <string name="common_retry_later">잠시 후 다시 시도해 주세요.</string>
-    <string name="common_retry">다시 불러오기</string>
+    <string name="home_tab_rank_one">1순위</string>
+    <string name="home_tab_rank_two">2순위</string>
+    <string name="home_tab_rank_three">3순위</string>
 
-    <string name="splash_title">오구리</string>
-    <string name="splash_subtitle">연차를 전략적으로 쓰면 여행이 달라집니다.</string>
-    <string name="splash_start">시작하기</string>
+    <string name="home_strategy_period">%1$s - %2$s</string>
+    <string name="home_strategy_holiday_with">%1$s이랑 딱 붙어 있어요</string>
+    <string name="home_strategy_day_off_hint">연차 %1$d일이면 %2$d일이나 쉴 수 있어요</string>
 
-    <string name="login_title">로그인</string>
-    <string name="login_subtitle">3초 만에 전략 확인하기</string>
-    <string name="login_kakao_start">카카오로 시작하기</string>
-    <string name="login_guest_browse">게스트로 둘러보기</string>
+    <string name="home_guide_match_places">이때 가면 딱 좋은 곳들이에요</string>
+    <string name="home_guide_match_places_highlight">딱 좋은 곳</string>
+    <string name="home_hint_place_cards">마음에 드는 카드를 눌러보세요</string>
 
-    <string name="onboarding_title">온보딩</string>
-    <string name="onboarding_subtitle">직군 / 연차 / 근무 형태 입력</string>
-    <string name="onboarding_line_role">직장인 / 학생 선택</string>
-    <string name="onboarding_line_leave">남은 연차 15일</string>
-    <string name="onboarding_line_work_pattern">주 5일 / 주 6일</string>
-    <string name="onboarding_calculate">전략 계산하기</string>
+    <string name="home_guide_trip_products">놓치기 아쉬운 유용한 정보를 가져왔어요</string>
+    <string name="home_guide_trip_products_highlight">유용한 정보</string>
+    <string name="home_hint_trip_products">매력적인 혜택을 확인해보세요</string>
 
-    <string name="home_title">홈</string>
-    <string name="home_subtitle">최고 전략 1개 강조 (MVP 핵심 화면)</string>
-    <string name="home_best_strategy_period">🔥 %1$s ~ %2$s</string>
-    <string name="home_best_strategy_efficiency">연차 %1$d일 → %2$d일 확보</string>
-    <string name="home_top_efficiency_month">%1$s · %2$d일</string>
-    <string name="home_recommended_destinations">✈️ %1$s</string>
-    <string name="home_button_detail">전략 상세 보기</string>
-    <string name="home_button_snackbar_test">상단 스낵바 테스트</string>
-    <string name="home_error_message">전략 추천을 불러오지 못했습니다.</string>
+    <string name="home_ad_hotel_title">아고다에서 예쁜 숙소를 둘러볼까요?</string>
+    <string name="home_ad_hotel_title_highlight">예쁜 숙소</string>
+    <string name="home_ad_plane_title">지금 떠나는 최저가 항공편은 얼마일까요?</string>
+    <string name="home_ad_plane_title_highlight">최저가 항공편</string>
+    <string name="home_ad_activity_title">클룩과 함께 재밌는 액티비티를 찾아볼까요?</string>
+    <string name="home_ad_activity_title_highlight">재밌는 액티비티</string>
 
-    <string name="strategy_detail_title">전략 상세</string>
-    <string name="strategy_detail_subtitle">전략 ID: %1$s</string>
-    <string name="strategy_detail_line_title">📅 %1$s</string>
-    <string name="strategy_detail_line_leave_usage">연차 사용: %1$s</string>
-    <string name="strategy_detail_line_total_secured">총 확보: %1$d일</string>
-    <string name="strategy_detail_line_recommended_destinations">✈️ %1$s</string>
-    <string name="strategy_detail_line_banner_placeholder">하단 배너 광고 영역(추후)</string>
-    <string name="strategy_detail_button_calendar">전략 캘린더 보기</string>
-    <string name="strategy_detail_error_message">전략 상세를 불러오지 못했습니다.</string>
+    <string name="home_cta_more_recommend">다른 추천 보기</string>
+    <string name="home_loading">추천 전략을 불러오는 중이에요...</string>
+    <string name="home_error_retry">추천 전략을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
+    <string name="login_apple_with_account">Apple 계정으로 로그인</string>
+    <string name="login_kakao_with_account">카카오 계정으로 로그인</string>
+    <string name="login_guest_browse">로그인 없이 둘러보기</string>
 
-    <string name="calendar_title">전략 캘린더</string>
-    <string name="calendar_subtitle">월별 전략 달력 (플레이스홀더)</string>
-    <string name="calendar_year_title">%1$d 전략 달력</string>
-    <string name="calendar_month_highlight">🔥 %1$s - %2$d일 확보 가능</string>
-    <string name="calendar_error_message">전략 달력을 불러오지 못했습니다.</string>
-
-    <string name="mypage_title">마이페이지</string>
-    <string name="mypage_subtitle">계정 / 전략 설정 / Pro / 지원</string>
-    <string name="mypage_line_leave">남은 연차 수정</string>
-    <string name="mypage_line_work_pattern">근무 형태 변경</string>
-    <string name="mypage_line_pro">Pro 시작하기</string>
-    <string name="mypage_line_suggest">건의하기</string>
-    <string name="mypage_button_support_inquiry">문의 유형 선택으로 이동</string>
-
-    <string name="support_title">문의 유형 선택</string>
-    <string name="support_subtitle">이후 메일 앱 실행 이벤트로 연결</string>
-    <string name="support_feature_suggestion">기능 제안</string>
-    <string name="support_bug_report">오류 신고</string>
-    <string name="support_other_inquiry">기타 문의</string>
-    <string name="generic_banner_ad">배너 광고 영역</string>
-    <string name="generic_section_divider">────────────</string>
-
-    <string name="login_apple_start">Apple로 시작하기 (iOS)</string>
-    <string name="login_guest_note">게스트는 Pro를 제외한 기능 제한이 없습니다.</string>
-
-    <string name="onboarding_prompt_identity">나는 누구인가요?</string>
-    <string name="onboarding_role_office_worker">직장인</string>
-    <string name="onboarding_role_student">학생</string>
-    <string name="onboarding_prompt_leave">남은 연차는?</string>
-    <string name="onboarding_leave_days_value">%1$d일</string>
-    <string name="onboarding_prompt_work_schedule">근무 형태</string>
-    <string name="onboarding_work_schedule_five">주 5일</string>
-    <string name="onboarding_work_schedule_six">주 6일</string>
-
-    <string name="home_section_best_strategy">🔥 지금 가장 좋은 전략</string>
-    <string name="home_section_top3">📊 올해 효율 TOP 3</string>
-    <string name="home_section_destinations">✈️ 추천 여행지</string>
-    <string name="home_profile_summary">%1$s · %2$s · 남은 연차 %3$d일</string>
-    <string name="home_role_office_worker">직장인</string>
-    <string name="home_role_student">학생</string>
-    <string name="home_work_schedule_five">주 5일</string>
-    <string name="home_work_schedule_six">주 6일</string>
-    <string name="home_ranked_month">%1$d위 %2$s (%3$d일)</string>
-
-    <string name="strategy_detail_section_leave_usage">연차 사용</string>
-    <string name="strategy_detail_section_total_secured">🔥 총 확보</string>
-    <string name="strategy_detail_section_destinations">✈️ 추천 여행지</string>
-    <string name="strategy_detail_button_mini_calendar">미니 달력 보기</string>
-    <string name="strategy_detail_button_pdf_pro">Pro로 PDF 저장하기</string>
-    <string name="strategy_detail_snackbar_pdf_pro">PDF 저장은 Pro 기능입니다. (더미)</string>
-    <string name="strategy_detail_total_days_badge">%1$d일</string>
-
-    <string name="calendar_month_selector_title">[ 월별 스와이프 달력 UI ]</string>
-    <string name="calendar_selected_month_summary">선택된 월: %1$s 전략 미리보기</string>
-    <string name="calendar_month_chip">%1$s</string>
-
-    <string name="mypage_user_title">👤 사용자</string>
-    <string name="mypage_section_account">📌 계정</string>
-    <string name="mypage_section_strategy_settings">📅 전략 설정</string>
-    <string name="mypage_section_pro">🟡 Pro</string>
-    <string name="mypage_section_support_info">💬 지원 &amp; 정보</string>
-    <string name="mypage_login_info_title">로그인 정보</string>
-    <string name="mypage_login_info_none">로그인 안됨</string>
-    <string name="mypage_login_info_guest">게스트</string>
-    <string name="mypage_login_info_kakao">카카오</string>
-    <string name="mypage_login_info_apple">Apple</string>
-    <string name="mypage_saved_strategy_title">저장한 전략 보기</string>
-    <string name="mypage_saved_strategy_count">%1$d개 저장됨</string>
-    <string name="mypage_pro_ad_remove">광고 제거</string>
-    <string name="mypage_pro_pdf">연간 전략 PDF</string>
-    <string name="mypage_pro_analysis">고급 효율 분석</string>
-    <string name="mypage_pro_start">Pro 시작하기</string>
-    <string name="mypage_pro_manage">Pro 관리</string>
-    <string name="mypage_notice">공지사항</string>
-    <string name="mypage_faq">자주 묻는 질문</string>
-    <string name="mypage_suggest">건의하기</string>
-    <string name="mypage_terms">이용약관</string>
-    <string name="mypage_privacy">개인정보 처리방침</string>
-    <string name="mypage_open_source">오픈소스 라이선스</string>
-    <string name="mypage_logout">로그아웃</string>
-    <string name="mypage_snackbar_dummy_action">MVP 와이어프레임 더미 동작입니다.</string>
-    <string name="mypage_snackbar_pro_toggled_on">Pro 구독 활성화됨 (더미).</string>
-    <string name="mypage_snackbar_pro_toggled_off">Pro 구독 비활성화됨 (더미).</string>
-    <string name="mypage_snackbar_logout">로그아웃됨 (더미).</string>
-
-    <string name="support_step_select_title">1단계. 문의 유형 선택</string>
-    <string name="support_step_mail_title">2단계. 메일 앱 실행 (더미)</string>
-    <string name="support_email_subject_label">제목</string>
-    <string name="support_email_body_label">본문</string>
-    <string name="support_email_open_app">메일 앱 열기</string>
-    <string name="support_email_back">다른 유형 선택</string>
-    <string name="support_email_opened_dummy">메일 앱 실행 요청됨 (더미).</string>
-    <string name="support_inquiry_subject_feature">[오구리] 기능 제안 문의</string>
-    <string name="support_inquiry_subject_bug">[오구리] 오류 신고 문의</string>
-    <string name="support_inquiry_subject_other">[오구리] 기타 문의</string>
-    <string name="support_inquiry_type_feature">기능 제안</string>
-    <string name="support_inquiry_type_bug">오류 신고</string>
-    <string name="support_inquiry_type_other">기타 문의</string>
-    <string name="support_email_body_template">■ 문의 유형:\n%1$s\n\n■ 내용:\n\n-------------------------\n앱 버전: %2$s\nOS: %3$s\n기기 모델: %4$s</string>
+    <string name="calendar_preparing_message">캘린더 디자인을 준비 중입니다.</string>
+    <string name="mypage_preparing_message">마이페이지 디자인을 준비 중입니다.</string>
 </resources>

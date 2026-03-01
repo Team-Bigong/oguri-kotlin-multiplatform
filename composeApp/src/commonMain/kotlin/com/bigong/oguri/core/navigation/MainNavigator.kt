@@ -18,34 +18,8 @@ class MainNavigator(
         return navBackStackEntryState.value?.destination
     }
 
-    fun navigateToLogin() {
-        navHostController.navigate(RouteModel.Login)
-    }
-
-    fun navigateToOnboarding() {
-        navHostController.navigate(RouteModel.Onboarding)
-    }
-
-    fun navigateToStrategyDetail(strategyIdentifier: String) {
-        navHostController.navigate(RouteModel.StrategyDetail(strategyIdentifier = strategyIdentifier))
-    }
-
-    fun navigateToStrategyCalendar() {
-        navHostController.navigate(RouteModel.StrategyCalendar)
-    }
-
-    fun navigateToSupportInquiryType() {
-        navHostController.navigate(RouteModel.SupportInquiryType)
-    }
-
     fun navigateToBottomNavigationDestination(destination: BottomNavigationDestination) {
-        navigateToMainTabRoot(destination.routeModel)
-    }
-
-    fun popBackStack(): Boolean = navHostController.popBackStack()
-
-    private fun navigateToMainTabRoot(routeModel: RouteModel) {
-        navHostController.navigate(routeModel) {
+        navHostController.navigate(destination.routeModel) {
             launchSingleTop = true
             restoreState = false
             popUpTo(navHostController.graph.id) {
@@ -53,6 +27,28 @@ class MainNavigator(
                 saveState = false
             }
         }
+    }
+
+    fun navigateToLogin() {
+        navHostController.navigate(RouteModel.Login) {
+            launchSingleTop = true
+            popUpTo(navHostController.graph.id) {
+                inclusive = false
+            }
+        }
+    }
+
+    fun navigateToHomeFromLogin() {
+        navHostController.navigate(RouteModel.Home) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Login) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun popBackStack(): Boolean {
+        return navHostController.popBackStack()
     }
 }
 

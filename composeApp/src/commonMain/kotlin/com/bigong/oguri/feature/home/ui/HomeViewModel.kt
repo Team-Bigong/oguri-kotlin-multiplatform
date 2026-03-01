@@ -1,59 +1,71 @@
 package com.bigong.oguri.feature.home.ui
 
-import com.bigong.oguri.data.model.HomeStrategyRecommendation
-import com.bigong.oguri.data.model.UserState
-import com.bigong.oguri.data.repository.AnnualLeaveStrategyRepository
-import com.bigong.oguri.data.repository.UserStateRepository
-import com.bigong.oguri.feature.common.ui.RouteViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import dev.zacsweers.metro.Inject
+import com.bigong.oguri.domain.usecase.GetRecommendPeriodListUseCase
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
+@Inject
 class HomeViewModel(
-    private val annualLeaveStrategyRepository: AnnualLeaveStrategyRepository,
-    private val userStateRepository: UserStateRepository,
-) : RouteViewModel() {
-    private val mutableHomeUiStateFlow: MutableStateFlow<HomeUiState> = MutableStateFlow(HomeUiState())
-    val homeUiStateFlow: StateFlow<HomeUiState> = mutableHomeUiStateFlow.asStateFlow()
+    private val getRecommendPeriodsUseCase: GetRecommendPeriodListUseCase,
+) : ViewModel() {
+    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    var homeUiState: HomeUiState by mutableStateOf(HomeUiState())
+        private set
 
     init {
-        routeViewModelScope.launch {
-            userStateRepository.userStateFlow.collect { latestUserState: UserState ->
-                mutableHomeUiStateFlow.update { previousUiState: HomeUiState ->
-                    previousUiState.copy(userState = latestUserState)
-                }
-            }
-        }
-        refresh()
+        loadRecommendPeriods()
     }
 
-    fun refresh() {
-        routeViewModelScope.launch {
-            mutableHomeUiStateFlow.update { previousUiState: HomeUiState ->
-                previousUiState.copy(isLoading = true, isError = false)
-            }
+    fun loadRecommendPeriods() {
+        viewModelScope.launch {
+            homeUiState = homeUiState.copy(isLoading = true, isError = false)
+
             runCatching {
-                annualLeaveStrategyRepository.getHomeStrategyRecommendation()
-            }.onSuccess { homeStrategyRecommendation: HomeStrategyRecommendation ->
-                mutableHomeUiStateFlow.update { previousUiState: HomeUiState ->
-                    previousUiState.copy(
-                        isLoading = false,
-                        isError = false,
-                        recommendation = homeStrategyRecommendation,
-                    )
-                }
+                getRecommendPeriodsUseCase()
+            }.onSuccess { recommendPeriods ->
+                val selectedRank = recommendPeriods.firstOrNull()?.rank ?: 1
+                homeUiState = homeUiState.copy(
+                    isLoading = false,
+                    isError = false,
+                    selectedRank = selectedRank,
+                    recommendPeriods = recommendPeriods,
+                )
             }.onFailure {
-                mutableHomeUiStateFlow.update { previousUiState: HomeUiState ->
-                    previousUiState.copy(
-                        isLoading = false,
-                        isError = true,
-                        recommendation = null,
-                    )
-                }
+                homeUiState = homeUiState.copy(
+                    isLoading = false,
+                    isError = true,
+                    recommendPeriods = emptyList(),
+                )
             }
         }
+    }
+
+    fun selectRank(rank: Int) {
+        homeUiState = homeUiState.copy(selectedRank = rank)
+    }
+
+    fun toggleSaved(isChecked: Boolean) {
+        val selectedRank = homeUiState.selectedRank
+        val nextSavedRankSet = if (isChecked) {
+            homeUiState.savedRankSet + selectedRank
+        } else {
+            homeUiState.savedRankSet - selectedRank
+        }
+        homeUiState = homeUiState.copy(savedRankSet = nextSavedRankSet)
+    }
+
+    override fun onCleared() {
+        viewModelScope.cancel()
+        super.onCleared()
     }
 }

@@ -1,35 +1,21 @@
 package com.bigong.oguri.feature.home.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import com.bigong.oguri.data.repository.AnnualLeaveStrategyRepository
-import com.bigong.oguri.data.repository.UserStateRepository
-import com.bigong.oguri.feature.common.ui.rememberRouteViewModel
-import com.bigong.oguri.feature.home.ui.model.HomeUiState
+import androidx.compose.runtime.remember
+import dev.zacsweers.metro.Provider
 
 @Composable
 fun HomeRoute(
-    annualLeaveStrategyRepository: AnnualLeaveStrategyRepository,
-    userStateRepository: UserStateRepository,
-    onStrategyDetailClick: (String) -> Unit,
-    onShowSnackbarClick: () -> Unit,
+    homeViewModelProvider: Provider<HomeViewModel>,
 ) {
-    val homeViewModel: HomeViewModel = rememberRouteViewModel(
-        annualLeaveStrategyRepository,
-        userStateRepository,
-    ) {
-        HomeViewModel(
-            annualLeaveStrategyRepository = annualLeaveStrategyRepository,
-            userStateRepository = userStateRepository,
-        )
+    val homeViewModel: HomeViewModel = remember(homeViewModelProvider) {
+        homeViewModelProvider()
     }
-    val homeUiState: HomeUiState by homeViewModel.homeUiStateFlow.collectAsState()
 
     HomeScreen(
-        homeUiState = homeUiState,
-        onRetryClick = homeViewModel::refresh,
-        onStrategyDetailClick = onStrategyDetailClick,
-        onShowSnackbarClick = onShowSnackbarClick,
+        homeUiState = homeViewModel.homeUiState,
+        onRankSelected = homeViewModel::selectRank,
+        onSavedChanged = homeViewModel::toggleSaved,
+        onRetryClick = homeViewModel::loadRecommendPeriods,
     )
 }

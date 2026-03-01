@@ -1,75 +1,39 @@
 package com.bigong.oguri.feature.splash.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.feature.common.ui.PlaceholderActionButton
-import com.bigong.oguri.feature.common.ui.PlaceholderHeader
-import com.bigong.oguri.feature.common.ui.PlaceholderSpacingLarge
-import com.bigong.oguri.feature.common.ui.PlaceholderSpacingMedium
-import com.bigong.oguri.feature.common.ui.PlaceholderSpacingSmall
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.splash_start
-import oguri.composeapp.generated.resources.splash_subtitle
-import oguri.composeapp.generated.resources.splash_title
-import org.jetbrains.compose.resources.stringResource
+import oguri.composeapp.generated.resources.ic_app_text
+import oguri.composeapp.generated.resources.img_oguri_walking
+import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun SplashRoute(
-    onStartClick: () -> Unit,
-) {
-    SplashScreen(onStartClick = onStartClick)
-}
-
-@Composable
-fun SplashScreen(
-    onStartClick: () -> Unit,
-) {
+fun SplashScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFFDFF6EC),
-                        Color(0xFFFFF1D6),
-                        Color(0xFFFFFFFF),
-                    ),
-                ),
-            )
-            .safeDrawingPadding()
-            .padding(horizontal = 20.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.SpaceBetween,
+            .background(Color(0xFFF3F3F3)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(PlaceholderSpacingSmall),
-        ) {
-            PlaceholderHeader(
-                screenTitleText = "🦆 ${stringResource(Res.string.splash_title)}",
-                screenSubtitleText = stringResource(Res.string.splash_subtitle),
-            )
-        }
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(PlaceholderSpacingMedium),
-        ) {
-            PlaceholderActionButton(
-                labelText = stringResource(Res.string.splash_start),
-                onClick = onStartClick,
-            )
-        }
+        Image(
+            painter = painterResource(Res.drawable.img_oguri_walking),
+            contentDescription = null,
+            modifier = Modifier.size(190.dp),
+        )
+        Image(
+            painter = painterResource(Res.drawable.ic_app_text),
+            contentDescription = null,
+            modifier = Modifier.size(width = 110.dp, height = 60.dp),
+        )
     }
 }
