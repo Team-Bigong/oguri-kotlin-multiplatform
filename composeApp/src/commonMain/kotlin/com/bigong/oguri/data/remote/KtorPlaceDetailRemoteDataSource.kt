@@ -35,16 +35,16 @@ class KtorPlaceDetailRemoteDataSource(
         return createDummyPlaceDetail(placeId = placeId)
     }
 
-    private fun createDummyPlaceDetail(placeId: Long): PlaceDetailResponse {
-        return PlaceDetailResponse(
+    private fun createDummyPlaceDetail(placeId: Long): PlaceDetailResponse =
+        PlaceDetailResponse(
             id = placeId,
             country = "필리핀",
             city = "보라카이",
             thumbnailUrls =
                 listOf(
                     "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
-                    "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/3c8e4a2f-5fd8-4b40-8556-fd130d0f7579.jpeg",
-                    "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/d3f3d609-a9ec-4808-b9ef-836af7089cd9.jpeg",
+                    "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
+                    "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
                 ),
             isSaved = false,
             description =
@@ -54,19 +54,19 @@ class KtorPlaceDetailRemoteDataSource(
                     ExperienceResponse(
                         title = "다이빙 체험",
                         summary = "맑은 바다 속에서 형형색색 산호와 물고기를 만나요. 초보자도 안전 교육 후 참여할 수 있어 부담이 적어요.",
-                        thumbnailUrl = "https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_activity_2.jpg?alt=media&token=d537d230-b208-4a74-8e92-137b09b36945",
+                        thumbnailUrl = "https://github.com/user-attachments/assets/95525288-bd76-41ad-ad4e-03ddd6c11a1d.png",
                         advertisementUrl = "https://www.klook.com/ko/",
                     ),
                     ExperienceResponse(
                         title = "만다린 베이",
                         summary = "화이트 비치와 가까운 위치의 리조트예요. 수영장과 레스토랑 시설이 좋아 휴식에 집중하기 좋아요.",
-                        thumbnailUrl = "https://images.unsplash.com/photo-1570214476695-19bd8cccb9a4?auto=format&fit=crop&w=1080&q=80",
+                        thumbnailUrl = "https://github.com/user-attachments/assets/02dba4ca-4589-4fc3-8e46-d15bc7b77903.png",
                         advertisementUrl = "https://www.agoda.com/",
                     ),
                     ExperienceResponse(
                         title = "스노클링 투어",
                         summary = "잔잔한 구간 중심 코스로 진행되어 초보도 편하게 참여할 수 있어요.",
-                        thumbnailUrl = "https://images.unsplash.com/photo-1595941069915-4ebc5197c14a?auto=format&fit=crop&w=1080&q=80",
+                        thumbnailUrl = "https://github.com/user-attachments/assets/b50f048d-0bb8-419e-ab57-fb4b1105f5be.png",
                         advertisementUrl = "https://www.klook.com/ko/",
                     ),
                 ),
@@ -96,5 +96,4 @@ class KtorPlaceDetailRemoteDataSource(
                     ),
                 ),
         )
-    }
 }

@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.placedetail.ui.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -46,11 +47,29 @@ fun PlaceDetailTopBar(
     var isMenuExpanded by remember { mutableStateOf(false) }
     val tintColor = if (isCollapsed) Neutral100 else Neutral0
 
+    if (!isCollapsed) {
+        Box(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+        ) {
+            Image(
+                painter = painterResource(Res.drawable.btn_back),
+                contentDescription = null,
+                colorFilter = ColorFilter.tint(tintColor),
+                modifier = Modifier.noRippleClickable(onClick = onBackClick),
+            )
+        }
+        return
+    }
+
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(if (isCollapsed) Neutral0 else Neutral0.copy(alpha = 0f))
+                .background(Neutral0)
                 .statusBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.SpaceBetween,

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.Image
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
@@ -30,6 +31,7 @@ import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
+import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
 import com.bigong.oguri.domain.model.Experience
@@ -54,6 +56,8 @@ import oguri.composeapp.generated.resources.place_detail_relevant_places_subtitl
 import oguri.composeapp.generated.resources.place_detail_section_experience
 import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
+import oguri.composeapp.generated.resources.btn_share
+import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -116,10 +120,20 @@ fun PlaceDetailScreen(
                             color = Neutral40,
                         )
                     }
-                    SaveToggleButton(
-                        checked = placeDetailUiState.isSaved,
-                        onCheckedChange = { onSaveToggleClick() },
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Image(
+                            painter = painterResource(Res.drawable.btn_share),
+                            contentDescription = null,
+                            modifier = Modifier.noRippleClickable(onClick = onShareClick),
+                        )
+                        SaveToggleButton(
+                            checked = placeDetailUiState.isSaved,
+                            onCheckedChange = { onSaveToggleClick() },
+                        )
+                    }
                 }
             }
             item {
