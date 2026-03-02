@@ -164,7 +164,7 @@ fun HomeScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(height = 28.dp))
+                Spacer(modifier = Modifier.height(height = 24.dp))
                 HomeMoreRecommendationButton(
                     subtitleText = stringResource(Res.string.home_more_recommendation_subtitle),
                     text = stringResource(Res.string.home_cta_more_recommend),
