@@ -20,15 +20,12 @@ class HomeService(
     private val destinationImageRepository: DestinationImageRepository,
     private val publicHolidayRepository: PublicHolidayRepository
 ) {
-    fun getHomeData(dayOffCount: Int): RecommendPeriodResponse {
-        // 1. DB에서 공휴일 목록 가져오기
+    fun getHomeData(dayOffCount: Int): List<RecommendPeriodResponse> {
         val holidayList = publicHolidayRepository.findAll()
         val holidayMap = holidayList.associateBy { it.holidayDate }
 
-        // 2. 최적의 휴가 기간 계산 (현재 날짜 이후부터 최대 1년치 탐색)
-        val bestPeriod = findBestVacation(dayOffCount, holidayMap)
+        val bestPeriods = findTopVacationPeriods(dayOffCount, holidayMap, limit = 3)
 
-        // 3. DB에서 여행지 조회
         val destinations = destinationRepository.findAll()
         val places = destinations.map { destination ->
             val thumbnail = destinationImageRepository.findByDestinationIdAndIsThumbnailTrue(destination.id)
@@ -41,36 +38,43 @@ class HomeService(
             )
         }
 
-        // 4. 광고 더미 데이터
         val advertisements = listOf(
             AdvertisementResponse(platform = "google", url = "https://www.google.com"),
             AdvertisementResponse(platform = "naver", url = "https://www.naver.com")
         )
 
-        return RecommendPeriodResponse(
-            rank = 1,
-            isSaved = false,
-            startDate = bestPeriod.start,
-            endDate = bestPeriod.end,
-            holiday = bestPeriod.holidays,
-            dayOffCount = dayOffCount,
-            totalTripCount = bestPeriod.totalDays,
-            places = places,
-            advertisements = advertisements
-        )
+        return bestPeriods.mapIndexed { index, period ->
+            val holidayNames = period.holidayObjects
+                .filter { it.isActualHoliday }
+                .map { it.name }
+                .distinct()
+
+            RecommendPeriodResponse(
+                rank = index + 1,
+                isSaved = false,
+                startDate = period.start,
+                endDate = period.end,
+                holiday = if (holidayNames.isEmpty() && period.totalDays > 0) listOf("주말") else holidayNames,
+                dayOffCount = dayOffCount,
+                totalTripCount = period.totalDays,
+                places = places,
+                advertisements = advertisements
+            )
+        }
     }
 
-    private fun findBestVacation(userDayOff: Int, holidayMap: Map<LocalDate, PublicHoliday>): VacationPeriod {
+    private fun findTopVacationPeriods(
+        userDayOff: Int,
+        holidayMap: Map<LocalDate, PublicHoliday>,
+        limit: Int
+    ): List<VacationPeriod> {
         val now = LocalDate.now()
-        val endSearchDate = now.plusYears(1) // 오늘부터 1년 뒤까지 동적으로 탐색
-
+        val endSearchDate = now.plusYears(1)
         val daysToSearch = ChronoUnit.DAYS.between(now, endSearchDate).toInt() + 1
 
-        var maxDays = 0
-        var bestStart = now
-        var bestEnd = now
-        var bestHolidayObjects = listOf<PublicHoliday>()
+        val candidates = mutableListOf<VacationPeriod>()
 
+        // 1. 모든 가능한 구간 수집
         for (i in 0 until daysToSearch) {
             val currentStart = now.plusDays(i.toLong())
             var usedDayOff = 0
@@ -79,39 +83,38 @@ class HomeService(
 
             for (j in i until daysToSearch) {
                 val date = now.plusDays(j.toLong())
-                
                 if (!isOffDay(date, holidayMap)) {
-                    if (usedDayOff < userDayOff) {
-                        usedDayOff++
-                    } else {
-                        break
-                    }
+                    if (usedDayOff < userDayOff) usedDayOff++ else break
                 } else {
                     holidayMap[date]?.let { currentHolidayObjects.add(it) }
                 }
-
                 currentEnd = date
-                val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
-                
-                if (totalDays > maxDays) {
-                    maxDays = totalDays
-                    bestStart = currentStart
-                    bestEnd = currentEnd
-                    bestHolidayObjects = currentHolidayObjects.toList()
-                }
+            }
+            
+            val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
+            if (totalDays > 0) {
+                candidates.add(VacationPeriod(currentStart, currentEnd, totalDays, currentHolidayObjects.toList()))
             }
         }
 
-        // 실제 공휴일 당일인 경우만 추출하여 노출 (연휴, 대체공휴일 등은 제외)
-        val holidayNames = bestHolidayObjects
-            .filter { it.isActualHoliday }
-            .map { it.name }
-            .distinct()
+        // 2. 정렬 (일수 큰 순 -> 날짜 빠른 순)
+        val sortedCandidates = candidates
+            .distinctBy { it.start.toString() + it.end.toString() }
+            .sortedWith(compareByDescending<VacationPeriod> { it.totalDays }.thenBy { it.start })
 
-        // 공휴일 당일 정보가 없으면 "주말"로 표시
-        val finalHolidays = if (holidayNames.isEmpty() && maxDays > 0) listOf("주말") else holidayNames
+        // 3. 중복 구간(Overlap) 필터링
+        val selected = mutableListOf<VacationPeriod>()
+        for (candidate in sortedCandidates) {
+            if (selected.size >= limit) break
+            
+            // 이미 선택된 기간들과 겹치지 않는지 확인
+            val isOverlapping = selected.any { it.overlapsWith(candidate) }
+            if (!isOverlapping) {
+                selected.add(candidate)
+            }
+        }
 
-        return VacationPeriod(bestStart, bestEnd, maxDays, finalHolidays)
+        return selected
     }
 
     private fun isOffDay(date: LocalDate, holidayMap: Map<LocalDate, PublicHoliday>): Boolean {
@@ -124,6 +127,11 @@ class HomeService(
         val start: LocalDate,
         val end: LocalDate,
         val totalDays: Int,
-        val holidays: List<String>
-    )
+        val holidayObjects: List<PublicHoliday>
+    ) {
+        // 두 기간이 겹치는지 확인하는 함수
+        fun overlapsWith(other: VacationPeriod): Boolean {
+            return !this.end.isBefore(other.start) && !other.end.isBefore(this.start)
+        }
+    }
 }

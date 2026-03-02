@@ -15,7 +15,7 @@ class HomeController(
     @GetMapping
     fun getHome(
         @RequestParam(defaultValue = "3") dayOffCount: Int
-    ): RecommendPeriodResponse {
+    ): List<RecommendPeriodResponse> {
         return homeService.getHomeData(dayOffCount)
     }
 }
