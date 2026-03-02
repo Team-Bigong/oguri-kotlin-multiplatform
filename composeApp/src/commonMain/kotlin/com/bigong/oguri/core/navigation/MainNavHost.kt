@@ -10,11 +10,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.feature.calendar.ui.CalendarRoute
 import com.bigong.oguri.feature.home.ui.HomeRoute
 import com.bigong.oguri.feature.login.ui.LoginRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageRoute
+import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 
 private const val NAVIGATION_FADE_DURATION_MILLIS: Int = 180
@@ -28,9 +30,10 @@ fun MainNavHost(
     NavHost(
         navController = navigator.navHostController,
         startDestination = RouteModel.Splash,
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPaddingValues),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(contentPaddingValues),
         enterTransition = { fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS)) },
         exitTransition = { fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS)) },
         popEnterTransition = { fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS)) },
@@ -47,13 +50,25 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.Home> {
-            HomeRoute(homeViewModelProvider = appGraph.homeViewModelProvider)
+            HomeRoute(
+                homeViewModelProvider = appGraph.homeViewModelProvider,
+                onPlaceClick = navigator::navigateToPlaceDetail,
+            )
         }
         composable<RouteModel.Calendar> {
             CalendarRoute()
         }
         composable<RouteModel.MyPage> {
             MyPageRoute()
+        }
+        composable<RouteModel.PlaceDetail> { navBackStackEntry ->
+            val route = navBackStackEntry.toRoute<RouteModel.PlaceDetail>()
+            PlaceDetailRoute(
+                placeDetailViewModelProvider = appGraph.placeDetailViewModelProvider,
+                placeId = route.placeId,
+                onBackClick = { navigator.popBackStack() },
+                onPlaceClick = navigator::navigateToPlaceDetail,
+            )
         }
     }
 }

@@ -1,32 +1,27 @@
 package com.bigong.oguri.feature.home.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.ui.component.AdvertisementCard
+import com.bigong.oguri.core.ui.component.GuideHeader
+import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.RecommendPeriod
-import com.bigong.oguri.feature.home.ui.component.HomeAdvertisementCard
 import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
-import com.bigong.oguri.feature.home.ui.component.HomeGuideHeader
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader
 import com.bigong.oguri.feature.home.ui.component.HomeMoreRecommendationButton
-import com.bigong.oguri.feature.home.ui.component.HomePlaceCard
 import com.bigong.oguri.feature.home.ui.component.HomeStrategyCard
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import oguri.composeapp.generated.resources.Res
@@ -56,6 +51,7 @@ fun HomeScreen(
     onSavedChanged: (Boolean) -> Unit,
     onRetryClick: () -> Unit,
     onAdvertisementClick: (String) -> Unit,
+    onPlaceClick: (Long) -> Unit,
 ) {
     if (homeUiState.isLoading) {
         HomeLoadingContent(message = stringResource(Res.string.home_loading))
@@ -63,7 +59,7 @@ fun HomeScreen(
     }
 
     if (homeUiState.isError || homeUiState.recommendPeriods.isEmpty()) {
-        val errorText: String = stringResource(Res.string.home_error_retry)
+        val errorText = stringResource(Res.string.home_error_retry)
         HomeErrorContent(
             message = errorText,
             retryText = errorText,
@@ -72,12 +68,12 @@ fun HomeScreen(
         return
     }
 
-    val currentPeriod: RecommendPeriod =
+    val currentPeriod =
         homeUiState.recommendPeriods.firstOrNull { recommendPeriod: RecommendPeriod ->
             recommendPeriod.rank == homeUiState.selectedRank
         } ?: homeUiState.recommendPeriods.first()
 
-    val rankLabels: List<String> =
+    val rankLabels =
         listOf(
             stringResource(Res.string.home_tab_rank_one),
             stringResource(Res.string.home_tab_rank_two),
@@ -120,7 +116,7 @@ fun HomeScreen(
             }
             item {
                 Spacer(modifier = Modifier.height(28.dp))
-                HomeGuideHeader(
+                GuideHeader(
                     iconResource = Res.drawable.ic_plane,
                     titleText = stringResource(Res.string.home_guide_match_places),
                     highlightedText = stringResource(Res.string.home_guide_match_places_highlight),
@@ -130,21 +126,14 @@ fun HomeScreen(
             }
             item {
                 Spacer(modifier = Modifier.height(18.dp))
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space = 10.dp),
-                ) {
-                    items(items = currentPeriod.places, key = { place -> place.id }) { place ->
-                        HomePlaceCard(
-                            place = place,
-                            modifier = Modifier.width(width = 154.dp),
-                        )
-                    }
-                }
+                PlaceHorizontalCarousel(
+                    places = currentPeriod.places,
+                    onPlaceClick = { place -> onPlaceClick(place.id) },
+                )
             }
             item {
                 Spacer(modifier = Modifier.height(28.dp))
-                HomeGuideHeader(
+                GuideHeader(
                     iconResource = Res.drawable.ic_shopping_bag,
                     titleText = stringResource(Res.string.home_guide_trip_products),
                     highlightedText = stringResource(Res.string.home_guide_trip_products_highlight),
@@ -153,18 +142,22 @@ fun HomeScreen(
                 )
             }
             items(
-                items = currentPeriod.advertisements,
-                key = { advertisement: Advertisement -> "${advertisement.platform.name}:${advertisement.url}" },
-            ) { advertisement: Advertisement ->
+                count = currentPeriod.advertisements.size,
+                key = { index: Int ->
+                    val advertisement: Advertisement = currentPeriod.advertisements[index]
+                    "${advertisement.platform.name}:${advertisement.url}"
+                },
+            ) { index: Int ->
+                val advertisement = currentPeriod.advertisements[index]
                 Spacer(modifier = Modifier.height(18.dp))
-                HomeAdvertisementCard(
+                AdvertisementCard(
                     advertisement = advertisement,
                     modifier = Modifier.padding(horizontal = 20.dp),
                     onClick = onAdvertisementClick,
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(height = 24.dp))
+                Spacer(modifier = Modifier.height(height = 28.dp))
                 HomeMoreRecommendationButton(
                     subtitleText = stringResource(Res.string.home_more_recommendation_subtitle),
                     text = stringResource(Res.string.home_cta_more_recommend),

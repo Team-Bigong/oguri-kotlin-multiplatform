@@ -47,6 +47,10 @@ class MainNavigator(
         }
     }
 
+    fun navigateToPlaceDetail(placeId: Long) {
+        navHostController.navigate(RouteModel.PlaceDetail(placeId = placeId))
+    }
+
     fun popBackStack(): Boolean {
         return navHostController.popBackStack()
     }

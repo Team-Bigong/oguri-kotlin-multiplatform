@@ -1,4 +1,4 @@
-package com.bigong.oguri.feature.home.ui.component
+package com.bigong.oguri.core.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -24,11 +24,11 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-fun HomeGuideHeader(
+fun GuideHeader(
     iconResource: DrawableResource,
     titleText: String,
     highlightedText: String,
-    subtitleText: String,
+    subtitleText: String? = null,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -52,12 +52,14 @@ fun HomeGuideHeader(
                 style = OguriTheme.typography.cardTitle,
                 color = Neutral100,
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = subtitleText,
-                style = OguriTheme.typography.labelMedium,
-                color = Neutral50,
-            )
+            if (!subtitleText.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = subtitleText,
+                    style = OguriTheme.typography.labelMedium,
+                    color = Neutral50,
+                )
+            }
         }
     }
 }

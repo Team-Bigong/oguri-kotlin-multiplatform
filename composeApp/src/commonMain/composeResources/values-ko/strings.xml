@@ -35,6 +35,20 @@
     <string name="home_cta_more_recommend">다른 추천 보기</string>
     <string name="home_loading">추천 전략을 불러오는 중이에요...</string>
     <string name="home_error_retry">추천 전략을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
+
+    <string name="place_detail_country">%1$s</string>
+    <string name="place_detail_section_experience">보라카이에서 이런 건 어때요?</string>
+    <string name="place_detail_section_experience_highlight">이런 건 어때요?</string>
+    <string name="place_detail_section_experience_subtitle">마음에 드는 카드를 눌러보세요</string>
+    <string name="place_detail_flight_title">항공편, 구경이라도 해볼까요?</string>
+    <string name="place_detail_flight_title_highlight">구경이라도</string>
+    <string name="place_detail_relevant_places">이때 가면 좋은 다른 여행지도 있어요</string>
+    <string name="place_detail_relevant_places_highlight">다른 여행지</string>
+    <string name="place_detail_relevant_places_subtitle">좌우로 넘기며 살펴보세요</string>
+    <string name="place_detail_menu_share">공유하기</string>
+    <string name="place_detail_menu_save">저장하기</string>
+    <string name="place_detail_menu_unsave">저장 삭제하기</string>
+
     <string name="login_apple_with_account">Apple 계정으로 로그인</string>
     <string name="login_kakao_with_account">카카오 계정으로 로그인</string>
     <string name="login_guest_browse">로그인 없이 둘러보기</string>

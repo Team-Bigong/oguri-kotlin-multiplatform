@@ -1,4 +1,4 @@
-package com.bigong.oguri.feature.home.ui.component
+package com.bigong.oguri.core.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -22,29 +22,44 @@ import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkImage
+import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.Place
 
-private val HOME_PLACE_CARD_CORNER_RADIUS = 8.dp
+private val PLACE_CARD_CORNER_RADIUS = 8.dp
 
 @Composable
-fun HomePlaceCard(
+fun PlaceCard(
     place: Place,
     modifier: Modifier = Modifier,
+    onClick: (Place) -> Unit = {},
 ) {
     Column(
         modifier =
             modifier
-                .clip(shape = RoundedCornerShape(size = HOME_PLACE_CARD_CORNER_RADIUS))
-                .background(color = Mint10, shape = RoundedCornerShape(size = HOME_PLACE_CARD_CORNER_RADIUS)),
+                .clip(shape = RoundedCornerShape(size = PLACE_CARD_CORNER_RADIUS))
+                .background(color = Mint10, shape = RoundedCornerShape(size = PLACE_CARD_CORNER_RADIUS))
+                .noRippleClickable(onClick = { onClick(place) }),
     ) {
         NetworkImage(
             imageUrl = place.thumbnailUrl,
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(height = 134.dp),
+                    .height(height = 134.dp)
+                    .clip(
+                        shape =
+                            RoundedCornerShape(
+                                topStart = PLACE_CARD_CORNER_RADIUS,
+                                topEnd = PLACE_CARD_CORNER_RADIUS,
+                            ),
+                    ),
         )
-        Column(modifier = Modifier.padding(horizontal = 12.dp).padding(top = 10.dp, bottom = 12.dp)) {
+        Column(
+            modifier =
+                Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 10.dp, bottom = 12.dp),
+        ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(space = 4.dp),
                 verticalAlignment = Alignment.Bottom,

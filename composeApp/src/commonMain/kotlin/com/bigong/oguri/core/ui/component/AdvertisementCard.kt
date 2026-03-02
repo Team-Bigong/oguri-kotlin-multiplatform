@@ -1,4 +1,4 @@
-package com.bigong.oguri.feature.home.ui.component
+package com.bigong.oguri.core.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -48,30 +48,33 @@ import oguri.composeapp.generated.resources.url_plane_2
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val HOME_ADVERTISEMENT_CARD_CORNER_RADIUS = 8.dp
+private val ADVERTISEMENT_CARD_CORNER_RADIUS = 8.dp
 
 @Composable
-fun HomeAdvertisementCard(
+fun AdvertisementCard(
     advertisement: Advertisement,
     modifier: Modifier = Modifier,
+    titleText: String? = null,
+    highlightedText: String? = null,
+    highlightedColor: Color? = null,
     onClick: (String) -> Unit = {},
 ) {
-    val imageUrls: List<String> = advertisementImageUrls(advertisement = advertisement)
-    val stableImageIndex: Int = advertisementStableImageIndex(advertisement = advertisement, candidateSize = imageUrls.size)
-    val imageUrl: String = imageUrls[stableImageIndex]
-    val titleText: String = advertisementTitleText(advertisement = advertisement)
-    val highlightedText: String = advertisementHighlightedText(advertisement = advertisement)
-    val highlightedColor: Color = advertisementHighlightColor(advertisement = advertisement)
+    val imageUrls = advertisementImageUrls(advertisement = advertisement)
+    val stableImageIndex = advertisementStableImageIndex(advertisement = advertisement, candidateSize = imageUrls.size)
+    val imageUrl = imageUrls.getOrNull(stableImageIndex).orEmpty()
+    val resolvedTitleText = titleText ?: advertisementDefaultTitleText(advertisement = advertisement)
+    val resolvedHighlightedText = highlightedText ?: advertisementDefaultHighlightedText(advertisement = advertisement)
+    val resolvedHighlightColor = highlightedColor ?: advertisementDefaultHighlightColor(advertisement = advertisement)
 
     Column(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(shape = RoundedCornerShape(size = HOME_ADVERTISEMENT_CARD_CORNER_RADIUS))
+                .clip(shape = RoundedCornerShape(size = ADVERTISEMENT_CARD_CORNER_RADIUS))
                 .noRippleClickable(onClick = { onClick(advertisement.url) })
                 .background(
                     color = Mint10,
-                    shape = RoundedCornerShape(size = HOME_ADVERTISEMENT_CARD_CORNER_RADIUS),
+                    shape = RoundedCornerShape(size = ADVERTISEMENT_CARD_CORNER_RADIUS),
                 ),
     ) {
         Box(
@@ -82,7 +85,15 @@ fun HomeAdvertisementCard(
         ) {
             NetworkImage(
                 imageUrl = imageUrl,
-                modifier = Modifier.fillMaxSize(),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .clip(
+                            RoundedCornerShape(
+                                topStart = ADVERTISEMENT_CARD_CORNER_RADIUS,
+                                topEnd = ADVERTISEMENT_CARD_CORNER_RADIUS,
+                            ),
+                        ),
             )
             Image(
                 painter = painterResource(Res.drawable.ic_advertisement),
@@ -92,9 +103,9 @@ fun HomeAdvertisementCard(
         }
         Text(
             text =
-                titleText.getStyledText(
-                    style = TextStyle(color = highlightedColor, fontWeight = FontWeight.Bold),
-                    highlightedText,
+                resolvedTitleText.getStyledText(
+                    style = TextStyle(color = resolvedHighlightColor, fontWeight = FontWeight.Bold),
+                    resolvedHighlightedText,
                 ),
             style = OguriTheme.typography.cardSubtitle,
             color = Neutral100,
@@ -105,7 +116,7 @@ fun HomeAdvertisementCard(
 }
 
 @Composable
-private fun advertisementTitleText(advertisement: Advertisement): String =
+private fun advertisementDefaultTitleText(advertisement: Advertisement): String =
     when (advertisement.platform) {
         AdvertisementPlatform.AGODA -> stringResource(Res.string.home_ad_hotel_title)
         AdvertisementPlatform.SKYSCANNER -> stringResource(Res.string.home_ad_plane_title)
@@ -114,7 +125,7 @@ private fun advertisementTitleText(advertisement: Advertisement): String =
     }
 
 @Composable
-private fun advertisementHighlightedText(advertisement: Advertisement): String =
+private fun advertisementDefaultHighlightedText(advertisement: Advertisement): String =
     when (advertisement.platform) {
         AdvertisementPlatform.AGODA -> stringResource(Res.string.home_ad_hotel_title_highlight)
         AdvertisementPlatform.SKYSCANNER -> stringResource(Res.string.home_ad_plane_title_highlight)
@@ -152,7 +163,7 @@ private fun advertisementImageUrls(advertisement: Advertisement): List<String> =
         }
     }
 
-private fun advertisementHighlightColor(advertisement: Advertisement): Color =
+private fun advertisementDefaultHighlightColor(advertisement: Advertisement): Color =
     when (advertisement.platform) {
         AdvertisementPlatform.AGODA -> InfoBlue
         AdvertisementPlatform.SKYSCANNER -> Mint70
@@ -167,6 +178,6 @@ private fun advertisementStableImageIndex(
     if (candidateSize <= 1) {
         return 0
     }
-    val stableHash: Int = "${advertisement.platform.name}:${advertisement.url}".hashCode()
+    val stableHash = "${advertisement.platform.name}:${advertisement.url}".hashCode()
     return ((stableHash % candidateSize) + candidateSize) % candidateSize
 }

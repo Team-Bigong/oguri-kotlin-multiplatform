@@ -1,4 +1,4 @@
-package com.bigong.oguri.feature.home.ui.component
+package com.bigong.oguri.core.ui.component
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
@@ -8,9 +8,9 @@ import oguri.composeapp.generated.resources.ic_binoculars
 
 @Preview(showBackground = true)
 @Composable
-private fun HomeGuideHeaderPreview() {
+private fun GuideHeaderPreview() {
     OguriTheme {
-        HomeGuideHeader(
+        GuideHeader(
             iconResource = Res.drawable.ic_binoculars,
             titleText = "이때 가면 딱 좋은 곳들이에요",
             highlightedText = "딱 좋은 곳",

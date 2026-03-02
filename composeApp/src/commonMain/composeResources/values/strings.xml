@@ -35,6 +35,20 @@
     <string name="home_cta_more_recommend">See more recommendations</string>
     <string name="home_loading">Loading recommendations...</string>
     <string name="home_error_retry">Failed to load recommendations. Tap to retry.</string>
+
+    <string name="place_detail_country">%1$s</string>
+    <string name="place_detail_section_experience">How about this in Boracay?</string>
+    <string name="place_detail_section_experience_highlight">this</string>
+    <string name="place_detail_section_experience_subtitle">Tap cards to see details</string>
+    <string name="place_detail_flight_title">Want to look around flights?</string>
+    <string name="place_detail_flight_title_highlight">flights</string>
+    <string name="place_detail_relevant_places">There are other places fit this period too</string>
+    <string name="place_detail_relevant_places_highlight">other places</string>
+    <string name="place_detail_relevant_places_subtitle">Swipe and check places</string>
+    <string name="place_detail_menu_share">Share</string>
+    <string name="place_detail_menu_save">Save</string>
+    <string name="place_detail_menu_unsave">Remove saved</string>
+
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_kakao_with_account">Sign in with Kakao account</string>
     <string name="login_guest_browse">Browse without login</string>

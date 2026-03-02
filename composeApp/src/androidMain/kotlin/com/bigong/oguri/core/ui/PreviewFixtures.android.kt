@@ -1,6 +1,8 @@
 package com.bigong.oguri.core.ui
 
+import com.bigong.oguri.domain.model.Experience
 import com.bigong.oguri.domain.model.Place
+import com.bigong.oguri.domain.model.PlaceDetail
 import com.bigong.oguri.domain.model.RecommendPeriod
 import kotlinx.datetime.LocalDate
 
@@ -24,4 +26,34 @@ internal val previewRecommendPeriod: RecommendPeriod =
         totalTripCount = 5,
         places = listOf(previewPlace),
         advertisements = emptyList(),
+    )
+
+internal val previewPlaceDetail: PlaceDetail =
+    PlaceDetail(
+        id = 1L,
+        country = "필리핀",
+        city = "보라카이",
+        thumbnailUrls =
+            listOf(
+                "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
+                "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/b41acf66-b33b-448c-8144-d9aba0df12c0.jpeg",
+            ),
+        isSaved = false,
+        description = "화이트 비치로 유명한 보라카이, **휴식에 집중하고 싶을 때** 가장 잘 어울리는 곳이에요.",
+        experiences =
+            listOf(
+                Experience(
+                    title = "다이빙 체험",
+                    summary = "맑은 바다 속 형형색색 풍경을 만날 수 있어요.",
+                    thumbnailUrl = "https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_activity_2.jpg?alt=media&token=d537d230-b208-4a74-8e92-137b09b36945",
+                    advertisementUrl = "https://www.klook.com/ko/",
+                ),
+            ),
+        flightUrl = "https://www.skyscanner.co.kr/",
+        relevantPlaces =
+            listOf(
+                previewPlace,
+                previewPlace.copy(id = 2L, city = "바르셀로나", country = "스페인"),
+                previewPlace.copy(id = 3L, city = "샌프란시스코", country = "미국"),
+            ),
     )

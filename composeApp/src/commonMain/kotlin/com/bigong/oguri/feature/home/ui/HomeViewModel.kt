@@ -12,12 +12,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Inject
 class HomeViewModel(
     private val getRecommendPeriodsUseCase: GetRecommendPeriodListUseCase,
 ) : ViewModel() {
-    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     var homeUiState: HomeUiState by mutableStateOf(HomeUiState())
         private set
@@ -31,7 +32,9 @@ class HomeViewModel(
             homeUiState = homeUiState.copy(isLoading = true, isError = false)
 
             runCatching {
-                getRecommendPeriodsUseCase()
+                withContext(Dispatchers.Default) {
+                    getRecommendPeriodsUseCase()
+                }
             }.onSuccess { recommendPeriods ->
                 val selectedRank = recommendPeriods.firstOrNull()?.rank ?: 1
                 homeUiState = homeUiState.copy(
@@ -62,11 +65,6 @@ class HomeViewModel(
             homeUiState.savedRankSet - selectedRank
         }
         homeUiState = homeUiState.copy(savedRankSet = nextSavedRankSet)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    fun openAdvertisement(destinationUrl: String) {
-        // TODO: Emit one-shot event and handle external link at app root.
     }
 
     override fun onCleared() {

@@ -1,4 +1,4 @@
-package com.bigong.oguri.feature.home.ui.component
+package com.bigong.oguri.core.ui.component
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -9,9 +9,9 @@ import com.bigong.oguri.core.ui.previewPlace
 
 @Preview(showBackground = true)
 @Composable
-private fun HomePlaceCardPreview() {
+private fun PlaceCardPreview() {
     OguriTheme {
-        HomePlaceCard(
+        PlaceCard(
             place = previewPlace,
             modifier = Modifier.fillMaxWidth(),
         )
