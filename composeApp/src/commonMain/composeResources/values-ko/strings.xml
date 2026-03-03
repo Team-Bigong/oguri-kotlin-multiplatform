@@ -48,6 +48,7 @@
     <string name="place_detail_menu_share">공유하기</string>
     <string name="place_detail_menu_save">저장하기</string>
     <string name="place_detail_menu_unsave">저장 삭제하기</string>
+    <string name="place_detail_experience_detail">자세히 보기</string>
 
     <string name="login_apple_with_account">Apple 계정으로 로그인</string>
     <string name="login_kakao_with_account">카카오 계정으로 로그인</string>

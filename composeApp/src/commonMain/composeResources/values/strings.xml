@@ -48,6 +48,7 @@
     <string name="place_detail_menu_share">Share</string>
     <string name="place_detail_menu_save">Save</string>
     <string name="place_detail_menu_unsave">Remove saved</string>
+    <string name="place_detail_experience_detail">See details</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_kakao_with_account">Sign in with Kakao account</string>

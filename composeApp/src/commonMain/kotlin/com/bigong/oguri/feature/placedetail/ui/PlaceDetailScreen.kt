@@ -56,10 +56,8 @@ import oguri.composeapp.generated.resources.place_detail_flight_title
 import oguri.composeapp.generated.resources.place_detail_flight_title_highlight
 import oguri.composeapp.generated.resources.place_detail_relevant_places
 import oguri.composeapp.generated.resources.place_detail_relevant_places_highlight
-import oguri.composeapp.generated.resources.place_detail_relevant_places_subtitle
 import oguri.composeapp.generated.resources.place_detail_section_experience
 import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
-import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -158,7 +156,7 @@ fun PlaceDetailScreen(
                     iconResource = Res.drawable.ic_binoculars,
                     titleText = stringResource(Res.string.place_detail_section_experience),
                     highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
-                    subtitleText = stringResource(Res.string.place_detail_section_experience_subtitle),
+                    subtitleText = null,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
@@ -205,7 +203,7 @@ fun PlaceDetailScreen(
                     iconResource = Res.drawable.ic_plane,
                     titleText = stringResource(Res.string.place_detail_relevant_places),
                     highlightedText = stringResource(Res.string.place_detail_relevant_places_highlight),
-                    subtitleText = stringResource(Res.string.place_detail_relevant_places_subtitle),
+                    subtitleText = null,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
                 Spacer(modifier = Modifier.height(18.dp))

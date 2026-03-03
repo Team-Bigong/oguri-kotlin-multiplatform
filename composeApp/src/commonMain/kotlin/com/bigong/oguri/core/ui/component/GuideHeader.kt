@@ -33,7 +33,7 @@ fun GuideHeader(
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = if (subtitleText.isNullOrBlank()) Alignment.CenterVertically else Alignment.Top,
         modifier = modifier,
     ) {
         Image(
