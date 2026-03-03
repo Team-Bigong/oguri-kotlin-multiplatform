@@ -42,6 +42,7 @@
     <string name="place_detail_section_experience_subtitle">Tap cards to see details</string>
     <string name="place_detail_flight_title">Want to look around flights?</string>
     <string name="place_detail_flight_title_highlight">flights</string>
+    <string name="place_detail_flight_card_title">View flights for %1$s itinerary</string>
     <string name="place_detail_relevant_places">There are other places fit this period too</string>
     <string name="place_detail_relevant_places_highlight">other places</string>
     <string name="place_detail_relevant_places_subtitle">Swipe and check places</string>

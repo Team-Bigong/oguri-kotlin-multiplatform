@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -13,8 +14,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -34,12 +37,24 @@ private val EXPERIENCE_CARD_CORNER_RADIUS = 8.dp
 fun ExperienceCard(
     experience: Experience,
     modifier: Modifier = Modifier,
+    uniformHeight: Dp? = null,
+    onMeasuredHeight: (Int) -> Unit = {},
     onClick: (String) -> Unit = {},
 ) {
     Column(
         modifier =
             modifier
                 .width(164.dp)
+                .then(
+                    if (uniformHeight != null) {
+                        Modifier.height(uniformHeight)
+                    } else {
+                        Modifier
+                    },
+                )
+                .onGloballyPositioned { coordinates ->
+                    onMeasuredHeight(coordinates.size.height)
+                }
                 .noRippleClickable(onClick = { onClick(experience.advertisementUrl) }),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -68,6 +83,7 @@ fun ExperienceCard(
             maxLines = 4,
             overflow = TextOverflow.Ellipsis,
         )
+        Spacer(modifier = Modifier.weight(1f))
         Text(
             text = stringResource(Res.string.place_detail_experience_detail),
             modifier =

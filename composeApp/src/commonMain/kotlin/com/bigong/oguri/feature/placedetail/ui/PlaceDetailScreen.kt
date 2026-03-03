@@ -21,9 +21,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
@@ -52,6 +55,7 @@ import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
 import oguri.composeapp.generated.resources.ic_ticket
 import oguri.composeapp.generated.resources.place_detail_country
+import oguri.composeapp.generated.resources.place_detail_flight_card_title
 import oguri.composeapp.generated.resources.place_detail_flight_title
 import oguri.composeapp.generated.resources.place_detail_flight_title_highlight
 import oguri.composeapp.generated.resources.place_detail_relevant_places
@@ -90,6 +94,14 @@ fun PlaceDetailScreen(
 
     val lazyListState = rememberLazyListState()
     val isTopBarCollapsed by rememberPlaceDetailTopBarCollapsedState(listState = lazyListState)
+    var maxExperienceCardHeightPx by remember { mutableIntStateOf(0) }
+    val density = LocalDensity.current
+    val uniformExperienceCardHeight =
+        if (maxExperienceCardHeightPx > 0) {
+            with(density) { maxExperienceCardHeightPx.toDp() }
+        } else {
+            null
+        }
 
     Box(
         modifier =
@@ -169,6 +181,12 @@ fun PlaceDetailScreen(
                     items(items = placeDetail.experiences, key = { experience: Experience -> experience.title }) { experience: Experience ->
                         ExperienceCard(
                             experience = experience,
+                            uniformHeight = uniformExperienceCardHeight,
+                            onMeasuredHeight = { measuredHeightPx ->
+                                if (measuredHeightPx > maxExperienceCardHeightPx) {
+                                    maxExperienceCardHeightPx = measuredHeightPx
+                                }
+                            },
                             onClick = onUrlClick,
                         )
                     }
@@ -190,8 +208,8 @@ fun PlaceDetailScreen(
                             platform = AdvertisementPlatform.SKYSCANNER,
                             url = placeDetail.flightUrl,
                         ),
-                    titleText = stringResource(Res.string.place_detail_flight_title),
-                    highlightedText = stringResource(Res.string.place_detail_flight_title_highlight),
+                    titleText = stringResource(Res.string.place_detail_flight_card_title, placeDetail.city),
+                    highlightedText = placeDetail.city,
                     highlightedColor = Mint70,
                     modifier = Modifier.padding(horizontal = 20.dp),
                     onClick = onUrlClick,
