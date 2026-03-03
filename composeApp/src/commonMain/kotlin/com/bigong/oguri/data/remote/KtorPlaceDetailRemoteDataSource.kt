@@ -54,19 +54,19 @@ class KtorPlaceDetailRemoteDataSource(
                     ExperienceResponse(
                         title = "다이빙 체험",
                         summary = "맑은 바다 속에서 형형색색 산호와 물고기를 만나요. 초보자도 안전 교육 후 참여할 수 있어 부담이 적어요.",
-                        thumbnailUrl = "https://github.com/user-attachments/assets/95525288-bd76-41ad-ad4e-03ddd6c11a1d.png",
+                        thumbnailUrl = "https://img.activityjapan.com/wi/diving-article_thumb.jpg",
                         advertisementUrl = "https://www.klook.com/ko/",
                     ),
                     ExperienceResponse(
                         title = "만다린 베이",
                         summary = "화이트 비치와 가까운 위치의 리조트예요. 수영장과 레스토랑 시설이 좋아 휴식에 집중하기 좋아요.",
-                        thumbnailUrl = "https://github.com/user-attachments/assets/02dba4ca-4589-4fc3-8e46-d15bc7b77903.png",
+                        thumbnailUrl = "https://cf.bstatic.com/xdata/images/hotel/max500/688924316.jpg?k=4a01b781b8c351466623a5b978038c93ef38433fadb1202045f5bf7519198756&o=&hp=1",
                         advertisementUrl = "https://www.agoda.com/",
                     ),
                     ExperienceResponse(
                         title = "스노클링 투어",
                         summary = "잔잔한 구간 중심 코스로 진행되어 초보도 편하게 참여할 수 있어요.",
-                        thumbnailUrl = "https://github.com/user-attachments/assets/b50f048d-0bb8-419e-ab57-fb4b1105f5be.png",
+                        thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/2427f7eb-ad73-44f3-b8f3-837813aeacbd.jpeg",
                         advertisementUrl = "https://www.klook.com/ko/",
                     ),
                 ),

@@ -2,20 +2,23 @@ package com.bigong.oguri.feature.placedetail.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.Image
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -29,9 +32,8 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
-import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
-import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
 import com.bigong.oguri.domain.model.Experience
@@ -40,6 +42,7 @@ import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.placedetail.ui.component.ExperienceCard
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailDescriptionSection
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailImagePager
+import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailShareButton
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import oguri.composeapp.generated.resources.Res
@@ -47,6 +50,7 @@ import oguri.composeapp.generated.resources.home_error_retry
 import oguri.composeapp.generated.resources.home_loading
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
+import oguri.composeapp.generated.resources.ic_ticket
 import oguri.composeapp.generated.resources.place_detail_country
 import oguri.composeapp.generated.resources.place_detail_flight_title
 import oguri.composeapp.generated.resources.place_detail_flight_title_highlight
@@ -56,8 +60,6 @@ import oguri.composeapp.generated.resources.place_detail_relevant_places_subtitl
 import oguri.composeapp.generated.resources.place_detail_section_experience
 import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
-import oguri.composeapp.generated.resources.btn_share
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -91,24 +93,32 @@ fun PlaceDetailScreen(
     val lazyListState = rememberLazyListState()
     val isTopBarCollapsed by rememberPlaceDetailTopBarCollapsedState(listState = lazyListState)
 
-    androidx.compose.foundation.layout.Box(
-        modifier = Modifier.fillMaxSize().background(Neutral5),
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Neutral5)
+                .navigationBarsPadding(),
     ) {
         LazyColumn(
             state = lazyListState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 20.dp),
+            contentPadding = PaddingValues(bottom = 24.dp),
         ) {
             item {
                 PlaceDetailImagePager(imageUrls = placeDetail.thumbnailUrls)
             }
             item(key = PLACE_DETAIL_TITLE_ITEM_KEY) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(top = 14.dp),
+                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 12.dp),
+                    ) {
                         Text(
                             text = placeDetail.city,
                             style = OguriTheme.typography.sectionTitle,
@@ -122,12 +132,11 @@ fun PlaceDetailScreen(
                     }
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(top = 2.dp),
                     ) {
-                        Image(
-                            painter = painterResource(Res.drawable.btn_share),
-                            contentDescription = null,
-                            modifier = Modifier.noRippleClickable(onClick = onShareClick),
+                        PlaceDetailShareButton(
+                            onShareClick = onShareClick,
+                            modifier = Modifier.padding(start = 12.dp),
                         )
                         SaveToggleButton(
                             checked = placeDetailUiState.isSaved,
@@ -137,13 +146,14 @@ fun PlaceDetailScreen(
                 }
             }
             item {
+                Spacer(modifier = Modifier.height(8.dp))
                 PlaceDetailDescriptionSection(
                     description = placeDetail.description,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(22.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 GuideHeader(
                     iconResource = Res.drawable.ic_binoculars,
                     titleText = stringResource(Res.string.place_detail_section_experience),
@@ -154,7 +164,7 @@ fun PlaceDetailScreen(
             }
             item {
                 Spacer(modifier = Modifier.height(14.dp))
-                androidx.compose.foundation.lazy.LazyRow(
+                LazyRow(
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -167,15 +177,15 @@ fun PlaceDetailScreen(
                 }
             }
             item {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 GuideHeader(
-                    iconResource = Res.drawable.ic_plane,
+                    iconResource = Res.drawable.ic_ticket,
                     titleText = stringResource(Res.string.place_detail_flight_title),
                     highlightedText = stringResource(Res.string.place_detail_flight_title_highlight),
                     subtitleText = null,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(18.dp))
                 AdvertisementCard(
                     advertisement =
                         Advertisement(
@@ -190,7 +200,7 @@ fun PlaceDetailScreen(
                 )
             }
             item {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 GuideHeader(
                     iconResource = Res.drawable.ic_plane,
                     titleText = stringResource(Res.string.place_detail_relevant_places),
@@ -198,7 +208,7 @@ fun PlaceDetailScreen(
                     subtitleText = stringResource(Res.string.place_detail_relevant_places_subtitle),
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(18.dp))
                 PlaceHorizontalCarousel(
                     places = placeDetail.relevantPlaces,
                     onPlaceClick = { place -> onPlaceClick(place.id) },
@@ -219,14 +229,13 @@ fun PlaceDetailScreen(
 }
 
 @Composable
-private fun rememberPlaceDetailTopBarCollapsedState(
-    listState: LazyListState,
-): androidx.compose.runtime.State<Boolean> {
-    return remember(listState) {
+private fun rememberPlaceDetailTopBarCollapsedState(listState: LazyListState): State<Boolean> =
+    remember(listState) {
         derivedStateOf {
-            val titleItemInfo = listState.layoutInfo.visibleItemsInfo.firstOrNull { itemInfo ->
-                itemInfo.key == PLACE_DETAIL_TITLE_ITEM_KEY
-            }
+            val titleItemInfo =
+                listState.layoutInfo.visibleItemsInfo.firstOrNull { itemInfo ->
+                    itemInfo.key == PLACE_DETAIL_TITLE_ITEM_KEY
+                }
 
             if (titleItemInfo == null) {
                 listState.firstVisibleItemIndex > 1
@@ -235,4 +244,3 @@ private fun rememberPlaceDetailTopBarCollapsedState(
             }
         }
     }
-}
