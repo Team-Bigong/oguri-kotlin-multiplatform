@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
@@ -28,9 +29,9 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_back
 import oguri.composeapp.generated.resources.btn_menu
+import oguri.composeapp.generated.resources.place_detail_menu_save
 import oguri.composeapp.generated.resources.place_detail_menu_share
 import oguri.composeapp.generated.resources.place_detail_menu_unsave
-import oguri.composeapp.generated.resources.place_detail_menu_save
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -55,76 +56,85 @@ fun PlaceDetailTopBar(
                     .statusBarsPadding()
                     .padding(horizontal = 16.dp, vertical = 10.dp),
         ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.background(color = Neutral100.copy(alpha = 0.3f), shape = CircleShape),
+            ) {
+                Image(
+                    painter = painterResource(Res.drawable.btn_back),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(tintColor),
+                    modifier = Modifier.noRippleClickable(onClick = onBackClick),
+                )
+            }
+        }
+    } else {
+        Row(
+            modifier =
+                modifier
+                    .fillMaxWidth()
+                    .background(Neutral0)
+                    .statusBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Image(
                 painter = painterResource(Res.drawable.btn_back),
                 contentDescription = null,
                 colorFilter = ColorFilter.tint(tintColor),
                 modifier = Modifier.noRippleClickable(onClick = onBackClick),
             )
-        }
-        return
-    }
-
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .background(Neutral0)
-                .statusBarsPadding()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Image(
-            painter = painterResource(Res.drawable.btn_back),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(tintColor),
-            modifier = Modifier.noRippleClickable(onClick = onBackClick),
-        )
-        Text(
-            text = city,
-            style = OguriTheme.typography.sectionTitle,
-            color = tintColor,
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(Res.drawable.btn_menu),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(tintColor),
-                modifier = Modifier.noRippleClickable(onClick = { isMenuExpanded = true }),
+            Text(
+                text = city,
+                style = OguriTheme.typography.cardTitle,
+                color = tintColor,
             )
-            DropdownMenu(
-                expanded = isMenuExpanded,
-                onDismissRequest = { isMenuExpanded = false },
-                containerColor = Neutral0,
-                tonalElevation = 0.dp,
-                shadowElevation = 4.dp,
-                border = androidx.compose.foundation.BorderStroke(width = 1.dp, color = Neutral30),
-            ) {
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(Res.string.place_detail_menu_share), style = OguriTheme.typography.bodyMedium) },
-                    onClick = {
-                        isMenuExpanded = false
-                        onShareClick()
-                    },
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(Res.drawable.btn_menu),
+                    contentDescription = null,
+                    colorFilter = ColorFilter.tint(tintColor),
+                    modifier = Modifier.noRippleClickable(onClick = { isMenuExpanded = true }),
                 )
-                DropdownMenuItem(
-                    text = {
-                        Text(
-                            text =
-                                if (isSaved) {
-                                    stringResource(Res.string.place_detail_menu_unsave)
-                                } else {
-                                    stringResource(Res.string.place_detail_menu_save)
-                                },
-                            style = OguriTheme.typography.bodyMedium,
-                        )
-                    },
-                    onClick = {
-                        isMenuExpanded = false
-                        onSaveToggleClick()
-                    },
-                )
+                DropdownMenu(
+                    expanded = isMenuExpanded,
+                    onDismissRequest = { isMenuExpanded = false },
+                    containerColor = Neutral0,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 4.dp,
+                    border = androidx.compose.foundation.BorderStroke(width = 1.dp, color = Neutral30),
+                ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = stringResource(Res.string.place_detail_menu_share),
+                                style = OguriTheme.typography.bodyMedium,
+                            )
+                        },
+                        onClick = {
+                            isMenuExpanded = false
+                            onShareClick()
+                        },
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text =
+                                    if (isSaved) {
+                                        stringResource(Res.string.place_detail_menu_unsave)
+                                    } else {
+                                        stringResource(Res.string.place_detail_menu_save)
+                                    },
+                                style = OguriTheme.typography.bodyMedium,
+                            )
+                        },
+                        onClick = {
+                            isMenuExpanded = false
+                            onSaveToggleClick()
+                        },
+                    )
+                }
             }
         }
     }

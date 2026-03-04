@@ -18,3 +18,18 @@ private fun PlaceDetailTopBarCollapsedPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun PlaceDetailTopBarNotCollapsedPreview() {
+    OguriTheme {
+        PlaceDetailTopBar(
+            city = "보라카이",
+            isSaved = false,
+            isCollapsed = false,
+            onBackClick = {},
+            onShareClick = {},
+            onSaveToggleClick = {},
+        )
+    }
+}
