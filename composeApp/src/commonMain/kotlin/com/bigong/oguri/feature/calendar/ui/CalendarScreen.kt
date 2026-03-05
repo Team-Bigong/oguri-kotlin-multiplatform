@@ -1,40 +1,129 @@
 package com.bigong.oguri.feature.calendar.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral20
+import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.domain.model.CalendarPeriod
+import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysEditor
+import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthGrid
+import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthSelector
+import com.bigong.oguri.feature.calendar.ui.component.CalendarRecommendationSection
+import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
+import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
+import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.calendar_preparing_message
-import oguri.composeapp.generated.resources.bottom_navigation_calendar
+import oguri.composeapp.generated.resources.calendar_error_retry
+import oguri.composeapp.generated.resources.calendar_header_subtitle
+import oguri.composeapp.generated.resources.calendar_header_title
+import oguri.composeapp.generated.resources.calendar_loading
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun CalendarScreen() {
+fun CalendarScreen(
+    calendarUiState: CalendarUiState,
+    onLeaveDaysChanged: (Int) -> Unit,
+    onYearMonthSelected: (Int, Int) -> Unit,
+    onDateClick: (kotlinx.datetime.LocalDate) -> Unit,
+    onPeriodClick: (CalendarPeriod) -> Unit,
+    onRetryClick: () -> Unit,
+) {
+    if (calendarUiState.isLoading) {
+        HomeLoadingContent(message = stringResource(Res.string.calendar_loading))
+        return
+    }
+
+    if (calendarUiState.isError || calendarUiState.calendarRecommendation == null) {
+        val retryText = stringResource(Res.string.calendar_error_retry)
+        HomeErrorContent(
+            message = retryText,
+            retryText = retryText,
+            onRetryClick = onRetryClick,
+        )
+        return
+    }
+
+    val recommendation = calendarUiState.calendarRecommendation
+    val selectedPeriod =
+        recommendation.periods.firstOrNull { period: CalendarPeriod ->
+            period.id == calendarUiState.selectedPeriodId
+        }
+
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Neutral5)
+                .statusBarsPadding()
+                .verticalScroll(rememberScrollState()),
     ) {
-        androidx.compose.material3.Text(
-            text = stringResource(Res.string.bottom_navigation_calendar),
+        Spacer(modifier = Modifier.height(18.dp))
+        Text(
+            text = stringResource(Res.string.calendar_header_title),
             style = OguriTheme.typography.sectionTitle,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = Neutral90,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
-        androidx.compose.material3.Text(
-            text = stringResource(Res.string.calendar_preparing_message),
-            style = OguriTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = stringResource(Res.string.calendar_header_subtitle),
+            style = OguriTheme.typography.bodyMedium,
+            color = Neutral50,
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
+        Spacer(modifier = Modifier.height(14.dp))
+        CalendarLeaveDaysEditor(
+            leaveDays = calendarUiState.leaveDays,
+            onLeaveDaysChanged = onLeaveDaysChanged,
+            modifier = Modifier.padding(horizontal = 20.dp),
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider(color = Neutral20)
+
+        CalendarMonthSelector(
+            selectedYear = calendarUiState.selectedYear,
+            selectedMonth = calendarUiState.selectedMonth,
+            onYearMonthSelected = onYearMonthSelected,
+        )
+
+        CalendarMonthGrid(
+            year = recommendation.year,
+            month = recommendation.month,
+            holidays = recommendation.holidays,
+            selectedPeriod = selectedPeriod,
+            selectedDate = calendarUiState.selectedDate,
+            todayDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+            onDateClick = onDateClick,
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        CalendarRecommendationSection(
+            periods = recommendation.periods,
+            selectedPeriodId = calendarUiState.selectedPeriodId,
+            onPeriodClick = onPeriodClick,
+            modifier = Modifier.padding(horizontal = 20.dp),
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

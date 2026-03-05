@@ -32,6 +32,11 @@ sealed interface RouteModel {
     data class PlaceDetail(
         val placeId: Long,
     ) : RouteModel
+
+    @Serializable
+    data class PeriodDetail(
+        val periodId: Long,
+    ) : RouteModel
 }
 
 data class BottomNavigationDestination(

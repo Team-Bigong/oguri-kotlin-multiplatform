@@ -55,6 +55,29 @@
     <string name="login_kakao_with_account">Sign in with Kakao account</string>
     <string name="login_guest_browse">Browse without login</string>
 
-    <string name="calendar_preparing_message">Calendar design is in progress.</string>
+    <string name="calendar_header_title">How many leave days can you use?</string>
+    <string name="calendar_header_subtitle">These are the longest breaks with your leave</string>
+    <string name="calendar_loading">Loading calendar recommendations...</string>
+    <string name="calendar_error_retry">Failed to load calendar recommendations. Tap to retry.</string>
+    <string name="calendar_dialog_leave_days_title">Enter leave days</string>
+    <string name="calendar_dialog_confirm">Confirm</string>
+    <string name="calendar_dialog_cancel">Cancel</string>
+    <string name="calendar_month_year">%1$d %2$d</string>
+    <string name="calendar_month_year_selector">Select year and month</string>
+    <string name="calendar_day_sun">Sun</string>
+    <string name="calendar_day_mon">Mon</string>
+    <string name="calendar_day_tue">Tue</string>
+    <string name="calendar_day_wed">Wed</string>
+    <string name="calendar_day_thu">Thu</string>
+    <string name="calendar_day_fri">Fri</string>
+    <string name="calendar_day_sat">Sat</string>
+    <string name="calendar_recommendation_guide_title">These are the best days for your leave</string>
+    <string name="calendar_recommendation_guide_highlight">best days</string>
+    <string name="calendar_recommendation_guide_subtitle">Tap the arrow to explore travel spots too</string>
+    <string name="calendar_period_range">%1$s - %2$s</string>
+    <string name="calendar_month_day">%1$d/%2$d</string>
+    <string name="period_detail_dummy_back">Back</string>
+    <string name="period_detail_dummy_title">Period Detail Dummy Screen</string>
+    <string name="period_detail_dummy_description">Navigation success with periodId=%1$d</string>
     <string name="mypage_preparing_message">My page design is in progress.</string>
 </resources>

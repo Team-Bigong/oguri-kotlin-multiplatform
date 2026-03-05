@@ -51,6 +51,10 @@ class MainNavigator(
         navHostController.navigate(RouteModel.PlaceDetail(placeId = placeId))
     }
 
+    fun navigateToPeriodDetail(periodId: Long) {
+        navHostController.navigate(RouteModel.PeriodDetail(periodId = periodId))
+    }
+
     fun popBackStack(): Boolean {
         return navHostController.popBackStack()
     }

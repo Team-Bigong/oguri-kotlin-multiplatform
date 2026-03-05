@@ -55,6 +55,29 @@
     <string name="login_kakao_with_account">카카오 계정으로 로그인</string>
     <string name="login_guest_browse">로그인 없이 둘러보기</string>
 
-    <string name="calendar_preparing_message">캘린더 디자인을 준비 중입니다.</string>
+    <string name="calendar_header_title">연차 몇 일 쓸 수 있어요?</string>
+    <string name="calendar_header_subtitle">이 연차로 가장 길게 쉴 수 있는 날이에요</string>
+    <string name="calendar_loading">캘린더 추천을 불러오는 중이에요...</string>
+    <string name="calendar_error_retry">캘린더 추천을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
+    <string name="calendar_dialog_leave_days_title">연차 일수를 입력해 주세요</string>
+    <string name="calendar_dialog_confirm">확인</string>
+    <string name="calendar_dialog_cancel">취소</string>
+    <string name="calendar_month_year">%1$d년 %2$d월</string>
+    <string name="calendar_month_year_selector">연도와 월 선택</string>
+    <string name="calendar_day_sun">일</string>
+    <string name="calendar_day_mon">월</string>
+    <string name="calendar_day_tue">화</string>
+    <string name="calendar_day_wed">수</string>
+    <string name="calendar_day_thu">목</string>
+    <string name="calendar_day_fri">금</string>
+    <string name="calendar_day_sat">토</string>
+    <string name="calendar_recommendation_guide_title">가장 알차게 쉴 수 있는 날이에요</string>
+    <string name="calendar_recommendation_guide_highlight">가장 알차게</string>
+    <string name="calendar_recommendation_guide_subtitle">화살표를 누르면 여행지도 함께 볼 수 있어요</string>
+    <string name="calendar_period_range">%1$s - %2$s</string>
+    <string name="calendar_month_day">%1$d월 %2$d일</string>
+    <string name="period_detail_dummy_back">뒤로가기</string>
+    <string name="period_detail_dummy_title">Period Detail 더미 화면</string>
+    <string name="period_detail_dummy_description">periodId=%1$d 로 이동 성공</string>
     <string name="mypage_preparing_message">마이페이지 디자인을 준비 중입니다.</string>
 </resources>

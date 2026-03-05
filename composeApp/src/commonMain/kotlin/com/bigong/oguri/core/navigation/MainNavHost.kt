@@ -16,6 +16,7 @@ import com.bigong.oguri.feature.calendar.ui.CalendarRoute
 import com.bigong.oguri.feature.home.ui.HomeRoute
 import com.bigong.oguri.feature.login.ui.LoginRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageRoute
+import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 
@@ -56,7 +57,10 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.Calendar> {
-            CalendarRoute()
+            CalendarRoute(
+                calendarViewModelProvider = appGraph.calendarViewModelProvider,
+                onOpenPeriodDetail = navigator::navigateToPeriodDetail,
+            )
         }
         composable<RouteModel.MyPage> {
             MyPageRoute()
@@ -68,6 +72,13 @@ fun MainNavHost(
                 placeId = route.placeId,
                 onBackClick = { navigator.popBackStack() },
                 onPlaceClick = navigator::navigateToPlaceDetail,
+            )
+        }
+        composable<RouteModel.PeriodDetail> { navBackStackEntry ->
+            val route = navBackStackEntry.toRoute<RouteModel.PeriodDetail>()
+            PeriodDetailRoute(
+                periodId = route.periodId,
+                onBackClick = { navigator.popBackStack() },
             )
         }
     }
