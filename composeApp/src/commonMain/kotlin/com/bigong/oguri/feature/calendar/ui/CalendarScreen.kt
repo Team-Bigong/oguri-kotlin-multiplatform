@@ -29,13 +29,13 @@ import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Clock
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_error_retry
 import oguri.composeapp.generated.resources.calendar_header_subtitle
 import oguri.composeapp.generated.resources.calendar_header_title
 import oguri.composeapp.generated.resources.calendar_loading
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 @Composable
 fun CalendarScreen(
@@ -75,21 +75,21 @@ fun CalendarScreen(
                 .statusBarsPadding()
                 .verticalScroll(rememberScrollState()),
     ) {
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Text(
             text = stringResource(Res.string.calendar_header_title),
             style = OguriTheme.typography.sectionTitle,
             color = Neutral90,
             modifier = Modifier.padding(horizontal = 20.dp),
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(Res.string.calendar_header_subtitle),
-            style = OguriTheme.typography.bodyMedium,
+            style = OguriTheme.typography.cardSubtitle,
             color = Neutral50,
             modifier = Modifier.padding(horizontal = 20.dp),
         )
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         CalendarLeaveDaysEditor(
             leaveDays = calendarUiState.leaveDays,
             onLeaveDaysChanged = onLeaveDaysChanged,
@@ -111,11 +111,15 @@ fun CalendarScreen(
             holidays = recommendation.holidays,
             selectedPeriod = selectedPeriod,
             selectedDate = calendarUiState.selectedDate,
-            todayDate = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date,
+            todayDate =
+                Clock.System
+                    .now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date,
             onDateClick = onDateClick,
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         CalendarRecommendationSection(
             periods = recommendation.periods,

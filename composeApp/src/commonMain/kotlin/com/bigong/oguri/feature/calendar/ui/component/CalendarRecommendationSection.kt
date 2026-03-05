@@ -25,7 +25,6 @@ fun CalendarRecommendationSection(
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         GuideHeader(
             iconResource = Res.drawable.ic_thumb,
@@ -33,13 +32,17 @@ fun CalendarRecommendationSection(
             highlightedText = stringResource(Res.string.calendar_recommendation_guide_highlight),
             subtitleText = stringResource(Res.string.calendar_recommendation_guide_subtitle),
         )
-        periods.forEach { period ->
-            CalendarRecommendationCard(
-                period = period,
-                isSelected = selectedPeriodId == period.id,
-                onClick = onPeriodClick,
-            )
+        Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            verticalArrangement = Arrangement.spacedBy(18.dp),
+        ) {
+            periods.forEach { period ->
+                CalendarRecommendationCard(
+                    period = period,
+                    isSelected = selectedPeriodId == period.id,
+                    onClick = onPeriodClick,
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(4.dp))
     }
 }
