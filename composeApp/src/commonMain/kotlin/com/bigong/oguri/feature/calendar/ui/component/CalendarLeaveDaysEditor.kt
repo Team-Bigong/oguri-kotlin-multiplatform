@@ -3,13 +3,13 @@ package com.bigong.oguri.feature.calendar.ui.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -56,6 +57,7 @@ fun CalendarLeaveDaysEditor(
                 .fillMaxWidth()
                 .background(color = Neutral0, shape = LEAVE_DAYS_EDITOR_SHAPE)
                 .border(width = 1.dp, color = Mint70, shape = LEAVE_DAYS_EDITOR_SHAPE)
+                .noRippleClickable(onClick = { isDialogVisible = true })
                 .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -72,7 +74,6 @@ fun CalendarLeaveDaysEditor(
         Image(
             painter = painterResource(resource = Res.drawable.ic_pen),
             contentDescription = null,
-            modifier = Modifier.noRippleClickable(onClick = { isDialogVisible = true }),
         )
     }
 
