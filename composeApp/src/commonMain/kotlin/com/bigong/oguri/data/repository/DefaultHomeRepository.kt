@@ -26,7 +26,7 @@ class DefaultHomeRepository(
 private fun RecommendPeriodResponse.toDomain(): RecommendPeriod {
     return RecommendPeriod(
         rank = rank,
-        isSaved = isSaved,
+        isSaved = saved,
         startDate = LocalDate.parse(startDate),
         endDate = LocalDate.parse(endDate),
         holiday = holiday,

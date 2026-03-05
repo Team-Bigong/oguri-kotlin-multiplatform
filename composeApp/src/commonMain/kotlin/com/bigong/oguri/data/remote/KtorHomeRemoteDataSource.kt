@@ -1,15 +1,14 @@
 package com.bigong.oguri.data.remote
 
-import com.bigong.oguri.data.remote.model.request.GetRecommendPeriodsRequest
+import com.bigong.oguri.core.network.DEBUG_BASE_URL
 import com.bigong.oguri.data.remote.model.response.AdvertisementResponse
 import com.bigong.oguri.data.remote.model.response.PlaceResponse
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
-import io.ktor.http.HttpMethod
-import io.ktor.http.URLBuilder
-import io.ktor.http.takeFrom
-import io.ktor.util.date.GMTDate
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.isSuccess
 import kotlinx.coroutines.delay
 
 @Inject
@@ -17,22 +16,25 @@ class KtorHomeRemoteDataSource(
     private val httpClient: HttpClient,
 ) : HomeRemoteDataSource {
     override suspend fun getRecommendPeriodResponses(): List<RecommendPeriodResponse> {
-        val request =
-            GetRecommendPeriodsRequest(
-                requestedAtTimestamp = GMTDate().timestamp,
-                method = HttpMethod.Get.value,
-            )
-        val simulatedRequestUrlBuilder =
-            URLBuilder().apply {
-                takeFrom("https://api.oguri.app/v1/home/recommend-period")
-                parameters.append("requestedAt", request.requestedAtTimestamp.toString())
-                parameters.append("method", request.method)
+        val requestUrl = "$DEBUG_BASE_URL$HOME_API_PATH"
+
+        val responses =
+            runCatching {
+                val response = httpClient.get(requestUrl)
+                if (response.status.isSuccess()) {
+                    response.body<List<RecommendPeriodResponse>>()
+                } else {
+                    emptyList()
+                }
+            }.getOrElse {
+                emptyList()
             }
-        if (simulatedRequestUrlBuilder.host.isEmpty() || httpClient.hashCode() == 0) {
-            return emptyList()
+
+        if (responses.isNotEmpty()) {
+            return responses
         }
 
-        delay(280)
+        delay(220)
         return createDummyRecommendPeriods()
     }
 
@@ -65,7 +67,7 @@ class KtorHomeRemoteDataSource(
         return listOf(
             RecommendPeriodResponse(
                 rank = 1,
-                isSaved = false,
+                saved = true,
                 startDate = "2026-02-28",
                 endDate = "2026-03-04",
                 holiday = listOf("삼일절"),
@@ -81,7 +83,7 @@ class KtorHomeRemoteDataSource(
             ),
             RecommendPeriodResponse(
                 rank = 2,
-                isSaved = false,
+                saved = false,
                 startDate = "2026-05-01",
                 endDate = "2026-05-06",
                 holiday = listOf("근로자의날", "어린이날"),
@@ -97,7 +99,7 @@ class KtorHomeRemoteDataSource(
             ),
             RecommendPeriodResponse(
                 rank = 3,
-                isSaved = false,
+                saved = false,
                 startDate = "2026-10-03",
                 endDate = "2026-10-09",
                 holiday = listOf("개천절", "한글날"),
@@ -115,6 +117,8 @@ class KtorHomeRemoteDataSource(
     }
 
     companion object {
+        private const val HOME_API_PATH: String = "/api/v1/home"
+
         private const val ADVERTISEMENT_PLATFORM_AGODA: String = "agoda"
         private const val ADVERTISEMENT_PLATFORM_SKYSCANNER: String = "skyscanner"
         private const val ADVERTISEMENT_PLATFORM_KLOOK: String = "klook"

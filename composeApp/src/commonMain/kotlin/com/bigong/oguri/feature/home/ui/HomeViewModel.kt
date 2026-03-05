@@ -37,10 +37,12 @@ class HomeViewModel(
                 }
             }.onSuccess { recommendPeriods ->
                 val selectedRank = recommendPeriods.firstOrNull()?.rank ?: 1
+                val savedRanks = recommendPeriods.filter { period -> period.isSaved }.map { period -> period.rank }.toSet()
                 homeUiState = homeUiState.copy(
                     isLoading = false,
                     isError = false,
                     selectedRank = selectedRank,
+                    savedRankSet = savedRanks,
                     recommendPeriods = recommendPeriods,
                 )
             }.onFailure {

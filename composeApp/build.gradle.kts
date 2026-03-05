@@ -1,5 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -9,6 +10,35 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
 }
+
+val localProperties: Properties =
+    Properties().apply {
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { inputStream ->
+                load(inputStream)
+            }
+        }
+    }
+
+val debugBaseUrl: String =
+    (localProperties.getProperty("debug.base.url") ?: "https://oguri-kotlin-multiplatform.onrender.com")
+        .trim()
+        .trimEnd('/')
+
+val generatedNetworkConfigDirectory =
+    layout.buildDirectory.dir("generated/source/networkConfig/commonMain/kotlin").get().asFile
+val generatedNetworkConfigFile =
+    generatedNetworkConfigDirectory.resolve("com/bigong/oguri/core/network/DebugNetworkConfig.kt")
+
+generatedNetworkConfigFile.parentFile.mkdirs()
+generatedNetworkConfigFile.writeText(
+    """
+    package com.bigong.oguri.core.network
+
+    const val DEBUG_BASE_URL: String = "$debugBaseUrl"
+    """.trimIndent(),
+)
 
 kotlin {
     androidTarget {
@@ -28,6 +58,9 @@ kotlin {
     }
 
     sourceSets {
+        commonMain {
+            kotlin.srcDir(generatedNetworkConfigDirectory)
+        }
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
