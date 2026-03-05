@@ -76,6 +76,8 @@
     <string name="calendar_recommendation_guide_subtitle">화살표를 누르면 여행지도 함께 볼 수 있어요</string>
     <string name="calendar_period_range">%1$s - %2$s</string>
     <string name="calendar_month_day">%1$d월 %2$d일</string>
+    <string name="calendar_leave_days_sheet_title">연차 사용 일수</string>
+    <string name="calendar_leave_days_sheet_done">완료</string>
     <string name="period_detail_dummy_back">뒤로가기</string>
     <string name="period_detail_dummy_title">Period Detail 더미 화면</string>
     <string name="period_detail_dummy_description">periodId=%1$d 로 이동 성공</string>

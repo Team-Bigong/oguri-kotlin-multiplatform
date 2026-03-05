@@ -20,13 +20,10 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.ErrorRed
 import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Neutral30
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
-import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
@@ -142,8 +139,8 @@ private fun CalendarDayCell(
     val dayTextColor =
         when {
             isToday -> Mint70
-            holidayName != null || dayCell.date.dayOfWeek == DayOfWeek.SUNDAY -> Orange50
             dayCell.isCurrentMonth.not() -> Neutral40
+            holidayName != null || dayCell.date.dayOfWeek == DayOfWeek.SUNDAY || dayCell.date.dayOfWeek == DayOfWeek.THURSDAY -> Orange50
             else -> Neutral70
         }
 
