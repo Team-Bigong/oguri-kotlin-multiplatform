@@ -35,5 +35,8 @@ class Destination(
     var recommendEndMonth2: Int? = null,
 
     @Column(length = 50)
-    var flightTime: String? = null
+    var flightTime: String? = null,
+
+    @OneToMany(mappedBy = "destination", fetch = FetchType.LAZY)
+    var images: List<DestinationImage> = mutableListOf()
 )
