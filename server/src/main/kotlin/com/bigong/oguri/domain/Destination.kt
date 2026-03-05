@@ -22,11 +22,17 @@ class Destination(
     @Column(columnDefinition = "TEXT")
     var description: String? = null,
 
-    @Column(name = "recommend_start_month")
-    var recommendStartMonth: Int? = null,
+    @Column(name = "recommend_start_month_1")
+    var recommendStartMonth1: Int? = null,
 
-    @Column(name = "recommend_end_month")
-    var recommendEndMonth: Int? = null,
+    @Column(name = "recommend_end_month_1")
+    var recommendEndMonth1: Int? = null,
+
+    @Column(name = "recommend_start_month_2")
+    var recommendStartMonth2: Int? = null,
+
+    @Column(name = "recommend_end_month_2")
+    var recommendEndMonth2: Int? = null,
 
     @Column(length = 50)
     var flightTime: String? = null
