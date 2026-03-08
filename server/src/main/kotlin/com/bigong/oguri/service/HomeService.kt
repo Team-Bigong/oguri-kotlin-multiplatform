@@ -15,32 +15,34 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 /**
- * 성능 최적화된 홈 화면 서비스
+ * 성능 최적화된 홈 화면 서비스 (Member 중심 리팩터링 완료)
  */
 @Service
 @Transactional(readOnly = true)
 class HomeService(
     private val destinationRepository: DestinationRepository,
     private val publicHolidayRepository: PublicHolidayRepository,
-    private val savedRecommendationRepository: SavedRecommendationRepository
+    private val savedRecommendationRepository: SavedRecommendationRepository,
+    private val memberService: MemberService
 ) {
     companion object {
-        const val WEIGHT_FLIGHT_TIME = 0.6    // 비행시간 가중치 (60%)
-        const val WEIGHT_BIG_MAC_INDEX = 0.4  // 빅맥지수 가중치 (40%)
-        const val MAX_RECOMMENDATIONS = 7     // 최대 추천 장소 개수
+        const val WEIGHT_FLIGHT_TIME = 0.6
+        const val WEIGHT_BIG_MAC_INDEX = 0.4
+        const val MAX_RECOMMENDATIONS = 7
     }
 
     /**
-     * 홈 화면 데이터 조회 (성능 최적화 버전)
+     * 홈 화면 데이터 조회
      */
-    fun getHomeData(dayOffCount: Int, userCountry: String, userId: String): List<RecommendPeriodResponse> {
-        // 1. 모든 공휴일 정보 로드
+    fun getHomeData(userCountry: String, memberId: String): List<RecommendPeriodResponse> {
+        // 1. 멤버별 저장된 연차 개수 조회
+        val dayOffCount = memberService.getDayOffCount(memberId)
+
+        // 2. 공휴일 정보 및 저장된 연휴 목록 로드
         val holidayMap = publicHolidayRepository.findAll().associateBy { it.holidayDate }
+        val savedPeriods = savedRecommendationRepository.findAllByMemberId(memberId)
 
-        // 2. 사용자가 저장한 연휴 목록 조회 (isSaved 표시용)
-        val savedPeriods = savedRecommendationRepository.findAllByUserId(userId)
-
-        // 3. 모든 여행지, 국가, 이미지를 단 하나의 쿼리로 로드 (N+1 문제 해결)
+        // 3. 모든 여행지 정보 로드
         val allDestinations = destinationRepository.findAllWithCountryAndImages()
 
         // 4. 최적의 연차 구간 탐색
@@ -54,7 +56,6 @@ class HomeService(
         return bestPeriods.mapIndexed { index, period ->
             val recommendedPlaces = calculateRecommendedPlaces(period.start, allDestinations, userCountry)
 
-            // 현재 기간이 사용자가 저장한 목록에 있는지 확인
             val isSaved = savedPeriods.any { 
                 it.startDate == period.start && it.endDate == period.end 
             }
@@ -78,9 +79,6 @@ class HomeService(
         }
     }
 
-    /**
-     * 추천 장소 계산 (N+1 문제 해결 버전)
-     */
     private fun calculateRecommendedPlaces(
         startDate: LocalDate,
         destinations: List<Destination>,
@@ -120,7 +118,6 @@ class HomeService(
         .take(MAX_RECOMMENDATIONS)
         .map { (dest, _) ->
             val thumbnailUrl = dest.images.find { it.isThumbnail }?.imageUrl ?: ""
-
             PlaceResponse(
                 id = dest.id.toLong(),
                 country = dest.country?.name ?: "Unknown",
@@ -168,7 +165,7 @@ class HomeService(
                 }
                 currentEnd = date
             }
-
+            
             val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
             if (totalDays > 0) {
                 candidates.add(VacationPeriod(currentStart, currentEnd, totalDays, holidayIndicesInPeriod.toList()))
@@ -191,8 +188,8 @@ class HomeService(
     }
 
     private fun isOffDay(date: LocalDate, holidayMap: Map<LocalDate, PublicHoliday>): Boolean {
-        return date.dayOfWeek == DayOfWeek.SATURDAY ||
-               date.dayOfWeek == DayOfWeek.SUNDAY ||
+        return date.dayOfWeek == DayOfWeek.SATURDAY || 
+               date.dayOfWeek == DayOfWeek.SUNDAY || 
                holidayMap.containsKey(date)
     }
 

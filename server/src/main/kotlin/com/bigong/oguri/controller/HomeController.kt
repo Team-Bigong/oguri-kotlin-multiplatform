@@ -15,10 +15,9 @@ class HomeController(
 ) {
     @GetMapping
     fun getHome(
-        @RequestParam(defaultValue = "3") dayOffCount: Int,
         @RequestParam(defaultValue = "대한민국") userCountry: String,
         @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") userId: String
     ): List<RecommendPeriodResponse> {
-        return homeService.getHomeData(dayOffCount, userCountry, userId)
+        return homeService.getHomeData(userCountry, userId)
     }
 }

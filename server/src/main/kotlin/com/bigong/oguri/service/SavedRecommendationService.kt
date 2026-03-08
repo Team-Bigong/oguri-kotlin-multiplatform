@@ -14,15 +14,14 @@ class SavedRecommendationService(
     /**
      * 연휴 기간 저장
      */
-    fun save(request: SaveRecommendationRequest, userId: String) {
-        // 이미 저장되어 있는지 확인
-        val existing = savedRecommendationRepository.findByUserIdAndStartDateAndEndDate(
-            userId, request.startDate, request.endDate
+    fun save(request: SaveRecommendationRequest, memberId: String) {
+        val existing = savedRecommendationRepository.findByMemberIdAndStartDateAndEndDate(
+            memberId, request.startDate, request.endDate
         )
         if (existing != null) return
 
         val entity = SavedRecommendation(
-            userId = userId,
+            memberId = memberId,
             startDate = request.startDate,
             endDate = request.endDate,
             dayOffCount = request.dayOffCount
@@ -33,9 +32,9 @@ class SavedRecommendationService(
     /**
      * 연휴 기간 삭제 (저장 취소)
      */
-    fun delete(request: SaveRecommendationRequest, userId: String) {
-        savedRecommendationRepository.deleteByUserIdAndStartDateAndEndDate(
-            userId, request.startDate, request.endDate
+    fun delete(request: SaveRecommendationRequest, memberId: String) {
+        savedRecommendationRepository.deleteByMemberIdAndStartDateAndEndDate(
+            memberId, request.startDate, request.endDate
         )
     }
 }

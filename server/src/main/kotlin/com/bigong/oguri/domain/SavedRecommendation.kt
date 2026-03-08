@@ -11,8 +11,8 @@ class SavedRecommendation(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int = 0,
 
-    @Column(nullable = false)
-    val userId: String = "GUEST",
+    @Column(name = "member_id", nullable = false)
+    val memberId: String = "GUEST",
 
     @Column(nullable = false)
     val startDate: LocalDate,
