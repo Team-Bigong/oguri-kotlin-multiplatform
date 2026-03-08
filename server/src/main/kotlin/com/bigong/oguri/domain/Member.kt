@@ -10,6 +10,9 @@ class Member(
     @Column(name = "id", length = 100)
     val id: String,
 
+    @Column(unique = true, length = 100)
+    var nickname: String? = null,
+
     @Column(nullable = false)
     var dayOffCount: Int = 3,
 
@@ -19,5 +22,12 @@ class Member(
     fun updateDayOffCount(count: Int) {
         this.dayOffCount = count
         this.updatedAt = LocalDateTime.now()
+    }
+
+    fun setNicknameOnce(generatedNickname: String) {
+        if (this.nickname == null) {
+            this.nickname = generatedNickname
+            this.updatedAt = LocalDateTime.now()
+        }
     }
 }

@@ -13,6 +13,16 @@ class MemberController(
     private val savedRecommendationService: SavedRecommendationService
 ) {
     /**
+     * 내 정보 조회 API (최초 진입 시 호출하여 닉네임 생성 등 수행)
+     */
+    @GetMapping("/me")
+    fun getMyInfo(
+        @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") memberId: String
+    ): com.bigong.oguri.dto.MemberMeResponse {
+        return memberService.getMyInfo(memberId)
+    }
+
+    /**
      * 멤버 연차 개수 설정 저장 API
      */
     @PostMapping("/day-off")
