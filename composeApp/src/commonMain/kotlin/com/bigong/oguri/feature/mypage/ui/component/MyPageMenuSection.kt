@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.mypage.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,11 +11,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import kotlinx.coroutines.NonCancellable.start
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_right_arrow
 import org.jetbrains.compose.resources.painterResource
@@ -24,7 +28,7 @@ fun MyPageMenuSection(
     menuItems: List<MyPageMenuItem>,
     modifier: Modifier = Modifier,
 ) {
-    androidx.compose.foundation.layout.Column(modifier = modifier) {
+    Column(modifier = modifier) {
         HorizontalDivider(color = Neutral20)
         menuItems.forEach { menuItem: MyPageMenuItem ->
             Row(
@@ -32,18 +36,20 @@ fun MyPageMenuSection(
                     Modifier
                         .fillMaxWidth()
                         .noRippleClickable(onClick = menuItem.onClick)
-                        .padding(horizontal = 20.dp, vertical = 18.dp),
+                        .padding(start = 24.dp, end = 12.dp)
+                        .padding(vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = menuItem.label,
-                    style = OguriTheme.typography.cardTitle,
-                    color = Neutral90,
+                    style = OguriTheme.typography.cardSubtitle,
+                    color = Neutral100,
                 )
                 Image(
                     painter = painterResource(Res.drawable.ic_right_arrow),
                     contentDescription = null,
+                    colorFilter = ColorFilter.tint(Neutral100),
                 )
             }
         }

@@ -1,6 +1,7 @@
 package com.bigong.oguri.feature.mypage.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -13,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.domain.model.MyPageSelectedPeriod
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -29,13 +31,14 @@ fun MyPageSelectedPeriodSection(
     onDeleteClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    androidx.compose.foundation.layout.Column(modifier = modifier) {
-        MyPageSectionTitle(
+    Column(modifier = modifier) {
+        GuideHeader(
             iconResource = Res.drawable.ic_diary,
             titleText = stringResource(Res.string.mypage_section_selected_period),
+            modifier = Modifier.padding(horizontal = 20.dp),
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         if (selectedPeriods.isEmpty()) {
             Text(

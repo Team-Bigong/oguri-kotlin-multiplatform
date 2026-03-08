@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.domain.model.Place
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_plane
@@ -27,7 +28,7 @@ fun MyPageSavedPlaceSection(
     modifier: Modifier = Modifier,
 ) {
     androidx.compose.foundation.layout.Column(modifier = modifier) {
-        MyPageSectionTitle(
+        GuideHeader(
             iconResource = Res.drawable.ic_plane,
             titleText = stringResource(Res.string.mypage_section_saved_place),
             modifier = Modifier.padding(horizontal = 20.dp),

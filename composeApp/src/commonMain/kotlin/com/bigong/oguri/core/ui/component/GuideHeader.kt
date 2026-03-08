@@ -27,7 +27,7 @@ import org.jetbrains.compose.resources.painterResource
 fun GuideHeader(
     iconResource: DrawableResource,
     titleText: String,
-    highlightedText: String,
+    highlightedText: String? = null,
     subtitleText: String? = null,
     modifier: Modifier = Modifier,
 ) {
@@ -42,16 +42,25 @@ fun GuideHeader(
             modifier = Modifier.size(size = 24.dp),
         )
         Column {
-            Text(
-                text =
-                    titleText.getStyledText(
-                        style = TextStyle(color = Mint70, fontWeight = FontWeight.Bold),
-                        highlightedText,
-                    ),
-                modifier = Modifier.padding(top = 2.dp),
-                style = OguriTheme.typography.cardTitle,
-                color = Neutral100,
-            )
+            if (highlightedText.isNullOrBlank()) {
+                Text(
+                    text = titleText,
+                    modifier = Modifier.padding(top = 2.dp),
+                    style = OguriTheme.typography.cardTitle,
+                    color = Neutral100,
+                )
+            } else {
+                Text(
+                    text =
+                        titleText.getStyledText(
+                            style = TextStyle(color = Mint70, fontWeight = FontWeight.Bold),
+                            highlightedText,
+                        ),
+                    modifier = Modifier.padding(top = 2.dp),
+                    style = OguriTheme.typography.cardTitle,
+                    color = Neutral100,
+                )
+            }
             if (!subtitleText.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(

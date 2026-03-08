@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.mypage.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -10,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral50
@@ -33,15 +35,18 @@ fun MyPageProfileSection(
     Row(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
     ) {
         Image(
             painter = painterResource(Res.drawable.img_profile),
             contentDescription = null,
-            modifier = Modifier.size(56.dp),
+            modifier = Modifier.size(48.dp),
         )
 
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Column(
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(top = 8.dp),
+        ) {
             Text(
                 text = nickname,
                 style = OguriTheme.typography.cardTitle,
@@ -49,18 +54,26 @@ fun MyPageProfileSection(
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
                     text = stringResource(Res.string.mypage_profile_leave_days, remainingLeaveDays, preferredLeaveDays),
-                    style = OguriTheme.typography.bodyMedium,
+                    style = OguriTheme.typography.bodySmall,
                     color = Neutral50,
                 )
-                Image(
-                    painter = painterResource(Res.drawable.ic_pen),
-                    contentDescription = null,
-                    modifier = Modifier.noRippleClickable(onClick = onEditLeaveDaysClick),
-                )
+                Box(
+                    modifier =
+                        Modifier
+                            .size(32.dp)
+                            .noRippleClickable(onClick = onEditLeaveDaysClick),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(Res.drawable.ic_pen),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(Neutral50),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
             }
         }
     }

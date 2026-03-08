@@ -1,8 +1,10 @@
 package com.bigong.oguri.feature.mypage.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -11,6 +13,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
@@ -81,22 +84,29 @@ fun MyPageScreen(
     val myPageInfo = myPageUiState.myPageInfo
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize().background(Neutral5).statusBarsPadding(),
+        modifier = Modifier.fillMaxSize().background(Neutral5),
     ) {
         item {
-            Spacer(modifier = Modifier.height(20.dp))
-            MyPageProfileSection(
-                nickname = myPageInfo.nickname,
-                remainingLeaveDays = myPageInfo.remainingLeaveDays,
-                preferredLeaveDays = myPageInfo.preferredLeaveDays,
-                onEditLeaveDaysClick = onEditLeaveDaysClick,
-                modifier = Modifier.padding(horizontal = 20.dp),
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(Mint10)
+                        .statusBarsPadding()
+                        .padding(vertical = 18.dp),
+            ) {
+                MyPageProfileSection(
+                    nickname = myPageInfo.nickname,
+                    remainingLeaveDays = myPageInfo.remainingLeaveDays,
+                    preferredLeaveDays = myPageInfo.preferredLeaveDays,
+                    onEditLeaveDaysClick = onEditLeaveDaysClick,
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                )
+            }
             HorizontalDivider(color = Neutral20)
         }
         item {
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             MyPageSelectedPeriodSection(
                 selectedPeriods = myPageInfo.selectedPeriods,
                 onDeleteClick = onDeleteScheduleClick,
@@ -108,7 +118,7 @@ fun MyPageScreen(
                 savedPlaces = myPageInfo.savedPlaces,
                 onDeleteClick = onDeleteSavedPlaceClick,
             )
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
         item {
             MyPageMenuSection(
