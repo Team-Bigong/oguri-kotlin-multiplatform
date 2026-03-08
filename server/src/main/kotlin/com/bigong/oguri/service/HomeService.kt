@@ -164,7 +164,7 @@ class HomeService(
         limit: Int
     ): List<VacationPeriod> {
         val now = LocalDate.now()
-        val endSearchDate = now.plusYears(1)
+        val endSearchDate = now.plusMonths(8) // 오늘부터 8개월 뒤까지로 탐색 범위 단축
         val daysToSearch = ChronoUnit.DAYS.between(now, endSearchDate).toInt() + 1
 
         val candidates = mutableListOf<VacationPeriod>()
