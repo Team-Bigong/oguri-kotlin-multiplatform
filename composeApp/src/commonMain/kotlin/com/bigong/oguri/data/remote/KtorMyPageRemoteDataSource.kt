@@ -65,7 +65,11 @@ class KtorMyPageRemoteDataSource(
         }
 
         delay(140)
-        cachedMyPageResponse = cachedMyPageResponse.copy(preferredLeaveDays = request.preferredLeaveDays)
+        cachedMyPageResponse =
+            cachedMyPageResponse.copy(
+                remainingLeaveDays = request.remainingLeaveDays,
+                preferredLeaveDays = request.preferredLeaveDays,
+            )
         return cachedMyPageResponse
     }
 

@@ -51,7 +51,7 @@ fun MyPageScreen(
     onRetryClick: () -> Unit,
     onEditLeaveDaysClick: () -> Unit,
     onDismissLeaveDaysBottomSheet: () -> Unit,
-    onSubmitLeaveDays: (Int) -> Unit,
+    onSubmitLeaveDays: (Int, Int) -> Unit,
     onDeleteScheduleClick: (Long) -> Unit,
     onDismissDeleteScheduleDialog: () -> Unit,
     onConfirmDeleteSchedule: () -> Unit,
@@ -137,7 +137,8 @@ fun MyPageScreen(
 
     if (myPageUiState.isEditLeaveDaysBottomSheetVisible) {
         MyPageLeaveDaysBottomSheet(
-            currentLeaveDays = myPageInfo.preferredLeaveDays,
+            currentRemainingLeaveDays = myPageInfo.remainingLeaveDays,
+            currentPreferredLeaveDays = myPageInfo.preferredLeaveDays,
             onDismissRequest = onDismissLeaveDaysBottomSheet,
             onSubmit = onSubmitLeaveDays,
         )

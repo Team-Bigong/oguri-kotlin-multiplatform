@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.bigong.oguri.domain.usecase.DeleteMyPageSavedPlaceUseCase
 import com.bigong.oguri.domain.usecase.DeleteMyPageSelectedPeriodUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
-import com.bigong.oguri.domain.usecase.UpdatePreferredLeaveDaysUseCase
+import com.bigong.oguri.domain.usecase.UpdateMyPageLeaveDaysUseCase
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -20,7 +20,7 @@ import kotlinx.coroutines.withContext
 @Inject
 class MyPageViewModel(
     private val getMyPageInfoUseCase: GetMyPageInfoUseCase,
-    private val updatePreferredLeaveDaysUseCase: UpdatePreferredLeaveDaysUseCase,
+    private val updateMyPageLeaveDaysUseCase: UpdateMyPageLeaveDaysUseCase,
     private val deleteMyPageSelectedPeriodUseCase: DeleteMyPageSelectedPeriodUseCase,
     private val deleteMyPageSavedPlaceUseCase: DeleteMyPageSavedPlaceUseCase,
 ) : ViewModel() {
@@ -67,15 +67,21 @@ class MyPageViewModel(
         myPageUiState = myPageUiState.copy(isEditLeaveDaysBottomSheetVisible = false)
     }
 
-    fun updatePreferredLeaveDays(preferredLeaveDays: Int) {
-        if (preferredLeaveDays <= 0) {
+    fun updateLeaveDays(
+        remainingLeaveDays: Int,
+        preferredLeaveDays: Int,
+    ) {
+        if (remainingLeaveDays <= 0 || preferredLeaveDays <= 0) {
             return
         }
 
         viewModelScope.launch {
             runCatching {
                 withContext(Dispatchers.Default) {
-                    updatePreferredLeaveDaysUseCase(preferredLeaveDays = preferredLeaveDays)
+                    updateMyPageLeaveDaysUseCase(
+                        remainingLeaveDays = remainingLeaveDays,
+                        preferredLeaveDays = preferredLeaveDays,
+                    )
                 }
             }.onSuccess { myPageInfo ->
                 myPageUiState =

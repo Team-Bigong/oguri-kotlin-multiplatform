@@ -22,7 +22,7 @@ fun MyPageRoute(
         onRetryClick = myPageViewModel::loadMyPageInfo,
         onEditLeaveDaysClick = myPageViewModel::showEditLeaveDaysBottomSheet,
         onDismissLeaveDaysBottomSheet = myPageViewModel::hideEditLeaveDaysBottomSheet,
-        onSubmitLeaveDays = myPageViewModel::updatePreferredLeaveDays,
+        onSubmitLeaveDays = myPageViewModel::updateLeaveDays,
         onDeleteScheduleClick = myPageViewModel::showDeleteScheduleDialog,
         onDismissDeleteScheduleDialog = myPageViewModel::dismissDeleteScheduleDialog,
         onConfirmDeleteSchedule = myPageViewModel::confirmDeleteSchedule,

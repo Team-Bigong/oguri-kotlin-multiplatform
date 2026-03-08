@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -24,9 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
@@ -38,28 +40,30 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_exit
 import oguri.composeapp.generated.resources.calendar_leave_days_sheet_done
-import oguri.composeapp.generated.resources.calendar_leave_days_sheet_title
+import oguri.composeapp.generated.resources.mypage_leave_days_field_preferred
+import oguri.composeapp.generated.resources.mypage_leave_days_field_remaining
+import oguri.composeapp.generated.resources.mypage_leave_days_sheet_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
 
 private val BOTTOM_SHEET_SHAPE = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+private val FIELD_SHAPE = RoundedCornerShape(size = 8.dp)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyPageLeaveDaysBottomSheet(
-    currentLeaveDays: Int,
+    currentRemainingLeaveDays: Int,
+    currentPreferredLeaveDays: Int,
     onDismissRequest: () -> Unit,
-    onSubmit: (Int) -> Unit,
+    onSubmit: (Int, Int) -> Unit,
 ) {
-    var inputText by remember(currentLeaveDays) { mutableStateOf(currentLeaveDays.toString()) }
+    var remainingLeaveDaysInput by remember(currentRemainingLeaveDays) { mutableStateOf(currentRemainingLeaveDays.toString()) }
+    var preferredLeaveDaysInput by remember(currentPreferredLeaveDays) { mutableStateOf(currentPreferredLeaveDays.toString()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    LaunchedEffect(currentLeaveDays) {
-        inputText = currentLeaveDays.toString()
+    LaunchedEffect(currentRemainingLeaveDays, currentPreferredLeaveDays) {
+        remainingLeaveDaysInput = currentRemainingLeaveDays.toString()
+        preferredLeaveDaysInput = currentPreferredLeaveDays.toString()
     }
 
     ModalBottomSheet(
@@ -89,7 +93,7 @@ fun MyPageLeaveDaysBottomSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Text(
-                    text = stringResource(Res.string.calendar_leave_days_sheet_title),
+                    text = stringResource(Res.string.mypage_leave_days_sheet_title),
                     style = OguriTheme.typography.cardTitle,
                     color = Neutral90,
                 )
@@ -102,39 +106,19 @@ fun MyPageLeaveDaysBottomSheet(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .background(color = Mint50.copy(alpha = 0.5f), shape = RoundedCornerShape(size = 8.dp))
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                BasicTextField(
-                    value = inputText,
-                    onValueChange = { nextText ->
-                        inputText = nextText.filter { character -> character.isDigit() }.take(2)
-                    },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    textStyle =
-                        TextStyle(
-                            color = Neutral90,
-                            fontSize = 20.sp,
-                            textAlign = TextAlign.Center,
-                        ),
-                    decorationBox = { innerTextField ->
-                        if (inputText.isEmpty()) {
-                            Text(
-                                text = "0",
-                                style = OguriTheme.typography.bodyLarge,
-                                color = Neutral40,
-                            )
-                        }
-                        innerTextField()
-                    },
-                )
-            }
+            LeaveDaysTextField(
+                titleText = stringResource(Res.string.mypage_leave_days_field_remaining),
+                value = remainingLeaveDaysInput,
+                onValueChange = { remainingLeaveDaysInput = it },
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LeaveDaysTextField(
+                titleText = stringResource(Res.string.mypage_leave_days_field_preferred),
+                value = preferredLeaveDaysInput,
+                onValueChange = { preferredLeaveDaysInput = it },
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
@@ -145,8 +129,9 @@ fun MyPageLeaveDaysBottomSheet(
                         .background(color = Mint70, shape = RoundedCornerShape(size = 8.dp))
                         .noRippleClickable(
                             onClick = {
-                                val leaveDays = inputText.toIntOrNull() ?: return@noRippleClickable
-                                onSubmit(leaveDays)
+                                val remainingLeaveDays = remainingLeaveDaysInput.toIntOrNull() ?: return@noRippleClickable
+                                val preferredLeaveDays = preferredLeaveDaysInput.toIntOrNull() ?: return@noRippleClickable
+                                onSubmit(remainingLeaveDays, preferredLeaveDays)
                             },
                         ).padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
@@ -157,6 +142,53 @@ fun MyPageLeaveDaysBottomSheet(
                     color = Neutral0,
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun LeaveDaysTextField(
+    titleText: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Text(
+            text = titleText,
+            style = OguriTheme.typography.bodyMedium,
+            color = Neutral50,
+            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+        )
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(color = Mint50.copy(alpha = 0.5f), shape = FIELD_SHAPE)
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = { nextText ->
+                    onValueChange(nextText.filter { character -> character.isDigit() }.take(2))
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                textStyle =
+                    TextStyle(
+                        color = Neutral90,
+                    ),
+                decorationBox = { innerTextField ->
+                    if (value.isEmpty()) {
+                        Text(
+                            text = "0",
+                            style = OguriTheme.typography.bodyLarge,
+                            color = Neutral40,
+                        )
+                    }
+                    innerTextField()
+                },
+            )
         }
     }
 }

@@ -103,4 +103,7 @@
     <string name="mypage_logout_dialog_message">로그아웃 후 다시 로그인해야 해요.</string>
     <string name="mypage_loading">마이페이지 정보를 불러오는 중이에요...</string>
     <string name="mypage_error_retry">마이페이지 정보를 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
+    <string name="mypage_leave_days_sheet_title">연차 설정</string>
+    <string name="mypage_leave_days_field_remaining">남은 연차</string>
+    <string name="mypage_leave_days_field_preferred">선호하는 연차</string>
 </resources>

@@ -9,9 +9,10 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 private fun MyPageLeaveDaysBottomSheetPreview() {
     OguriTheme {
         MyPageLeaveDaysBottomSheet(
-            currentLeaveDays = 3,
+            currentRemainingLeaveDays = 15,
+            currentPreferredLeaveDays = 3,
             onDismissRequest = {},
-            onSubmit = {},
+            onSubmit = { _, _ -> },
         )
     }
 }

@@ -22,10 +22,17 @@ class DefaultMyPageRepository(
         return myPageRemoteDataSource.getMyPageResponse().toDomain()
     }
 
-    override suspend fun updatePreferredLeaveDays(preferredLeaveDays: Int): MyPageInfo {
+    override suspend fun updateLeaveDays(
+        remainingLeaveDays: Int,
+        preferredLeaveDays: Int,
+    ): MyPageInfo {
         return myPageRemoteDataSource
             .updateLeaveDays(
-                request = UpdateMyPageLeaveDaysRequest(preferredLeaveDays = preferredLeaveDays),
+                request =
+                    UpdateMyPageLeaveDaysRequest(
+                        remainingLeaveDays = remainingLeaveDays,
+                        preferredLeaveDays = preferredLeaveDays,
+                    ),
             ).toDomain()
     }
 
