@@ -67,10 +67,20 @@ class HomeViewModel(
     }
 
     fun toggleSaved(isChecked: Boolean) {
+        val selectedRank = homeUiState.selectedRank
+        val previousSavedRankSet = homeUiState.savedRankSet
+        val wasSaved = selectedRank in previousSavedRankSet
         val selectedPeriod =
             homeUiState.recommendPeriods.firstOrNull { period: RecommendPeriod ->
-                period.rank == homeUiState.selectedRank
+                period.rank == selectedRank
             } ?: return
+
+        val optimisticSavedRankSet = if (isChecked) {
+            previousSavedRankSet + selectedRank
+        } else {
+            previousSavedRankSet - selectedRank
+        }
+        homeUiState = homeUiState.copy(savedRankSet = optimisticSavedRankSet)
 
         viewModelScope.launch {
             runCatching {
@@ -89,14 +99,13 @@ class HomeViewModel(
                         )
                     }
                 }
-            }.onSuccess {
-                val selectedRank = homeUiState.selectedRank
-                val nextSavedRankSet = if (isChecked) {
+            }.onFailure {
+                val restoredSavedRankSet = if (wasSaved) {
                     homeUiState.savedRankSet + selectedRank
                 } else {
                     homeUiState.savedRankSet - selectedRank
                 }
-                homeUiState = homeUiState.copy(savedRankSet = nextSavedRankSet)
+                homeUiState = homeUiState.copy(savedRankSet = restoredSavedRankSet)
             }
         }
     }

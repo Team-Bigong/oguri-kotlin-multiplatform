@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkImage
@@ -51,11 +52,9 @@ fun ExperienceCard(
                     } else {
                         Modifier
                     },
-                )
-                .onGloballyPositioned { coordinates ->
+                ).onGloballyPositioned { coordinates ->
                     onMeasuredHeight(coordinates.size.height)
-                }
-                .noRippleClickable(onClick = { onClick(experience.advertisementUrl) }),
+                }.noRippleClickable(onClick = { onClick(experience.advertisementUrl) }),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         NetworkImage(
@@ -79,7 +78,7 @@ fun ExperienceCard(
         Text(
             text = experience.summary,
             style = OguriTheme.typography.labelMedium,
-            color = Neutral100,
+            color = Neutral50,
             maxLines = 4,
             overflow = TextOverflow.Ellipsis,
         )

@@ -12,6 +12,8 @@ import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.setBody
 import io.ktor.client.request.post
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 
 @Inject
 class KtorHomeRemoteDataSource(
@@ -29,6 +31,7 @@ class KtorHomeRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         httpClient.post(requestUrl) {
             header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(request)
         }
     }
@@ -37,6 +40,7 @@ class KtorHomeRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         httpClient.delete(requestUrl) {
             header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+            header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             setBody(request)
         }
     }

@@ -75,6 +75,7 @@ fun NavDisplay(
                 val appGraphFactory = createGraphFactory<AppGraph.Factory>()
                 val httpClient =
                     HttpClient(providePlatformHttpClientEngineFactory()) {
+                        expectSuccess = true
                         install(ContentNegotiation) {
                             json(
                                 Json {

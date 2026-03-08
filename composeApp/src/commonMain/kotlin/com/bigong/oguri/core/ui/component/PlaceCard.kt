@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral40
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkImage
@@ -79,7 +80,7 @@ fun PlaceCard(
             Text(
                 text = place.summary,
                 style = OguriTheme.typography.labelMedium,
-                color = Neutral60,
+                color = Neutral50,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
