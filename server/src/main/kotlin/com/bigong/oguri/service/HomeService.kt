@@ -7,6 +7,7 @@ import com.bigong.oguri.dto.PlaceResponse
 import com.bigong.oguri.dto.RecommendPeriodResponse
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.PublicHolidayRepository
+import com.bigong.oguri.repository.SavedRecommendationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.DayOfWeek
@@ -20,7 +21,8 @@ import java.time.temporal.ChronoUnit
 @Transactional(readOnly = true)
 class HomeService(
     private val destinationRepository: DestinationRepository,
-    private val publicHolidayRepository: PublicHolidayRepository
+    private val publicHolidayRepository: PublicHolidayRepository,
+    private val savedRecommendationRepository: SavedRecommendationRepository
 ) {
     companion object {
         const val WEIGHT_FLIGHT_TIME = 0.6    // 비행시간 가중치 (60%)
@@ -31,14 +33,17 @@ class HomeService(
     /**
      * 홈 화면 데이터 조회 (성능 최적화 버전)
      */
-    fun getHomeData(dayOffCount: Int, userCountry: String): List<RecommendPeriodResponse> {
+    fun getHomeData(dayOffCount: Int, userCountry: String, userId: String): List<RecommendPeriodResponse> {
         // 1. 모든 공휴일 정보 로드
         val holidayMap = publicHolidayRepository.findAll().associateBy { it.holidayDate }
 
-        // 2. 모든 여행지, 국가, 이미지를 단 하나의 쿼리로 로드 (N+1 문제 해결)
+        // 2. 사용자가 저장한 연휴 목록 조회 (isSaved 표시용)
+        val savedPeriods = savedRecommendationRepository.findAllByUserId(userId)
+
+        // 3. 모든 여행지, 국가, 이미지를 단 하나의 쿼리로 로드 (N+1 문제 해결)
         val allDestinations = destinationRepository.findAllWithCountryAndImages()
 
-        // 3. 최적의 연차 구간 탐색
+        // 4. 최적의 연차 구간 탐색
         val bestPeriods = findTopVacationPeriods(dayOffCount, holidayMap, limit = 3)
 
         val advertisements = listOf(
@@ -49,6 +54,11 @@ class HomeService(
         return bestPeriods.mapIndexed { index, period ->
             val recommendedPlaces = calculateRecommendedPlaces(period.start, allDestinations, userCountry)
 
+            // 현재 기간이 사용자가 저장한 목록에 있는지 확인
+            val isSaved = savedPeriods.any { 
+                it.startDate == period.start && it.endDate == period.end 
+            }
+
             val holidayNames = period.holidayObjects
                 .filter { it.isActualHoliday }
                 .map { it.name }
@@ -56,7 +66,7 @@ class HomeService(
 
             RecommendPeriodResponse(
                 rank = index + 1,
-                isSaved = false,
+                isSaved = isSaved,
                 startDate = period.start,
                 endDate = period.end,
                 holiday = if (holidayNames.isEmpty() && period.totalDays > 0) listOf("주말") else holidayNames,
@@ -78,7 +88,6 @@ class HomeService(
     ): List<PlaceResponse> {
         val targetMonth = startDate.monthValue
 
-        // 1. 시기 필터링
         val candidates = destinations.filter { dest ->
             isMonthInRange(targetMonth, dest.recommendStartMonth1, dest.recommendEndMonth1) ||
             isMonthInRange(targetMonth, dest.recommendStartMonth2, dest.recommendEndMonth2)
@@ -86,7 +95,6 @@ class HomeService(
 
         if (candidates.isEmpty()) return emptyList()
 
-        // 2. 정규화 준비 (미리 계산)
         val flightTimes = candidates.map { parseFlightTime(it.flightTime) }
         val bigMacIndices = candidates.map { it.country?.bigMacIndex?.toDouble() ?: 5.0 }
 
@@ -95,7 +103,6 @@ class HomeService(
         val minBigMac = bigMacIndices.minOrNull() ?: 0.0
         val maxBigMac = bigMacIndices.maxOrNull() ?: 1.0
 
-        // 3. 점수 계산 및 정렬
         return candidates.map { dest ->
             val flightVal = parseFlightTime(dest.flightTime)
             val bigMacVal = dest.country?.bigMacIndex?.toDouble() ?: 5.0
@@ -112,7 +119,6 @@ class HomeService(
         )
         .take(MAX_RECOMMENDATIONS)
         .map { (dest, _) ->
-            // [최적화 3] DB를 다시 찌르지 않고 이미 로드된 images 리스트에서 썸네일을 찾음
             val thumbnailUrl = dest.images.find { it.isThumbnail }?.imageUrl ?: ""
 
             PlaceResponse(
@@ -135,9 +141,6 @@ class HomeService(
         return flightTime.replace(Regex("[^0-9]"), "").toDoubleOrNull() ?: 0.0
     }
 
-    /**
-     * 탐색 알고리즘 최적화
-     */
     private fun findTopVacationPeriods(
         userDayOff: Int,
         holidayMap: Map<LocalDate, PublicHoliday>,
@@ -149,16 +152,14 @@ class HomeService(
 
         val candidates = mutableListOf<VacationPeriod>()
 
-        // [최적화 4] 이중 루프 내 불필요한 객체 생성을 최소화
         for (i in 0 until daysToSearch) {
             val currentStart = now.plusDays(i.toLong())
             var usedDayOff = 0
             var currentEnd = currentStart
             val holidayIndicesInPeriod = mutableListOf<PublicHoliday>()
 
-            for (j in i until (i + 31)) { // 한 번의 휴가가 31일을 넘지 않는다고 가정하여 탐색 범위 축소
+            for (j in i until (i + 31)) {
                 if (j >= daysToSearch) break
-
                 val date = now.plusDays(j.toLong())
                 if (!isOffDay(date, holidayMap)) {
                     if (usedDayOff < userDayOff) usedDayOff++ else break

@@ -3,6 +3,7 @@ package com.bigong.oguri.controller
 import com.bigong.oguri.dto.RecommendPeriodResponse
 import com.bigong.oguri.service.HomeService
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -15,8 +16,9 @@ class HomeController(
     @GetMapping
     fun getHome(
         @RequestParam(defaultValue = "3") dayOffCount: Int,
-        @RequestParam(defaultValue = "대한민국") userCountry: String
+        @RequestParam(defaultValue = "대한민국") userCountry: String,
+        @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") userId: String
     ): List<RecommendPeriodResponse> {
-        return homeService.getHomeData(dayOffCount, userCountry)
+        return homeService.getHomeData(dayOffCount, userCountry, userId)
     }
 }
