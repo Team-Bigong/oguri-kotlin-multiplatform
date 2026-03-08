@@ -59,7 +59,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-private val BottomNavigationVerticalPadding = 8.dp
 private val SnackbarTopPadding = 10.dp
 private val EXIT_BACK_PRESS_WINDOW = 2.seconds
 
@@ -207,7 +206,8 @@ private fun BottomNavigationBar(
                     modifier =
                         Modifier
                             .noRippleClickable(onClick = { onDestinationClick(destination) })
-                            .padding(horizontal = 18.dp, vertical = 10.dp),
+                            .padding(horizontal = 18.dp, vertical = 10.dp)
+                            .weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
