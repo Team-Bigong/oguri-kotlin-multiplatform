@@ -15,6 +15,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_save_checked
@@ -28,11 +30,16 @@ fun SaveToggleButton(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier =
-            modifier
-                .size(48.dp)
-                .noRippleClickable(onClick = { onCheckedChange(!checked) })
-                .padding(14.dp),
+            modifier =
+                modifier
+                    .size(48.dp)
+                    .noRippleClickable(
+                        onClick = {
+                            HapticType.Selection.perform()
+                            onCheckedChange(!checked)
+                        },
+                    )
+                    .padding(14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Image(
