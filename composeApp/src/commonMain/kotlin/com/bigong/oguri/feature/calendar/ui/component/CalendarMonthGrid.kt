@@ -164,6 +164,9 @@ private fun CalendarDayCell(
                 .height(height = 42.dp)
                 .noRippleClickable(
                     onClick = {
+                        if (!isInRecommendation) {
+                            return@noRippleClickable
+                        }
                         HapticType.Selection.perform()
                         onClick(dayCell.date)
                     },
