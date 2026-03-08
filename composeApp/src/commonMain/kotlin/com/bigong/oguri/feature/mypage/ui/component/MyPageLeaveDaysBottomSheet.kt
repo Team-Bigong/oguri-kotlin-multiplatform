@@ -12,10 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -26,10 +27,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -47,7 +46,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 private val BOTTOM_SHEET_SHAPE = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-private val FIELD_SHAPE = RoundedCornerShape(size = 8.dp)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -153,42 +151,45 @@ private fun LeaveDaysTextField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         Text(
             text = titleText,
             style = OguriTheme.typography.bodyMedium,
             color = Neutral50,
-            modifier = Modifier.padding(start = 4.dp, bottom = 8.dp),
+            modifier = Modifier.padding(start = 4.dp),
         )
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(color = Mint50.copy(alpha = 0.5f), shape = FIELD_SHAPE)
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-        ) {
-            BasicTextField(
-                value = value,
-                onValueChange = { nextText ->
-                    onValueChange(nextText.filter { character -> character.isDigit() }.take(2))
-                },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                textStyle =
-                    TextStyle(
-                        color = Neutral90,
-                    ),
-                decorationBox = { innerTextField ->
-                    if (value.isEmpty()) {
-                        Text(
-                            text = "0",
-                            style = OguriTheme.typography.bodyLarge,
-                            color = Neutral40,
-                        )
-                    }
-                    innerTextField()
-                },
-            )
-        }
+        OutlinedTextField(
+            value = value,
+            onValueChange = { nextText ->
+                onValueChange(nextText.filter { character -> character.isDigit() }.take(2))
+            },
+            singleLine = true,
+            textStyle = OguriTheme.typography.bodyLarge.copy(color = Neutral90),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            placeholder = {
+                Text(
+                    text = "0",
+                    style = OguriTheme.typography.bodyLarge,
+                    color = Neutral40,
+                )
+            },
+            shape = RoundedCornerShape(8.dp),
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Mint70,
+                    unfocusedBorderColor = Neutral40,
+                    focusedLabelColor = Mint70,
+                    unfocusedLabelColor = Neutral50,
+                    cursorColor = Mint70,
+                    focusedTextColor = Neutral90,
+                    unfocusedTextColor = Neutral90,
+                    focusedContainerColor = Neutral0,
+                    unfocusedContainerColor = Neutral0,
+                ),
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }

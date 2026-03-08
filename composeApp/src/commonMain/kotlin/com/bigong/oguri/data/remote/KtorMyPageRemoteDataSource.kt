@@ -53,8 +53,8 @@ class KtorMyPageRemoteDataSource(
 
         return MyPageResponse(
             nickname = memberMe.nickname,
-            remainingLeaveDays = memberMe.dayOffCount,
-            preferredLeaveDays = memberMe.dayOffCount,
+            remainingLeaveDays = memberMe.remainingDayOff,
+            preferredLeaveDays = memberMe.preferredDayOff,
             selectedPeriods = savedRecommendations,
             savedPlaces = emptyList(),
         ).also { response ->
@@ -63,17 +63,21 @@ class KtorMyPageRemoteDataSource(
     }
 
     override suspend fun updateLeaveDays(request: UpdateMyPageLeaveDaysRequest): MyPageResponse {
-        val updatedDayOffCount =
-            httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-                setBody(UpdateMemberDayOffRequest(dayOffCount = request.remainingLeaveDays))
-            }.body<Int>()
+        httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
+            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+            setBody(
+                UpdateMemberDayOffRequest(
+                    preferredDayOff = request.preferredLeaveDays,
+                    remainingDayOff = request.remainingLeaveDays,
+                ),
+            )
+        }
 
         val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
 
         return currentMyPageResponse.copy(
-            remainingLeaveDays = updatedDayOffCount,
-            preferredLeaveDays = updatedDayOffCount,
+            remainingLeaveDays = request.remainingLeaveDays,
+            preferredLeaveDays = request.preferredLeaveDays,
         ).also { response ->
             cachedMyPageResponse = response
         }

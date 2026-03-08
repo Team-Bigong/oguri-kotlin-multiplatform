@@ -19,6 +19,11 @@ private fun CalendarMonthGridPreview() {
                     CalendarHoliday(date = LocalDate(2026, 3, 1), name = "삼일절"),
                     CalendarHoliday(date = LocalDate(2026, 3, 2), name = "대체휴일"),
                 ),
+            periods =
+                listOf(
+                    CalendarPeriod(id = 1L, startDate = LocalDate(2026, 2, 28), endDate = LocalDate(2026, 3, 4)),
+                    CalendarPeriod(id = 2L, startDate = LocalDate(2026, 3, 7), endDate = LocalDate(2026, 3, 10)),
+                ),
             selectedPeriod = CalendarPeriod(id = 1L, startDate = LocalDate(2026, 2, 28), endDate = LocalDate(2026, 3, 4)),
             selectedDate = LocalDate(2026, 3, 1),
             todayDate = LocalDate(2026, 3, 2),

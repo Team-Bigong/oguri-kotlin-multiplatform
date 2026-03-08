@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.placedetail.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -9,8 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -23,7 +25,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral30
+import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
@@ -34,6 +36,8 @@ import oguri.composeapp.generated.resources.place_detail_menu_share
 import oguri.composeapp.generated.resources.place_detail_menu_unsave
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+
+private val PLACE_DETAIL_MENU_SHAPE = RoundedCornerShape(size = 8.dp)
 
 @Composable
 fun PlaceDetailTopBar(
@@ -100,40 +104,46 @@ fun PlaceDetailTopBar(
                 DropdownMenu(
                     expanded = isMenuExpanded,
                     onDismissRequest = { isMenuExpanded = false },
+                    shape = PLACE_DETAIL_MENU_SHAPE,
                     containerColor = Neutral0,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 4.dp,
-                    border = androidx.compose.foundation.BorderStroke(width = 1.dp, color = Neutral30),
+                    modifier = Modifier.background(color = Neutral0, shape = PLACE_DETAIL_MENU_SHAPE),
                 ) {
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text = stringResource(Res.string.place_detail_menu_share),
-                                style = OguriTheme.typography.bodyMedium,
-                            )
-                        },
-                        onClick = {
-                            isMenuExpanded = false
-                            onShareClick()
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text =
-                                    if (isSaved) {
-                                        stringResource(Res.string.place_detail_menu_unsave)
-                                    } else {
-                                        stringResource(Res.string.place_detail_menu_save)
-                                    },
-                                style = OguriTheme.typography.bodyMedium,
-                            )
-                        },
-                        onClick = {
-                            isMenuExpanded = false
-                            onSaveToggleClick()
-                        },
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(Res.string.place_detail_menu_share),
+                            style = OguriTheme.typography.bodyMedium,
+                            color = Neutral100,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .noRippleClickable(
+                                        onClick = {
+                                            isMenuExpanded = false
+                                            onShareClick()
+                                        },
+                                    ).padding(horizontal = 16.dp, vertical = 12.dp),
+                        )
+                        HorizontalDivider(color = Neutral20)
+                        Text(
+                            text =
+                                if (isSaved) {
+                                    stringResource(Res.string.place_detail_menu_unsave)
+                                } else {
+                                    stringResource(Res.string.place_detail_menu_save)
+                                },
+                            style = OguriTheme.typography.bodyMedium,
+                            color = Neutral100,
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .noRippleClickable(
+                                        onClick = {
+                                            isMenuExpanded = false
+                                            onSaveToggleClick()
+                                        },
+                                    ).padding(horizontal = 16.dp, vertical = 12.dp),
+                        )
+                    }
                 }
             }
         }

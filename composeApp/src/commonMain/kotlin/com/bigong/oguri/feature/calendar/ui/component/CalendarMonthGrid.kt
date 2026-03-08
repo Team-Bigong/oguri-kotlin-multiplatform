@@ -15,8 +15,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
@@ -26,8 +31,11 @@ import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange20
 import com.bigong.oguri.core.designsystem.Orange50
+import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.domain.model.CalendarHoliday
 import com.bigong.oguri.domain.model.CalendarPeriod
 import kotlinx.datetime.DateTimeUnit
@@ -45,13 +53,15 @@ import oguri.composeapp.generated.resources.calendar_day_tue
 import oguri.composeapp.generated.resources.calendar_day_wed
 import org.jetbrains.compose.resources.stringResource
 
-private val SELECTED_DATE_EDGE_SHAPE = RoundedCornerShape(size = 14.dp)
+private val PERIOD_HIGHLIGHT_CORNER_RADIUS_DP = 8.dp
+private val SELECTED_DATE_EDGE_SHAPE = RoundedCornerShape(size = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP)
 
 @Composable
 fun CalendarMonthGrid(
     year: Int,
     month: Int,
     holidays: List<CalendarHoliday>,
+    periods: List<CalendarPeriod>,
     selectedPeriod: CalendarPeriod?,
     selectedDate: LocalDate?,
     todayDate: LocalDate,
@@ -93,18 +103,20 @@ fun CalendarMonthGrid(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             ) {
                 weekCells.forEachIndexed { index: Int, dayCell: DayCell ->
-                    val isSelected = dayCell.date.isInSelectedPeriod(selectedPeriod)
-                    val hasSelectedLeft =
+                    val periodForDate = dayCell.date.findPeriod(periods = periods)
+                    val isSelected = selectedPeriod != null && periodForDate?.id == selectedPeriod.id
+                    val hasRecommendation = periodForDate != null
+                    val hasSamePeriodLeft =
                         if (index == 0) {
                             false
                         } else {
-                            weekCells[index - 1].date.isInSelectedPeriod(selectedPeriod) && isSelected
+                            weekCells[index - 1].date.findPeriod(periods = periods)?.id == periodForDate?.id && hasRecommendation
                         }
-                    val hasSelectedRight =
+                    val hasSamePeriodRight =
                         if (index == weekCells.lastIndex) {
                             false
                         } else {
-                            weekCells[index + 1].date.isInSelectedPeriod(selectedPeriod) && isSelected
+                            weekCells[index + 1].date.findPeriod(periods = periods)?.id == periodForDate?.id && hasRecommendation
                         }
                     CalendarDayCell(
                         modifier = Modifier.weight(1f),
@@ -112,8 +124,9 @@ fun CalendarMonthGrid(
                         holidayName = holidayNameByDate[dayCell.date],
                         isToday = dayCell.date == todayDate,
                         isSelected = isSelected,
-                        hasSelectedLeft = hasSelectedLeft,
-                        hasSelectedRight = hasSelectedRight,
+                        isInRecommendation = hasRecommendation,
+                        hasSamePeriodLeft = hasSamePeriodLeft,
+                        hasSamePeriodRight = hasSamePeriodRight,
                         isSelectedDate = dayCell.date == selectedDate,
                         onClick = onDateClick,
                     )
@@ -131,8 +144,9 @@ private fun CalendarDayCell(
     holidayName: String?,
     isToday: Boolean,
     isSelected: Boolean,
-    hasSelectedLeft: Boolean,
-    hasSelectedRight: Boolean,
+    isInRecommendation: Boolean,
+    hasSamePeriodLeft: Boolean,
+    hasSamePeriodRight: Boolean,
     isSelectedDate: Boolean,
     onClick: (LocalDate) -> Unit,
 ) {
@@ -148,7 +162,12 @@ private fun CalendarDayCell(
         modifier =
             modifier
                 .height(height = 42.dp)
-                .noRippleClickable(onClick = { onClick(dayCell.date) }),
+                .noRippleClickable(
+                    onClick = {
+                        HapticType.Selection.perform()
+                        onClick(dayCell.date)
+                    },
+                ),
     ) {
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
@@ -156,10 +175,21 @@ private fun CalendarDayCell(
                     Modifier
                         .fillMaxWidth()
                         .height(16.dp)
-                        .padding(horizontal = if (isSelected && !hasSelectedLeft && !hasSelectedRight) 4.dp else 0.dp)
-                        .background(
-                            color = if (isSelected) Mint50.copy(alpha = 0.5f) else Color.Transparent,
-                            shape = selectedDateBackgroundShape(isSelected, hasSelectedLeft, hasSelectedRight),
+                        .padding(
+                            start = if (isInRecommendation && !hasSamePeriodLeft) 6.dp else 0.dp,
+                            end = if (isInRecommendation && !hasSamePeriodRight) 6.dp else 0.dp,
+                        ).background(
+                            color =
+                                when {
+                                    isSelected -> Mint50.copy(alpha = 0.5f)
+                                    else -> Color.Transparent
+                                },
+                            shape = selectedDateBackgroundShape(isInRecommendation, hasSamePeriodLeft, hasSamePeriodRight),
+                        ).recommendationDashedBorder(
+                            isSelected = isSelected,
+                            isInRecommendation = isInRecommendation,
+                            hasSamePeriodLeft = hasSamePeriodLeft,
+                            hasSamePeriodRight = hasSamePeriodRight,
                         ),
                 contentAlignment = Alignment.Center,
             ) {
@@ -227,22 +257,108 @@ private fun dayCells(
 }
 
 private fun selectedDateBackgroundShape(
-    isSelected: Boolean,
-    hasSelectedLeft: Boolean,
-    hasSelectedRight: Boolean,
+    isInRecommendation: Boolean,
+    hasSamePeriodLeft: Boolean,
+    hasSamePeriodRight: Boolean,
 ): Shape {
-    if (!isSelected) {
+    if (!isInRecommendation) {
         return CircleShape
     }
     return when {
-        !hasSelectedLeft && !hasSelectedRight -> SELECTED_DATE_EDGE_SHAPE
-        !hasSelectedLeft -> RoundedCornerShape(topStart = 14.dp, bottomStart = 14.dp)
-        !hasSelectedRight -> RoundedCornerShape(topEnd = 14.dp, bottomEnd = 14.dp)
+        !hasSamePeriodLeft && !hasSamePeriodRight -> SELECTED_DATE_EDGE_SHAPE
+        !hasSamePeriodLeft -> RoundedCornerShape(topStart = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP, bottomStart = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP)
+        !hasSamePeriodRight -> RoundedCornerShape(topEnd = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP, bottomEnd = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP)
         else -> RoundedCornerShape(size = 0.dp)
     }
 }
 
-private fun LocalDate.isInSelectedPeriod(selectedPeriod: CalendarPeriod?): Boolean =
-    selectedPeriod?.let { period: CalendarPeriod ->
+private fun Modifier.recommendationDashedBorder(
+    isSelected: Boolean,
+    isInRecommendation: Boolean,
+    hasSamePeriodLeft: Boolean,
+    hasSamePeriodRight: Boolean,
+): Modifier {
+    if (isSelected || !isInRecommendation) {
+        return this
+    }
+
+    return drawBehind {
+        val strokeWidthPx = 1.dp.toPx()
+        val inset = strokeWidthPx / 2f
+        val highlightColor = Orange20.copy(alpha = 0.5f)
+        val dashEffect = PathEffect.dashPathEffect(intervals = floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+        val radiusPx = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP.toPx()
+        val lineStartX = if (hasSamePeriodLeft) inset else inset + radiusPx
+        val lineEndX = if (hasSamePeriodRight) size.width - inset else size.width - inset - radiusPx
+
+        if (lineEndX > lineStartX) {
+            drawLine(
+                color = highlightColor,
+                start = androidx.compose.ui.geometry.Offset(x = lineStartX, y = inset),
+                end = androidx.compose.ui.geometry.Offset(x = lineEndX, y = inset),
+                strokeWidth = strokeWidthPx,
+                cap = StrokeCap.Round,
+                pathEffect = dashEffect,
+            )
+
+            drawLine(
+                color = highlightColor,
+                start = androidx.compose.ui.geometry.Offset(x = lineStartX, y = size.height - inset),
+                end = androidx.compose.ui.geometry.Offset(x = lineEndX, y = size.height - inset),
+                strokeWidth = strokeWidthPx,
+                cap = StrokeCap.Round,
+                pathEffect = dashEffect,
+            )
+        }
+
+        val arcDiameter = radiusPx * 2f
+        if (!hasSamePeriodLeft) {
+            val leftArcPath =
+                Path().apply {
+                    addArc(
+                        oval =
+                            androidx.compose.ui.geometry.Rect(
+                                left = 0f,
+                                top = inset,
+                                right = arcDiameter,
+                                bottom = size.height - inset,
+                            ),
+                        startAngleDegrees = 90f,
+                        sweepAngleDegrees = 180f,
+                    )
+                }
+            drawPath(
+                path = leftArcPath,
+                color = highlightColor,
+                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round, pathEffect = dashEffect),
+            )
+        }
+
+        if (!hasSamePeriodRight) {
+            val rightArcPath =
+                Path().apply {
+                    addArc(
+                        oval =
+                            androidx.compose.ui.geometry.Rect(
+                                left = size.width - arcDiameter,
+                                top = inset,
+                                right = size.width,
+                                bottom = size.height - inset,
+                            ),
+                        startAngleDegrees = -90f,
+                        sweepAngleDegrees = 180f,
+                    )
+                }
+            drawPath(
+                path = rightArcPath,
+                color = highlightColor,
+                style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round, pathEffect = dashEffect),
+            )
+        }
+    }
+}
+
+private fun LocalDate.findPeriod(periods: List<CalendarPeriod>): CalendarPeriod? =
+    periods.firstOrNull { period: CalendarPeriod ->
         this in period.startDate..period.endDate
-    } == true
+    }

@@ -4,11 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MemberMeResponse(
-    @SerialName("id")
-    val id: String,
-    @SerialName("nickname")
-    val nickname: String,
+data class MemberDayOffResponse(
     @SerialName("preferredDayOff")
     val preferredDayOff: Int,
     @SerialName("remainingDayOff")

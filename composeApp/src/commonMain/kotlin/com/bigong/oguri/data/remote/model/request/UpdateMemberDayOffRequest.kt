@@ -5,6 +5,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UpdateMemberDayOffRequest(
-    @SerialName("dayOffCount")
-    val dayOffCount: Int,
+    @SerialName("preferredDayOff")
+    val preferredDayOff: Int,
+    @SerialName("remainingDayOff")
+    val remainingDayOff: Int,
 )

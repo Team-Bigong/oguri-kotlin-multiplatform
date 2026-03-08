@@ -109,6 +109,7 @@ fun CalendarScreen(
             year = recommendation.year,
             month = recommendation.month,
             holidays = recommendation.holidays,
+            periods = recommendation.periods,
             selectedPeriod = selectedPeriod,
             selectedDate = calendarUiState.selectedDate,
             todayDate =

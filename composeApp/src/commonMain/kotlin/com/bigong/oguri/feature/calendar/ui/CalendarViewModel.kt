@@ -26,29 +26,19 @@ class CalendarViewModel(
         private set
 
     init {
-        fetchCalendarRecommendation(
-            year = calendarUiState.selectedYear,
-            month = calendarUiState.selectedMonth,
-        )
+        loadInitialCalendar()
     }
 
     fun updateLeaveDays(leaveDays: Int) {
         if (leaveDays <= 0) {
             return
         }
-        viewModelScope.launch {
-            runCatching {
-                withContext(Dispatchers.Default) {
-                    getCalendarRecommendationUseCase.updateDayOffCount(dayOffCount = leaveDays)
-                }
-            }.onSuccess { updatedDayOffCount ->
-                calendarUiState = calendarUiState.copy(leaveDays = updatedDayOffCount)
-                fetchCalendarRecommendation(
-                    year = calendarUiState.selectedYear,
-                    month = calendarUiState.selectedMonth,
-                )
-            }
-        }
+        calendarUiState = calendarUiState.copy(leaveDays = leaveDays)
+        fetchCalendarRecommendation(
+            year = calendarUiState.selectedYear,
+            month = calendarUiState.selectedMonth,
+            leaveDays = leaveDays,
+        )
     }
 
     fun updateYearMonth(
@@ -62,6 +52,7 @@ class CalendarViewModel(
         fetchCalendarRecommendation(
             year = year,
             month = month,
+            leaveDays = calendarUiState.leaveDays,
         )
     }
 
@@ -114,12 +105,39 @@ class CalendarViewModel(
         fetchCalendarRecommendation(
             year = calendarUiState.selectedYear,
             month = calendarUiState.selectedMonth,
+            leaveDays = calendarUiState.leaveDays,
         )
+    }
+
+    private fun loadInitialCalendar() {
+        viewModelScope.launch {
+            calendarUiState = calendarUiState.copy(isLoading = true, isError = false)
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    getCalendarRecommendationUseCase.getPreferredDayOffCount()
+                }
+            }.onSuccess { preferredDayOffCount ->
+                val resolvedLeaveDays = preferredDayOffCount.coerceAtLeast(1)
+                calendarUiState = calendarUiState.copy(leaveDays = resolvedLeaveDays)
+                fetchCalendarRecommendation(
+                    year = calendarUiState.selectedYear,
+                    month = calendarUiState.selectedMonth,
+                    leaveDays = resolvedLeaveDays,
+                )
+            }.onFailure {
+                calendarUiState = calendarUiState.copy(
+                    isLoading = false,
+                    isError = true,
+                    calendarRecommendation = null,
+                )
+            }
+        }
     }
 
     private fun fetchCalendarRecommendation(
         year: Int,
         month: Int,
+        leaveDays: Int,
     ) {
         viewModelScope.launch {
             calendarUiState = calendarUiState.copy(isLoading = true, isError = false)
@@ -129,6 +147,7 @@ class CalendarViewModel(
                     getCalendarRecommendationUseCase(
                         year = year,
                         month = month,
+                        dayOffCount = leaveDays,
                     )
                 }
             }.onSuccess { recommendation ->
@@ -136,7 +155,7 @@ class CalendarViewModel(
                 calendarUiState = calendarUiState.copy(
                     isLoading = false,
                     isError = false,
-                    leaveDays = recommendation.leaveDays,
+                    leaveDays = leaveDays,
                     selectedYear = recommendation.year,
                     selectedMonth = recommendation.month,
                     selectedDate = defaultSelectedPeriod?.startDate,

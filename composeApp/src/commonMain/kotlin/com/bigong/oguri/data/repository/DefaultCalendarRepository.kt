@@ -15,21 +15,23 @@ import kotlinx.datetime.LocalDate
 class DefaultCalendarRepository(
     private val calendarRemoteDataSource: CalendarRemoteDataSource,
 ) : CalendarRepository {
+    override suspend fun getPreferredDayOffCount(): Int {
+        return calendarRemoteDataSource.getMemberDayOffResponse().preferredDayOff
+    }
+
     override suspend fun getCalendarRecommendation(
         year: Int,
         month: Int,
+        dayOffCount: Int,
     ): CalendarRecommendation {
         return calendarRemoteDataSource.getCalendarRecommendationResponse(
             year = year,
             month = month,
+            dayOffCount = dayOffCount,
         ).toDomain(
             year = year,
             month = month,
         )
-    }
-
-    override suspend fun updateMemberDayOffCount(dayOffCount: Int): Int {
-        return calendarRemoteDataSource.updateMemberDayOffCount(dayOffCount = dayOffCount)
     }
 }
 
