@@ -21,6 +21,8 @@ import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.core.util.extension.noRippleClickable
 
 private val RANK_TOGGLE_CONTAINER_HEIGHT = 26.dp
@@ -71,7 +73,14 @@ fun RankSegmentedToggle(
                     modifier =
                         Modifier
                             .width(segmentWidth)
-                            .noRippleClickable(onClick = { onRankSelected(rank) })
+                            .noRippleClickable(
+                                onClick = {
+                                    if (rank != selectedRank) {
+                                        HapticType.Selection.perform()
+                                    }
+                                    onRankSelected(rank)
+                                },
+                            )
                             .height(height = RANK_TOGGLE_CONTAINER_HEIGHT),
                     contentAlignment = Alignment.Center,
                 ) {
