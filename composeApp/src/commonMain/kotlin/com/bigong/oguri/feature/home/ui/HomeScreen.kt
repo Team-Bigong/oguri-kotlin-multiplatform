@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
@@ -126,10 +127,12 @@ fun HomeScreen(
             }
             item {
                 Spacer(modifier = Modifier.height(18.dp))
-                PlaceHorizontalCarousel(
-                    places = currentPeriod.places,
-                    onPlaceClick = { place -> onPlaceClick(place.id) },
-                )
+                key(homeUiState.selectedRank) {
+                    PlaceHorizontalCarousel(
+                        places = currentPeriod.places,
+                        onPlaceClick = { place -> onPlaceClick(place.id) },
+                    )
+                }
             }
             item {
                 Spacer(modifier = Modifier.height(28.dp))
