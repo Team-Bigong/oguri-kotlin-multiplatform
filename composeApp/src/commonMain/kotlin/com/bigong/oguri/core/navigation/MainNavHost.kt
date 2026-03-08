@@ -3,6 +3,8 @@ package com.bigong.oguri.core.navigation
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 
 private const val NAVIGATION_FADE_DURATION_MILLIS: Int = 180
+private const val NAVIGATION_SLIDE_DURATION_MILLIS: Int = 240
 
 @Composable
 fun MainNavHost(
@@ -35,10 +38,30 @@ fun MainNavHost(
             Modifier
                 .fillMaxSize()
                 .padding(contentPaddingValues),
-        enterTransition = { fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS)) },
-        exitTransition = { fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS)) },
-        popEnterTransition = { fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS)) },
-        popExitTransition = { fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS)) },
+        enterTransition = {
+            slideInHorizontally(
+                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                initialOffsetX = { fullWidth: Int -> fullWidth },
+            ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
+        exitTransition = {
+            slideOutHorizontally(
+                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                targetOffsetX = { fullWidth: Int -> -fullWidth / 3 },
+            ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
+        popEnterTransition = {
+            slideInHorizontally(
+                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                initialOffsetX = { fullWidth: Int -> -fullWidth / 3 },
+            ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
+        popExitTransition = {
+            slideOutHorizontally(
+                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                targetOffsetX = { fullWidth: Int -> fullWidth },
+            ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+        },
     ) {
         composable<RouteModel.Splash> {
             SplashRoute(onSplashCompleted = navigator::navigateToLogin)
