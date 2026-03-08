@@ -39,6 +39,8 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
    └─ mypage
       ├─ navigation
       └─ ui
+         ├─ component
+         └─ model
 ```
 
 ## 레이어 규칙

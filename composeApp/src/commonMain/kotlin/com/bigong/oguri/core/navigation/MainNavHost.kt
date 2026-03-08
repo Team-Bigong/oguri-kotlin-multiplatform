@@ -86,7 +86,9 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.MyPage> {
-            MyPageRoute()
+            MyPageRoute(
+                myPageViewModelProvider = appGraph.myPageViewModelProvider,
+            )
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->
             val route = navBackStackEntry.toRoute<RouteModel.PlaceDetail>()

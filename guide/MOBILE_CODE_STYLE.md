@@ -33,6 +33,8 @@
 - 공통 소스셋 제한으로 `commonMain` 프리뷰가 어려운 경우 `androidMain` 프리뷰 파일로 대체한다.
 - 클릭은 기본적으로 `noRippleClickable`을 사용한다.
 - 혼합 스타일 텍스트는 `getStyledText`만 사용한다. (`getColoredText` 사용 금지)
+- 외부 링크 열기는 `LocalUriHandler.current.openUri(...)` 패턴을 사용한다.
+- 삭제/로그아웃 확인 팝업은 공용 `ConfirmAlertDialog`를 재사용한다.
 
 ## 패키지 규칙
 - `presentation` 패키지를 사용하지 않는다.

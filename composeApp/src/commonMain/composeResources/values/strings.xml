@@ -81,5 +81,26 @@
     <string name="period_detail_dummy_back">Back</string>
     <string name="period_detail_dummy_title">Period Detail Dummy Screen</string>
     <string name="period_detail_dummy_description">Navigation success with periodId=%1$d</string>
-    <string name="mypage_preparing_message">My page design is in progress.</string>
+    <string name="mypage_profile_leave_days">Remaining leave: %1$d days / Preferred leave: %2$d days</string>
+    <string name="mypage_section_selected_period">Selected vacation periods</string>
+    <string name="mypage_section_saved_place">Saved places</string>
+    <string name="mypage_selected_period_date_range">%1$d/%2$d - %3$d/%4$d</string>
+    <string name="mypage_selected_period_information">Holiday %1$d days · Leave %2$d days</string>
+    <string name="mypage_empty_selected_period">No saved vacation period.</string>
+    <string name="mypage_empty_saved_place">No saved place.</string>
+    <string name="mypage_menu_suggest">Suggestions</string>
+    <string name="mypage_menu_terms_of_service">Terms of Service</string>
+    <string name="mypage_menu_privacy_policy">Privacy Policy</string>
+    <string name="mypage_menu_withdraw">Delete account</string>
+    <string name="mypage_menu_logout">Logout</string>
+    <string name="mypage_dialog_confirm">Confirm</string>
+    <string name="mypage_dialog_cancel">Cancel</string>
+    <string name="mypage_delete_schedule_dialog_title">Delete this vacation period?</string>
+    <string name="mypage_delete_schedule_dialog_message">Deleted information cannot be restored.</string>
+    <string name="mypage_delete_place_dialog_title">Delete this place?</string>
+    <string name="mypage_delete_place_dialog_message">Deleted information cannot be restored.</string>
+    <string name="mypage_logout_dialog_title">Log out?</string>
+    <string name="mypage_logout_dialog_message">You will need to log in again.</string>
+    <string name="mypage_loading">Loading my page data...</string>
+    <string name="mypage_error_retry">Failed to load my page data. Tap to retry.</string>
 </resources>
