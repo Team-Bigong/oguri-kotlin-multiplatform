@@ -31,8 +31,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -51,6 +53,8 @@ import oguri.composeapp.generated.resources.calendar_leave_days_sheet_title
 import oguri.composeapp.generated.resources.ic_pen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 private val LEAVE_DAYS_EDITOR_SHAPE = RoundedCornerShape(size = 8.dp)
 private val BOTTOM_SHEET_SHAPE = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
@@ -183,13 +187,34 @@ private fun LeaveDaysNumberPicker(
 ) {
     val centerOffset = (visibleItemCount - 1) / 2
     val pickerState = rememberLazyListState(initialFirstVisibleItemIndex = (value - MIN_LEAVE_DAYS).coerceAtLeast(0))
+    val itemHeightPx = with(LocalDensity.current) { itemHeight.roundToPx() }
 
-    LaunchedEffect(pickerState.isScrollInProgress, pickerState.firstVisibleItemIndex) {
-        if (!pickerState.isScrollInProgress) {
-            val day = (pickerState.firstVisibleItemIndex + MIN_LEAVE_DAYS).coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
+    LaunchedEffect(pickerState, itemHeightPx) {
+        snapshotFlow {
+            pickerState.firstVisibleItemIndex to pickerState.firstVisibleItemScrollOffset
+        }.map { (firstVisibleItemIndex, firstVisibleItemScrollOffset) ->
+            nearestPickerIndex(
+                firstVisibleItemIndex = firstVisibleItemIndex,
+                firstVisibleItemScrollOffset = firstVisibleItemScrollOffset,
+                itemHeightPx = itemHeightPx,
+            )
+        }.distinctUntilChanged().collect { nearestIndex ->
+            val day = (nearestIndex + MIN_LEAVE_DAYS).coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
             if (day != value) {
                 onValueChange(day)
             }
+        }
+    }
+
+    LaunchedEffect(pickerState.isScrollInProgress, itemHeightPx) {
+        if (!pickerState.isScrollInProgress) {
+            val nearestIndex =
+                nearestPickerIndex(
+                    firstVisibleItemIndex = pickerState.firstVisibleItemIndex,
+                    firstVisibleItemScrollOffset = pickerState.firstVisibleItemScrollOffset,
+                    itemHeightPx = itemHeightPx,
+                )
+            pickerState.scrollToItem(index = nearestIndex)
         }
     }
 
@@ -228,6 +253,15 @@ private fun LeaveDaysNumberPicker(
             }
         }
     }
+}
+
+private fun nearestPickerIndex(
+    firstVisibleItemIndex: Int,
+    firstVisibleItemScrollOffset: Int,
+    itemHeightPx: Int,
+): Int {
+    val nextIndexOffset = if (firstVisibleItemScrollOffset >= itemHeightPx / 2) 1 else 0
+    return (firstVisibleItemIndex + nextIndexOffset).coerceIn(0, MAX_LEAVE_DAYS - MIN_LEAVE_DAYS)
 }
 
 @Composable
