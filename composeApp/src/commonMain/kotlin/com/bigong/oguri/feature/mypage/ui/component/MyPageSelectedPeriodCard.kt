@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral30
-import com.bigong.oguri.core.designsystem.Neutral60
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
@@ -85,7 +85,7 @@ fun MyPageSelectedPeriodCard(
             Text(
                 text = stringResource(Res.string.mypage_selected_period_information, period.totalTripCount, period.dayOffCount),
                 style = OguriTheme.typography.bodyMedium,
-                color = Neutral60,
+                color = Neutral50,
             )
         }
         Spacer(modifier = Modifier.width(18.dp))
