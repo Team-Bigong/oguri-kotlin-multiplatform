@@ -1,7 +1,7 @@
 package com.bigong.oguri.controller
 
+import com.bigong.oguri.dto.MemberDayOffRequest
 import com.bigong.oguri.dto.SaveRecommendationRequest
-import com.bigong.oguri.dto.UserSettingRequest
 import com.bigong.oguri.service.MemberService
 import com.bigong.oguri.service.SavedRecommendationService
 import org.springframework.web.bind.annotation.*
@@ -13,7 +13,7 @@ class MemberController(
     private val savedRecommendationService: SavedRecommendationService
 ) {
     /**
-     * 내 정보 조회 API (최초 진입 시 호출하여 닉네임 생성 등 수행)
+     * 내 정보 조회 API
      */
     @GetMapping("/me")
     fun getMyInfo(
@@ -23,14 +23,24 @@ class MemberController(
     }
 
     /**
-     * 멤버 연차 개수 설정 저장 API
+     * 멤버 연차 정보 설정 조회 API
+     */
+    @GetMapping("/day-off")
+    fun getDayOffInfo(
+        @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") memberId: String
+    ): com.bigong.oguri.dto.MemberDayOffResponse {
+        return memberService.getDayOffInfo(memberId)
+    }
+
+    /**
+     * 멤버 연차 정보 설정(선호/잔여) 저장 API
      */
     @PostMapping("/day-off")
-    fun updateDayOffCount(
-        @RequestBody request: UserSettingRequest,
+    fun updateDayOffInfo(
+        @RequestBody request: MemberDayOffRequest,
         @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") memberId: String
-    ): Int {
-        return memberService.updateDayOffCount(memberId, request.dayOffCount)
+    ) {
+        memberService.updateDayOffInfo(memberId, request.preferredDayOff, request.remainingDayOff)
     }
 
     /**

@@ -18,8 +18,9 @@ class CalendarController(
     @GetMapping
     fun getCalendar(
         @RequestParam @DateTimeFormat(pattern = "yyyy-MM") yearMonth: YearMonth,
+        @RequestParam(required = false) dayOffCount: Int?,
         @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") memberId: String
     ): CalendarResponse {
-        return calendarService.getCalendarData(yearMonth, memberId)
+        return calendarService.getCalendarData(yearMonth, memberId, dayOffCount)
     }
 }

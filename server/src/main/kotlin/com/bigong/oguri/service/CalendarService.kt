@@ -22,10 +22,14 @@ class CalendarService(
     private val publicHolidayRepository: PublicHolidayRepository
 ) {
     /**
-     * 특정 년월의 캘린더 데이터 조회 (Top 3 추천 연휴 포함)
+     * 특정 년월의 캘린더 데이터 조회
+     * @param dayOffCount 클라이언트에서 명시적으로 보낸 연차 개수 (null일 경우 서버의 preferred 사용)
      */
-    fun getCalendarData(yearMonth: YearMonth, memberId: String): CalendarResponse {
-        val dayOffCount = memberService.getDayOffCount(memberId)
+    fun getCalendarData(yearMonth: YearMonth, memberId: String, dayOffCount: Int?): CalendarResponse {
+        // 1. 계산에 사용할 연차 개수 결정 (파라미터 우선 -> 없으면 서버 저장된 선호값)
+        val targetDayOff = dayOffCount ?: memberService.getPreferredDayOff(memberId)
+
+        // 2. 공휴일 정보 로드
         val allHolidays = publicHolidayRepository.findAll()
         val holidayMap = allHolidays.associateBy { it.holidayDate }
         
@@ -33,19 +37,16 @@ class CalendarService(
             .filter { YearMonth.from(it.holidayDate) == yearMonth }
             .map { HolidayResponse(date = it.holidayDate, label = it.name) }
 
-        // 홈 API와 동일한 로직으로 해당 월의 Top 3 구간 탐색
-        val bestPeriods = findTopPeriodsInMonth(yearMonth, dayOffCount, holidayMap, limit = 3)
+        // 3. 결정된 연차 개수로 최적의 연휴 탐색
+        val bestPeriods = findTopPeriodsInMonth(yearMonth, targetDayOff, holidayMap, limit = 3)
 
         return CalendarResponse(
-            dayOffCount = dayOffCount,
+            dayOffCount = targetDayOff, // 응답에는 실제 계산에 사용된 연차 개수를 반환
             bestPeriods = bestPeriods,
             holidays = monthHolidays
         )
     }
 
-    /**
-     * 해당 월 내에서 가장 길게 쉴 수 있는 겹치지 않는 구간 Top N 탐색
-     */
     private fun findTopPeriodsInMonth(
         yearMonth: YearMonth,
         userDayOff: Int,
@@ -58,13 +59,11 @@ class CalendarService(
 
         val candidates = mutableListOf<VacationCandidate>()
 
-        // 1. 해당 월 내의 모든 시작점에 대해 가능한 휴가 구간 수집
         for (i in 0 until daysInMonth) {
             val currentStart = startOfMonth.plusDays(i.toLong())
             var usedDayOff = 0
             var currentEnd = currentStart
 
-            // 시작일부터 월말까지만 탐색
             for (j in i until daysInMonth) {
                 val date = startOfMonth.plusDays(j.toLong())
                 if (!isOffDay(date, holidayMap)) {
@@ -79,12 +78,10 @@ class CalendarService(
             }
         }
 
-        // 2. 정렬 (일수 큰 순 -> 날짜 빠른 순)
         val sortedCandidates = candidates
             .distinctBy { it.start.toString() + it.end.toString() }
             .sortedWith(compareByDescending<VacationCandidate> { it.totalDays }.thenBy { it.start })
 
-        // 3. 중복 구간(Overlap) 필터링 - 홈 API 로직과 동일
         val selected = mutableListOf<VacationCandidate>()
         for (candidate in sortedCandidates) {
             if (selected.size >= limit) break
@@ -102,9 +99,6 @@ class CalendarService(
                holidayMap.containsKey(date)
     }
 
-    /**
-     * 내부 계산용 데이터 클래스
-     */
     private data class VacationCandidate(
         val start: LocalDate,
         val end: LocalDate,

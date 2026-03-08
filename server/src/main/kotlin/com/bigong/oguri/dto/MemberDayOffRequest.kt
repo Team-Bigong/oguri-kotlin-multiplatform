@@ -1,8 +1,6 @@
 package com.bigong.oguri.dto
 
-data class MemberMeResponse(
-    val id: String,
-    val nickname: String,
+data class MemberDayOffRequest(
     val preferredDayOff: Int,
     val remainingDayOff: Int
 )

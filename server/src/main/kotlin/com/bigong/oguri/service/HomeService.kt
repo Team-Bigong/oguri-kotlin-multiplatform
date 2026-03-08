@@ -17,7 +17,6 @@ import kotlin.math.abs
 
 /**
  * 성능 및 추천 로직이 최적화된 홈 화면 서비스
- * 휴가 기간별(단/중/장거리) 맞춤 비행시간 추천 엔진 포함
  */
 @Service
 @Transactional(readOnly = true)
@@ -32,21 +31,24 @@ class HomeService(
         const val WEIGHT_BIG_MAC_INDEX = 0.4
         const val MAX_RECOMMENDATIONS = 7
         
-        // 휴가 기간별 구간 임계값
-        const val MID_TRIP_THRESHOLD = 5     // 5일 이상이면 중거리 고려
-        const val LONG_TRIP_THRESHOLD = 7    // 7일 이상이면 장거리 고려
+        const val MID_TRIP_THRESHOLD = 5
+        const val LONG_TRIP_THRESHOLD = 7
     }
 
     /**
      * 홈 화면 데이터 조회
      */
     fun getHomeData(userCountry: String, memberId: String): List<RecommendPeriodResponse> {
-        val dayOffCount = memberService.getDayOffCount(memberId)
+        // [핵심] 추천 계산은 선호하는 연차(preferred) 기준으로, 응답 필드는 잔여 연차(remaining) 기준으로 처리
+        val preferredDayOff = memberService.getPreferredDayOff(memberId)
+        val remainingDayOff = memberService.getRemainingDayOff(memberId)
+
         val holidayMap = publicHolidayRepository.findAll().associateBy { it.holidayDate }
         val savedPeriods = savedRecommendationRepository.findAllByMemberId(memberId)
         val allDestinations = destinationRepository.findAllWithCountryAndImages()
 
-        val bestPeriods = findTopVacationPeriods(dayOffCount, holidayMap, limit = 3)
+        // 선호하는 연차 개수를 사용하여 최적의 연휴 탐색
+        val bestPeriods = findTopVacationPeriods(preferredDayOff, holidayMap, limit = 3)
 
         val advertisements = listOf(
             AdvertisementResponse(platform = "google", url = "https://www.google.com"),
@@ -71,7 +73,7 @@ class HomeService(
                 startDate = period.start,
                 endDate = period.end,
                 holiday = if (holidayNames.isEmpty() && period.totalDays > 0) listOf("주말") else holidayNames,
-                dayOffCount = dayOffCount,
+                dayOffCount = remainingDayOff, // 클라이언트에 보여줄 남은 연차 개수
                 totalTripCount = period.totalDays,
                 places = recommendedPlaces,
                 advertisements = advertisements
@@ -79,9 +81,6 @@ class HomeService(
         }
     }
 
-    /**
-     * 휴가 일수에 따른 단/중/장거리 맞춤 추천 로직
-     */
     private fun calculateRecommendedPlaces(
         startDate: LocalDate,
         destinations: List<Destination>,
@@ -90,7 +89,6 @@ class HomeService(
     ): List<PlaceResponse> {
         val targetMonth = startDate.monthValue
 
-        // 1. 시기 필터링
         val candidates = destinations.filter { dest ->
             isMonthInRange(targetMonth, dest.recommendStartMonth1, dest.recommendEndMonth1) ||
             isMonthInRange(targetMonth, dest.recommendStartMonth2, dest.recommendEndMonth2)
@@ -98,7 +96,6 @@ class HomeService(
 
         if (candidates.isEmpty()) return emptyList()
 
-        // 2. 정규화 범위 파악
         val flightTimes = candidates.map { parseFlightTime(it.flightTime) }
         val bigMacIndices = candidates.map { it.country?.bigMacIndex?.toDouble() ?: 5.0 }
 
@@ -107,25 +104,18 @@ class HomeService(
         val minBigMac = bigMacIndices.minOrNull() ?: 0.0
         val maxBigMac = bigMacIndices.maxOrNull() ?: 1.0
 
-        // [핵심] 휴가 기간에 따른 목표 비행 점수(Target Score) 설정
         val targetFlightValue = when {
-            totalTripCount >= LONG_TRIP_THRESHOLD -> 1.0  // 장거리 (7일 이상): 가장 먼 곳 선호
-            totalTripCount >= MID_TRIP_THRESHOLD  -> 0.35 // 중거리 (5~6일): 약 5~6시간 비행 거리 선호
-            else -> 0.0                                   // 단거리 (5일 미만): 가장 가까운 곳 선호
+            totalTripCount >= LONG_TRIP_THRESHOLD -> 1.0
+            totalTripCount >= MID_TRIP_THRESHOLD  -> 0.35
+            else -> 0.0
         }
 
-        // 3. 점수 계산
         return candidates.map { dest ->
             val flightVal = parseFlightTime(dest.flightTime)
             val bigMacVal = dest.country?.bigMacIndex?.toDouble() ?: 5.0
 
-            // 현재 장소의 비행시간 정규화 (0~1)
             val normalizedFlight = if (maxFlight != minFlight) (flightVal - minFlight) / (maxFlight - minFlight) else 0.0
-            
-            // 목표 점수와의 거리를 계산하여 점수화 (가까울수록 높은 점수)
             val flightScore = 1.0 - abs(normalizedFlight - targetFlightValue)
-
-            // 빅맥지수는 공통적으로 낮을수록 높은 점수
             val bigMacScore = if (maxBigMac != minBigMac) 1.0 - (bigMacVal - minBigMac) / (maxBigMac - minBigMac) else 1.0
 
             val totalScore = (flightScore * WEIGHT_FLIGHT_TIME) + (bigMacScore * WEIGHT_BIG_MAC_INDEX)
@@ -164,7 +154,7 @@ class HomeService(
         limit: Int
     ): List<VacationPeriod> {
         val now = LocalDate.now()
-        val endSearchDate = now.plusMonths(8) // 오늘부터 8개월 뒤까지로 탐색 범위 단축
+        val endSearchDate = now.plusMonths(8)
         val daysToSearch = ChronoUnit.DAYS.between(now, endSearchDate).toInt() + 1
 
         val candidates = mutableListOf<VacationPeriod>()

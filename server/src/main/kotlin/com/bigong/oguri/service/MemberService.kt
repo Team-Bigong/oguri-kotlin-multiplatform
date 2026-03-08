@@ -17,14 +17,13 @@ class MemberService(
     private val nounRepository: NounRepository
 ) {
     /**
-     * 내 정보 조회 (닉네임이 없으면 랜덤 생성)
+     * 내 정보 조회 (닉네임 자동 생성 포함)
      */
     fun getMyInfo(memberId: String): MemberMeResponse {
         val member = memberRepository.findById(memberId).orElseGet {
             memberRepository.save(Member(id = memberId))
         }
 
-        // 닉네임이 없으면 생성
         if (member.nickname == null) {
             val generated = generateUniqueNickname()
             member.setNicknameOnce(generated)
@@ -34,39 +33,60 @@ class MemberService(
         return MemberMeResponse(
             id = member.id,
             nickname = member.nickname!!,
-            dayOffCount = member.dayOffCount
+            preferredDayOff = member.preferredDayOff,
+            remainingDayOff = member.remainingDayOff
         )
     }
 
     /**
-     * 연차 개수 업데이트
+     * 연차 정보 업데이트 (선호/잔여)
      */
-    fun updateDayOffCount(memberId: String, dayOffCount: Int): Int {
+    fun updateDayOffInfo(memberId: String, preferred: Int, remaining: Int) {
         val member = memberRepository.findById(memberId).orElseGet {
             memberRepository.save(Member(id = memberId))
         }
-        member.updateDayOffCount(dayOffCount)
-        return memberRepository.save(member).dayOffCount
+        member.updateDayOffInfo(preferred, remaining)
+        memberRepository.save(member)
     }
 
     /**
-     * 연차 개수 조회
+     * 멤버의 연차 정보(선호/잔여) 전체 조회
      */
     @Transactional(readOnly = true)
-    fun getDayOffCount(memberId: String): Int {
+    fun getDayOffInfo(memberId: String): com.bigong.oguri.dto.MemberDayOffResponse {
+        val member = memberRepository.findById(memberId).orElseGet {
+            Member(id = memberId)
+        }
+        return com.bigong.oguri.dto.MemberDayOffResponse(
+            preferredDayOff = member.preferredDayOff,
+            remainingDayOff = member.remainingDayOff
+        )
+    }
+
+    /**
+     * 멤버의 선호 연차 개수 조회
+     */
+    @Transactional(readOnly = true)
+    fun getPreferredDayOff(memberId: String): Int {
         return memberRepository.findById(memberId)
-            .map { it.dayOffCount }
+            .map { it.preferredDayOff }
             .orElse(3)
     }
 
     /**
-     * 유니크한 랜덤 닉네임 생성 로직
+     * 멤버의 잔여 연차 개수 조회
      */
+    @Transactional(readOnly = true)
+    fun getRemainingDayOff(memberId: String): Int {
+        return memberRepository.findById(memberId)
+            .map { it.remainingDayOff }
+            .orElse(3)
+    }
+
     private fun generateUniqueNickname(): String {
         val adjectives = adjectiveRepository.findAll()
         val nouns = nounRepository.findAll()
 
-        // 단어가 하나도 없을 경우 대비 (안전장치)
         if (adjectives.isEmpty() || nouns.isEmpty()) {
             return "여행자 " + String.format("%05d", Random.nextInt(100000))
         }
@@ -76,8 +96,8 @@ class MemberService(
             val adj = adjectives.random().word
             val noun = nouns.random().word
             val number = String.format("%05d", Random.nextInt(100000))
-            nickname = "$adj ${noun}_$number"
-        } while (memberRepository.existsByNickname(nickname)) // 중복 체크
+            nickname = "$adj $noun $number"
+        } while (memberRepository.existsByNickname(nickname))
 
         return nickname
     }

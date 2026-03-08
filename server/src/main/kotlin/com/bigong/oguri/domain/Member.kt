@@ -14,13 +14,17 @@ class Member(
     var nickname: String? = null,
 
     @Column(nullable = false)
-    var dayOffCount: Int = 3,
+    var preferredDayOff: Int = 3,
+
+    @Column(nullable = false)
+    var remainingDayOff: Int = 3,
 
     @Column(nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
-    fun updateDayOffCount(count: Int) {
-        this.dayOffCount = count
+    fun updateDayOffInfo(preferred: Int, remaining: Int) {
+        this.preferredDayOff = preferred
+        this.remainingDayOff = remaining
         this.updatedAt = LocalDateTime.now()
     }
 
