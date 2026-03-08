@@ -1,6 +1,7 @@
 package com.bigong.oguri.data.repository
 
 import com.bigong.oguri.data.remote.HomeRemoteDataSource
+import com.bigong.oguri.data.remote.model.request.ManageSavedRecommendationRequest
 import com.bigong.oguri.data.remote.model.response.AdvertisementResponse
 import com.bigong.oguri.data.remote.model.response.PlaceResponse
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
@@ -16,10 +17,40 @@ import kotlinx.datetime.LocalDate
 class DefaultHomeRepository(
     private val homeRemoteDataSource: HomeRemoteDataSource,
 ) : HomeRepository {
-    override suspend fun getRecommendPeriods(): List<RecommendPeriod> {
-        return homeRemoteDataSource.getRecommendPeriodResponses().map { recommendPeriodResponse: RecommendPeriodResponse ->
+    override suspend fun getRecommendPeriods(userCountry: String): List<RecommendPeriod> {
+        return homeRemoteDataSource.getRecommendPeriodResponses(userCountry = userCountry).map { recommendPeriodResponse: RecommendPeriodResponse ->
             recommendPeriodResponse.toDomain()
         }
+    }
+
+    override suspend fun saveRecommendation(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        dayOffCount: Int,
+    ) {
+        homeRemoteDataSource.saveRecommendation(
+            request =
+                ManageSavedRecommendationRequest(
+                    startDate = startDate.toString(),
+                    endDate = endDate.toString(),
+                    dayOffCount = dayOffCount,
+                ),
+        )
+    }
+
+    override suspend fun deleteRecommendation(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        dayOffCount: Int,
+    ) {
+        homeRemoteDataSource.deleteRecommendation(
+            request =
+                ManageSavedRecommendationRequest(
+                    startDate = startDate.toString(),
+                    endDate = endDate.toString(),
+                    dayOffCount = dayOffCount,
+                ),
+        )
     }
 }
 

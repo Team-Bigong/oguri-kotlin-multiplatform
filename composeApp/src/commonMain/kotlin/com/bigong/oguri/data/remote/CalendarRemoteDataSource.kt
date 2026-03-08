@@ -4,8 +4,9 @@ import com.bigong.oguri.data.remote.model.response.CalendarRecommendationRespons
 
 interface CalendarRemoteDataSource {
     suspend fun getCalendarRecommendationResponse(
-        leaveDays: Int,
         year: Int,
         month: Int,
     ): CalendarRecommendationResponse
+
+    suspend fun updateMemberDayOffCount(dayOffCount: Int): Int
 }

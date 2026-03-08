@@ -4,8 +4,9 @@ import com.bigong.oguri.domain.model.CalendarRecommendation
 
 interface CalendarRepository {
     suspend fun getCalendarRecommendation(
-        leaveDays: Int,
         year: Int,
         month: Int,
     ): CalendarRecommendation
+
+    suspend fun updateMemberDayOffCount(dayOffCount: Int): Int
 }

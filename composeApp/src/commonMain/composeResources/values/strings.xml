@@ -56,7 +56,7 @@
     <string name="login_guest_browse">Browse without login</string>
 
     <string name="calendar_header_title">How many leave days can you use?</string>
-    <string name="calendar_header_subtitle">These are the longest breaks with your leave</string>
+    <string name="calendar_header_subtitle">Try changing the days to find other schedules</string>
     <string name="calendar_loading">Loading calendar recommendations...</string>
     <string name="calendar_error_retry">Failed to load calendar recommendations. Tap to retry.</string>
     <string name="calendar_dialog_leave_days_title">Enter leave days</string>

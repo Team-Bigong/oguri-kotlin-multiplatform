@@ -16,36 +16,47 @@ class DefaultCalendarRepository(
     private val calendarRemoteDataSource: CalendarRemoteDataSource,
 ) : CalendarRepository {
     override suspend fun getCalendarRecommendation(
-        leaveDays: Int,
         year: Int,
         month: Int,
     ): CalendarRecommendation {
         return calendarRemoteDataSource.getCalendarRecommendationResponse(
-            leaveDays = leaveDays,
             year = year,
             month = month,
-        ).toDomain()
+        ).toDomain(
+            year = year,
+            month = month,
+        )
+    }
+
+    override suspend fun updateMemberDayOffCount(dayOffCount: Int): Int {
+        return calendarRemoteDataSource.updateMemberDayOffCount(dayOffCount = dayOffCount)
     }
 }
 
-private fun CalendarRecommendationResponse.toDomain(): CalendarRecommendation {
+private fun CalendarRecommendationResponse.toDomain(
+    year: Int,
+    month: Int,
+): CalendarRecommendation {
     return CalendarRecommendation(
-        leaveDays = leaveDays,
+        leaveDays = dayOffCount,
         year = year,
         month = month,
         holidays = holidays.map { calendarHolidayResponse: CalendarHolidayResponse -> calendarHolidayResponse.toDomain() },
-        periods = periods.map { calendarPeriodResponse: CalendarPeriodResponse -> calendarPeriodResponse.toDomain() },
+        periods =
+            bestPeriods.mapIndexed { index: Int, calendarPeriodResponse: CalendarPeriodResponse ->
+                calendarPeriodResponse.toDomain(id = index + 1L)
+            },
     )
 }
 
 private fun CalendarHolidayResponse.toDomain(): CalendarHoliday {
     return CalendarHoliday(
         date = LocalDate.parse(date),
-        name = name,
+        name = label,
     )
 }
 
-private fun CalendarPeriodResponse.toDomain(): CalendarPeriod {
+private fun CalendarPeriodResponse.toDomain(id: Long): CalendarPeriod {
     return CalendarPeriod(
         id = id,
         startDate = LocalDate.parse(startDate),

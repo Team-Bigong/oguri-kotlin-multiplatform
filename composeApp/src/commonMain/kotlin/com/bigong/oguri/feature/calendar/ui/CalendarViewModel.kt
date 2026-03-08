@@ -27,7 +27,6 @@ class CalendarViewModel(
 
     init {
         fetchCalendarRecommendation(
-            leaveDays = calendarUiState.leaveDays,
             year = calendarUiState.selectedYear,
             month = calendarUiState.selectedMonth,
         )
@@ -37,12 +36,19 @@ class CalendarViewModel(
         if (leaveDays <= 0) {
             return
         }
-        calendarUiState = calendarUiState.copy(leaveDays = leaveDays)
-        fetchCalendarRecommendation(
-            leaveDays = leaveDays,
-            year = calendarUiState.selectedYear,
-            month = calendarUiState.selectedMonth,
-        )
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    getCalendarRecommendationUseCase.updateDayOffCount(dayOffCount = leaveDays)
+                }
+            }.onSuccess { updatedDayOffCount ->
+                calendarUiState = calendarUiState.copy(leaveDays = updatedDayOffCount)
+                fetchCalendarRecommendation(
+                    year = calendarUiState.selectedYear,
+                    month = calendarUiState.selectedMonth,
+                )
+            }
+        }
     }
 
     fun updateYearMonth(
@@ -54,7 +60,6 @@ class CalendarViewModel(
             selectedMonth = month,
         )
         fetchCalendarRecommendation(
-            leaveDays = calendarUiState.leaveDays,
             year = year,
             month = month,
         )
@@ -81,7 +86,7 @@ class CalendarViewModel(
 
         calendarUiState = calendarUiState.copy(
             selectedDate = date,
-            selectedPeriodId = matchedPeriod?.id,
+            selectedPeriodId = matchedPeriod.id,
         )
     }
 
@@ -107,14 +112,12 @@ class CalendarViewModel(
 
     fun retry() {
         fetchCalendarRecommendation(
-            leaveDays = calendarUiState.leaveDays,
             year = calendarUiState.selectedYear,
             month = calendarUiState.selectedMonth,
         )
     }
 
     private fun fetchCalendarRecommendation(
-        leaveDays: Int,
         year: Int,
         month: Int,
     ) {
@@ -124,7 +127,6 @@ class CalendarViewModel(
             runCatching {
                 withContext(Dispatchers.Default) {
                     getCalendarRecommendationUseCase(
-                        leaveDays = leaveDays,
                         year = year,
                         month = month,
                     )

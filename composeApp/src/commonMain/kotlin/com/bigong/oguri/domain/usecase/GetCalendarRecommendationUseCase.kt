@@ -9,14 +9,16 @@ class GetCalendarRecommendationUseCase(
     private val calendarRepository: CalendarRepository,
 ) {
     suspend operator fun invoke(
-        leaveDays: Int,
         year: Int,
         month: Int,
     ): CalendarRecommendation {
         return calendarRepository.getCalendarRecommendation(
-            leaveDays = leaveDays,
             year = year,
             month = month,
         )
+    }
+
+    suspend fun updateDayOffCount(dayOffCount: Int): Int {
+        return calendarRepository.updateMemberDayOffCount(dayOffCount = dayOffCount)
     }
 }

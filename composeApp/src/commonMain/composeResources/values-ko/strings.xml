@@ -56,7 +56,7 @@
     <string name="login_guest_browse">로그인 없이 둘러보기</string>
 
     <string name="calendar_header_title">연차 몇 일 쓸 수 있어요?</string>
-    <string name="calendar_header_subtitle">이 연차로 가장 길게 쉴 수 있는 날이에요</string>
+    <string name="calendar_header_subtitle">일수를 바꿔보면서 다른 일정도 찾아보세요</string>
     <string name="calendar_loading">캘린더 추천을 불러오는 중이에요...</string>
     <string name="calendar_error_retry">캘린더 추천을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
     <string name="calendar_dialog_leave_days_title">연차 일수를 입력해 주세요</string>
@@ -86,8 +86,8 @@
     <string name="mypage_section_saved_place">내가 담아둔 여행지</string>
     <string name="mypage_selected_period_date_range">%1$d월 %2$d일 - %3$d월 %4$d일</string>
     <string name="mypage_selected_period_information">휴일 %1$d일 · 연차 %2$d일</string>
-    <string name="mypage_empty_selected_period">저장된 휴가 일정이 없어요.</string>
-    <string name="mypage_empty_saved_place">담아둔 여행지가 없어요.</string>
+    <string name="mypage_empty_selected_period">아직 골라둔 휴가 일정이 없어요.</string>
+    <string name="mypage_empty_saved_place">아직 담아둔 여행지가 없어요.</string>
     <string name="mypage_menu_suggest">건의하기</string>
     <string name="mypage_menu_terms_of_service">서비스 이용약관</string>
     <string name="mypage_menu_privacy_policy">개인정보 처리방침</string>

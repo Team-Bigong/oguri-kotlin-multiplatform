@@ -12,6 +12,7 @@
 - 요청/응답 모델은 각각 `data/remote/model/request`, `data/remote/model/response` 패키지에 둔다.
 - UI 모델이 아닌 도메인 모델을 `domain/model`에 둔다.
 - CRUD(수정/삭제) 요청도 서버 호출 형태를 유지하고 실패 시 로컬 더미 상태를 갱신해 화면 흐름을 보장한다.
+- 스웨거 명세가 확정된 엔드포인트(`home`, `calendar`, `member`)는 더미 fallback 없이 실제 API 응답만 사용한다.
 
 ## DI
 - DI는 Metro를 사용한다.

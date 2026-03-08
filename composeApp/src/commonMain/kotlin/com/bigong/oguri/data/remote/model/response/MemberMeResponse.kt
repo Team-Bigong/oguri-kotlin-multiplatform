@@ -4,11 +4,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class CalendarRecommendationResponse(
+data class MemberMeResponse(
+    @SerialName("id")
+    val id: String,
+    @SerialName("nickname")
+    val nickname: String,
     @SerialName("dayOffCount")
     val dayOffCount: Int,
-    @SerialName("bestPeriods")
-    val bestPeriods: List<CalendarPeriodResponse>,
-    @SerialName("holidays")
-    val holidays: List<CalendarHolidayResponse>,
 )

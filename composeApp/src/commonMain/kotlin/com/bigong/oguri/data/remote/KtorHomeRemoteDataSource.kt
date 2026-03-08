@@ -1,130 +1,51 @@
 package com.bigong.oguri.data.remote
 
 import com.bigong.oguri.core.network.DEBUG_BASE_URL
-import com.bigong.oguri.data.remote.model.response.AdvertisementResponse
-import com.bigong.oguri.data.remote.model.response.PlaceResponse
+import com.bigong.oguri.data.remote.model.request.ManageSavedRecommendationRequest
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
-import io.ktor.http.isSuccess
-import kotlinx.coroutines.delay
+import io.ktor.client.request.header
+import io.ktor.client.request.parameter
+import io.ktor.client.request.setBody
+import io.ktor.client.request.post
 
 @Inject
 class KtorHomeRemoteDataSource(
     private val httpClient: HttpClient,
 ) : HomeRemoteDataSource {
-    override suspend fun getRecommendPeriodResponses(): List<RecommendPeriodResponse> {
+    override suspend fun getRecommendPeriodResponses(userCountry: String): List<RecommendPeriodResponse> {
         val requestUrl = "$DEBUG_BASE_URL$HOME_API_PATH"
+        return httpClient.get(requestUrl) {
+            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+            parameter(HOME_USER_COUNTRY_QUERY_NAME, userCountry)
+        }.body()
+    }
 
-        val responses =
-            runCatching {
-                val response = httpClient.get(requestUrl)
-                if (response.status.isSuccess()) {
-                    response.body<List<RecommendPeriodResponse>>()
-                } else {
-                    emptyList()
-                }
-            }.getOrElse {
-                emptyList()
-            }
-
-        if (responses.isNotEmpty()) {
-            return responses
+    override suspend fun saveRecommendation(request: ManageSavedRecommendationRequest) {
+        val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
+        httpClient.post(requestUrl) {
+            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+            setBody(request)
         }
-
-        delay(220)
-        return createDummyRecommendPeriods()
     }
 
-    private fun createDummyRecommendPeriods(): List<RecommendPeriodResponse> {
-        val commonPlaces =
-            listOf(
-                PlaceResponse(
-                    id = 1L,
-                    country = "필리핀",
-                    city = "보라카이",
-                    summary = "화이트 비치 물빛이 가장 또렷해지는 시기예요",
-                    thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
-                ),
-                PlaceResponse(
-                    id = 2L,
-                    country = "스페인",
-                    city = "바르셀로나",
-                    summary = "가우디 건축과 바다 산책을 함께 즐기기 좋아요",
-                    thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/b41acf66-b33b-448c-8144-d9aba0df12c0.jpeg",
-                ),
-                PlaceResponse(
-                    id = 3L,
-                    country = "미국",
-                    city = "샌프란시스코",
-                    summary = "언덕과 바다 풍경이 가장 또렷해지는 시기예요",
-                    thumbnailUrl = "https://ozimg.flyasiana.com/temp/image/20190417/249589c9-d0eb-4e2b-a0d2-c8cc84b94e14.jpeg",
-                ),
-            )
-
-        return listOf(
-            RecommendPeriodResponse(
-                rank = 1,
-                saved = true,
-                startDate = "2026-02-28",
-                endDate = "2026-03-04",
-                holiday = listOf("삼일절"),
-                dayOffCount = 2,
-                totalTripCount = 5,
-                places = commonPlaces,
-                advertisements =
-                    listOf(
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA, url = AGODA_DESTINATION_URL),
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER, url = SKYSCANNER_DESTINATION_URL),
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK, url = KLOOK_DESTINATION_URL),
-                    ),
-            ),
-            RecommendPeriodResponse(
-                rank = 2,
-                saved = false,
-                startDate = "2026-05-01",
-                endDate = "2026-05-06",
-                holiday = listOf("근로자의날", "어린이날"),
-                dayOffCount = 2,
-                totalTripCount = 6,
-                places = commonPlaces,
-                advertisements =
-                    listOf(
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA, url = AGODA_DESTINATION_URL),
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER, url = SKYSCANNER_DESTINATION_URL),
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK, url = KLOOK_DESTINATION_URL),
-                    ),
-            ),
-            RecommendPeriodResponse(
-                rank = 3,
-                saved = false,
-                startDate = "2026-10-03",
-                endDate = "2026-10-09",
-                holiday = listOf("개천절", "한글날"),
-                dayOffCount = 3,
-                totalTripCount = 7,
-                places = commonPlaces,
-                advertisements =
-                    listOf(
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_AGODA, url = AGODA_DESTINATION_URL),
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_SKYSCANNER, url = SKYSCANNER_DESTINATION_URL),
-                        AdvertisementResponse(platform = ADVERTISEMENT_PLATFORM_KLOOK, url = KLOOK_DESTINATION_URL),
-                    ),
-            ),
-        )
+    override suspend fun deleteRecommendation(request: ManageSavedRecommendationRequest) {
+        val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
+        httpClient.delete(requestUrl) {
+            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+            setBody(request)
+        }
     }
 
-    companion object {
+    private companion object {
         private const val HOME_API_PATH: String = "/api/v1/home"
-
-        private const val ADVERTISEMENT_PLATFORM_AGODA: String = "agoda"
-        private const val ADVERTISEMENT_PLATFORM_SKYSCANNER: String = "skyscanner"
-        private const val ADVERTISEMENT_PLATFORM_KLOOK: String = "klook"
-
-        private const val AGODA_DESTINATION_URL: String = "https://www.agoda.com/"
-        private const val SKYSCANNER_DESTINATION_URL: String = "https://www.skyscanner.co.kr/"
-        private const val KLOOK_DESTINATION_URL: String = "https://www.klook.com/ko/"
+        private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH: String = "/api/v1/members/saved-recommendations"
+        private const val USER_ID_HEADER_NAME: String = "X-USER-ID"
+        private const val DEFAULT_USER_ID: String = "GUEST"
+        private const val HOME_USER_COUNTRY_QUERY_NAME: String = "userCountry"
     }
 }
