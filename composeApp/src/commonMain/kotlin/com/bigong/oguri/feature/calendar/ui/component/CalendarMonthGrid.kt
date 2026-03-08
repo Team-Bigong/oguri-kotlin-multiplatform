@@ -140,7 +140,7 @@ private fun CalendarDayCell(
         when {
             isToday -> Mint70
             dayCell.isCurrentMonth.not() -> Neutral40
-            holidayName != null || dayCell.date.dayOfWeek == DayOfWeek.SUNDAY || dayCell.date.dayOfWeek == DayOfWeek.THURSDAY -> Orange50
+            holidayName != null || dayCell.date.dayOfWeek == DayOfWeek.SUNDAY || dayCell.date.dayOfWeek == DayOfWeek.SATURDAY -> Orange50
             else -> Neutral70
         }
 
