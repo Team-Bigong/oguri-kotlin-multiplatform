@@ -206,7 +206,14 @@ private fun BottomNavigationBar(
                 Column(
                     modifier =
                         Modifier
-                            .noRippleClickable(onClick = { onDestinationClick(destination) })
+                            .noRippleClickable(
+                                onClick = {
+                                    if (isSelected) {
+                                        return@noRippleClickable
+                                    }
+                                    onDestinationClick(destination)
+                                },
+                            )
                             .padding(horizontal = 18.dp, vertical = 10.dp)
                             .weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,

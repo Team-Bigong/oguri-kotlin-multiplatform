@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -54,6 +56,7 @@ import oguri.composeapp.generated.resources.calendar_day_wed
 import org.jetbrains.compose.resources.stringResource
 
 private val PERIOD_HIGHLIGHT_CORNER_RADIUS_DP = 8.dp
+private val PERIOD_HIGHLIGHT_EDGE_PADDING_DP = 6.dp
 private val SELECTED_DATE_EDGE_SHAPE = RoundedCornerShape(size = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP)
 
 @Composable
@@ -177,25 +180,32 @@ private fun CalendarDayCell(
                 modifier =
                     Modifier
                         .fillMaxWidth()
-                        .height(16.dp)
-                        .padding(
-                            start = if (isInRecommendation && !hasSamePeriodLeft) 6.dp else 0.dp,
-                            end = if (isInRecommendation && !hasSamePeriodRight) 6.dp else 0.dp,
-                        ).background(
-                            color =
-                                when {
-                                    isSelected -> Mint50.copy(alpha = 0.5f)
-                                    else -> Color.Transparent
-                                },
-                            shape = selectedDateBackgroundShape(isInRecommendation, hasSamePeriodLeft, hasSamePeriodRight),
-                        ).recommendationDashedBorder(
-                            isSelected = isSelected,
-                            isInRecommendation = isInRecommendation,
-                            hasSamePeriodLeft = hasSamePeriodLeft,
-                            hasSamePeriodRight = hasSamePeriodRight,
-                        ),
+                        .height(16.dp),
                 contentAlignment = Alignment.Center,
             ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(16.dp)
+                            .padding(
+                                start = if (isInRecommendation && !hasSamePeriodLeft) PERIOD_HIGHLIGHT_EDGE_PADDING_DP else 0.dp,
+                                end = if (isInRecommendation && !hasSamePeriodRight) PERIOD_HIGHLIGHT_EDGE_PADDING_DP else 0.dp,
+                            ).background(
+                                color =
+                                    when {
+                                        isSelected -> Mint50.copy(alpha = 0.5f)
+                                        else -> Color.Transparent
+                                    },
+                                shape = selectedDateBackgroundShape(isInRecommendation, hasSamePeriodLeft, hasSamePeriodRight),
+                            ).recommendationDashedBorder(
+                                isSelected = isSelected,
+                                isInRecommendation = isInRecommendation,
+                                hasSamePeriodLeft = hasSamePeriodLeft,
+                                hasSamePeriodRight = hasSamePeriodRight,
+                            ),
+                )
+
                 Text(
                     text = dayCell.label,
                     style = OguriTheme.typography.labelSmall,
@@ -268,10 +278,24 @@ private fun selectedDateBackgroundShape(
         return CircleShape
     }
     return when {
-        !hasSamePeriodLeft && !hasSamePeriodRight -> SELECTED_DATE_EDGE_SHAPE
-        !hasSamePeriodLeft -> RoundedCornerShape(topStart = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP, bottomStart = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP)
-        !hasSamePeriodRight -> RoundedCornerShape(topEnd = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP, bottomEnd = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP)
-        else -> RoundedCornerShape(size = 0.dp)
+        !hasSamePeriodLeft && !hasSamePeriodRight -> {
+            SELECTED_DATE_EDGE_SHAPE
+        }
+
+        !hasSamePeriodLeft -> {
+            RoundedCornerShape(
+                topStart = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP,
+                bottomStart = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP,
+            )
+        }
+
+        !hasSamePeriodRight -> {
+            RoundedCornerShape(topEnd = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP, bottomEnd = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP)
+        }
+
+        else -> {
+            RoundedCornerShape(size = 0.dp)
+        }
     }
 }
 
@@ -291,14 +315,22 @@ private fun Modifier.recommendationDashedBorder(
         val highlightColor = Orange20.copy(alpha = 0.5f)
         val dashEffect = PathEffect.dashPathEffect(intervals = floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
         val radiusPx = PERIOD_HIGHLIGHT_CORNER_RADIUS_DP.toPx()
-        val lineStartX = if (hasSamePeriodLeft) inset else inset + radiusPx
-        val lineEndX = if (hasSamePeriodRight) size.width - inset else size.width - inset - radiusPx
+        val lineStartX =
+            when {
+                hasSamePeriodLeft -> inset
+                else -> inset + radiusPx
+            }
+        val lineEndX =
+            when {
+                hasSamePeriodRight -> size.width - inset
+                else -> size.width - inset - radiusPx
+            }
 
         if (lineEndX > lineStartX) {
             drawLine(
                 color = highlightColor,
-                start = androidx.compose.ui.geometry.Offset(x = lineStartX, y = inset),
-                end = androidx.compose.ui.geometry.Offset(x = lineEndX, y = inset),
+                start = Offset(x = lineStartX, y = inset),
+                end = Offset(x = lineEndX, y = inset),
                 strokeWidth = strokeWidthPx,
                 cap = StrokeCap.Round,
                 pathEffect = dashEffect,
@@ -306,8 +338,8 @@ private fun Modifier.recommendationDashedBorder(
 
             drawLine(
                 color = highlightColor,
-                start = androidx.compose.ui.geometry.Offset(x = lineStartX, y = size.height - inset),
-                end = androidx.compose.ui.geometry.Offset(x = lineEndX, y = size.height - inset),
+                start = Offset(x = lineStartX, y = size.height - inset),
+                end = Offset(x = lineEndX, y = size.height - inset),
                 strokeWidth = strokeWidthPx,
                 cap = StrokeCap.Round,
                 pathEffect = dashEffect,
@@ -320,7 +352,7 @@ private fun Modifier.recommendationDashedBorder(
                 Path().apply {
                     addArc(
                         oval =
-                            androidx.compose.ui.geometry.Rect(
+                            Rect(
                                 left = 0f,
                                 top = inset,
                                 right = arcDiameter,
@@ -342,7 +374,7 @@ private fun Modifier.recommendationDashedBorder(
                 Path().apply {
                     addArc(
                         oval =
-                            androidx.compose.ui.geometry.Rect(
+                            Rect(
                                 left = size.width - arcDiameter,
                                 top = inset,
                                 right = size.width,

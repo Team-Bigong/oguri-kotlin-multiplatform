@@ -189,7 +189,10 @@ private fun LeaveDaysTextField(
                     focusedContainerColor = Neutral0,
                     unfocusedContainerColor = Neutral0,
                 ),
-            modifier = Modifier.fillMaxWidth(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
         )
     }
 }
