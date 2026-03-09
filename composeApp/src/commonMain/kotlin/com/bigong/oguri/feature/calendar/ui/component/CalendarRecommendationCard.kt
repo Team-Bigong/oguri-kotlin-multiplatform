@@ -20,7 +20,9 @@ import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.domain.model.CalendarPeriod
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_month_day
@@ -52,7 +54,12 @@ fun CalendarRecommendationCard(
                     width = 1.dp,
                     color = Mint70,
                     shape = RECOMMENDATION_CARD_SHAPE,
-                ).noRippleClickable(onClick = { onClick(period) })
+                ).noRippleClickable(
+                    onClick = {
+                        HapticType.Selection.perform()
+                        onClick(period)
+                    },
+                )
                 .padding(start = 20.dp, end = 12.dp)
                 .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,

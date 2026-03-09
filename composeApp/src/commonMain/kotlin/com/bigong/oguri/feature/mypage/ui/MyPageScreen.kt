@@ -36,7 +36,6 @@ import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
 import oguri.composeapp.generated.resources.mypage_error_retry
 import oguri.composeapp.generated.resources.mypage_loading
-import oguri.composeapp.generated.resources.mypage_logout_dialog_message
 import oguri.composeapp.generated.resources.mypage_logout_dialog_title
 import oguri.composeapp.generated.resources.mypage_menu_logout
 import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
@@ -174,7 +173,7 @@ fun MyPageScreen(
         ConfirmAlertDialog(
             iconResource = Res.drawable.ic_alert,
             titleText = stringResource(Res.string.mypage_logout_dialog_title),
-            messageText = stringResource(Res.string.mypage_logout_dialog_message),
+            messageText = "",
             confirmButtonText = stringResource(Res.string.mypage_dialog_confirm),
             cancelButtonText = stringResource(Res.string.mypage_dialog_cancel),
             onDismissRequest = onDismissLogoutDialog,

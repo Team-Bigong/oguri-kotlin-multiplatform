@@ -8,14 +8,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
@@ -28,6 +31,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
 private val ALERT_DIALOG_SHAPE = RoundedCornerShape(size = 8.dp)
+private val DIALOG_BUTTON_SHAPE = RoundedCornerShape(size = 8.dp)
 
 @Composable
 fun ConfirmAlertDialog(
@@ -40,74 +44,88 @@ fun ConfirmAlertDialog(
     onConfirmClick: () -> Unit,
     onCancelClick: () -> Unit,
 ) {
-    AlertDialog(
+    Dialog(
         onDismissRequest = onDismissRequest,
-        icon = {
-            Image(
-                painter = painterResource(iconResource),
-                contentDescription = null,
-            )
-        },
-        title = {
-            Text(
-                text = titleText,
-                style = OguriTheme.typography.sectionTitle,
-                color = Neutral70,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        text = {
-            Text(
-                text = messageText,
-                style = OguriTheme.typography.cardTitle,
-                color = Orange50,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
-        },
-        confirmButton = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+        properties =
+            DialogProperties(
+                usePlatformDefaultWidth = false,
+                dismissOnBackPress = false,
+                dismissOnClickOutside = false,
+            ),
+    ) {
+        Surface(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+            shape = ALERT_DIALOG_SHAPE,
+            color = Neutral0,
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .background(color = Mint70, shape = ALERT_DIALOG_SHAPE)
-                            .noRippleClickable(onClick = onConfirmClick)
-                            .padding(vertical = 14.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
+                Image(
+                    painter = painterResource(iconResource),
+                    contentDescription = null,
+                    modifier = Modifier.size(48.dp),
+                )
+
+                Text(
+                    text = titleText,
+                    style = OguriTheme.typography.cardTitle,
+                    color = Neutral70,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                )
+
+                if (messageText.isNotBlank()) {
                     Text(
-                        text = confirmButtonText,
-                        style = OguriTheme.typography.cardTitle,
-                        color = Neutral0,
+                        text = messageText,
+                        style = OguriTheme.typography.bodyMedium,
+                        color = Orange50,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                     )
                 }
 
-                Box(
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .background(color = Neutral10, shape = ALERT_DIALOG_SHAPE)
-                            .noRippleClickable(onClick = onCancelClick)
-                            .padding(vertical = 14.dp),
-                    contentAlignment = Alignment.Center,
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = if (messageText.isNotBlank()) 18.dp else 14.dp),
                 ) {
-                    Text(
-                        text = cancelButtonText,
-                        style = OguriTheme.typography.cardTitle,
-                        color = Neutral70,
-                    )
+                    Box(
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .background(color = Mint70, shape = DIALOG_BUTTON_SHAPE)
+                                .noRippleClickable(onClick = onConfirmClick)
+                                .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = confirmButtonText,
+                            style = OguriTheme.typography.bodyMedium,
+                            color = Neutral0,
+                        )
+                    }
+
+                    Box(
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .background(color = Neutral10, shape = DIALOG_BUTTON_SHAPE)
+                                .noRippleClickable(onClick = onCancelClick)
+                                .padding(vertical = 12.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = cancelButtonText,
+                            style = OguriTheme.typography.bodyMedium,
+                            color = Neutral70,
+                        )
+                    }
                 }
             }
-        },
-        dismissButton = {},
-        shape = ALERT_DIALOG_SHAPE,
-        containerColor = Neutral0,
-        titleContentColor = Neutral90,
-        textContentColor = Neutral70,
-    )
+        }
+    }
 }
