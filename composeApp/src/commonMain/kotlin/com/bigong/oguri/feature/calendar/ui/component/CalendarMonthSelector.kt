@@ -12,21 +12,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.AnchoredPopupMenu
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -51,6 +53,7 @@ fun CalendarMonthSelector(
     modifier: Modifier = Modifier,
 ) {
     var isDropdownVisible by remember { mutableStateOf(false) }
+    var menuAnchorHeightPx by remember { mutableIntStateOf(0) }
     val yearMonthOptions = remember { yearMonthOptions() }
 
     Row(
@@ -62,23 +65,36 @@ fun CalendarMonthSelector(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = stringResource(Res.string.calendar_month_year, selectedYear, selectedMonth),
-            style = OguriTheme.typography.cardSubtitle,
-            color = Neutral100,
-        )
-        Image(
-            painter = painterResource(resource = Res.drawable.btn_expand_menu),
-            contentDescription = stringResource(Res.string.calendar_month_year_selector),
-            modifier = Modifier.padding(start = 8.dp),
-        )
+        Box(
+            modifier =
+                Modifier
+                    .onGloballyPositioned { coordinates ->
+                        menuAnchorHeightPx = coordinates.size.height
+                    },
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.calendar_month_year, selectedYear, selectedMonth),
+                    style = OguriTheme.typography.cardSubtitle,
+                    color = Neutral100,
+                )
+                Image(
+                    painter = painterResource(resource = Res.drawable.btn_expand_menu),
+                    contentDescription = stringResource(Res.string.calendar_month_year_selector),
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
+        }
 
-        DropdownMenu(
+        AnchoredPopupMenu(
             expanded = isDropdownVisible,
             onDismissRequest = { isDropdownVisible = false },
+            anchorHeightPx = menuAnchorHeightPx,
+            alignment = Alignment.TopStart,
             shape = MONTH_MENU_SHAPE,
             containerColor = Neutral0,
-            modifier = Modifier.background(color = Neutral0, shape = MONTH_MENU_SHAPE),
         ) {
             Box(
                 modifier =
