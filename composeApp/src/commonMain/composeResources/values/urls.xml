@@ -1,11 +1,11 @@
 <resources>
-    <string name="url_hotel_1">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_hotel_1.jpg?alt=media&amp;token=c41d7e52-469b-4b25-83fb-0ce154cf66a3</string>
-    <string name="url_hotel_2">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_hotel_2.jpg?alt=media&amp;token=bd7441cb-1f00-4258-8137-1ef7d3e1c2cd</string>
+    <string name="url_hotel_1">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisement%2Fimg_hotel_1.jpg?alt=media&amp;token=f25418de-4665-4f36-ae00-c521e1f259cc</string>
+    <string name="url_hotel_2">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisement%2Fimg_hotel_2.jpg?alt=media&amp;token=fd0e2fe7-467f-4a7d-91ca-90273cf2fe9c</string>
 
-    <string name="url_plane_1">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_plane_1.jpg?alt=media&amp;token=fbc6c5ca-acee-48f5-8e7f-6294630d4822</string>
-    <string name="url_plane_2">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_plane_2.jpg?alt=media&amp;token=0f808afb-b11f-409d-b22e-f645b0709416</string>
+    <string name="url_plane_1">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisement%2Fimg_plane_1.jpg?alt=media&amp;token=2dc1b9c7-4122-47eb-9e35-381f14688390</string>
+    <string name="url_plane_2">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisement%2Fimg_plane_2.jpg?alt=media&amp;token=1febfb8f-0017-49fc-bbf3-74f867fff972</string>
 
-    <string name="url_activity_1">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/place%2Ffrance%2Ffr%3Aparis%3Adetail-1.jpg?alt=media&amp;token=41892e0a-2c71-4dfb-858f-948e28edbe26</string>
-    <string name="url_activity_2">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_activity_1.jpg?alt=media&amp;token=0fcdba9e-c1b6-4d9c-a37f-4f4d5d749653</string>
-    <string name="url_activity_3">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_activity_2.jpg?alt=media&amp;token=d537d230-b208-4a74-8e92-137b09b36945</string>
+    <string name="url_activity_1">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisement%2Fimg_activity_1.jpg?alt=media&amp;token=eacd1748-5315-4b89-ae10-d03485f25838</string>
+    <string name="url_activity_2">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisement%2Fimg_activity_2.jpg?alt=media&amp;token=dfaacdaf-dd31-4de6-9602-7e98901142ce</string>
+    <string name="url_activity_3">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisement%2Fimg_activity_3.jpg?alt=media&amp;token=0cd4fb12-b80e-48c4-9832-535f26d38278</string>
 </resources>
