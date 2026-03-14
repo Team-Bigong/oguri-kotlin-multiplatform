@@ -20,7 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Neutral40
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.SaveToggleButton
@@ -91,10 +91,11 @@ fun HomeStrategyCard(
                             Res.string.home_strategy_holiday_with,
                             currentPeriod.holiday.joinToString(separator = " · "),
                         ).getStyledText(
-                            style = TextStyle(
-                                color = Mint70,
-                                fontWeight = FontWeight.Bold,
-                            ),
+                            style =
+                                TextStyle(
+                                    color = Mint70,
+                                    fontWeight = FontWeight.Bold,
+                                ),
                             currentPeriod.holiday.joinToString(separator = " · "),
                         ),
                     style = OguriTheme.typography.cardSubtitle,
@@ -109,7 +110,7 @@ fun HomeStrategyCard(
                             currentPeriod.totalTripCount,
                         ),
                     style = OguriTheme.typography.caption,
-                    color = Neutral40,
+                    color = Neutral50,
                 )
                 Spacer(modifier = Modifier.height(24.dp))
             }

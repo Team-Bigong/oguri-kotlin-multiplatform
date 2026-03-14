@@ -8,5 +8,4 @@
     <string name="url_activity_1">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/place%2Ffrance%2Ffr%3Aparis%3Adetail-1.jpg?alt=media&amp;token=41892e0a-2c71-4dfb-858f-948e28edbe26</string>
     <string name="url_activity_2">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_activity_1.jpg?alt=media&amp;token=0fcdba9e-c1b6-4d9c-a37f-4f4d5d749653</string>
     <string name="url_activity_3">https://firebasestorage.googleapis.com/v0/b/oguri-af89b.firebasestorage.app/o/drawable%2Fimg_activity_2.jpg?alt=media&amp;token=d537d230-b208-4a74-8e92-137b09b36945</string>
-    <string name="url_place_dummy">https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg</string>
 </resources>
