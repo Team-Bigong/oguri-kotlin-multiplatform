@@ -30,7 +30,7 @@ class HomeService(
         const val WEIGHT_FLIGHT_TIME = 0.6
         const val WEIGHT_BIG_MAC_INDEX = 0.4
         const val MAX_RECOMMENDATIONS = 7
-        
+
         const val MID_TRIP_THRESHOLD = 5
         const val LONG_TRIP_THRESHOLD = 7
     }
@@ -51,15 +51,16 @@ class HomeService(
         val bestPeriods = findTopVacationPeriods(preferredDayOff, holidayMap, limit = 3)
 
         val advertisements = listOf(
-            AdvertisementResponse(platform = "google", url = "https://www.google.com"),
-            AdvertisementResponse(platform = "naver", url = "https://www.naver.com")
+            AdvertisementResponse(platform = "agoda", url = "https://www.agoda.com/"),
+            AdvertisementResponse(platform = "skyscanner", url = "https://www.skyscanner.com/"),
+            AdvertisementResponse(platform = "klook", url = "https://www.klook.com/")
         )
 
         return bestPeriods.mapIndexed { index, period ->
             val recommendedPlaces = calculateRecommendedPlaces(period.start, allDestinations, userCountry, period.totalDays)
 
-            val isSaved = savedPeriods.any { 
-                it.startDate == period.start && it.endDate == period.end 
+            val isSaved = savedPeriods.any {
+                it.startDate == period.start && it.endDate == period.end
             }
 
             val holidayNames = period.holidayObjects
@@ -175,7 +176,7 @@ class HomeService(
                 }
                 currentEnd = date
             }
-            
+
             val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
             if (totalDays > 0) {
                 candidates.add(VacationPeriod(currentStart, currentEnd, totalDays, holidayIndicesInPeriod.toList()))
@@ -198,8 +199,8 @@ class HomeService(
     }
 
     private fun isOffDay(date: LocalDate, holidayMap: Map<LocalDate, PublicHoliday>): Boolean {
-        return date.dayOfWeek == DayOfWeek.SATURDAY || 
-               date.dayOfWeek == DayOfWeek.SUNDAY || 
+        return date.dayOfWeek == DayOfWeek.SATURDAY ||
+               date.dayOfWeek == DayOfWeek.SUNDAY ||
                holidayMap.containsKey(date)
     }
 
