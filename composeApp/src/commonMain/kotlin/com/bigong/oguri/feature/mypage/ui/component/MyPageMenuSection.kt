@@ -15,10 +15,8 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral20
-import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
-import kotlinx.coroutines.NonCancellable.start
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_right_arrow
 import org.jetbrains.compose.resources.painterResource
@@ -37,7 +35,7 @@ fun MyPageMenuSection(
                         .fillMaxWidth()
                         .noRippleClickable(onClick = menuItem.onClick)
                         .padding(start = 24.dp, end = 12.dp)
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = 18.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
