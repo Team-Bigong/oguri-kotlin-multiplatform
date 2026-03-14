@@ -1,0 +1,26 @@
+-- 25개 도시의 추천 시기 정밀 업데이트
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 5, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '후쿠오카';
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 5, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '오사카';
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 5, recommend_start_month_2 = 10, recommend_end_month_2 = 11 WHERE name = '도쿄';
+UPDATE destinations SET recommend_start_month_1 = 12, recommend_end_month_1 = 4, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '세부';
+UPDATE destinations SET recommend_start_month_1 = 12, recommend_end_month_1 = 4, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '보라카이';
+UPDATE destinations SET recommend_start_month_1 = 12, recommend_end_month_1 = 4, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '보홀';
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 5, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '상하이';
+UPDATE destinations SET recommend_start_month_1 = 4, recommend_end_month_1 = 6, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '베이징';
+UPDATE destinations SET recommend_start_month_1 = 6, recommend_end_month_1 = 9, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '칭다오';
+UPDATE destinations SET recommend_start_month_1 = 4, recommend_end_month_1 = 6, recommend_start_month_2 = 9, recommend_end_month_2 = 10 WHERE name = '바르셀로나';
+UPDATE destinations SET recommend_start_month_1 = 4, recommend_end_month_1 = 6, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '마드리드';
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 5, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = 'LA';
+UPDATE destinations SET recommend_start_month_1 = 4, recommend_end_month_1 = 6, recommend_start_month_2 = 10, recommend_end_month_2 = 11 WHERE name = '뉴욕';
+UPDATE destinations SET recommend_start_month_1 = 9, recommend_end_month_1 = 10, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '샌프란시스코';
+UPDATE destinations SET recommend_start_month_1 = 2, recommend_end_month_1 = 5, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '다낭';
+UPDATE destinations SET recommend_start_month_1 = 12, recommend_end_month_1 = 3, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '호치민';
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 5, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '브리즈번';
+UPDATE destinations SET recommend_start_month_1 = 9, recommend_end_month_1 = 11, recommend_start_month_2 = 12, recommend_end_month_2 = 1 WHERE name = '시드니';
+UPDATE destinations SET recommend_start_month_1 = 10, recommend_end_month_1 = 3, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '멜버른';
+UPDATE destinations SET recommend_start_month_1 = 4, recommend_end_month_1 = 6, recommend_start_month_2 = 9, recommend_end_month_2 = 10 WHERE name = '파리';
+UPDATE destinations SET recommend_start_month_1 = 6, recommend_end_month_1 = 9, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '니스';
+UPDATE destinations SET recommend_start_month_1 = 6, recommend_end_month_1 = 8, recommend_start_month_2 = 12, recommend_end_month_2 = 2 WHERE name = '삿포로';
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 5, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '서울';
+UPDATE destinations SET recommend_start_month_1 = 4, recommend_end_month_1 = 6, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '부산';
+UPDATE destinations SET recommend_start_month_1 = 3, recommend_end_month_1 = 10, recommend_start_month_2 = NULL, recommend_end_month_2 = NULL WHERE name = '제주도';
