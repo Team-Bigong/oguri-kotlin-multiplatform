@@ -1,0 +1,109 @@
+<resources>
+    <string name="bottom_navigation_home">홈</string>
+    <string name="bottom_navigation_calendar">캘린더</string>
+    <string name="bottom_navigation_my">마이페이지</string>
+
+    <string name="navigation_back_press_exit_message">뒤로가기를 한 번 더 누르면 종료됩니다</string>
+
+    <string name="home_greeting_name">이 조합, 오구리만 알고 있었어요</string>
+    <string name="home_greeting_question">이번엔 이렇게 쉬어볼까요?</string>
+
+    <string name="home_tab_rank_one">1순위</string>
+    <string name="home_tab_rank_two">2순위</string>
+    <string name="home_tab_rank_three">3순위</string>
+
+    <string name="home_strategy_period">%1$s - %2$s</string>
+    <string name="home_strategy_holiday_with">%1$s이랑 딱 붙어 있어요</string>
+    <string name="home_strategy_day_off_hint">연차 %1$d일이면 %2$d일이나 쉴 수 있어요</string>
+
+    <string name="home_guide_match_places">이때 가면 딱 좋은 곳들이에요</string>
+    <string name="home_guide_match_places_highlight">딱 좋은 곳</string>
+    <string name="home_hint_place_cards">마음에 드는 카드를 눌러보세요</string>
+
+    <string name="home_guide_trip_products">놓치기 아쉬운 유용한 정보를 가져왔어요</string>
+    <string name="home_guide_trip_products_highlight">유용한 정보</string>
+    <string name="home_hint_trip_products">매력적인 혜택을 확인해보세요</string>
+
+    <string name="home_ad_hotel_title">아고다에서 예쁜 숙소를 둘러볼까요?</string>
+    <string name="home_ad_hotel_title_highlight">예쁜 숙소</string>
+    <string name="home_ad_plane_title">지금 떠나는 최저가 항공편은 얼마일까요?</string>
+    <string name="home_ad_plane_title_highlight">최저가 항공편</string>
+    <string name="home_ad_activity_title">클룩과 함께 재밌는 액티비티를 찾아볼까요?</string>
+    <string name="home_ad_activity_title_highlight">재밌는 액티비티</string>
+
+    <string name="home_more_recommendation_subtitle">딱 맞는 연휴가 없었나요?</string>
+    <string name="home_cta_more_recommend">다른 추천 보기</string>
+    <string name="home_loading">추천 전략을 불러오는 중이에요...</string>
+    <string name="home_error_retry">추천 전략을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
+
+    <string name="place_detail_country">%1$s</string>
+    <string name="place_detail_section_experience">보라카이에서 이런 건 어때요?</string>
+    <string name="place_detail_section_experience_highlight">이런 건 어때요?</string>
+    <string name="place_detail_section_experience_subtitle">마음에 드는 카드를 눌러보세요</string>
+    <string name="place_detail_flight_title">항공편, 구경이라도 해볼까요?</string>
+    <string name="place_detail_flight_title_highlight">구경이라도</string>
+    <string name="place_detail_flight_card_title">%1$s 일정으로 항공편 보기</string>
+    <string name="place_detail_relevant_places">이때 가면 좋은 다른 여행지도 있어요</string>
+    <string name="place_detail_relevant_places_highlight">다른 여행지</string>
+    <string name="place_detail_relevant_places_subtitle">좌우로 넘기며 살펴보세요</string>
+    <string name="place_detail_menu_share">공유하기</string>
+    <string name="place_detail_menu_save">저장하기</string>
+    <string name="place_detail_menu_unsave">저장 삭제하기</string>
+    <string name="place_detail_experience_detail">자세히 보기</string>
+
+    <string name="login_apple_with_account">Apple 계정으로 로그인</string>
+    <string name="login_kakao_with_account">카카오 계정으로 로그인</string>
+    <string name="login_guest_browse">로그인 없이 둘러보기</string>
+
+    <string name="calendar_header_title">연차 몇 일 쓸 수 있어요?</string>
+    <string name="calendar_header_subtitle">일수를 바꿔보면서 다른 일정도 찾아보세요</string>
+    <string name="calendar_loading">캘린더 추천을 불러오는 중이에요...</string>
+    <string name="calendar_error_retry">캘린더 추천을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
+    <string name="calendar_dialog_leave_days_title">연차 일수를 입력해 주세요</string>
+    <string name="calendar_dialog_confirm">확인</string>
+    <string name="calendar_dialog_cancel">취소</string>
+    <string name="calendar_month_year">%1$d년 %2$d월</string>
+    <string name="calendar_month_year_selector">연도와 월 선택</string>
+    <string name="calendar_day_sun">일</string>
+    <string name="calendar_day_mon">월</string>
+    <string name="calendar_day_tue">화</string>
+    <string name="calendar_day_wed">수</string>
+    <string name="calendar_day_thu">목</string>
+    <string name="calendar_day_fri">금</string>
+    <string name="calendar_day_sat">토</string>
+    <string name="calendar_recommendation_guide_title">가장 알차게 쉴 수 있는 날이에요</string>
+    <string name="calendar_recommendation_guide_highlight">가장 알차게</string>
+    <string name="calendar_recommendation_guide_subtitle">화살표를 누르면 여행지도 함께 볼 수 있어요</string>
+    <string name="calendar_period_range">%1$s - %2$s</string>
+    <string name="calendar_month_day">%1$d월 %2$d일</string>
+    <string name="calendar_leave_days_sheet_title">연차 사용 일수</string>
+    <string name="calendar_leave_days_sheet_done">완료</string>
+    <string name="period_detail_dummy_back">뒤로가기</string>
+    <string name="period_detail_dummy_title">Period Detail 더미 화면</string>
+    <string name="period_detail_dummy_description">periodId=%1$d 로 이동 성공</string>
+    <string name="mypage_profile_leave_days">남은 연차: %1$d일 / 선호하는 연차: %2$d일</string>
+    <string name="mypage_section_selected_period">내가 고른 휴가 일정</string>
+    <string name="mypage_section_saved_place">내가 담아둔 여행지</string>
+    <string name="mypage_selected_period_date_range">%1$d월 %2$d일 - %3$d월 %4$d일</string>
+    <string name="mypage_selected_period_information">휴일 %1$d일 · 연차 %2$d일</string>
+    <string name="mypage_empty_selected_period">아직 골라둔 휴가 일정이 없어요.</string>
+    <string name="mypage_empty_saved_place">아직 담아둔 여행지가 없어요.</string>
+    <string name="mypage_menu_suggest">건의하기</string>
+    <string name="mypage_menu_terms_of_service">서비스 이용약관</string>
+    <string name="mypage_menu_privacy_policy">개인정보 처리방침</string>
+    <string name="mypage_menu_withdraw">회원 탈퇴</string>
+    <string name="mypage_menu_logout">로그아웃</string>
+    <string name="mypage_dialog_confirm">확인</string>
+    <string name="mypage_dialog_cancel">취소</string>
+    <string name="mypage_delete_schedule_dialog_title">휴가 일정을 삭제할까요?</string>
+    <string name="mypage_delete_schedule_dialog_message">삭제된 정보는 복구되지 않습니다.</string>
+    <string name="mypage_delete_place_dialog_title">여행지를 삭제할까요?</string>
+    <string name="mypage_delete_place_dialog_message">삭제된 정보는 복구되지 않습니다.</string>
+    <string name="mypage_logout_dialog_title">로그아웃 할까요?</string>
+    <string name="mypage_logout_dialog_message">로그아웃 후 다시 로그인해야 해요.</string>
+    <string name="mypage_loading">마이페이지 정보를 불러오는 중이에요...</string>
+    <string name="mypage_error_retry">마이페이지 정보를 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
+    <string name="mypage_leave_days_sheet_title">연차 설정</string>
+    <string name="mypage_leave_days_field_remaining">남은 연차</string>
+    <string name="mypage_leave_days_field_preferred">선호하는 연차</string>
+</resources>

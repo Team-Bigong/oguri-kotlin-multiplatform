@@ -1,0 +1,109 @@
+<resources>
+    <string name="bottom_navigation_home">Home</string>
+    <string name="bottom_navigation_calendar">Calendar</string>
+    <string name="bottom_navigation_my">My</string>
+
+    <string name="navigation_back_press_exit_message">Press back again to exit</string>
+
+    <string name="home_greeting_name">This Combination, only Oguri knows this.</string>
+    <string name="home_greeting_question">How about resting like this this time?</string>
+
+    <string name="home_tab_rank_one">1st</string>
+    <string name="home_tab_rank_two">2nd</string>
+    <string name="home_tab_rank_three">3rd</string>
+
+    <string name="home_strategy_period">%1$s - %2$s</string>
+    <string name="home_strategy_holiday_with">Close to %1$s</string>
+    <string name="home_strategy_day_off_hint">Using %1$d leave days can secure %2$d trip days</string>
+
+    <string name="home_guide_match_places">These places match this period</string>
+    <string name="home_guide_match_places_highlight">match this period</string>
+    <string name="home_hint_place_cards">Tap cards if you want</string>
+
+    <string name="home_guide_trip_products">We also brought useful trip information</string>
+    <string name="home_guide_trip_products_highlight">useful trip information</string>
+    <string name="home_hint_trip_products">Check attractive benefits</string>
+
+    <string name="home_ad_hotel_title">Want to look around pretty hotels on Agoda?</string>
+    <string name="home_ad_hotel_title_highlight">pretty hotels</string>
+    <string name="home_ad_plane_title">How much is the lowest flight leaving now?</string>
+    <string name="home_ad_plane_title_highlight">lowest flight</string>
+    <string name="home_ad_activity_title">Shall we find fun activities with Klook?</string>
+    <string name="home_ad_activity_title_highlight">fun activities</string>
+
+    <string name="home_more_recommendation_subtitle">Couldn’t find the perfect holiday?</string>
+    <string name="home_cta_more_recommend">See more recommendations</string>
+    <string name="home_loading">Loading recommendations...</string>
+    <string name="home_error_retry">Failed to load recommendations. Tap to retry.</string>
+
+    <string name="place_detail_country">%1$s</string>
+    <string name="place_detail_section_experience">How about this in Boracay?</string>
+    <string name="place_detail_section_experience_highlight">this</string>
+    <string name="place_detail_section_experience_subtitle">Tap cards to see details</string>
+    <string name="place_detail_flight_title">Want to look around flights?</string>
+    <string name="place_detail_flight_title_highlight">flights</string>
+    <string name="place_detail_flight_card_title">View flights for %1$s itinerary</string>
+    <string name="place_detail_relevant_places">There are other places fit this period too</string>
+    <string name="place_detail_relevant_places_highlight">other places</string>
+    <string name="place_detail_relevant_places_subtitle">Swipe and check places</string>
+    <string name="place_detail_menu_share">Share</string>
+    <string name="place_detail_menu_save">Save</string>
+    <string name="place_detail_menu_unsave">Remove saved</string>
+    <string name="place_detail_experience_detail">See details</string>
+
+    <string name="login_apple_with_account">Sign in with Apple account</string>
+    <string name="login_kakao_with_account">Sign in with Kakao account</string>
+    <string name="login_guest_browse">Browse without login</string>
+
+    <string name="calendar_header_title">How many leave days can you use?</string>
+    <string name="calendar_header_subtitle">Try changing the days to find other schedules</string>
+    <string name="calendar_loading">Loading calendar recommendations...</string>
+    <string name="calendar_error_retry">Failed to load calendar recommendations. Tap to retry.</string>
+    <string name="calendar_dialog_leave_days_title">Enter leave days</string>
+    <string name="calendar_dialog_confirm">Confirm</string>
+    <string name="calendar_dialog_cancel">Cancel</string>
+    <string name="calendar_month_year">%1$d %2$d</string>
+    <string name="calendar_month_year_selector">Select year and month</string>
+    <string name="calendar_day_sun">Sun</string>
+    <string name="calendar_day_mon">Mon</string>
+    <string name="calendar_day_tue">Tue</string>
+    <string name="calendar_day_wed">Wed</string>
+    <string name="calendar_day_thu">Thu</string>
+    <string name="calendar_day_fri">Fri</string>
+    <string name="calendar_day_sat">Sat</string>
+    <string name="calendar_recommendation_guide_title">These are the best days for your leave</string>
+    <string name="calendar_recommendation_guide_highlight">best days</string>
+    <string name="calendar_recommendation_guide_subtitle">Tap the arrow to explore travel spots too</string>
+    <string name="calendar_period_range">%1$s - %2$s</string>
+    <string name="calendar_month_day">%1$d/%2$d</string>
+    <string name="calendar_leave_days_sheet_title">Leave Settings</string>
+    <string name="calendar_leave_days_sheet_done">Done</string>
+    <string name="period_detail_dummy_back">Back</string>
+    <string name="period_detail_dummy_title">Period Detail Dummy Screen</string>
+    <string name="period_detail_dummy_description">Navigation success with periodId=%1$d</string>
+    <string name="mypage_profile_leave_days">Remaining leave: %1$d days / Preferred leave: %2$d days</string>
+    <string name="mypage_section_selected_period">Selected vacation periods</string>
+    <string name="mypage_section_saved_place">Saved places</string>
+    <string name="mypage_selected_period_date_range">%1$d/%2$d - %3$d/%4$d</string>
+    <string name="mypage_selected_period_information">Holiday %1$d days · Leave %2$d days</string>
+    <string name="mypage_empty_selected_period">No saved vacation period.</string>
+    <string name="mypage_empty_saved_place">No saved place.</string>
+    <string name="mypage_menu_suggest">Suggestions</string>
+    <string name="mypage_menu_terms_of_service">Terms of Service</string>
+    <string name="mypage_menu_privacy_policy">Privacy Policy</string>
+    <string name="mypage_menu_withdraw">Delete account</string>
+    <string name="mypage_menu_logout">Logout</string>
+    <string name="mypage_dialog_confirm">Confirm</string>
+    <string name="mypage_dialog_cancel">Cancel</string>
+    <string name="mypage_delete_schedule_dialog_title">Delete this vacation period?</string>
+    <string name="mypage_delete_schedule_dialog_message">Deleted information cannot be restored.</string>
+    <string name="mypage_delete_place_dialog_title">Delete this place?</string>
+    <string name="mypage_delete_place_dialog_message">Deleted information cannot be restored.</string>
+    <string name="mypage_logout_dialog_title">Log out?</string>
+    <string name="mypage_logout_dialog_message">You will need to log in again.</string>
+    <string name="mypage_loading">Loading my page data...</string>
+    <string name="mypage_error_retry">Failed to load my page data. Tap to retry.</string>
+    <string name="mypage_leave_days_sheet_title">Leave Settings</string>
+    <string name="mypage_leave_days_field_remaining">Remaining leave days</string>
+    <string name="mypage_leave_days_field_preferred">Preferred leave days</string>
+</resources>
