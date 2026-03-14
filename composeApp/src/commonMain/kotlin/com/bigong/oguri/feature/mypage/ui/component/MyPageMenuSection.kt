@@ -35,7 +35,7 @@ fun MyPageMenuSection(
                         .fillMaxWidth()
                         .noRippleClickable(onClick = menuItem.onClick)
                         .padding(start = 24.dp, end = 12.dp)
-                        .padding(vertical = 18.dp),
+                        .padding(vertical = 14.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
