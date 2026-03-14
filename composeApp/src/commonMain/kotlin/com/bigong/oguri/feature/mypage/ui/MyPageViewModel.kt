@@ -1,53 +1,160 @@
 package com.bigong.oguri.feature.mypage.ui
 
-import com.bigong.oguri.data.model.UserState
-import com.bigong.oguri.data.model.WorkScheduleType
-import com.bigong.oguri.data.repository.UserStateRepository
-import com.bigong.oguri.feature.common.ui.RouteViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import com.bigong.oguri.domain.usecase.DeleteMyPageSavedPlaceUseCase
+import com.bigong.oguri.domain.usecase.DeleteMyPageSelectedPeriodUseCase
+import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
+import com.bigong.oguri.domain.usecase.UpdateMyPageLeaveDaysUseCase
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-private const val ANNUAL_LEAVE_INCREMENT: Int = 1
-
+@Inject
 class MyPageViewModel(
-    private val userStateRepository: UserStateRepository,
-) : RouteViewModel() {
-    private val mutableMyPageUiStateFlow: MutableStateFlow<MyPageUiState> = MutableStateFlow(MyPageUiState())
-    val myPageUiStateFlow: StateFlow<MyPageUiState> = mutableMyPageUiStateFlow.asStateFlow()
+    private val getMyPageInfoUseCase: GetMyPageInfoUseCase,
+    private val updateMyPageLeaveDaysUseCase: UpdateMyPageLeaveDaysUseCase,
+    private val deleteMyPageSelectedPeriodUseCase: DeleteMyPageSelectedPeriodUseCase,
+    private val deleteMyPageSavedPlaceUseCase: DeleteMyPageSavedPlaceUseCase,
+) : ViewModel() {
+    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    var myPageUiState: MyPageUiState by mutableStateOf(MyPageUiState())
+        private set
 
     init {
-        routeViewModelScope.launch {
-            userStateRepository.userStateFlow.collect { userState: UserState ->
-                mutableMyPageUiStateFlow.value = MyPageUiState(userState = userState)
+        loadMyPageInfo()
+    }
+
+    fun loadMyPageInfo() {
+        viewModelScope.launch {
+            myPageUiState = myPageUiState.copy(isLoading = true, isError = false)
+
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    getMyPageInfoUseCase()
+                }
+            }.onSuccess { myPageInfo ->
+                myPageUiState =
+                    myPageUiState.copy(
+                        isLoading = false,
+                        isError = false,
+                        myPageInfo = myPageInfo,
+                    )
+            }.onFailure {
+                myPageUiState =
+                    myPageUiState.copy(
+                        isLoading = false,
+                        isError = true,
+                        myPageInfo = null,
+                    )
             }
         }
     }
 
-    fun increaseAnnualLeaveDays(currentDays: Int) {
-        userStateRepository.updateRemainingAnnualLeaveDays(currentDays + ANNUAL_LEAVE_INCREMENT)
+    fun showEditLeaveDaysBottomSheet() {
+        myPageUiState = myPageUiState.copy(isEditLeaveDaysBottomSheetVisible = true)
     }
 
-    fun decreaseAnnualLeaveDays(currentDays: Int) {
-        userStateRepository.updateRemainingAnnualLeaveDays(currentDays - ANNUAL_LEAVE_INCREMENT)
+    fun hideEditLeaveDaysBottomSheet() {
+        myPageUiState = myPageUiState.copy(isEditLeaveDaysBottomSheetVisible = false)
     }
 
-    fun toggleWorkScheduleType(currentWorkScheduleType: WorkScheduleType) {
-        val nextWorkScheduleType: WorkScheduleType = if (currentWorkScheduleType == WorkScheduleType.FIVE_DAYS) {
-            WorkScheduleType.SIX_DAYS
-        } else {
-            WorkScheduleType.FIVE_DAYS
+    fun updateLeaveDays(
+        remainingLeaveDays: Int,
+        preferredLeaveDays: Int,
+    ) {
+        if (remainingLeaveDays <= 0 || preferredLeaveDays <= 0) {
+            return
         }
-        userStateRepository.updateWorkScheduleType(nextWorkScheduleType)
+
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    updateMyPageLeaveDaysUseCase(
+                        remainingLeaveDays = remainingLeaveDays,
+                        preferredLeaveDays = preferredLeaveDays,
+                    )
+                }
+            }.onSuccess { myPageInfo ->
+                myPageUiState =
+                    myPageUiState.copy(
+                        myPageInfo = myPageInfo,
+                        isEditLeaveDaysBottomSheetVisible = false,
+                    )
+            }
+        }
     }
 
-    fun toggleProSubscription() {
-        userStateRepository.toggleProSubscription()
+    fun showDeleteScheduleDialog(periodId: Long) {
+        myPageUiState = myPageUiState.copy(pendingDeleteScheduleId = periodId)
     }
 
-    fun logout() {
-        userStateRepository.logout()
+    fun dismissDeleteScheduleDialog() {
+        myPageUiState = myPageUiState.copy(pendingDeleteScheduleId = null)
+    }
+
+    fun confirmDeleteSchedule() {
+        val pendingDeleteScheduleId = myPageUiState.pendingDeleteScheduleId ?: return
+
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    deleteMyPageSelectedPeriodUseCase(periodId = pendingDeleteScheduleId)
+                }
+            }.onSuccess { myPageInfo ->
+                myPageUiState =
+                    myPageUiState.copy(
+                        myPageInfo = myPageInfo,
+                        pendingDeleteScheduleId = null,
+                    )
+            }
+        }
+    }
+
+    fun showDeleteSavedPlaceDialog(placeId: Long) {
+        myPageUiState = myPageUiState.copy(pendingDeletePlaceId = placeId)
+    }
+
+    fun dismissDeleteSavedPlaceDialog() {
+        myPageUiState = myPageUiState.copy(pendingDeletePlaceId = null)
+    }
+
+    fun confirmDeleteSavedPlace() {
+        val pendingDeletePlaceId = myPageUiState.pendingDeletePlaceId ?: return
+
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    deleteMyPageSavedPlaceUseCase(placeId = pendingDeletePlaceId)
+                }
+            }.onSuccess { myPageInfo ->
+                myPageUiState =
+                    myPageUiState.copy(
+                        myPageInfo = myPageInfo,
+                        pendingDeletePlaceId = null,
+                    )
+            }
+        }
+    }
+
+    fun showLogoutDialog() {
+        myPageUiState = myPageUiState.copy(isLogoutDialogVisible = true)
+    }
+
+    fun hideLogoutDialog() {
+        myPageUiState = myPageUiState.copy(isLogoutDialogVisible = false)
+    }
+
+    override fun onCleared() {
+        viewModelScope.cancel()
+        super.onCleared()
     }
 }

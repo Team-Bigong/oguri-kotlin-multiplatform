@@ -40,86 +40,94 @@ fun rememberOguriTypographySystem(): OguriTypographySystem {
         fontSize: Int,
         lineHeight: Int,
         letterSpacing: Float = 0f,
-    ): TextStyle {
-        return TextStyle(
+    ): TextStyle =
+        TextStyle(
             fontFamily = pretendardFontFamily,
             fontWeight = fontWeight,
             fontSize = fontSize.sp,
             lineHeight = lineHeight.sp,
             letterSpacing = letterSpacing.em,
         )
-    }
 
     return OguriTypographySystem(
-        heroTitle = createTextStyle(
-            fontWeight = FontWeight.Bold,
-            fontSize = 28,
-            lineHeight = 36,
-            letterSpacing = -0.01f,
-        ),
-        sectionTitle = createTextStyle(
-            fontWeight = FontWeight.Bold,
-            fontSize = 22,
-            lineHeight = 30,
-            letterSpacing = -0.01f,
-        ),
-        cardTitle = createTextStyle(
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 18,
-            lineHeight = 25,
-        ),
-        cardSubtitle = createTextStyle(
-            fontWeight = FontWeight.Medium,
-            fontSize = 15,
-            lineHeight = 22,
-            letterSpacing = -0.005f,
-        ),
-        bodyLarge = createTextStyle(
-            fontWeight = FontWeight.Normal,
-            fontSize = 16,
-            lineHeight = 24,
-        ),
-        bodyMedium = createTextStyle(
-            fontWeight = FontWeight.Normal,
-            fontSize = 14,
-            lineHeight = 21,
-        ),
-        bodySmall = createTextStyle(
-            fontWeight = FontWeight.Normal,
-            fontSize = 13,
-            lineHeight = 19,
-        ),
-        caption = createTextStyle(
-            fontWeight = FontWeight.Normal,
-            fontSize = 12,
-            lineHeight = 16,
-            letterSpacing = 0.01f,
-        ),
-        labelLarge = createTextStyle(
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14,
-            lineHeight = 20,
-        ),
-        labelMedium = createTextStyle(
-            fontWeight = FontWeight.Medium,
-            fontSize = 12,
-            lineHeight = 16,
-            letterSpacing = 0.01f,
-        ),
-        labelSmall = createTextStyle(
-            fontWeight = FontWeight.Medium,
-            fontSize = 11,
-            lineHeight = 14,
-            letterSpacing = 0.02f,
-        ),
+        heroTitle =
+            createTextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = 28,
+                lineHeight = 36,
+                letterSpacing = -0.01f,
+            ),
+        sectionTitle =
+            createTextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = 22,
+                lineHeight = 30,
+                letterSpacing = -0.01f,
+            ),
+        cardTitle =
+            createTextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18,
+                lineHeight = 25,
+            ),
+        cardSubtitle =
+            createTextStyle(
+                fontWeight = FontWeight.Medium,
+                fontSize = 15,
+                lineHeight = 22,
+                letterSpacing = -0.005f,
+            ),
+        bodyLarge =
+            createTextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 16,
+                lineHeight = 24,
+            ),
+        bodyMedium =
+            createTextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 14,
+                lineHeight = 21,
+            ),
+        bodySmall =
+            createTextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 13,
+                lineHeight = 19,
+            ),
+        caption =
+            createTextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 12,
+                lineHeight = 16,
+                letterSpacing = 0.01f,
+            ),
+        labelLarge =
+            createTextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14,
+                lineHeight = 20,
+            ),
+        labelMedium =
+            createTextStyle(
+                fontWeight = FontWeight.Medium,
+                fontSize = 12,
+                lineHeight = 16,
+                letterSpacing = 0.01f,
+            ),
+        labelSmall =
+            createTextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 11,
+                lineHeight = 14,
+                letterSpacing = 0.02f,
+            ),
     )
 }
 
 @Composable
-fun rememberOguriMaterialTypography(
-    oguriTypographySystem: OguriTypographySystem,
-): MaterialTypography {
-    return MaterialTypography(
+fun rememberOguriMaterialTypography(oguriTypographySystem: OguriTypographySystem): MaterialTypography =
+    MaterialTypography(
         displayLarge = oguriTypographySystem.heroTitle,
         headlineMedium = oguriTypographySystem.sectionTitle,
         titleLarge = oguriTypographySystem.cardTitle,
@@ -131,7 +139,6 @@ fun rememberOguriMaterialTypography(
         labelMedium = oguriTypographySystem.labelMedium,
         labelSmall = oguriTypographySystem.labelSmall,
     )
-}
 
 @Composable
 private fun rememberPretendardFontFamily(): FontFamily {

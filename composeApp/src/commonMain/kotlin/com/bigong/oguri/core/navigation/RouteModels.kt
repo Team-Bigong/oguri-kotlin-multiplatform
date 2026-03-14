@@ -1,12 +1,16 @@
 package com.bigong.oguri.core.navigation
 
+import kotlin.reflect.KClass
 import kotlinx.serialization.Serializable
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.StringResource
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.bottom_navigation_calendar
 import oguri.composeapp.generated.resources.bottom_navigation_home
 import oguri.composeapp.generated.resources.bottom_navigation_my
-import org.jetbrains.compose.resources.StringResource
-import kotlin.reflect.KClass
+import oguri.composeapp.generated.resources.ic_calendar
+import oguri.composeapp.generated.resources.ic_home
+import oguri.composeapp.generated.resources.ic_mypage
 
 sealed interface RouteModel {
     @Serializable
@@ -16,24 +20,23 @@ sealed interface RouteModel {
     data object Login : RouteModel
 
     @Serializable
-    data object Onboarding : RouteModel
-
-    @Serializable
     data object Home : RouteModel
 
     @Serializable
-    data class StrategyDetail(
-        val strategyIdentifier: String,
-    ) : RouteModel
-
-    @Serializable
-    data object StrategyCalendar : RouteModel
+    data object Calendar : RouteModel
 
     @Serializable
     data object MyPage : RouteModel
 
     @Serializable
-    data object SupportInquiryType : RouteModel
+    data class PlaceDetail(
+        val placeId: Long,
+    ) : RouteModel
+
+    @Serializable
+    data class PeriodDetail(
+        val periodId: Long,
+    ) : RouteModel
 }
 
 data class BottomNavigationDestination(
@@ -41,6 +44,7 @@ data class BottomNavigationDestination(
     val routeClass: KClass<out RouteModel>,
     val routeSerialName: String,
     val labelResource: StringResource,
+    val iconResource: DrawableResource,
 )
 
 object RouteModels {
@@ -49,29 +53,23 @@ object RouteModels {
             BottomNavigationDestination(
                 routeModel = RouteModel.Home,
                 routeClass = RouteModel.Home::class,
-                routeSerialName =
-                    RouteModel.Home
-                        .serializer()
-                        .descriptor.serialName,
+                routeSerialName = RouteModel.Home.serializer().descriptor.serialName,
                 labelResource = Res.string.bottom_navigation_home,
+                iconResource = Res.drawable.ic_home,
             ),
             BottomNavigationDestination(
-                routeModel = RouteModel.StrategyCalendar,
-                routeClass = RouteModel.StrategyCalendar::class,
-                routeSerialName =
-                    RouteModel.StrategyCalendar
-                        .serializer()
-                        .descriptor.serialName,
+                routeModel = RouteModel.Calendar,
+                routeClass = RouteModel.Calendar::class,
+                routeSerialName = RouteModel.Calendar.serializer().descriptor.serialName,
                 labelResource = Res.string.bottom_navigation_calendar,
+                iconResource = Res.drawable.ic_calendar,
             ),
             BottomNavigationDestination(
                 routeModel = RouteModel.MyPage,
                 routeClass = RouteModel.MyPage::class,
-                routeSerialName =
-                    RouteModel.MyPage
-                        .serializer()
-                        .descriptor.serialName,
+                routeSerialName = RouteModel.MyPage.serializer().descriptor.serialName,
                 labelResource = Res.string.bottom_navigation_my,
+                iconResource = Res.drawable.ic_mypage,
             ),
         )
 }
