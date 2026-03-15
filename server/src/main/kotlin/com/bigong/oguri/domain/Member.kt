@@ -13,6 +13,9 @@ class Member(
     @Column(unique = true, length = 100)
     var nickname: String? = null,
 
+    @Column(columnDefinition = "TEXT")
+    var refreshToken: String? = null,
+
     @Column(nullable = false)
     var preferredDayOff: Int = 3,
 
@@ -33,5 +36,10 @@ class Member(
             this.nickname = generatedNickname
             this.updatedAt = LocalDateTime.now()
         }
+    }
+
+    fun updateRefreshToken(newToken: String) {
+        this.refreshToken = newToken
+        this.updatedAt = LocalDateTime.now()
     }
 }
