@@ -21,6 +21,7 @@ import com.bigong.oguri.feature.mypage.ui.MyPageRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
+import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 
 private const val NAVIGATION_FADE_DURATION_MILLIS: Int = 180
 private const val NAVIGATION_SLIDE_DURATION_MILLIS: Int = 240
@@ -88,6 +89,9 @@ fun MainNavHost(
         composable<RouteModel.MyPage> {
             MyPageRoute(
                 myPageViewModelProvider = appGraph.myPageViewModelProvider,
+                onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
+                onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
+                onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
             )
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->
@@ -103,6 +107,13 @@ fun MainNavHost(
             val route = navBackStackEntry.toRoute<RouteModel.PeriodDetail>()
             PeriodDetailRoute(
                 periodId = route.periodId,
+                onBackClick = { navigator.popBackStack() },
+            )
+        }
+        composable<RouteModel.WebDocument> { navBackStackEntry ->
+            val route = navBackStackEntry.toRoute<RouteModel.WebDocument>()
+            WebDocumentRoute(
+                documentType = route.documentType,
                 onBackClick = { navigator.popBackStack() },
             )
         }

@@ -15,8 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -31,10 +29,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.LabeledTextField
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_exit
@@ -42,6 +40,7 @@ import oguri.composeapp.generated.resources.calendar_leave_days_sheet_done
 import oguri.composeapp.generated.resources.mypage_leave_days_field_preferred
 import oguri.composeapp.generated.resources.mypage_leave_days_field_remaining
 import oguri.composeapp.generated.resources.mypage_leave_days_sheet_title
+import oguri.composeapp.generated.resources.mypage_leave_days_unit
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -102,23 +101,25 @@ fun MyPageLeaveDaysBottomSheet(
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             LeaveDaysTextField(
                 titleText = stringResource(Res.string.mypage_leave_days_field_remaining),
                 value = remainingLeaveDaysInput,
                 onValueChange = { remainingLeaveDaysInput = it },
+                unitText = stringResource(Res.string.mypage_leave_days_unit),
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
             LeaveDaysTextField(
                 titleText = stringResource(Res.string.mypage_leave_days_field_preferred),
                 value = preferredLeaveDaysInput,
                 onValueChange = { preferredLeaveDaysInput = it },
+                unitText = stringResource(Res.string.mypage_leave_days_unit),
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
             Box(
                 modifier =
@@ -131,7 +132,7 @@ fun MyPageLeaveDaysBottomSheet(
                                 val preferredLeaveDays = preferredLeaveDaysInput.toIntOrNull() ?: return@noRippleClickable
                                 onSubmit(remainingLeaveDays, preferredLeaveDays)
                             },
-                        ).padding(vertical = 12.dp),
+                        ).padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -149,50 +150,18 @@ private fun LeaveDaysTextField(
     titleText: String,
     value: String,
     onValueChange: (String) -> Unit,
+    unitText: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Text(
-            text = titleText,
-            style = OguriTheme.typography.bodyMedium,
-            color = Neutral50,
-            modifier = Modifier.padding(start = 4.dp),
-        )
-        OutlinedTextField(
-            value = value,
-            onValueChange = { nextText ->
-                onValueChange(nextText.filter { character -> character.isDigit() }.take(2))
-            },
-            singleLine = true,
-            textStyle = OguriTheme.typography.bodyLarge.copy(color = Neutral90),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            placeholder = {
-                Text(
-                    text = "0",
-                    style = OguriTheme.typography.bodyLarge,
-                    color = Neutral40,
-                )
-            },
-            shape = RoundedCornerShape(8.dp),
-            colors =
-                OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Mint70,
-                    unfocusedBorderColor = Neutral40,
-                    focusedLabelColor = Mint70,
-                    unfocusedLabelColor = Neutral50,
-                    cursorColor = Mint70,
-                    focusedTextColor = Neutral90,
-                    unfocusedTextColor = Neutral90,
-                    focusedContainerColor = Neutral0,
-                    unfocusedContainerColor = Neutral0,
-                ),
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-        )
-    }
+    LabeledTextField(
+        labelText = titleText,
+        value = value,
+        onValueChange = { nextText ->
+            onValueChange(nextText.filter { character -> character.isDigit() }.take(2))
+        },
+        placeholderText = "0",
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        unitText = unitText,
+        modifier = modifier,
+    )
 }

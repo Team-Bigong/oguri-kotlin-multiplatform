@@ -46,6 +46,8 @@ import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_exit
 import oguri.composeapp.generated.resources.calendar_leave_days_sheet_done
@@ -53,8 +55,6 @@ import oguri.composeapp.generated.resources.calendar_leave_days_sheet_title
 import oguri.composeapp.generated.resources.ic_pen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
 
 private val LEAVE_DAYS_EDITOR_SHAPE = RoundedCornerShape(size = 8.dp)
 private val BOTTOM_SHEET_SHAPE = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
@@ -163,7 +163,7 @@ fun CalendarLeaveDaysEditor(
                                     onLeaveDaysChanged(selectedLeaveDays)
                                     isBottomSheetVisible = false
                                 },
-                            ).padding(vertical = 12.dp),
+                            ).padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -198,12 +198,13 @@ private fun LeaveDaysNumberPicker(
                 firstVisibleItemScrollOffset = firstVisibleItemScrollOffset,
                 itemHeightPx = itemHeightPx,
             )
-        }.distinctUntilChanged().collect { nearestIndex ->
-            val day = (nearestIndex + MIN_LEAVE_DAYS).coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
-            if (day != value) {
-                onValueChange(day)
+        }.distinctUntilChanged()
+            .collect { nearestIndex ->
+                val day = (nearestIndex + MIN_LEAVE_DAYS).coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
+                if (day != value) {
+                    onValueChange(day)
+                }
             }
-        }
     }
 
     LaunchedEffect(pickerState.isScrollInProgress, itemHeightPx) {

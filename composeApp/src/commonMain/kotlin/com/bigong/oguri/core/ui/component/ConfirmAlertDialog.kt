@@ -24,8 +24,8 @@ import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.Neutral90
-import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -99,7 +99,7 @@ fun ConfirmAlertDialog(
                                 .weight(1f)
                                 .background(color = Mint70, shape = DIALOG_BUTTON_SHAPE)
                                 .noRippleClickable(onClick = onConfirmClick)
-                                .padding(vertical = 12.dp),
+                                .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -115,7 +115,7 @@ fun ConfirmAlertDialog(
                                 .weight(1f)
                                 .background(color = Neutral10, shape = DIALOG_BUTTON_SHAPE)
                                 .noRippleClickable(onClick = onCancelClick)
-                                .padding(vertical = 12.dp),
+                                .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(

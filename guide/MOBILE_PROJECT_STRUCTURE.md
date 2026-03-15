@@ -29,18 +29,21 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
    ├─ login
    │  └─ ui
    ├─ home
-   │  ├─ navigation
    │  └─ ui
    │     ├─ component
    │     └─ model
    ├─ calendar
-   │  ├─ navigation
    │  └─ ui
-   └─ mypage
-      ├─ navigation
+   ├─ placedetail
+   │  └─ ui
+   ├─ perioddetail
+   │  └─ ui
+   ├─ mypage
       └─ ui
          ├─ component
          └─ model
+   └─ webdocument
+      └─ ui
 ```
 
 ## 레이어 규칙
@@ -58,4 +61,4 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
 
 ## 리소스
 - 문자열/이미지는 `composeResources`를 사용한다.
-- 원격 이미지 URL도 리소스(`urls.xml`) 키 기반으로 관리한다.
+- 원격 이미지/문서 URI는 리소스(`uris.xml`) 키 기반으로 관리한다.

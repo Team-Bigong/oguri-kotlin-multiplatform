@@ -12,6 +12,13 @@ import oguri.composeapp.generated.resources.ic_calendar
 import oguri.composeapp.generated.resources.ic_home
 import oguri.composeapp.generated.resources.ic_mypage
 
+@Serializable
+enum class WebDocumentType {
+    SUGGESTION,
+    TERMS_OF_SERVICE,
+    PRIVACY_POLICY,
+}
+
 sealed interface RouteModel {
     @Serializable
     data object Splash : RouteModel
@@ -36,6 +43,11 @@ sealed interface RouteModel {
     @Serializable
     data class PeriodDetail(
         val periodId: Long,
+    ) : RouteModel
+
+    @Serializable
+    data class WebDocument(
+        val documentType: String,
     ) : RouteModel
 }
 
