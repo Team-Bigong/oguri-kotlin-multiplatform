@@ -49,7 +49,7 @@
     <string name="place_detail_menu_share">공유하기</string>
     <string name="place_detail_menu_save">저장하기</string>
     <string name="place_detail_menu_unsave">저장 삭제하기</string>
-    <string name="place_detail_experience_detail">자세히 보기</string>
+    <string name="place_detail_experience_detail">제휴 페이지로 이동</string>
 
     <string name="login_apple_with_account">Apple 계정으로 로그인</string>
     <string name="login_kakao_with_account">카카오 계정으로 로그인</string>
@@ -106,4 +106,5 @@
     <string name="mypage_leave_days_sheet_title">연차 설정</string>
     <string name="mypage_leave_days_field_remaining">남은 연차</string>
     <string name="mypage_leave_days_field_preferred">선호하는 연차</string>
+    <string name="mypage_leave_days_unit">일</string>
 </resources>
