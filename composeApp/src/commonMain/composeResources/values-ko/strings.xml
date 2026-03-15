@@ -106,4 +106,5 @@
     <string name="mypage_leave_days_sheet_title">연차 설정</string>
     <string name="mypage_leave_days_field_remaining">남은 연차</string>
     <string name="mypage_leave_days_field_preferred">선호하는 연차</string>
+    <string name="mypage_leave_days_unit">일</string>
 </resources>
