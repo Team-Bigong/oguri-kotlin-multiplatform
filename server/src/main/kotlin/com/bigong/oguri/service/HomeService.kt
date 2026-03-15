@@ -81,7 +81,10 @@ class HomeService(
         }
     }
 
-    private fun calculateRecommendedPlaces(
+    /**
+     * 추천 장소 계산 로직 (상세 화면에서도 재사용 가능하도록 공개)
+     */
+    fun calculateRecommendedPlaces(
         startDate: LocalDate,
         destinations: List<Destination>,
         userCountry: String,
