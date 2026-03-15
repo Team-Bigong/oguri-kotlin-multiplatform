@@ -73,7 +73,7 @@ private fun HomeScreenPreview() {
             onSavedChanged = {},
             onRetryClick = {},
             onAdvertisementClick = {},
-            onPlaceClick = {},
+            onPlaceClick = { _, _, _ -> },
         )
     }
 }

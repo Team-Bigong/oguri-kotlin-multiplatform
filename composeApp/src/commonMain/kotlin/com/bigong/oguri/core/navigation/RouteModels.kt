@@ -38,6 +38,8 @@ sealed interface RouteModel {
     @Serializable
     data class PlaceDetail(
         val placeId: Long,
+        val startDate: String? = null,
+        val endDate: String? = null,
     ) : RouteModel
 
     @Serializable

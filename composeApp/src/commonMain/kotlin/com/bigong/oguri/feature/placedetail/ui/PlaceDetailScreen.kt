@@ -215,20 +215,22 @@ fun PlaceDetailScreen(
                     onClick = onUrlClick,
                 )
             }
-            item {
-                Spacer(modifier = Modifier.height(28.dp))
-                GuideHeader(
-                    iconResource = Res.drawable.ic_plane,
-                    titleText = stringResource(Res.string.place_detail_relevant_places),
-                    highlightedText = stringResource(Res.string.place_detail_relevant_places_highlight),
-                    subtitleText = null,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-                Spacer(modifier = Modifier.height(18.dp))
-                PlaceHorizontalCarousel(
-                    places = placeDetail.relevantPlaces,
-                    onPlaceClick = { place -> onPlaceClick(place.id) },
-                )
+            if (placeDetail.relevantPlaces.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(28.dp))
+                    GuideHeader(
+                        iconResource = Res.drawable.ic_plane,
+                        titleText = stringResource(Res.string.place_detail_relevant_places),
+                        highlightedText = stringResource(Res.string.place_detail_relevant_places_highlight),
+                        subtitleText = null,
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                    )
+                    Spacer(modifier = Modifier.height(18.dp))
+                    PlaceHorizontalCarousel(
+                        places = placeDetail.relevantPlaces,
+                        onPlaceClick = { place -> onPlaceClick(place.id) },
+                    )
+                }
             }
         }
 

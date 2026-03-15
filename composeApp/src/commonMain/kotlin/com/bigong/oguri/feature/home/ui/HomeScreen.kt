@@ -52,7 +52,7 @@ fun HomeScreen(
     onSavedChanged: (Boolean) -> Unit,
     onRetryClick: () -> Unit,
     onAdvertisementClick: (String) -> Unit,
-    onPlaceClick: (Long) -> Unit,
+    onPlaceClick: (Long, String?, String?) -> Unit,
 ) {
     if (homeUiState.isLoading) {
         HomeLoadingContent(message = stringResource(Res.string.home_loading))
@@ -130,7 +130,13 @@ fun HomeScreen(
                 key(homeUiState.selectedRank) {
                     PlaceHorizontalCarousel(
                         places = currentPeriod.places,
-                        onPlaceClick = { place -> onPlaceClick(place.id) },
+                        onPlaceClick = { place ->
+                            onPlaceClick(
+                                place.id,
+                                currentPeriod.startDate.toString(),
+                                currentPeriod.endDate.toString(),
+                            )
+                        },
                     )
                 }
             }

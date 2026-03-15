@@ -8,7 +8,7 @@ import dev.zacsweers.metro.Provider
 @Composable
 fun HomeRoute(
     homeViewModelProvider: Provider<HomeViewModel>,
-    onPlaceClick: (Long) -> Unit,
+    onPlaceClick: (Long, String?, String?) -> Unit,
 ) {
     val homeViewModel: HomeViewModel = remember {
         homeViewModelProvider()

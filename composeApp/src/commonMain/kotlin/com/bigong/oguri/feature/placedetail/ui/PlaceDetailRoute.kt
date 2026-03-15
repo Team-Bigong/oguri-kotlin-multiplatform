@@ -10,6 +10,8 @@ import dev.zacsweers.metro.Provider
 fun PlaceDetailRoute(
     placeDetailViewModelProvider: Provider<PlaceDetailViewModel>,
     placeId: Long,
+    startDate: String?,
+    endDate: String?,
     onBackClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
 ) {
@@ -18,14 +20,24 @@ fun PlaceDetailRoute(
     }
     val uriHandler = LocalUriHandler.current
 
-    LaunchedEffect(placeId) {
-        placeDetailViewModel.loadPlaceDetail(placeId = placeId)
+    LaunchedEffect(placeId, startDate, endDate) {
+        placeDetailViewModel.loadPlaceDetail(
+            placeId = placeId,
+            startDate = startDate,
+            endDate = endDate,
+        )
     }
 
     PlaceDetailScreen(
         placeDetailUiState = placeDetailViewModel.placeDetailUiState,
         onBackClick = onBackClick,
-        onRetryClick = { placeDetailViewModel.loadPlaceDetail(placeId = placeId) },
+        onRetryClick = {
+            placeDetailViewModel.loadPlaceDetail(
+                placeId = placeId,
+                startDate = startDate,
+                endDate = endDate,
+            )
+        },
         onShareClick = {},
         onSaveToggleClick = placeDetailViewModel::toggleSaved,
         onUrlClick = { destinationUrl: String ->

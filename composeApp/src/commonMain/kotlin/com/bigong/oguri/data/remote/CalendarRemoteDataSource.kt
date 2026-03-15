@@ -1,10 +1,9 @@
 package com.bigong.oguri.data.remote
 
 import com.bigong.oguri.data.remote.model.response.CalendarRecommendationResponse
-import com.bigong.oguri.data.remote.model.response.MemberDayOffResponse
 
 interface CalendarRemoteDataSource {
-    suspend fun getMemberDayOffResponse(): MemberDayOffResponse
+    suspend fun getPreferredDayOffCount(): Int
 
     suspend fun getCalendarRecommendationResponse(
         year: Int,

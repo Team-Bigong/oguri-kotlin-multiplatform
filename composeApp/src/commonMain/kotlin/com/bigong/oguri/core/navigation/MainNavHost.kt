@@ -99,8 +99,16 @@ fun MainNavHost(
             PlaceDetailRoute(
                 placeDetailViewModelProvider = appGraph.placeDetailViewModelProvider,
                 placeId = route.placeId,
+                startDate = route.startDate,
+                endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
-                onPlaceClick = navigator::navigateToPlaceDetail,
+                onPlaceClick = { targetPlaceId: Long ->
+                    navigator.navigateToPlaceDetail(
+                        placeId = targetPlaceId,
+                        startDate = route.startDate,
+                        endDate = route.endDate,
+                    )
+                },
             )
         }
         composable<RouteModel.PeriodDetail> { navBackStackEntry ->

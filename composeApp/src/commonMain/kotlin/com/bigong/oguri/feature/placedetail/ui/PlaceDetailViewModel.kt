@@ -23,13 +23,21 @@ class PlaceDetailViewModel(
     var placeDetailUiState: PlaceDetailUiState by mutableStateOf(PlaceDetailUiState())
         private set
 
-    fun loadPlaceDetail(placeId: Long) {
+    fun loadPlaceDetail(
+        placeId: Long,
+        startDate: String?,
+        endDate: String?,
+    ) {
         viewModelScope.launch {
             placeDetailUiState = placeDetailUiState.copy(isLoading = true, isError = false)
 
             runCatching {
                 withContext(Dispatchers.Default) {
-                    getPlaceDetailUseCase(placeId = placeId)
+                    getPlaceDetailUseCase(
+                        placeId = placeId,
+                        startDate = startDate,
+                        endDate = endDate,
+                    )
                 }
             }.onSuccess { placeDetail ->
                 placeDetailUiState =

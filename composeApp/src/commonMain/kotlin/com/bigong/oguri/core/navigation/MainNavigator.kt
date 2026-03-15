@@ -47,8 +47,18 @@ class MainNavigator(
         }
     }
 
-    fun navigateToPlaceDetail(placeId: Long) {
-        navHostController.navigate(RouteModel.PlaceDetail(placeId = placeId))
+    fun navigateToPlaceDetail(
+        placeId: Long,
+        startDate: String?,
+        endDate: String?,
+    ) {
+        navHostController.navigate(
+            RouteModel.PlaceDetail(
+                placeId = placeId,
+                startDate = startDate,
+                endDate = endDate,
+            ),
+        )
     }
 
     fun navigateToPeriodDetail(periodId: Long) {

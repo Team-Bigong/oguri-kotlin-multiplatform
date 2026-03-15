@@ -16,7 +16,7 @@ class DefaultCalendarRepository(
     private val calendarRemoteDataSource: CalendarRemoteDataSource,
 ) : CalendarRepository {
     override suspend fun getPreferredDayOffCount(): Int {
-        return calendarRemoteDataSource.getMemberDayOffResponse().preferredDayOff
+        return calendarRemoteDataSource.getPreferredDayOffCount()
     }
 
     override suspend fun getCalendarRecommendation(
