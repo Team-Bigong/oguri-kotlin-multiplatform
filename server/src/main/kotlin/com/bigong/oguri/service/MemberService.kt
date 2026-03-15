@@ -21,7 +21,6 @@ import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
-import java.time.temporal.ChronoUnit
 import kotlin.random.Random
 
 /**
@@ -75,13 +74,13 @@ class MemberService(
             memberRepository.save(Member(id = memberId).apply { setNicknameOnce(generateUniqueNickname()) })
         }
 
-        // 2. 저장된 연휴 리스트 조회 및 가공
+        // 2. 저장된 연휴 리스트 조회
         val savedPeriods = savedRecommendationRepository.findAllByMemberId(memberId).map {
             SavedPeriodDto(
                 startDate = it.startDate,
                 endDate = it.endDate,
                 dayOffCount = it.dayOffCount,
-                totalTripCount = ChronoUnit.DAYS.between(it.startDate, it.endDate).toInt() + 1
+                totalTripCount = it.totalTripCount // DB 컬럼 값 사용
             )
         }
 
