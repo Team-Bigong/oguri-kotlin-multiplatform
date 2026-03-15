@@ -7,6 +7,7 @@ import dev.zacsweers.metro.Provider
 @Composable
 fun MyPageRoute(
     myPageViewModelProvider: Provider<MyPageViewModel>,
+    onOpenSuggestion: () -> Unit,
     onOpenTermsOfService: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
 ) {
@@ -26,7 +27,7 @@ fun MyPageRoute(
         onDeleteSavedPlaceClick = myPageViewModel::showDeleteSavedPlaceDialog,
         onDismissDeleteSavedPlaceDialog = myPageViewModel::dismissDeleteSavedPlaceDialog,
         onConfirmDeleteSavedPlace = myPageViewModel::confirmDeleteSavedPlace,
-        onSuggestClick = {},
+        onSuggestClick = onOpenSuggestion,
         onTermsOfServiceClick = onOpenTermsOfService,
         onPrivacyPolicyClick = onOpenPrivacyPolicy,
         onWithdrawClick = {},

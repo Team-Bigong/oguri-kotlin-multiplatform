@@ -8,7 +8,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.bigong.oguri.core.navigation.WebDocumentType
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.mypage_menu_suggest
 import oguri.composeapp.generated.resources.uri_privacy_policy
+import oguri.composeapp.generated.resources.uri_suggestion
 import oguri.composeapp.generated.resources.uri_terms_of_service
 import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
 import oguri.composeapp.generated.resources.mypage_menu_terms_of_service
@@ -27,11 +29,13 @@ fun WebDocumentRoute(
 
     val titleText =
         when (webDocumentType) {
+            WebDocumentType.SUGGESTION -> stringResource(Res.string.mypage_menu_suggest)
             WebDocumentType.TERMS_OF_SERVICE -> stringResource(Res.string.mypage_menu_terms_of_service)
             WebDocumentType.PRIVACY_POLICY -> stringResource(Res.string.mypage_menu_privacy_policy)
         }
     val targetUrl =
         when (webDocumentType) {
+            WebDocumentType.SUGGESTION -> stringResource(Res.string.uri_suggestion)
             WebDocumentType.TERMS_OF_SERVICE -> stringResource(Res.string.uri_terms_of_service)
             WebDocumentType.PRIVACY_POLICY -> stringResource(Res.string.uri_privacy_policy)
         }

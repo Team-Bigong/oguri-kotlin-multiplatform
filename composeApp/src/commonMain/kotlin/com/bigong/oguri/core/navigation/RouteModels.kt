@@ -14,6 +14,7 @@ import oguri.composeapp.generated.resources.ic_mypage
 
 @Serializable
 enum class WebDocumentType {
+    SUGGESTION,
     TERMS_OF_SERVICE,
     PRIVACY_POLICY,
 }

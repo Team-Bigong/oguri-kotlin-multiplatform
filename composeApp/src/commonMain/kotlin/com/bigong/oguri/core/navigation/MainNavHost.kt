@@ -89,6 +89,7 @@ fun MainNavHost(
         composable<RouteModel.MyPage> {
             MyPageRoute(
                 myPageViewModelProvider = appGraph.myPageViewModelProvider,
+                onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
             )
