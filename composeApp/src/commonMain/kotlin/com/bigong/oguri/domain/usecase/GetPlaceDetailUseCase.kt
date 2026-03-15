@@ -8,7 +8,21 @@ import dev.zacsweers.metro.Inject
 class GetPlaceDetailUseCase(
     private val placeDetailRepository: PlaceDetailRepository,
 ) {
-    suspend operator fun invoke(placeId: Long): PlaceDetail {
-        return placeDetailRepository.getPlaceDetail(placeId = placeId)
+    suspend operator fun invoke(
+        placeId: Long,
+        startDate: String? = null,
+        endDate: String? = null,
+        userCountry: String = DEFAULT_USER_COUNTRY,
+    ): PlaceDetail {
+        return placeDetailRepository.getPlaceDetail(
+            placeId = placeId,
+            startDate = startDate,
+            endDate = endDate,
+            userCountry = userCountry,
+        )
+    }
+
+    private companion object {
+        private const val DEFAULT_USER_COUNTRY: String = "대한민국"
     }
 }

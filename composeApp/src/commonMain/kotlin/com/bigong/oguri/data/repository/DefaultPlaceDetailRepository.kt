@@ -14,8 +14,19 @@ import dev.zacsweers.metro.Inject
 class DefaultPlaceDetailRepository(
     private val placeDetailRemoteDataSource: PlaceDetailRemoteDataSource,
 ) : PlaceDetailRepository {
-    override suspend fun getPlaceDetail(placeId: Long): PlaceDetail {
-        return placeDetailRemoteDataSource.getPlaceDetailResponse(placeId = placeId).toDomain()
+    override suspend fun getPlaceDetail(
+        placeId: Long,
+        startDate: String?,
+        endDate: String?,
+        userCountry: String,
+    ): PlaceDetail {
+        return placeDetailRemoteDataSource
+            .getPlaceDetailResponse(
+                placeId = placeId,
+                startDate = startDate,
+                endDate = endDate,
+                userCountry = userCountry,
+            ).toDomain()
     }
 }
 
