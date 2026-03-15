@@ -90,12 +90,14 @@ class HomeViewModel(
                             startDate = selectedPeriod.startDate,
                             endDate = selectedPeriod.endDate,
                             dayOffCount = selectedPeriod.dayOffCount,
+                            totalTripCount = selectedPeriod.totalTripCount,
                         )
                     } else {
                         deleteRecommendationUseCase(
                             startDate = selectedPeriod.startDate,
                             endDate = selectedPeriod.endDate,
                             dayOffCount = selectedPeriod.dayOffCount,
+                            totalTripCount = selectedPeriod.totalTripCount,
                         )
                     }
                 }

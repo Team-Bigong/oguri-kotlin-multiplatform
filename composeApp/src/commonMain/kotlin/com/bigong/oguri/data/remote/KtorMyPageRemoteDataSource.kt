@@ -9,14 +9,11 @@ import com.bigong.oguri.data.remote.model.request.UpdateMyPageLeaveDaysRequest
 import com.bigong.oguri.data.remote.model.response.MemberMeResponse
 import com.bigong.oguri.data.remote.model.response.MyPageResponse
 import com.bigong.oguri.data.remote.model.response.MyPageSelectedPeriodResponse
-import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 
@@ -28,49 +25,20 @@ class KtorMyPageRemoteDataSource(
     private var cachedMyPageResponse: MyPageResponse? = null
 
     override suspend fun getMyPageResponse(): MyPageResponse {
-        val memberMe =
+        val memberMeResponse: MemberMeResponse =
             authRequestExecutor.execute {
                 httpClient.get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
-                    header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-                }.body<MemberMeResponse>()
+                    appendUserIdHeaderWhenGuest()
+                }.body()
             }
 
-        val recommendPeriods =
-            authRequestExecutor.execute {
-                httpClient.get("$DEBUG_BASE_URL$HOME_API_PATH") {
-                    header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-                    parameter(HOME_USER_COUNTRY_QUERY_NAME, DEFAULT_USER_COUNTRY)
-                }.body<List<RecommendPeriodResponse>>()
-            }
-
-        val savedRecommendations =
-            recommendPeriods
-                .filter { recommendPeriodResponse: RecommendPeriodResponse -> recommendPeriodResponse.saved }
-                .map { recommendPeriodResponse: RecommendPeriodResponse ->
-                    MyPageSelectedPeriodResponse(
-                        id = recommendationId(recommendPeriodResponse),
-                        startDate = recommendPeriodResponse.startDate,
-                        endDate = recommendPeriodResponse.endDate,
-                        totalTripCount = recommendPeriodResponse.totalTripCount,
-                        dayOffCount = recommendPeriodResponse.dayOffCount,
-                    )
-                }
-
-        return MyPageResponse(
-            nickname = memberMe.nickname,
-            remainingLeaveDays = memberMe.remainingDayOff,
-            preferredLeaveDays = memberMe.preferredDayOff,
-            selectedPeriods = savedRecommendations,
-            savedPlaces = emptyList(),
-        ).also { response ->
-            cachedMyPageResponse = response
-        }
+        return memberMeResponse.toMyPageResponse().also { response -> cachedMyPageResponse = response }
     }
 
     override suspend fun updateLeaveDays(request: UpdateMyPageLeaveDaysRequest): MyPageResponse {
         authRequestExecutor.execute {
             httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                appendUserIdHeaderWhenGuest()
                 setBody(
                     UpdateMemberDayOffRequest(
                         preferredDayOff = request.preferredLeaveDays,
@@ -99,12 +67,13 @@ class KtorMyPageRemoteDataSource(
 
         authRequestExecutor.execute {
             httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH") {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                appendUserIdHeaderWhenGuest()
                 setBody(
                     ManageSavedRecommendationRequest(
                         startDate = selectedPeriod.startDate,
                         endDate = selectedPeriod.endDate,
                         dayOffCount = selectedPeriod.dayOffCount,
+                        totalTripCount = selectedPeriod.totalTripCount,
                     ),
                 )
             }
@@ -121,23 +90,60 @@ class KtorMyPageRemoteDataSource(
     }
 
     override suspend fun deleteSavedPlace(request: DeleteMyPageSavedPlaceRequest): MyPageResponse {
-        val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
-        return currentMyPageResponse
+        authRequestExecutor.execute {
+            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/${request.placeId}") {
+                appendUserIdHeaderWhenGuest()
+            }
+        }
+
+        val currentMyPageResponse: MyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
+        return currentMyPageResponse.copy(
+            savedPlaces = currentMyPageResponse.savedPlaces.filterNot { placeResponse -> placeResponse.id == request.placeId },
+        ).also { response ->
+            cachedMyPageResponse = response
+        }
     }
 
-    private fun recommendationId(recommendPeriodResponse: RecommendPeriodResponse): Long {
-        return "${recommendPeriodResponse.startDate}_${recommendPeriodResponse.endDate}_${recommendPeriodResponse.dayOffCount}".hashCode().toLong()
+    private fun recommendationId(
+        startDate: String,
+        endDate: String,
+        dayOffCount: Int,
+        totalTripCount: Int,
+    ): Long {
+        return "${startDate}_${endDate}_${dayOffCount}_${totalTripCount}".hashCode().toLong()
+    }
+
+    private fun MemberMeResponse.toMyPageResponse(): MyPageResponse {
+        val selectedPeriodResponses =
+            savedPeriods.map { savedPeriodResponse ->
+                MyPageSelectedPeriodResponse(
+                    id =
+                        recommendationId(
+                            startDate = savedPeriodResponse.startDate,
+                            endDate = savedPeriodResponse.endDate,
+                            dayOffCount = savedPeriodResponse.dayOffCount,
+                            totalTripCount = savedPeriodResponse.totalTripCount,
+                        ),
+                    startDate = savedPeriodResponse.startDate,
+                    endDate = savedPeriodResponse.endDate,
+                    totalTripCount = savedPeriodResponse.totalTripCount,
+                    dayOffCount = savedPeriodResponse.dayOffCount,
+                )
+            }
+
+        return MyPageResponse(
+            nickname = nickname,
+            remainingLeaveDays = remainingDayOff,
+            preferredLeaveDays = preferredDayOff,
+            selectedPeriods = selectedPeriodResponses,
+            savedPlaces = savedPlaces,
+        )
     }
 
     private companion object {
-        private const val USER_ID_HEADER_NAME: String = "X-USER-ID"
-        private const val DEFAULT_USER_ID: String = "GUEST"
-        private const val DEFAULT_USER_COUNTRY: String = "대한민국"
-        private const val HOME_USER_COUNTRY_QUERY_NAME: String = "userCountry"
-
         private const val MEMBER_ME_API_PATH: String = "/api/v1/members/me"
         private const val MEMBER_DAY_OFF_API_PATH: String = "/api/v1/members/day-off"
         private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH: String = "/api/v1/members/saved-recommendations"
-        private const val HOME_API_PATH: String = "/api/v1/home"
+        private const val MEMBER_SAVED_DESTINATIONS_API_PATH: String = "/api/v1/members/saved-destinations"
     }
 }

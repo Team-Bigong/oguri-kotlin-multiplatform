@@ -12,11 +12,13 @@ class SaveRecommendationUseCase(
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     ) {
         homeRepository.saveRecommendation(
             startDate = startDate,
             endDate = endDate,
             dayOffCount = dayOffCount,
+            totalTripCount = totalTripCount,
         )
     }
 }

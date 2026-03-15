@@ -24,7 +24,7 @@ class KtorHomeRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$HOME_API_PATH"
         return authRequestExecutor.execute {
             httpClient.get(requestUrl) {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                appendUserIdHeaderWhenGuest()
                 parameter(HOME_USER_COUNTRY_QUERY_NAME, userCountry)
             }.body()
         }
@@ -34,7 +34,7 @@ class KtorHomeRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         authRequestExecutor.execute {
             httpClient.post(requestUrl) {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                appendUserIdHeaderWhenGuest()
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(request)
             }
@@ -45,7 +45,7 @@ class KtorHomeRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         authRequestExecutor.execute {
             httpClient.delete(requestUrl) {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                appendUserIdHeaderWhenGuest()
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(request)
             }
@@ -55,8 +55,6 @@ class KtorHomeRemoteDataSource(
     private companion object {
         private const val HOME_API_PATH: String = "/api/v1/home"
         private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH: String = "/api/v1/members/saved-recommendations"
-        private const val USER_ID_HEADER_NAME: String = "X-USER-ID"
-        private const val DEFAULT_USER_ID: String = "GUEST"
         private const val HOME_USER_COUNTRY_QUERY_NAME: String = "userCountry"
     }
 }

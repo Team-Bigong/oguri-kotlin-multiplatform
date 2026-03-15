@@ -9,4 +9,8 @@ interface PlaceDetailRepository {
         endDate: String?,
         userCountry: String,
     ): PlaceDetail
+
+    suspend fun saveDestination(placeId: Long)
+
+    suspend fun deleteSavedDestination(placeId: Long)
 }

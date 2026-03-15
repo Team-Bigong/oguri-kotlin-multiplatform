@@ -28,6 +28,14 @@ class DefaultPlaceDetailRepository(
                 userCountry = userCountry,
             ).toDomain()
     }
+
+    override suspend fun saveDestination(placeId: Long) {
+        placeDetailRemoteDataSource.saveDestination(placeId = placeId)
+    }
+
+    override suspend fun deleteSavedDestination(placeId: Long) {
+        placeDetailRemoteDataSource.deleteSavedDestination(placeId = placeId)
+    }
 }
 
 private fun PlaceDetailResponse.toDomain(): PlaceDetail {
@@ -60,5 +68,6 @@ private fun PlaceResponse.toDomain(): Place {
         city = city,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
+        isSaved = saved,
     )
 }

@@ -100,5 +100,6 @@ private fun com.bigong.oguri.data.remote.model.response.PlaceResponse.toDomain()
         city = city,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
+        isSaved = saved,
     )
 }

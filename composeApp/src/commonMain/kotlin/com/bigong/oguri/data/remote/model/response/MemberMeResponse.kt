@@ -13,4 +13,8 @@ data class MemberMeResponse(
     val preferredDayOff: Int,
     @SerialName("remainingDayOff")
     val remainingDayOff: Int,
+    @SerialName("savedPeriods")
+    val savedPeriods: List<MemberSavedPeriodResponse> = emptyList(),
+    @SerialName("savedPlaces")
+    val savedPlaces: List<PlaceResponse> = emptyList(),
 )

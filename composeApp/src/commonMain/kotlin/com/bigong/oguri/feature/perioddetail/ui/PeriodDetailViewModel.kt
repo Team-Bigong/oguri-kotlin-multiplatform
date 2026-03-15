@@ -6,7 +6,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarPeriodDetailUseCase
-import com.bigong.oguri.domain.usecase.GetRecommendPeriodListUseCase
+import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import dev.zacsweers.metro.Inject
@@ -17,12 +17,10 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val DEFAULT_USER_COUNTRY: String = "대한민국"
-
 @Inject
 class PeriodDetailViewModel(
     private val getCalendarPeriodDetailUseCase: GetCalendarPeriodDetailUseCase,
-    private val getRecommendPeriodListUseCase: GetRecommendPeriodListUseCase,
+    private val getMyPageInfoUseCase: GetMyPageInfoUseCase,
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
 ) : ViewModel() {
@@ -49,14 +47,13 @@ class PeriodDetailViewModel(
                 val isInitiallySaved =
                     runCatching {
                         withContext(Dispatchers.Default) {
-                            getRecommendPeriodListUseCase(userCountry = DEFAULT_USER_COUNTRY)
+                            getMyPageInfoUseCase().selectedPeriods
                         }
                     }.getOrDefault(emptyList())
-                        .any { recommendPeriod ->
-                            recommendPeriod.startDate == periodDetail.startDate &&
-                                recommendPeriod.endDate == periodDetail.endDate &&
-                                recommendPeriod.dayOffCount == periodDetail.dayOffCount &&
-                                recommendPeriod.isSaved
+                        .any { selectedPeriod ->
+                            selectedPeriod.startDate == periodDetail.startDate &&
+                                selectedPeriod.endDate == periodDetail.endDate &&
+                                selectedPeriod.dayOffCount == periodDetail.dayOffCount
                         }
 
                 periodDetailUiState = periodDetailUiState.copy(
@@ -91,12 +88,14 @@ class PeriodDetailViewModel(
                             startDate = periodDetail.startDate,
                             endDate = periodDetail.endDate,
                             dayOffCount = periodDetail.dayOffCount,
+                            totalTripCount = periodDetail.totalTripCount,
                         )
                     } else {
                         deleteRecommendationUseCase(
                             startDate = periodDetail.startDate,
                             endDate = periodDetail.endDate,
                             dayOffCount = periodDetail.dayOffCount,
+                            totalTripCount = periodDetail.totalTripCount,
                         )
                     }
                 }

@@ -9,4 +9,8 @@ interface PlaceDetailRemoteDataSource {
         endDate: String?,
         userCountry: String,
     ): PlaceDetailResponse
+
+    suspend fun saveDestination(placeId: Long)
+
+    suspend fun deleteSavedDestination(placeId: Long)
 }

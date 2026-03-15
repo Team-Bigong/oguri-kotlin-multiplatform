@@ -10,11 +10,13 @@ interface HomeRepository {
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     )
 
     suspend fun deleteRecommendation(
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     )
 }

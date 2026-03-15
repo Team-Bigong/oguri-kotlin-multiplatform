@@ -78,5 +78,6 @@ private fun PlaceResponse.toDomain(): Place {
         city = city,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
+        isSaved = saved,
     )
 }

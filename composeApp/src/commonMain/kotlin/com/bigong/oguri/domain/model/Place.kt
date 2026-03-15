@@ -6,4 +6,5 @@ data class Place(
     val city: String,
     val summary: String,
     val thumbnailUrl: String,
+    val isSaved: Boolean = false,
 )

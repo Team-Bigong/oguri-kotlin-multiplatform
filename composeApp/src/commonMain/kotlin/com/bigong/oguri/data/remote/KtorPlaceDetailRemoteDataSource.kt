@@ -5,9 +5,10 @@ import com.bigong.oguri.data.remote.model.response.PlaceDetailResponse
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.delete
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.parameter
+import io.ktor.client.request.post
 
 @Inject
 class KtorPlaceDetailRemoteDataSource(
@@ -23,7 +24,7 @@ class KtorPlaceDetailRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$DESTINATION_API_PATH/$placeId"
         return authRequestExecutor.execute {
             httpClient.get(requestUrl) {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                appendUserIdHeaderWhenGuest()
                 parameter(USER_COUNTRY_QUERY_NAME, userCountry)
                 if (startDate != null) {
                     parameter(START_DATE_QUERY_NAME, startDate)
@@ -36,10 +37,25 @@ class KtorPlaceDetailRemoteDataSource(
         }
     }
 
+    override suspend fun saveDestination(placeId: Long) {
+        authRequestExecutor.execute {
+            httpClient.post("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId") {
+                appendUserIdHeaderWhenGuest()
+            }
+        }
+    }
+
+    override suspend fun deleteSavedDestination(placeId: Long) {
+        authRequestExecutor.execute {
+            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId") {
+                appendUserIdHeaderWhenGuest()
+            }
+        }
+    }
+
     private companion object {
         private const val DESTINATION_API_PATH: String = "/api/v1/destinations"
-        private const val USER_ID_HEADER_NAME: String = "X-USER-ID"
-        private const val DEFAULT_USER_ID: String = "GUEST"
+        private const val MEMBER_SAVED_DESTINATIONS_API_PATH: String = "/api/v1/members/saved-destinations"
         private const val USER_COUNTRY_QUERY_NAME: String = "userCountry"
         private const val START_DATE_QUERY_NAME: String = "startDate"
         private const val END_DATE_QUERY_NAME: String = "endDate"

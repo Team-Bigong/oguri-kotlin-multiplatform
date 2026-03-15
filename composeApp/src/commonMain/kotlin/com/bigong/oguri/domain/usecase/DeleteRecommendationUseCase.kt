@@ -12,11 +12,13 @@ class DeleteRecommendationUseCase(
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     ) {
         homeRepository.deleteRecommendation(
             startDate = startDate,
             endDate = endDate,
             dayOffCount = dayOffCount,
+            totalTripCount = totalTripCount,
         )
     }
 }

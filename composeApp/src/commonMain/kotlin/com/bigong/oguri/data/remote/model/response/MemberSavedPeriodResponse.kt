@@ -1,10 +1,10 @@
-package com.bigong.oguri.data.remote.model.request
+package com.bigong.oguri.data.remote.model.response
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ManageSavedRecommendationRequest(
+data class MemberSavedPeriodResponse(
     @SerialName("startDate")
     val startDate: String,
     @SerialName("endDate")

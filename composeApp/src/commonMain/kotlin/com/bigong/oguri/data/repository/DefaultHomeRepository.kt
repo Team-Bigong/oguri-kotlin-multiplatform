@@ -27,6 +27,7 @@ class DefaultHomeRepository(
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     ) {
         homeRemoteDataSource.saveRecommendation(
             request =
@@ -34,6 +35,7 @@ class DefaultHomeRepository(
                     startDate = startDate.toString(),
                     endDate = endDate.toString(),
                     dayOffCount = dayOffCount,
+                    totalTripCount = totalTripCount,
                 ),
         )
     }
@@ -42,6 +44,7 @@ class DefaultHomeRepository(
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     ) {
         homeRemoteDataSource.deleteRecommendation(
             request =
@@ -49,6 +52,7 @@ class DefaultHomeRepository(
                     startDate = startDate.toString(),
                     endDate = endDate.toString(),
                     dayOffCount = dayOffCount,
+                    totalTripCount = totalTripCount,
                 ),
         )
     }
@@ -75,6 +79,7 @@ private fun PlaceResponse.toDomain(): Place {
         city = city,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
+        isSaved = saved,
     )
 }
 
