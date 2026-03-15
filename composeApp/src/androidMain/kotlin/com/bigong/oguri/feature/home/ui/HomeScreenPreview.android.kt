@@ -74,6 +74,7 @@ private fun HomeScreenPreview() {
             onRetryClick = {},
             onAdvertisementClick = {},
             onPlaceClick = { _, _, _ -> },
+            onPeriodClick = { _, _ -> },
         )
     }
 }

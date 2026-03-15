@@ -61,8 +61,16 @@ class MainNavigator(
         )
     }
 
-    fun navigateToPeriodDetail(periodId: Long) {
-        navHostController.navigate(RouteModel.PeriodDetail(periodId = periodId))
+    fun navigateToPeriodDetail(
+        startDate: String,
+        endDate: String,
+    ) {
+        navHostController.navigate(
+            RouteModel.PeriodDetail(
+                startDate = startDate,
+                endDate = endDate,
+            ),
+        )
     }
 
     fun navigateToWebDocument(documentType: WebDocumentType) {

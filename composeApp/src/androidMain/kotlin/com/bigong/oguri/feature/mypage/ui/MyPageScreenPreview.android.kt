@@ -49,6 +49,7 @@ private fun MyPageScreenPreview() {
             onDismissLeaveDaysBottomSheet = {},
             onSubmitLeaveDays = { _, _ -> },
             onDeleteScheduleClick = {},
+            onSelectedPeriodClick = { _, _ -> },
             onDismissDeleteScheduleDialog = {},
             onConfirmDeleteSchedule = {},
             onDeleteSavedPlaceClick = {},

@@ -52,6 +52,7 @@ fun MyPageScreen(
     onDismissLeaveDaysBottomSheet: () -> Unit,
     onSubmitLeaveDays: (Int, Int) -> Unit,
     onDeleteScheduleClick: (Long) -> Unit,
+    onSelectedPeriodClick: (String, String) -> Unit,
     onDismissDeleteScheduleDialog: () -> Unit,
     onConfirmDeleteSchedule: () -> Unit,
     onDeleteSavedPlaceClick: (Long) -> Unit,
@@ -109,6 +110,7 @@ fun MyPageScreen(
             MyPageSelectedPeriodSection(
                 selectedPeriods = myPageInfo.selectedPeriods,
                 onDeleteClick = onDeleteScheduleClick,
+                onPeriodClick = onSelectedPeriodClick,
             )
         }
         item {

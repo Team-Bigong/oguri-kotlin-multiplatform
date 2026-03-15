@@ -78,9 +78,9 @@
     <string name="calendar_month_day">%1$d/%2$d</string>
     <string name="calendar_leave_days_sheet_title">Leave Settings</string>
     <string name="calendar_leave_days_sheet_done">Done</string>
-    <string name="period_detail_dummy_back">Back</string>
-    <string name="period_detail_dummy_title">Period Detail Dummy Screen</string>
-    <string name="period_detail_dummy_description">Navigation success with periodId=%1$d</string>
+    <string name="period_detail_title">Period Detail</string>
+    <string name="period_detail_holiday_fallback">holiday</string>
+    <string name="period_detail_empty_places_hint">No recommended places for this period yet.</string>
     <string name="mypage_profile_leave_days">Remaining leave: %1$d days / Preferred leave: %2$d days</string>
     <string name="mypage_section_selected_period">Selected vacation periods</string>
     <string name="mypage_section_saved_place">Saved places</string>

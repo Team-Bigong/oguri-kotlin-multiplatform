@@ -10,6 +10,7 @@ fun MyPageRoute(
     onOpenSuggestion: () -> Unit,
     onOpenTermsOfService: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
+    onPeriodClick: (String, String) -> Unit,
 ) {
     val myPageViewModel: MyPageViewModel = remember {
         myPageViewModelProvider()
@@ -22,6 +23,7 @@ fun MyPageRoute(
         onDismissLeaveDaysBottomSheet = myPageViewModel::hideEditLeaveDaysBottomSheet,
         onSubmitLeaveDays = myPageViewModel::updateLeaveDays,
         onDeleteScheduleClick = myPageViewModel::showDeleteScheduleDialog,
+        onSelectedPeriodClick = onPeriodClick,
         onDismissDeleteScheduleDialog = myPageViewModel::dismissDeleteScheduleDialog,
         onConfirmDeleteSchedule = myPageViewModel::confirmDeleteSchedule,
         onDeleteSavedPlaceClick = myPageViewModel::showDeleteSavedPlaceDialog,

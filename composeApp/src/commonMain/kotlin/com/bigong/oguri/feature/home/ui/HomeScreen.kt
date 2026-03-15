@@ -53,6 +53,7 @@ fun HomeScreen(
     onRetryClick: () -> Unit,
     onAdvertisementClick: (String) -> Unit,
     onPlaceClick: (Long, String?, String?) -> Unit,
+    onPeriodClick: (String, String) -> Unit,
 ) {
     if (homeUiState.isLoading) {
         HomeLoadingContent(message = stringResource(Res.string.home_loading))
@@ -112,6 +113,12 @@ fun HomeScreen(
                     currentPeriod = currentPeriod,
                     onRankSelected = onRankSelected,
                     onSavedChanged = onSavedChanged,
+                    onClick = {
+                        onPeriodClick(
+                            currentPeriod.startDate.toString(),
+                            currentPeriod.endDate.toString(),
+                        )
+                    },
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }

@@ -19,6 +19,7 @@ import com.bigong.oguri.domain.repository.PlaceDetailRepository
 import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
 import com.bigong.oguri.feature.home.ui.HomeViewModel
 import com.bigong.oguri.feature.mypage.ui.MyPageViewModel
+import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailViewModel
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailViewModel
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provides
@@ -30,6 +31,7 @@ interface AppGraph {
     val calendarViewModelProvider: Provider<CalendarViewModel>
     val homeViewModelProvider: Provider<HomeViewModel>
     val myPageViewModelProvider: Provider<MyPageViewModel>
+    val periodDetailViewModelProvider: Provider<PeriodDetailViewModel>
     val placeDetailViewModelProvider: Provider<PlaceDetailViewModel>
 
     @Provides

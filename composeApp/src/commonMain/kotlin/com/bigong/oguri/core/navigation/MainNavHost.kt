@@ -78,6 +78,7 @@ fun MainNavHost(
             HomeRoute(
                 homeViewModelProvider = appGraph.homeViewModelProvider,
                 onPlaceClick = navigator::navigateToPlaceDetail,
+                onPeriodClick = navigator::navigateToPeriodDetail,
             )
         }
         composable<RouteModel.Calendar> {
@@ -92,6 +93,7 @@ fun MainNavHost(
                 onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
+                onPeriodClick = navigator::navigateToPeriodDetail,
             )
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->
@@ -114,8 +116,17 @@ fun MainNavHost(
         composable<RouteModel.PeriodDetail> { navBackStackEntry ->
             val route = navBackStackEntry.toRoute<RouteModel.PeriodDetail>()
             PeriodDetailRoute(
-                periodId = route.periodId,
+                periodDetailViewModelProvider = appGraph.periodDetailViewModelProvider,
+                startDate = route.startDate,
+                endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
+                onPlaceClick = { placeId: Long ->
+                    navigator.navigateToPlaceDetail(
+                        placeId = placeId,
+                        startDate = route.startDate,
+                        endDate = route.endDate,
+                    )
+                },
             )
         }
         composable<RouteModel.WebDocument> { navBackStackEntry ->

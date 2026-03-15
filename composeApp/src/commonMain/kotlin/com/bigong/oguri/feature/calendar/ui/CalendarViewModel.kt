@@ -58,7 +58,7 @@ class CalendarViewModel(
 
     fun onDateClick(
         date: LocalDate,
-        onOpenPeriodDetail: (Long) -> Unit,
+        onOpenPeriodDetail: (String, String) -> Unit,
     ) {
         val matchedPeriod =
             calendarUiState.calendarRecommendation?.periods?.firstOrNull { period: CalendarPeriod ->
@@ -71,7 +71,10 @@ class CalendarViewModel(
         val isSameDateTapped = calendarUiState.selectedDate == date
         val isSamePeriodTapped = matchedPeriod.id == calendarUiState.selectedPeriodId
         if (isSameDateTapped && isSamePeriodTapped) {
-            onOpenPeriodDetail(matchedPeriod.id)
+            onOpenPeriodDetail(
+                matchedPeriod.startDate.toString(),
+                matchedPeriod.endDate.toString(),
+            )
             return
         }
 
@@ -83,10 +86,17 @@ class CalendarViewModel(
 
     fun onPeriodClick(
         periodId: Long,
-        onOpenPeriodDetail: (Long) -> Unit,
+        onOpenPeriodDetail: (String, String) -> Unit,
     ) {
         if (calendarUiState.selectedPeriodId == periodId) {
-            onOpenPeriodDetail(periodId)
+            val selectedPeriodForNavigation =
+                calendarUiState.calendarRecommendation?.periods?.firstOrNull { period: CalendarPeriod ->
+                    period.id == periodId
+                } ?: return
+            onOpenPeriodDetail(
+                selectedPeriodForNavigation.startDate.toString(),
+                selectedPeriodForNavigation.endDate.toString(),
+            )
             return
         }
 

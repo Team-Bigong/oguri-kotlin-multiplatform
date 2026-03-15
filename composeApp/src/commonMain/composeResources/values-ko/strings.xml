@@ -78,9 +78,9 @@
     <string name="calendar_month_day">%1$d월 %2$d일</string>
     <string name="calendar_leave_days_sheet_title">연차 사용 일수</string>
     <string name="calendar_leave_days_sheet_done">완료</string>
-    <string name="period_detail_dummy_back">뒤로가기</string>
-    <string name="period_detail_dummy_title">Period Detail 더미 화면</string>
-    <string name="period_detail_dummy_description">periodId=%1$d 로 이동 성공</string>
+    <string name="period_detail_title">기간 상세</string>
+    <string name="period_detail_holiday_fallback">연휴</string>
+    <string name="period_detail_empty_places_hint">이 기간에 맞는 추천 여행지가 아직 없어요.</string>
     <string name="mypage_profile_leave_days">남은 연차: %1$d일 / 선호하는 연차: %2$d일</string>
     <string name="mypage_section_selected_period">내가 고른 휴가 일정</string>
     <string name="mypage_section_saved_place">내가 담아둔 여행지</string>

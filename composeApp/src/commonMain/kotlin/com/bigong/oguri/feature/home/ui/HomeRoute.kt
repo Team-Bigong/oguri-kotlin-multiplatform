@@ -9,6 +9,7 @@ import dev.zacsweers.metro.Provider
 fun HomeRoute(
     homeViewModelProvider: Provider<HomeViewModel>,
     onPlaceClick: (Long, String?, String?) -> Unit,
+    onPeriodClick: (String, String) -> Unit,
 ) {
     val homeViewModel: HomeViewModel = remember {
         homeViewModelProvider()
@@ -24,5 +25,6 @@ fun HomeRoute(
             uriHandler.openUri(destinationUrl)
         },
         onPlaceClick = onPlaceClick,
+        onPeriodClick = onPeriodClick,
     )
 }

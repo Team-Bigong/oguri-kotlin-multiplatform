@@ -7,7 +7,7 @@ import dev.zacsweers.metro.Provider
 @Composable
 fun CalendarRoute(
     calendarViewModelProvider: Provider<CalendarViewModel>,
-    onOpenPeriodDetail: (Long) -> Unit = {},
+    onOpenPeriodDetail: (String, String) -> Unit = { _, _ -> },
 ) {
     val calendarViewModel: CalendarViewModel = remember {
         calendarViewModelProvider()

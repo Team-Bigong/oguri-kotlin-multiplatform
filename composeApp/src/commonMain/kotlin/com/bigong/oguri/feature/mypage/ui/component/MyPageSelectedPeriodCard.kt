@@ -41,6 +41,7 @@ fun MyPageSelectedPeriodCard(
     period: MyPageSelectedPeriod,
     isCurrentYear: Boolean,
     onDeleteClick: (Long) -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val yearColor = if (isCurrentYear) Mint70 else Orange50
@@ -49,6 +50,7 @@ fun MyPageSelectedPeriodCard(
         verticalAlignment = Alignment.CenterVertically,
         modifier =
             modifier
+                .noRippleClickable(onClick = onClick)
                 .background(color = Neutral0, shape = PERIOD_CARD_SHAPE)
                 .border(width = 1.dp, color = Neutral30, shape = PERIOD_CARD_SHAPE)
                 .padding(start = 18.dp, end = 8.dp)

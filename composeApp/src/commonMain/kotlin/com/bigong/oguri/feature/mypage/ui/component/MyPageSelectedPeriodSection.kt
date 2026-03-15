@@ -29,6 +29,7 @@ import kotlin.time.Clock
 fun MyPageSelectedPeriodSection(
     selectedPeriods: List<MyPageSelectedPeriod>,
     onDeleteClick: (Long) -> Unit,
+    onPeriodClick: (String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -65,6 +66,12 @@ fun MyPageSelectedPeriodSection(
                     period = period,
                     isCurrentYear = period.startDate.year == currentYear,
                     onDeleteClick = onDeleteClick,
+                    onClick = {
+                        onPeriodClick(
+                            period.startDate.toString(),
+                            period.endDate.toString(),
+                        )
+                    },
                 )
             }
         }

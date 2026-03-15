@@ -44,7 +44,8 @@ sealed interface RouteModel {
 
     @Serializable
     data class PeriodDetail(
-        val periodId: Long,
+        val startDate: String,
+        val endDate: String,
     ) : RouteModel
 
     @Serializable
