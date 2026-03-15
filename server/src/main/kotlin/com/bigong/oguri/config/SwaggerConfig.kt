@@ -1,7 +1,11 @@
 package com.bigong.oguri.config
 
+import io.swagger.v3.oas.models.Components
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Info
+import io.swagger.v3.oas.models.security.SecurityRequirement
+import io.swagger.v3.oas.models.security.SecurityScheme
+import io.swagger.v3.oas.models.tags.Tag
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -9,12 +13,26 @@ import org.springframework.context.annotation.Configuration
 class SwaggerConfig {
     @Bean
     fun openAPI(): OpenAPI {
+        val securitySchemeName = "bearerAuth"
+
         return OpenAPI()
             .info(
                 Info()
                     .title("Oguri API Server")
                     .version("v1.0.0")
                     .description("여행지 추천 서비스 Oguri의 API 문서입니다.")
+            )
+            .addSecurityItem(SecurityRequirement().addList(securitySchemeName))
+            .components(
+                Components()
+                    .addSecuritySchemes(
+                        securitySchemeName,
+                        SecurityScheme()
+                            .name(securitySchemeName)
+                            .type(SecurityScheme.Type.HTTP)
+                            .scheme("bearer")
+                            .bearerFormat("JWT")
+                    )
             )
     }
 }
