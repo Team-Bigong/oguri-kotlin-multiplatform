@@ -23,20 +23,25 @@ import io.ktor.client.request.setBody
 @Inject
 class KtorMyPageRemoteDataSource(
     private val httpClient: HttpClient,
+    private val authRequestExecutor: AuthRequestExecutor,
 ) : MyPageRemoteDataSource {
     private var cachedMyPageResponse: MyPageResponse? = null
 
     override suspend fun getMyPageResponse(): MyPageResponse {
         val memberMe =
-            httpClient.get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-            }.body<MemberMeResponse>()
+            authRequestExecutor.execute {
+                httpClient.get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
+                    header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                }.body<MemberMeResponse>()
+            }
 
         val recommendPeriods =
-            httpClient.get("$DEBUG_BASE_URL$HOME_API_PATH") {
-                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-                parameter(HOME_USER_COUNTRY_QUERY_NAME, DEFAULT_USER_COUNTRY)
-            }.body<List<RecommendPeriodResponse>>()
+            authRequestExecutor.execute {
+                httpClient.get("$DEBUG_BASE_URL$HOME_API_PATH") {
+                    header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                    parameter(HOME_USER_COUNTRY_QUERY_NAME, DEFAULT_USER_COUNTRY)
+                }.body<List<RecommendPeriodResponse>>()
+            }
 
         val savedRecommendations =
             recommendPeriods
@@ -63,14 +68,16 @@ class KtorMyPageRemoteDataSource(
     }
 
     override suspend fun updateLeaveDays(request: UpdateMyPageLeaveDaysRequest): MyPageResponse {
-        httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
-            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-            setBody(
-                UpdateMemberDayOffRequest(
-                    preferredDayOff = request.preferredLeaveDays,
-                    remainingDayOff = request.remainingLeaveDays,
-                ),
-            )
+        authRequestExecutor.execute {
+            httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
+                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                setBody(
+                    UpdateMemberDayOffRequest(
+                        preferredDayOff = request.preferredLeaveDays,
+                        remainingDayOff = request.remainingLeaveDays,
+                    ),
+                )
+            }
         }
 
         val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
@@ -90,15 +97,17 @@ class KtorMyPageRemoteDataSource(
                 selectedPeriodResponse.id == request.periodId
             } ?: return currentMyPageResponse
 
-        httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH") {
-            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-            setBody(
-                ManageSavedRecommendationRequest(
-                    startDate = selectedPeriod.startDate,
-                    endDate = selectedPeriod.endDate,
-                    dayOffCount = selectedPeriod.dayOffCount,
-                ),
-            )
+        authRequestExecutor.execute {
+            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH") {
+                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                setBody(
+                    ManageSavedRecommendationRequest(
+                        startDate = selectedPeriod.startDate,
+                        endDate = selectedPeriod.endDate,
+                        dayOffCount = selectedPeriod.dayOffCount,
+                    ),
+                )
+            }
         }
 
         return currentMyPageResponse.copy(

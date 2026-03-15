@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import com.bigong.oguri.domain.usecase.DeleteMyPageSavedPlaceUseCase
 import com.bigong.oguri.domain.usecase.DeleteMyPageSelectedPeriodUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
+import com.bigong.oguri.domain.usecase.LogoutUseCase
 import com.bigong.oguri.domain.usecase.UpdateMyPageLeaveDaysUseCase
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import dev.zacsweers.metro.Inject
@@ -23,6 +24,7 @@ class MyPageViewModel(
     private val updateMyPageLeaveDaysUseCase: UpdateMyPageLeaveDaysUseCase,
     private val deleteMyPageSelectedPeriodUseCase: DeleteMyPageSelectedPeriodUseCase,
     private val deleteMyPageSavedPlaceUseCase: DeleteMyPageSavedPlaceUseCase,
+    private val logoutUseCase: LogoutUseCase,
 ) : ViewModel() {
     private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -150,6 +152,11 @@ class MyPageViewModel(
     }
 
     fun hideLogoutDialog() {
+        myPageUiState = myPageUiState.copy(isLogoutDialogVisible = false)
+    }
+
+    fun confirmLogout() {
+        logoutUseCase()
         myPageUiState = myPageUiState.copy(isLogoutDialogVisible = false)
     }
 

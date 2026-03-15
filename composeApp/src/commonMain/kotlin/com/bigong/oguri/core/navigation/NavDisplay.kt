@@ -41,14 +41,19 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
+import com.bigong.oguri.core.network.AuthTokenStore
+import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import dev.zacsweers.metro.createGraphFactory
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.header
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.http.HttpHeaders
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import oguri.composeapp.generated.resources.Res
@@ -72,10 +77,18 @@ fun NavDisplay(
         val currentDestination: NavDestination? = navigator.currentDestination()
         val appGraph: AppGraph =
             remember {
+                AuthTokenStore.initialize(localDataSource = provideTokenLocalDataSource())
+                AuthTokenStore.bootstrapFromLocalDataSource()
                 val appGraphFactory = createGraphFactory<AppGraph.Factory>()
                 val httpClient =
                     HttpClient(providePlatformHttpClientEngineFactory()) {
                         expectSuccess = true
+                        install(DefaultRequest) {
+                            val accessToken = AuthTokenStore.getAccessToken()
+                            if (!accessToken.isNullOrBlank()) {
+                                header(HttpHeaders.Authorization, "Bearer $accessToken")
+                            }
+                        }
                         install(ContentNegotiation) {
                             json(
                                 Json {

@@ -69,6 +69,7 @@ fun MainNavHost(
         }
         composable<RouteModel.Login> {
             LoginRoute(
+                loginViewModelProvider = appGraph.loginViewModelProvider,
                 onKakaoLoginClick = navigator::navigateToHomeFromLogin,
                 onAppleLoginClick = navigator::navigateToHomeFromLogin,
                 onGuestBrowseClick = navigator::navigateToHomeFromLogin,

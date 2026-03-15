@@ -13,6 +13,17 @@
 - UI 모델이 아닌 도메인 모델을 `domain/model`에 둔다.
 - CRUD(수정/삭제) 요청도 서버 호출 형태를 유지하고 실패 시 로컬 더미 상태를 갱신해 화면 흐름을 보장한다.
 - 스웨거 명세가 확정된 엔드포인트(`home`, `calendar`, `member`)는 더미 fallback 없이 실제 API 응답만 사용한다.
+- 인증 토큰은 공용 스토어에서 관리하고, 네트워크 계층에서 `Authorization` 헤더를 주입한다.
+- `401` 또는 `403` 응답이 발생하면 토큰 재발급 후 요청을 1회 재시도한다.
+- 재발급 동시성은 `Mutex`로 보호해 중복 재발급을 방지한다.
+
+## 로그인
+- 카카오 로그인 키는 `local.properties`의 `kakao.key`를 사용한다.
+- Android는 Kakao SDK 기반 네이티브 로그인(`loginWithKakaoTalk` 우선, 실패 시 `loginWithKakaoAccount`)을 사용한다.
+- Android Manifest에 `AuthCodeHandlerActivity` 리다이렉트 스킴(`kakao{NATIVE_APP_KEY}://oauth`)을 등록한다.
+- 카카오 SDK 액세스 토큰으로 서버 `POST /api/v1/auth/login/kakao`를 호출해 서비스 토큰(`accessToken`, `refreshToken`)을 발급받는다.
+- 서비스 토큰 재발급은 `POST /api/v1/auth/refresh`를 사용한다.
+- 로그아웃 시 저장된 서비스 토큰(메모리/영속 저장소)을 모두 삭제한다.
 
 ## DI
 - DI는 Metro를 사용한다.

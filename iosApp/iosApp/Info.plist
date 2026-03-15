@@ -4,5 +4,22 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.bigong.oguri.kakao</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>kakao$(KEY_KAKAO)</string>
+			</array>
+		</dict>
+	</array>
+	<key>KEY_KAKAO</key>
+	<string>$(KEY_KAKAO)</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>kakaokompassauth</string>
+	</array>
 </dict>
 </plist>

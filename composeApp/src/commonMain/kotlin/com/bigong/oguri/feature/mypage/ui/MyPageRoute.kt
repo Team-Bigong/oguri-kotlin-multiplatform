@@ -35,6 +35,6 @@ fun MyPageRoute(
         onWithdrawClick = {},
         onLogoutClick = myPageViewModel::showLogoutDialog,
         onDismissLogoutDialog = myPageViewModel::hideLogoutDialog,
-        onConfirmLogout = myPageViewModel::hideLogoutDialog,
+        onConfirmLogout = myPageViewModel::confirmLogout,
     )
 }

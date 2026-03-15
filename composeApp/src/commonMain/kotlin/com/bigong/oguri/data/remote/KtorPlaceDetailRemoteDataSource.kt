@@ -12,6 +12,7 @@ import io.ktor.client.request.parameter
 @Inject
 class KtorPlaceDetailRemoteDataSource(
     private val httpClient: HttpClient,
+    private val authRequestExecutor: AuthRequestExecutor,
 ) : PlaceDetailRemoteDataSource {
     override suspend fun getPlaceDetailResponse(
         placeId: Long,
@@ -20,16 +21,19 @@ class KtorPlaceDetailRemoteDataSource(
         userCountry: String,
     ): PlaceDetailResponse {
         val requestUrl = "$DEBUG_BASE_URL$DESTINATION_API_PATH/$placeId"
-        return httpClient.get(requestUrl) {
-            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-            parameter(USER_COUNTRY_QUERY_NAME, userCountry)
-            if (startDate != null) {
-                parameter(START_DATE_QUERY_NAME, startDate)
+        return authRequestExecutor.execute {
+            httpClient.get(requestUrl) {
+                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                parameter(USER_COUNTRY_QUERY_NAME, userCountry)
+                if (startDate != null) {
+                    parameter(START_DATE_QUERY_NAME, startDate)
+                }
+                if (endDate != null) {
+                    parameter(END_DATE_QUERY_NAME, endDate)
+                }
             }
-            if (endDate != null) {
-                parameter(END_DATE_QUERY_NAME, endDate)
-            }
-        }.body()
+                .body()
+        }
     }
 
     private companion object {

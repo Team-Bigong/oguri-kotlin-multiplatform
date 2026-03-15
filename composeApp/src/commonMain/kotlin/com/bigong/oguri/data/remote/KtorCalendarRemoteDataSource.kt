@@ -14,12 +14,15 @@ import io.ktor.client.request.parameter
 @Inject
 class KtorCalendarRemoteDataSource(
     private val httpClient: HttpClient,
+    private val authRequestExecutor: AuthRequestExecutor,
 ) : CalendarRemoteDataSource {
     override suspend fun getPreferredDayOffCount(): Int {
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_ME_API_PATH"
-        return httpClient.get(requestUrl) {
-            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-        }.body<MemberMeResponse>().preferredDayOff
+        return authRequestExecutor.execute {
+            httpClient.get(requestUrl) {
+                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+            }.body<MemberMeResponse>().preferredDayOff
+        }
     }
 
     override suspend fun getCalendarRecommendationResponse(
@@ -29,11 +32,13 @@ class KtorCalendarRemoteDataSource(
     ): CalendarRecommendationResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_API_PATH"
         val yearMonth = "${year}-${month.toString().padStart(2, '0')}"
-        return httpClient.get(requestUrl) {
-            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-            parameter(CALENDAR_YEAR_MONTH_QUERY_NAME, yearMonth)
-            parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, dayOffCount)
-        }.body()
+        return authRequestExecutor.execute {
+            httpClient.get(requestUrl) {
+                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                parameter(CALENDAR_YEAR_MONTH_QUERY_NAME, yearMonth)
+                parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, dayOffCount)
+            }.body()
+        }
     }
 
     override suspend fun getCalendarPeriodDetailResponse(
@@ -42,12 +47,14 @@ class KtorCalendarRemoteDataSource(
         userCountry: String,
     ): CalendarPeriodDetailResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_DETAIL_API_PATH"
-        return httpClient.get(requestUrl) {
-            header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
-            parameter(CALENDAR_DETAIL_START_DATE_QUERY_NAME, startDate)
-            parameter(CALENDAR_DETAIL_END_DATE_QUERY_NAME, endDate)
-            parameter(USER_COUNTRY_QUERY_NAME, userCountry)
-        }.body()
+        return authRequestExecutor.execute {
+            httpClient.get(requestUrl) {
+                header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
+                parameter(CALENDAR_DETAIL_START_DATE_QUERY_NAME, startDate)
+                parameter(CALENDAR_DETAIL_END_DATE_QUERY_NAME, endDate)
+                parameter(USER_COUNTRY_QUERY_NAME, userCountry)
+            }.body()
+        }
     }
 
     private companion object {

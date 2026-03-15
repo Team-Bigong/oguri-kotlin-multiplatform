@@ -25,6 +25,7 @@ val debugBaseUrl: String =
     (localProperties.getProperty("debug.base.url") ?: "https://oguri-kotlin-multiplatform.onrender.com")
         .trim()
         .trimEnd('/')
+val kakaoNativeAppKey: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
 
 val generatedNetworkConfigDirectory =
     layout.buildDirectory.dir("generated/source/networkConfig/commonMain/kotlin").get().asFile
@@ -37,6 +38,7 @@ generatedNetworkConfigFile.writeText(
     package com.bigong.oguri.core.network
 
     const val DEBUG_BASE_URL: String = "$debugBaseUrl"
+    const val KAKAO_NATIVE_APP_KEY: String = "$kakaoNativeAppKey"
     """.trimIndent(),
 )
 
@@ -64,6 +66,8 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.kakao.android.user)
             implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
@@ -113,6 +117,7 @@ android {
                 .toInt()
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKey
     }
     packaging {
         resources {
