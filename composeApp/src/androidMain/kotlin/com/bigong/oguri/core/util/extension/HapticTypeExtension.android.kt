@@ -1,15 +1,16 @@
 package com.bigong.oguri.core.util.extension
 
-import android.app.Application
 import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
+import com.bigong.oguri.core.platform.OguriPlatformContextHolder
 import com.bigong.oguri.core.util.HapticType
 
 actual fun HapticType.perform() {
-    val applicationContext: Context = resolveApplicationContext() ?: return
-    val vibrator: Vibrator = applicationContext.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator ?: return
+    val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return
+    val vibrator = resolveVibrator(applicationContext) ?: return
     if (!vibrator.hasVibrator()) {
         return
     }
@@ -46,10 +47,11 @@ private fun legacyDurationMillis(hapticType: HapticType): Long {
     }
 }
 
-private fun resolveApplicationContext(): Context? {
-    return runCatching {
-        val activityThreadClass = Class.forName("android.app.ActivityThread")
-        val currentApplicationMethod = activityThreadClass.getMethod("currentApplication")
-        currentApplicationMethod.invoke(null) as? Application
-    }.getOrNull()
+private fun resolveVibrator(context: Context): Vibrator? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    }
 }
