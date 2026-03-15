@@ -18,4 +18,10 @@ class AuthController(
     fun loginWithKakao(@RequestBody request: KakaoLoginRequest): LoginResponse {
         return memberService.loginWithKakao(request.accessToken)
     }
+
+    @Operation(summary = "토큰 재발급", description = "만료된 액세스 토큰을 리프레시 토큰으로 갱신합니다.")
+    @PostMapping("/refresh")
+    fun refresh(@RequestBody request: com.bigong.oguri.dto.TokenRefreshRequest): com.bigong.oguri.dto.TokenRefreshResponse {
+        return memberService.refreshAccessToken(request.refreshToken)
+    }
 }

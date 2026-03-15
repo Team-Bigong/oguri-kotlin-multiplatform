@@ -14,6 +14,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.exchange
 import kotlin.random.Random
 
 @Service
@@ -55,6 +56,35 @@ class MemberService(
         )
     }
 
+    /**
+     * 리프레시 토큰을 사용한 액세스 토큰 재발급
+     */
+    fun refreshAccessToken(refreshToken: String): com.bigong.oguri.dto.TokenRefreshResponse {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw RuntimeException("유효하지 않거나 만료된 리프레시 토큰입니다.")
+        }
+
+        val memberId = jwtTokenProvider.getMemberId(refreshToken)
+        val member = memberRepository.findById(memberId).orElseThrow {
+            RuntimeException("존재하지 않는 사용자입니다.")
+        }
+
+        if (member.refreshToken != refreshToken) {
+            throw RuntimeException("토큰 정보가 일치하지 않습니다.")
+        }
+
+        val newAccessToken = jwtTokenProvider.createAccessToken(member.id)
+        val newRefreshToken = jwtTokenProvider.createRefreshToken(member.id)
+
+        member.updateRefreshToken(newRefreshToken)
+        memberRepository.save(member)
+
+        return com.bigong.oguri.dto.TokenRefreshResponse(
+            accessToken = newAccessToken,
+            refreshToken = newRefreshToken
+        )
+    }
+
     private fun getKakaoUserInfo(accessToken: String): KakaoUserInfoResponse {
         val url = "https://kapi.kakao.com/v2/user/me"
         val headers = HttpHeaders()
@@ -62,7 +92,7 @@ class MemberService(
         headers.set("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
 
         val entity = HttpEntity<Any>(headers)
-        val response = restTemplate.exchange(url, HttpMethod.GET, entity, KakaoUserInfoResponse::class.java)
+        val response = restTemplate.exchange<KakaoUserInfoResponse>(url, HttpMethod.GET, entity)
 
         return response.body ?: throw RuntimeException("카카오 유저 정보를 가져오는데 실패했습니다.")
     }
