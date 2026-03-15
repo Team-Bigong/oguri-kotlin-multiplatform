@@ -55,6 +55,10 @@ class MainNavigator(
         navHostController.navigate(RouteModel.PeriodDetail(periodId = periodId))
     }
 
+    fun navigateToWebDocument(documentType: WebDocumentType) {
+        navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
+    }
+
     fun popBackStack(): Boolean {
         return navHostController.popBackStack()
     }
