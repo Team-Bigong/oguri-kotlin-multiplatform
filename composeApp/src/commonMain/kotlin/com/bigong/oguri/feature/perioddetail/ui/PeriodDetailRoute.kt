@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.perioddetail.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.Provider
 
 @Composable
@@ -16,6 +17,7 @@ fun PeriodDetailRoute(
     val periodDetailViewModel: PeriodDetailViewModel = remember {
         periodDetailViewModelProvider()
     }
+    val periodDetailUiState = periodDetailViewModel.uiState.collectAsStateWithLifecycle().value
 
     LaunchedEffect(startDate, endDate) {
         periodDetailViewModel.loadPeriodDetail(
@@ -25,7 +27,7 @@ fun PeriodDetailRoute(
     }
 
     PeriodDetailScreen(
-        periodDetailUiState = periodDetailViewModel.periodDetailUiState,
+        periodDetailUiState = periodDetailUiState,
         onRetryClick = {
             periodDetailViewModel.loadPeriodDetail(
                 startDate = startDate,

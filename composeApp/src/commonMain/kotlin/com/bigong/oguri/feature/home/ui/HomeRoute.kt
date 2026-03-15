@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.home.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalUriHandler
 import dev.zacsweers.metro.Provider
 
@@ -14,10 +15,11 @@ fun HomeRoute(
     val homeViewModel: HomeViewModel = remember {
         homeViewModelProvider()
     }
+    val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
     val uriHandler = LocalUriHandler.current
 
     HomeScreen(
-        homeUiState = homeViewModel.homeUiState,
+        homeUiState = homeUiState,
         onRankSelected = homeViewModel::selectRank,
         onSavedChanged = homeViewModel::toggleSaved,
         onRetryClick = homeViewModel::loadRecommendPeriods,

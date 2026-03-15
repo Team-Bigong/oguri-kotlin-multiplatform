@@ -1,19 +1,18 @@
 package com.bigong.oguri.feature.perioddetail.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarPeriodDetailUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -24,17 +23,17 @@ class PeriodDetailViewModel(
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
 ) : ViewModel() {
-    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
-    var periodDetailUiState: PeriodDetailUiState by mutableStateOf(PeriodDetailUiState())
-        private set
+    private val _uiState: MutableStateFlow<PeriodDetailUiState> = MutableStateFlow(PeriodDetailUiState())
+    val uiState: StateFlow<PeriodDetailUiState> = _uiState.asStateFlow()
 
     fun loadPeriodDetail(
         startDate: String,
         endDate: String,
     ) {
         viewModelScope.launch {
-            periodDetailUiState = periodDetailUiState.copy(isLoading = true, isError = false)
+            _uiState.update { currentUiState: PeriodDetailUiState ->
+                currentUiState.copy(isLoading = true, isError = false)
+            }
 
             runCatching {
                 withContext(Dispatchers.Default) {
@@ -56,29 +55,35 @@ class PeriodDetailViewModel(
                                 selectedPeriod.dayOffCount == periodDetail.dayOffCount
                         }
 
-                periodDetailUiState = periodDetailUiState.copy(
-                    isLoading = false,
-                    isError = false,
-                    periodDetail = periodDetail,
-                    isSaved = isInitiallySaved,
-                )
+                _uiState.update { currentUiState: PeriodDetailUiState ->
+                    currentUiState.copy(
+                        isLoading = false,
+                        isError = false,
+                        periodDetail = periodDetail,
+                        isSaved = isInitiallySaved,
+                    )
+                }
             }.onFailure {
-                periodDetailUiState = periodDetailUiState.copy(
-                    isLoading = false,
-                    isError = true,
-                    periodDetail = null,
-                    isSaved = false,
-                )
+                _uiState.update { currentUiState: PeriodDetailUiState ->
+                    currentUiState.copy(
+                        isLoading = false,
+                        isError = true,
+                        periodDetail = null,
+                        isSaved = false,
+                    )
+                }
             }
         }
     }
 
     fun toggleSavedRecommendation() {
-        val periodDetail = periodDetailUiState.periodDetail ?: return
-        val previousSavedState = periodDetailUiState.isSaved
+        val periodDetail = uiState.value.periodDetail ?: return
+        val previousSavedState = uiState.value.isSaved
         val nextSavedState = !previousSavedState
 
-        periodDetailUiState = periodDetailUiState.copy(isSaved = nextSavedState)
+        _uiState.update { currentUiState: PeriodDetailUiState ->
+            currentUiState.copy(isSaved = nextSavedState)
+        }
 
         viewModelScope.launch {
             runCatching {
@@ -100,13 +105,10 @@ class PeriodDetailViewModel(
                     }
                 }
             }.onFailure {
-                periodDetailUiState = periodDetailUiState.copy(isSaved = previousSavedState)
+                _uiState.update { currentUiState: PeriodDetailUiState ->
+                    currentUiState.copy(isSaved = previousSavedState)
+                }
             }
         }
-    }
-
-    override fun onCleared() {
-        viewModelScope.cancel()
-        super.onCleared()
     }
 }

@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.placedetail.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.platform.LocalUriHandler
 import dev.zacsweers.metro.Provider
 
@@ -18,6 +19,7 @@ fun PlaceDetailRoute(
     val placeDetailViewModel = remember {
         placeDetailViewModelProvider()
     }
+    val placeDetailUiState = placeDetailViewModel.uiState.collectAsStateWithLifecycle().value
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(placeId, startDate, endDate) {
@@ -29,7 +31,7 @@ fun PlaceDetailRoute(
     }
 
     PlaceDetailScreen(
-        placeDetailUiState = placeDetailViewModel.placeDetailUiState,
+        placeDetailUiState = placeDetailUiState,
         onBackClick = onBackClick,
         onRetryClick = {
             placeDetailViewModel.loadPlaceDetail(

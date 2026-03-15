@@ -1,54 +1,49 @@
 package com.bigong.oguri.feature.login.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.usecase.LoginWithKakaoAccessTokenUseCase
+import com.bigong.oguri.feature.login.ui.model.LoginSideEffect
 import com.bigong.oguri.feature.login.ui.model.LoginUiState
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 @Inject
 class LoginViewModel(
     private val loginWithKakaoAccessTokenUseCase: LoginWithKakaoAccessTokenUseCase,
 ) : ViewModel() {
-    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val _uiState: MutableStateFlow<LoginUiState> = MutableStateFlow(LoginUiState())
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    var loginUiState: LoginUiState by mutableStateOf(LoginUiState())
-        private set
+    private val _sideEffect: MutableSharedFlow<LoginSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
+    val sideEffect: SharedFlow<LoginSideEffect> = _sideEffect.asSharedFlow()
 
-    fun loginWithKakaoAccessToken(
-        kakaoAccessToken: String,
-        onSuccess: () -> Unit,
-        onFailure: () -> Unit,
-    ) {
-        if (loginUiState.isLoading) {
+    fun loginWithKakaoAccessToken(kakaoAccessToken: String) {
+        if (uiState.value.isLoading || kakaoAccessToken.isBlank()) {
             return
         }
+
         viewModelScope.launch {
-            loginUiState = loginUiState.copy(isLoading = true)
+            _uiState.update { currentUiState: LoginUiState ->
+                currentUiState.copy(isLoading = true)
+            }
             runCatching {
-                withContext(Dispatchers.Default) {
-                    loginWithKakaoAccessTokenUseCase(kakaoAccessToken = kakaoAccessToken)
-                }
+                loginWithKakaoAccessTokenUseCase(kakaoAccessToken = kakaoAccessToken)
             }.onSuccess {
-                onSuccess()
-            }.onFailure {
-                onFailure()
+                _sideEffect.emit(LoginSideEffect.NavigateToHome)
             }.also {
-                loginUiState = loginUiState.copy(isLoading = false)
+                _uiState.update { currentUiState: LoginUiState ->
+                    currentUiState.copy(isLoading = false)
+                }
             }
         }
     }
 
-    override fun onCleared() {
-        viewModelScope.cancel()
-        super.onCleared()
-    }
 }

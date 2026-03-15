@@ -11,10 +11,19 @@ class DefaultAuthRepository(
     private val authRemoteDataSource: AuthRemoteDataSource,
 ) : AuthRepository {
     override suspend fun loginWithKakaoAccessToken(kakaoAccessToken: String): String {
+        require(value = kakaoAccessToken.isNotBlank()) {
+            "Kakao access token is empty."
+        }
         val loginResponse =
             authRemoteDataSource.loginWithKakao(
                 request = KakaoLoginRequest(accessToken = kakaoAccessToken),
             )
+        require(value = loginResponse.accessToken.isNotBlank()) {
+            "Service access token is empty."
+        }
+        require(value = loginResponse.refreshToken.isNotBlank()) {
+            "Service refresh token is empty."
+        }
         AuthTokenStore.updateTokens(
             accessToken = loginResponse.accessToken,
             refreshToken = loginResponse.refreshToken,

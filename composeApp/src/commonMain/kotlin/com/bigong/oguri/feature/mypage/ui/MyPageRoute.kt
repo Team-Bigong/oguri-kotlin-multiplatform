@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.mypage.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dev.zacsweers.metro.Provider
 
 @Composable
@@ -15,9 +16,10 @@ fun MyPageRoute(
     val myPageViewModel: MyPageViewModel = remember {
         myPageViewModelProvider()
     }
+    val myPageUiState = myPageViewModel.uiState.collectAsStateWithLifecycle().value
 
     MyPageScreen(
-        myPageUiState = myPageViewModel.myPageUiState,
+        myPageUiState = myPageUiState,
         onRetryClick = myPageViewModel::loadMyPageInfo,
         onEditLeaveDaysClick = myPageViewModel::showEditLeaveDaysBottomSheet,
         onDismissLeaveDaysBottomSheet = myPageViewModel::hideEditLeaveDaysBottomSheet,

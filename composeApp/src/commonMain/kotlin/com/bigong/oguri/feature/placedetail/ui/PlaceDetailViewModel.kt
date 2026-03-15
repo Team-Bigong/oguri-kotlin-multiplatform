@@ -1,18 +1,17 @@
 package com.bigong.oguri.feature.placedetail.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.usecase.DeleteSavedDestinationUseCase
 import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
 import com.bigong.oguri.domain.usecase.SaveDestinationUseCase
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -22,10 +21,8 @@ class PlaceDetailViewModel(
     private val saveDestinationUseCase: SaveDestinationUseCase,
     private val deleteSavedDestinationUseCase: DeleteSavedDestinationUseCase,
 ) : ViewModel() {
-    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
-    var placeDetailUiState: PlaceDetailUiState by mutableStateOf(PlaceDetailUiState())
-        private set
+    private val _uiState: MutableStateFlow<PlaceDetailUiState> = MutableStateFlow(PlaceDetailUiState())
+    val uiState: StateFlow<PlaceDetailUiState> = _uiState.asStateFlow()
 
     fun loadPlaceDetail(
         placeId: Long,
@@ -33,7 +30,9 @@ class PlaceDetailViewModel(
         endDate: String?,
     ) {
         viewModelScope.launch {
-            placeDetailUiState = placeDetailUiState.copy(isLoading = true, isError = false)
+            _uiState.update { currentUiState: PlaceDetailUiState ->
+                currentUiState.copy(isLoading = true, isError = false)
+            }
 
             runCatching {
                 withContext(Dispatchers.Default) {
@@ -44,29 +43,33 @@ class PlaceDetailViewModel(
                     )
                 }
             }.onSuccess { placeDetail ->
-                placeDetailUiState =
-                    placeDetailUiState.copy(
+                _uiState.update { currentUiState: PlaceDetailUiState ->
+                    currentUiState.copy(
                         isLoading = false,
                         isError = false,
                         placeDetail = placeDetail,
                         isSaved = placeDetail.isSaved,
                     )
+                }
             }.onFailure {
-                placeDetailUiState =
-                    placeDetailUiState.copy(
+                _uiState.update { currentUiState: PlaceDetailUiState ->
+                    currentUiState.copy(
                         isLoading = false,
                         isError = true,
                         placeDetail = null,
                     )
+                }
             }
         }
     }
 
     fun toggleSaved() {
-        val currentPlaceDetail = placeDetailUiState.placeDetail ?: return
-        val previousSavedState = placeDetailUiState.isSaved
+        val currentPlaceDetail = uiState.value.placeDetail ?: return
+        val previousSavedState = uiState.value.isSaved
         val nextSavedState = !previousSavedState
-        placeDetailUiState = placeDetailUiState.copy(isSaved = nextSavedState)
+        _uiState.update { currentUiState: PlaceDetailUiState ->
+            currentUiState.copy(isSaved = nextSavedState)
+        }
 
         viewModelScope.launch {
             runCatching {
@@ -78,13 +81,10 @@ class PlaceDetailViewModel(
                     }
                 }
             }.onFailure {
-                placeDetailUiState = placeDetailUiState.copy(isSaved = previousSavedState)
+                _uiState.update { currentUiState: PlaceDetailUiState ->
+                    currentUiState.copy(isSaved = previousSavedState)
+                }
             }
         }
-    }
-
-    override fun onCleared() {
-        viewModelScope.cancel()
-        super.onCleared()
     }
 }

@@ -27,12 +27,14 @@
 - `Route`와 `Screen`은 반드시 별도 파일로 분리한다.
 - `Route`는 상태 연결/이벤트 위임 담당.
 - `Screen`은 순수 UI 렌더링 담당.
+- `Route`에서 `StateFlow`는 `collectAsStateWithLifecycle()`로 수집한다.
 - `Screen` 파일은 200줄 이상이 되지 않도록 유지하고, 복잡한 UI는 `ui/component`로 분리한다.
 - `Screen`은 레이아웃 조합과 상태 분기만 담당하고, 카드/섹션/버튼은 컴포넌트로 위임한다.
 - 각 `Screen`과 각 `ui/component` 컴포넌트는 프리뷰를 제공한다.
 - 공통 소스셋 제한으로 `commonMain` 프리뷰가 어려운 경우 `androidMain` 프리뷰 파일로 대체한다.
 - 클릭은 기본적으로 `noRippleClickable`을 사용한다.
 - 혼합 스타일 텍스트는 `getStyledText`만 사용한다. (`getColoredText` 사용 금지)
+- 화면 전용 `SideEffect`는 `ui/model`에 파일로 분리한다.
 - 외부 문서(약관/개인정보/건의하기)는 `WebDocument` 라우트 + `PlatformWebView`로 처리한다.
 - 삭제/로그아웃 확인 팝업은 공용 `ConfirmAlertDialog`를 재사용한다.
 

@@ -30,6 +30,7 @@
 - 루트에서 UseCase를 직접 실행하지 않는다.
 - ViewModel 생성자에 UseCase를 주입한다.
 - `core.di`를 중심으로 그래프를 구성한다.
+- ViewModel 코루틴 스코프는 직접 생성하지 않고 `androidx.lifecycle.viewModelScope`를 사용한다.
 
 ## 내비게이션
 - 타입 세이프 라우팅(`@Serializable`)을 사용한다.
