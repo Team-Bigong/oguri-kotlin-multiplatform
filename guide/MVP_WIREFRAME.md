@@ -7,12 +7,12 @@
 ## 화면 목록
 1. Splash
 2. Login
-3. Onboarding
-4. Home
-5. Strategy Detail
-6. Strategy Calendar
+3. Home
+4. Place Detail
+5. Calendar
+6. Period Detail
 7. MyPage
-8. Support Type Selector (modal/push)
+8. Web Document (건의하기/약관/개인정보)
 
 ## 바텀 네비게이션
 - `Home` / `Calendar` / `MyPage`
@@ -28,7 +28,7 @@
 - Home / Strategy Detail / Strategy Calendar 하단 배너 1개.
 - 배너 높이: 화면 높이 10~12% 이내.
 - 콘텐츠와 배너는 Divider 등으로 분리.
-- Splash / Login / Onboarding / MyPage는 광고 없음.
+- Splash / Login / MyPage는 광고 없음.
 
 ## BM
 - 배너 광고: 운영비 보조
@@ -36,6 +36,6 @@
 - 여행 제휴: 확장 수익
 
 ## 구현 메모
-- 서버 미구현 기간에는 Ktor 형태 유지 + data layer 더미 응답 사용.
+- 서버 연동은 Ktor 기반으로 구현하고, 스웨거 확정 API를 우선 사용한다.
 - 문자열은 리소스로 분리하고 다국어(ko/en) 확장을 고려한다.
 - 내비게이션은 타입 세이프 라우팅을 사용한다.
