@@ -66,25 +66,22 @@ class MemberService(
     }
 
     /**
-     * 내 정보 및 저장된 데이터(연휴, 여행지) 전체 조회
+     * 내 정보 및 저장된 데이터 전체 조회
      */
     fun getMyInfo(memberId: String): MemberMeResponse {
-        // 1. 기본 멤버 정보 조회
         val member = memberRepository.findById(memberId).orElseGet {
             memberRepository.save(Member(id = memberId).apply { setNicknameOnce(generateUniqueNickname()) })
         }
 
-        // 2. 저장된 연휴 리스트 조회
         val savedPeriods = savedRecommendationRepository.findAllByMemberId(memberId).map {
             SavedPeriodDto(
                 startDate = it.startDate,
                 endDate = it.endDate,
                 dayOffCount = it.dayOffCount,
-                totalTripCount = it.totalTripCount // DB 컬럼 값 사용
+                totalTripCount = it.totalTripCount
             )
         }
 
-        // 3. 저장된 여행지 리스트 조회 및 상세 정보 조립
         val savedDestIds = savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }
         val savedPlaces = if (savedDestIds.isNotEmpty()) {
             destinationRepository.findAllWithCountryAndImages()
@@ -126,8 +123,6 @@ class MemberService(
         return TokenRefreshResponse(accessToken = newAccess, refreshToken = newRefresh)
     }
 
-    // ... (기타 헬퍼 메서드 생략) ...
-
     private fun getKakaoUserInfo(accessToken: String): KakaoUserInfoResponse {
         val url = "https://kapi.kakao.com/v2/user/me"
         val headers = HttpHeaders().apply {
@@ -158,14 +153,26 @@ class MemberService(
     @Transactional(readOnly = true)
     fun getRemainingDayOff(memberId: String): Int = memberRepository.findById(memberId).map { it.remainingDayOff }.orElse(3)
 
+    /**
+     * 유니크한 랜덤 닉네임 생성 로직 (형식: 형용사 명사_숫자5자리)
+     */
     private fun generateUniqueNickname(): String {
         val adjectives = adjectiveRepository.findAll()
         val nouns = nounRepository.findAll()
-        if (adjectives.isEmpty() || nouns.isEmpty()) return "여행자 " + String.format("%05d", Random.nextInt(100000))
+
+        // 단어가 하나도 없을 경우 대비 (안전장치)
+        if (adjectives.isEmpty() || nouns.isEmpty()) {
+            return "여행자_" + String.format("%05d", Random.nextInt(100000))
+        }
+
         var nickname: String
         do {
-            nickname = "${adjectives.random().word} ${nouns.random().word} ${String.format("%05d", Random.nextInt(100000))}"
+            val adj = adjectives.random().word
+            val noun = nouns.random().word
+            val number = String.format("%05d", Random.nextInt(100000))
+            nickname = "$adj ${noun}_$number" // 최종 형식 적용: 형용사[공백]명사_숫자
         } while (memberRepository.existsByNickname(nickname))
+
         return nickname
     }
 }
