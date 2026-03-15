@@ -26,22 +26,18 @@ class CalendarService(
      * @param dayOffCount 클라이언트에서 명시적으로 보낸 연차 개수 (null일 경우 서버의 preferred 사용)
      */
     fun getCalendarData(yearMonth: YearMonth, memberId: String, dayOffCount: Int?): CalendarResponse {
-        // 1. 계산에 사용할 연차 개수 결정 (파라미터 우선 -> 없으면 서버 저장된 선호값)
         val targetDayOff = dayOffCount ?: memberService.getPreferredDayOff(memberId)
-
-        // 2. 공휴일 정보 로드
         val allHolidays = publicHolidayRepository.findAll()
         val holidayMap = allHolidays.associateBy { it.holidayDate }
-        
+
         val monthHolidays = allHolidays
             .filter { YearMonth.from(it.holidayDate) == yearMonth }
             .map { HolidayResponse(date = it.holidayDate, label = it.name) }
 
-        // 3. 결정된 연차 개수로 최적의 연휴 탐색
         val bestPeriods = findTopPeriodsInMonth(yearMonth, targetDayOff, holidayMap, limit = 3)
 
         return CalendarResponse(
-            dayOffCount = targetDayOff, // 응답에는 실제 계산에 사용된 연차 개수를 반환
+            dayOffCount = targetDayOff,
             bestPeriods = bestPeriods,
             holidays = monthHolidays
         )
@@ -59,19 +55,23 @@ class CalendarService(
 
         val candidates = mutableListOf<VacationCandidate>()
 
+        // [최적화] 탐색 범위를 연차 개수에 따라 유동적으로 설정
+        val searchWindow = userDayOff * 2 + 10
+
         for (i in 0 until daysInMonth) {
             val currentStart = startOfMonth.plusDays(i.toLong())
             var usedDayOff = 0
             var currentEnd = currentStart
 
-            for (j in i until daysInMonth) {
+            val maxRange = if (i + searchWindow < daysInMonth) i + searchWindow else daysInMonth
+            for (j in i until maxRange) {
                 val date = startOfMonth.plusDays(j.toLong())
                 if (!isOffDay(date, holidayMap)) {
                     if (usedDayOff < userDayOff) usedDayOff++ else break
                 }
                 currentEnd = date
             }
-            
+
             val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
             if (totalDays > 0) {
                 candidates.add(VacationCandidate(currentStart, currentEnd, totalDays))
@@ -94,8 +94,8 @@ class CalendarService(
     }
 
     private fun isOffDay(date: LocalDate, holidayMap: Map<LocalDate, PublicHoliday>): Boolean {
-        return date.dayOfWeek == DayOfWeek.SATURDAY || 
-               date.dayOfWeek == DayOfWeek.SUNDAY || 
+        return date.dayOfWeek == DayOfWeek.SATURDAY ||
+               date.dayOfWeek == DayOfWeek.SUNDAY ||
                holidayMap.containsKey(date)
     }
 
