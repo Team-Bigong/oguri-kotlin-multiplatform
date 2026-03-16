@@ -10,6 +10,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 
 @Inject
@@ -17,15 +18,19 @@ class KtorAuthRemoteDataSource(
     private val httpClient: HttpClient,
 ) : AuthRemoteDataSource {
     override suspend fun loginWithKakao(request: KakaoLoginRequest): KakaoLoginResponse {
-        return httpClient.post("$DEBUG_BASE_URL$AUTH_LOGIN_KAKAO_API_PATH") {
+        val requestUrl: String = "$DEBUG_BASE_URL$AUTH_LOGIN_KAKAO_API_PATH"
+        return httpClient.post(requestUrl) {
             headers.remove(HttpHeaders.Authorization)
+            headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
             setBody(request)
         }.body()
     }
 
     override suspend fun refreshToken(request: RefreshTokenRequest): RefreshTokenResponse {
-        return httpClient.post("$DEBUG_BASE_URL$AUTH_REFRESH_API_PATH") {
+        val requestUrl: String = "$DEBUG_BASE_URL$AUTH_REFRESH_API_PATH"
+        return httpClient.post(requestUrl) {
             headers.remove(HttpHeaders.Authorization)
+            headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
             setBody(request)
         }.body()
     }
