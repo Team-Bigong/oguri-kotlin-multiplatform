@@ -54,6 +54,7 @@ fun MyPageScreen(
     onDismissDeleteScheduleDialog: () -> Unit,
     onConfirmDeleteSchedule: () -> Unit,
     onDeleteSavedPlaceClick: (Long) -> Unit,
+    onSavedPlaceClick: (Long) -> Unit,
     onDismissDeleteSavedPlaceDialog: () -> Unit,
     onConfirmDeleteSavedPlace: () -> Unit,
     onSuggestClick: () -> Unit,
@@ -110,6 +111,7 @@ fun MyPageScreen(
             Spacer(modifier = Modifier.height(24.dp))
             MyPageSavedPlaceSection(
                 savedPlaces = myPageInfo.savedPlaces,
+                onSavedPlaceClick = onSavedPlaceClick,
                 onDeleteClick = onDeleteSavedPlaceClick,
             )
             Spacer(modifier = Modifier.height(24.dp))

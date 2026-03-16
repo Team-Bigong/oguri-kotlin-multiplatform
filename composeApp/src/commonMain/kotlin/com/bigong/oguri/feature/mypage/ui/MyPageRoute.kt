@@ -25,6 +25,7 @@ fun MyPageRoute(
     onOpenPrivacyPolicy: () -> Unit,
     onLoggedOut: () -> Unit,
     onPeriodClick: (String, String) -> Unit,
+    onSavedPlaceClick: (Long) -> Unit,
 ) {
     val myPageViewModel =
         remember {
@@ -74,6 +75,7 @@ fun MyPageRoute(
         onDismissDeleteScheduleDialog = myPageViewModel::dismissDeleteScheduleDialog,
         onConfirmDeleteSchedule = myPageViewModel::confirmDeleteSchedule,
         onDeleteSavedPlaceClick = myPageViewModel::showDeleteSavedPlaceDialog,
+        onSavedPlaceClick = onSavedPlaceClick,
         onDismissDeleteSavedPlaceDialog = myPageViewModel::dismissDeleteSavedPlaceDialog,
         onConfirmDeleteSavedPlace = myPageViewModel::confirmDeleteSavedPlace,
         onSuggestClick = onOpenSuggestion,

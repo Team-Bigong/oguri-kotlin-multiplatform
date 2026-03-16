@@ -24,6 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MyPageSavedPlaceSection(
     savedPlaces: List<Place>,
+    onSavedPlaceClick: (Long) -> Unit,
     onDeleteClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -53,6 +54,7 @@ fun MyPageSavedPlaceSection(
             items(items = savedPlaces, key = { place -> place.id }) { place ->
                 MyPageSavedPlaceCard(
                     place = place,
+                    onClick = onSavedPlaceClick,
                     onDeleteClick = onDeleteClick,
                 )
             }

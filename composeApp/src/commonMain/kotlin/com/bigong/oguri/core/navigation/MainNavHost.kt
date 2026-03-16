@@ -110,6 +110,13 @@ fun MainNavHost(
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
                 onLoggedOut = onLoggedOut,
                 onPeriodClick = navigator::navigateToPeriodDetail,
+                onSavedPlaceClick = { placeId ->
+                    navigator.navigateToPlaceDetail(
+                        placeId = placeId,
+                        startDate = null,
+                        endDate = null,
+                    )
+                },
             )
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->

@@ -29,11 +29,15 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun MyPageSavedPlaceCard(
     place: Place,
+    onClick: (Long) -> Unit,
     onDeleteClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier.width(128.dp),
+        modifier =
+            modifier
+                .width(128.dp)
+                .noRippleClickable(onClick = { onClick(place.id) }),
     ) {
         NetworkImage(
             imageUrl = place.thumbnailUrl,

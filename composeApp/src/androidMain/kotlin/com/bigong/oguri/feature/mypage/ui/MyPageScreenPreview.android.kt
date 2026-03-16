@@ -53,6 +53,7 @@ private fun MyPageScreenPreview() {
             onDismissDeleteScheduleDialog = {},
             onConfirmDeleteSchedule = {},
             onDeleteSavedPlaceClick = {},
+            onSavedPlaceClick = {},
             onDismissDeleteSavedPlaceDialog = {},
             onConfirmDeleteSavedPlace = {},
             onSuggestClick = {},
