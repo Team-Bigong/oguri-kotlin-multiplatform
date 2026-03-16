@@ -25,6 +25,12 @@ val debugBaseUrl: String =
     (localProperties.getProperty("debug.base.url") ?: "https://oguri-kotlin-multiplatform.onrender.com")
         .trim()
         .trimEnd('/')
+val releaseBaseUrl: String =
+    (localProperties.getProperty("release.base.url")
+        ?: localProperties.getProperty("debug.base.url")
+        ?: "https://oguri-kotlin-multiplatform.onrender.com")
+        .trim()
+        .trimEnd('/')
 val kakaoNativeAppKey: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
 
 val generatedNetworkConfigDirectory =
@@ -41,6 +47,7 @@ generatedNetworkConfigFile.writeText(
     package com.bigong.oguri.core.network
 
     const val DEBUG_BASE_URL: String = "$debugBaseUrl"
+    const val RELEASE_BASE_URL: String = "$releaseBaseUrl"
     const val KAKAO_NATIVE_APP_KEY: String = "$kakaoNativeAppKey"
     """.trimIndent(),
 )
