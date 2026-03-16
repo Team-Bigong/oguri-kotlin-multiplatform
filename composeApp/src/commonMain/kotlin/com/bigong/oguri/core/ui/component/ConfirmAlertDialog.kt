@@ -49,8 +49,8 @@ fun ConfirmAlertDialog(
         properties =
             DialogProperties(
                 usePlatformDefaultWidth = false,
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
             ),
     ) {
         Surface(
