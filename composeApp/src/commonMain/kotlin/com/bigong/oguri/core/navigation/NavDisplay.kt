@@ -12,13 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +37,9 @@ import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
+import com.bigong.oguri.core.ui.component.OguriSnackBarHost
+import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
@@ -58,13 +56,13 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
+import oguri.composeapp.generated.resources.snackbar_logout_completed
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
 
-private val SnackbarTopPadding = 10.dp
 private val EXIT_BACK_PRESS_WINDOW = 2.seconds
 
 @Composable
@@ -103,6 +101,7 @@ fun NavDisplay(
             }
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage: String = stringResource(Res.string.navigation_back_press_exit_message)
+        val logoutCompletedMessage: String = stringResource(Res.string.snackbar_logout_completed)
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation: Boolean =
             RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
@@ -134,24 +133,29 @@ fun NavDisplay(
                             )
                         }
                     },
-                    snackbarHost = {},
+                    snackbarHost = {
+                        OguriSnackBarHost(
+                            hostState = snackbarHostState,
+                            hasBottomNavigation = shouldShowBottomNavigation,
+                        )
+                    },
                 ) { contentPaddingValues ->
                     MainNavHost(
                         appGraph = appGraph,
                         navigator = navigator,
+                        snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
+                        onLoggedOut = {
+                            navigator.navigateToLogin()
+                            coroutineScope.launch {
+                                snackbarHostState.showOguriSnackbar(
+                                    message = logoutCompletedMessage,
+                                    type = OguriSnackBarType.INFO,
+                                )
+                            }
+                        },
                     )
                 }
-
-                TopInjectedSnackbarHost(
-                    snackbarHostState = snackbarHostState,
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopCenter)
-                            .statusBarsPadding()
-                            .padding(top = SnackbarTopPadding)
-                            .padding(horizontal = 16.dp),
-                )
             }
         }
 
@@ -168,7 +172,10 @@ fun NavDisplay(
 
                 lastMainBackPressedMark = nowMark
                 coroutineScope.launch {
-                    snackbarHostState.showSnackbar(message = exitSnackbarMessage)
+                    snackbarHostState.showOguriSnackbar(
+                        message = exitSnackbarMessage,
+                        type = OguriSnackBarType.INFO,
+                    )
                 }
             }
         }
@@ -254,23 +261,4 @@ private fun isMainTabRootDestination(currentDestination: NavDestination?): Boole
     return RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
         currentRouteText == destination.routeSerialName
     }
-}
-
-@Composable
-private fun TopInjectedSnackbarHost(
-    snackbarHostState: SnackbarHostState,
-    modifier: Modifier = Modifier,
-) {
-    SnackbarHost(
-        hostState = snackbarHostState,
-        modifier = modifier,
-        snackbar = { snackbarData ->
-            Snackbar(
-                snackbarData = snackbarData,
-                containerColor = MaterialTheme.colorScheme.inverseSurface,
-                contentColor = MaterialTheme.colorScheme.inverseOnSurface,
-                shape = RoundedCornerShape(14.dp),
-            )
-        },
-    )
 }

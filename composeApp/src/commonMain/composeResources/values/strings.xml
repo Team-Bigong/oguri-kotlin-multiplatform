@@ -54,6 +54,16 @@
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_kakao_with_account">Sign in with Kakao account</string>
     <string name="login_guest_browse">Browse without login</string>
+    <string name="snackbar_login_failed">Login failed. Please try again.</string>
+    <string name="snackbar_home_saved">Vacation period saved.</string>
+    <string name="snackbar_home_deleted">Saved vacation period removed.</string>
+    <string name="snackbar_place_saved">Place saved.</string>
+    <string name="snackbar_place_deleted">Saved place removed.</string>
+    <string name="snackbar_calendar_leave_days_updated">Leave days updated.</string>
+    <string name="snackbar_logout_completed">You have been logged out.</string>
+    <string name="snackbar_mypage_leave_days_updated">Leave settings saved.</string>
+    <string name="snackbar_mypage_selected_period_deleted">Selected vacation period removed.</string>
+    <string name="snackbar_mypage_saved_place_deleted">Saved place removed.</string>
 
     <string name="calendar_header_title">How many leave days can you use?</string>
     <string name="calendar_header_subtitle">Try changing the days to find other schedules</string>

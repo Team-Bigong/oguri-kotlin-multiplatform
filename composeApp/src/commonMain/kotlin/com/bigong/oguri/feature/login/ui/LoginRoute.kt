@@ -4,15 +4,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.core.platform.loginWithApple
 import com.bigong.oguri.core.platform.loginWithKakao
+import com.bigong.oguri.feature.login.ui.model.LoginSideEffect
 import dev.zacsweers.metro.Provider
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.snackbar_login_failed
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LoginRoute(
     loginViewModelProvider: Provider<LoginViewModel>,
+    snackbarHostState: SnackbarHostState,
     onLoginCompleted: () -> Unit,
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
@@ -22,11 +31,24 @@ fun LoginRoute(
     }
     val loginUiState = loginViewModel.uiState.collectAsStateWithLifecycle().value
     val coroutineScope = rememberCoroutineScope()
+    val loginFailedMessage: String = stringResource(Res.string.snackbar_login_failed)
 
     LaunchedEffect(loginUiState.isLoginCompleted) {
         if (loginUiState.isLoginCompleted) {
             onLoginCompleted()
             loginViewModel.consumeLoginCompleted()
+        }
+    }
+    LaunchedEffect(loginViewModel) {
+        loginViewModel.sideEffect.collectLatest { sideEffect: LoginSideEffect ->
+            when (sideEffect) {
+                LoginSideEffect.LoginFailed -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = loginFailedMessage,
+                        type = OguriSnackBarType.ALERT,
+                    )
+                }
+            }
         }
     }
 
@@ -39,6 +61,7 @@ fun LoginRoute(
                 val kakaoLoginResult: Result<String> = loginWithKakao()
                 val kakaoAccessToken: String = kakaoLoginResult.getOrNull()?.trim().orEmpty()
                 if (kakaoAccessToken.isBlank()) {
+                    loginViewModel.onLoginFailed()
                     return@launch
                 }
                 loginViewModel.loginWithKakaoAccessToken(kakaoAccessToken = kakaoAccessToken)

@@ -6,10 +6,14 @@ import com.bigong.oguri.domain.model.RecommendPeriod
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetRecommendPeriodListUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
+import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -26,6 +30,8 @@ class HomeViewModel(
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+    private val _sideEffect: MutableSharedFlow<HomeSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
+    val sideEffect: SharedFlow<HomeSideEffect> = _sideEffect.asSharedFlow()
 
     init {
         loadRecommendPeriods()
@@ -109,6 +115,14 @@ class HomeViewModel(
                         )
                     }
                 }
+            }.onSuccess {
+                _sideEffect.tryEmit(
+                    if (isChecked) {
+                        HomeSideEffect.RecommendationSaved
+                    } else {
+                        HomeSideEffect.RecommendationDeleted
+                    },
+                )
             }.onFailure {
                 val restoredSavedRankSet =
                     if (wasSaved) {

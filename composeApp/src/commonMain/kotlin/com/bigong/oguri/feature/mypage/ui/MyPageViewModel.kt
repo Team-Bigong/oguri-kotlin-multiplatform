@@ -7,10 +7,14 @@ import com.bigong.oguri.domain.usecase.DeleteMyPageSelectedPeriodUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
 import com.bigong.oguri.domain.usecase.LogoutUseCase
 import com.bigong.oguri.domain.usecase.UpdateMyPageLeaveDaysUseCase
+import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -27,6 +31,8 @@ class MyPageViewModel(
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<MyPageUiState> = MutableStateFlow(MyPageUiState())
     val uiState: StateFlow<MyPageUiState> = _uiState.asStateFlow()
+    private val _sideEffect: MutableSharedFlow<MyPageSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
+    val sideEffect: SharedFlow<MyPageSideEffect> = _sideEffect.asSharedFlow()
 
     init {
         loadMyPageInfo()
@@ -97,6 +103,7 @@ class MyPageViewModel(
                         isEditLeaveDaysBottomSheetVisible = false,
                     )
                 }
+                _sideEffect.tryEmit(MyPageSideEffect.LeaveDaysUpdated)
             }
         }
     }
@@ -128,6 +135,7 @@ class MyPageViewModel(
                         pendingDeleteScheduleId = null,
                     )
                 }
+                _sideEffect.tryEmit(MyPageSideEffect.SelectedPeriodDeleted)
             }
         }
     }
@@ -159,6 +167,7 @@ class MyPageViewModel(
                         pendingDeletePlaceId = null,
                     )
                 }
+                _sideEffect.tryEmit(MyPageSideEffect.SavedPlaceDeleted)
             }
         }
     }
@@ -180,5 +189,6 @@ class MyPageViewModel(
         _uiState.update { currentUiState: MyPageUiState ->
             currentUiState.copy(isLogoutDialogVisible = false)
         }
+        _sideEffect.tryEmit(MyPageSideEffect.LoggedOut)
     }
 }

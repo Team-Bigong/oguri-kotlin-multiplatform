@@ -36,9 +36,13 @@ class CalendarViewModel(
         if (leaveDays <= 0) {
             return
         }
+        if (uiState.value.leaveDays == leaveDays) {
+            return
+        }
         _uiState.update { currentUiState: CalendarUiState ->
             currentUiState.copy(leaveDays = leaveDays)
         }
+        _sideEffect.tryEmit(CalendarSideEffect.LeaveDaysUpdated)
         fetchCalendarRecommendation(
             year = uiState.value.selectedYear,
             month = uiState.value.selectedMonth,

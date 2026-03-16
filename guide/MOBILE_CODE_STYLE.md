@@ -37,6 +37,8 @@
 - 화면 전용 `SideEffect`는 `ui/model`에 파일로 분리한다.
 - 외부 문서(약관/개인정보/건의하기)는 `WebDocument` 라우트 + `PlatformWebView`로 처리한다.
 - 삭제/로그아웃 확인 팝업은 공용 `ConfirmAlertDialog`를 재사용한다.
+- 스낵바는 공용 `OguriSnackBar`를 사용하고, `NavDisplay`의 단일 `SnackbarHostState` + `OguriSnackBarHost`로 관리한다.
+- 스낵바 표시는 `showOguriSnackbar(...)` 확장 함수를 사용하며, 타입(`SUCCESS`, `ALERT`, `INFO`)을 명시한다.
 
 ## 패키지 규칙
 - `presentation` 패키지를 사용하지 않는다.

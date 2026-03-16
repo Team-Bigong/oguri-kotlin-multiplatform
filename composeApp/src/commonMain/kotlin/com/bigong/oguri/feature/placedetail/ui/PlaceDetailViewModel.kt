@@ -5,10 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.usecase.DeleteSavedDestinationUseCase
 import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
 import com.bigong.oguri.domain.usecase.SaveDestinationUseCase
+import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -23,6 +27,8 @@ class PlaceDetailViewModel(
 ) : ViewModel() {
     private val _uiState: MutableStateFlow<PlaceDetailUiState> = MutableStateFlow(PlaceDetailUiState())
     val uiState: StateFlow<PlaceDetailUiState> = _uiState.asStateFlow()
+    private val _sideEffect: MutableSharedFlow<PlaceDetailSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
+    val sideEffect: SharedFlow<PlaceDetailSideEffect> = _sideEffect.asSharedFlow()
 
     fun loadPlaceDetail(
         placeId: Long,
@@ -80,6 +86,14 @@ class PlaceDetailViewModel(
                         deleteSavedDestinationUseCase(placeId = currentPlaceDetail.id)
                     }
                 }
+            }.onSuccess {
+                _sideEffect.tryEmit(
+                    if (nextSavedState) {
+                        PlaceDetailSideEffect.Saved
+                    } else {
+                        PlaceDetailSideEffect.Deleted
+                    },
+                )
             }.onFailure {
                 _uiState.update { currentUiState: PlaceDetailUiState ->
                     currentUiState.copy(isSaved = previousSavedState)

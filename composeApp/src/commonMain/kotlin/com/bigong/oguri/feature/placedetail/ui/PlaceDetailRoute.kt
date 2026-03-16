@@ -2,14 +2,24 @@ package com.bigong.oguri.feature.placedetail.ui
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.ui.platform.LocalUriHandler
+import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.showOguriSnackbar
+import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
 import dev.zacsweers.metro.Provider
+import kotlinx.coroutines.flow.collectLatest
+import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.snackbar_place_deleted
+import oguri.composeapp.generated.resources.snackbar_place_saved
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun PlaceDetailRoute(
     placeDetailViewModelProvider: Provider<PlaceDetailViewModel>,
+    snackbarHostState: SnackbarHostState,
     placeId: Long,
     startDate: String?,
     endDate: String?,
@@ -20,6 +30,8 @@ fun PlaceDetailRoute(
         placeDetailViewModelProvider()
     }
     val placeDetailUiState = placeDetailViewModel.uiState.collectAsStateWithLifecycle().value
+    val placeSavedMessage: String = stringResource(Res.string.snackbar_place_saved)
+    val placeDeletedMessage: String = stringResource(Res.string.snackbar_place_deleted)
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(placeId, startDate, endDate) {
@@ -28,6 +40,24 @@ fun PlaceDetailRoute(
             startDate = startDate,
             endDate = endDate,
         )
+    }
+    LaunchedEffect(placeDetailViewModel) {
+        placeDetailViewModel.sideEffect.collectLatest { sideEffect: PlaceDetailSideEffect ->
+            when (sideEffect) {
+                PlaceDetailSideEffect.Saved -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = placeSavedMessage,
+                        type = OguriSnackBarType.SUCCESS,
+                    )
+                }
+                PlaceDetailSideEffect.Deleted -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = placeDeletedMessage,
+                        type = OguriSnackBarType.INFO,
+                    )
+                }
+            }
+        }
     }
 
     PlaceDetailScreen(

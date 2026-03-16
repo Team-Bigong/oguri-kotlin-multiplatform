@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -30,7 +31,9 @@ private const val NAVIGATION_SLIDE_DURATION_MILLIS: Int = 240
 fun MainNavHost(
     appGraph: AppGraph,
     navigator: MainNavigator,
+    snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
+    onLoggedOut: () -> Unit,
 ) {
     NavHost(
         navController = navigator.navHostController,
@@ -70,6 +73,7 @@ fun MainNavHost(
         composable<RouteModel.Login> {
             LoginRoute(
                 loginViewModelProvider = appGraph.loginViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 onLoginCompleted = navigator::navigateToHomeFromLogin,
                 onAppleLoginClick = navigator::navigateToHomeFromLogin,
                 onGuestBrowseClick = navigator::navigateToHomeFromLogin,
@@ -78,6 +82,7 @@ fun MainNavHost(
         composable<RouteModel.Home> {
             HomeRoute(
                 homeViewModelProvider = appGraph.homeViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 onPlaceClick = navigator::navigateToPlaceDetail,
                 onPeriodClick = navigator::navigateToPeriodDetail,
             )
@@ -85,15 +90,18 @@ fun MainNavHost(
         composable<RouteModel.Calendar> {
             CalendarRoute(
                 calendarViewModelProvider = appGraph.calendarViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
         composable<RouteModel.MyPage> {
             MyPageRoute(
                 myPageViewModelProvider = appGraph.myPageViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
+                onLoggedOut = onLoggedOut,
                 onPeriodClick = navigator::navigateToPeriodDetail,
             )
         }
@@ -101,6 +109,7 @@ fun MainNavHost(
             val route = navBackStackEntry.toRoute<RouteModel.PlaceDetail>()
             PlaceDetailRoute(
                 placeDetailViewModelProvider = appGraph.placeDetailViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 placeId = route.placeId,
                 startDate = route.startDate,
                 endDate = route.endDate,
