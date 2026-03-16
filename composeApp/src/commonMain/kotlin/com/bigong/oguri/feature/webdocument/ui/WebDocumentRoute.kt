@@ -23,7 +23,7 @@ fun WebDocumentRoute(
 ) {
     var canGoBackInWebView by remember { mutableStateOf(false) }
     var goBackTrigger by remember { mutableIntStateOf(0) }
-    val webDocumentType: WebDocumentType =
+    val webDocumentType =
         runCatching { WebDocumentType.valueOf(documentType) }
             .getOrDefault(WebDocumentType.TERMS_OF_SERVICE)
 

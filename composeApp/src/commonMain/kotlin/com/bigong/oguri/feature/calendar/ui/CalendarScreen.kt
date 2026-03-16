@@ -57,7 +57,7 @@ fun CalendarScreen(
 
     val recommendation = calendarUiState.calendarRecommendation
     val selectedPeriod =
-        recommendation.periods.firstOrNull { period: CalendarPeriod ->
+        recommendation.periods.firstOrNull { period ->
             period.id == calendarUiState.selectedPeriodId
         }
 

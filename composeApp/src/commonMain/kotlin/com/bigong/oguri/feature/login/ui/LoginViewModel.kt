@@ -19,10 +19,10 @@ import kotlinx.coroutines.launch
 class LoginViewModel(
     private val loginWithKakaoAccessTokenUseCase: LoginWithKakaoAccessTokenUseCase,
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<LoginUiState> = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
-    private val _sideEffect: MutableSharedFlow<LoginSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
-    val sideEffect: SharedFlow<LoginSideEffect> = _sideEffect.asSharedFlow()
+    private val _uiState = MutableStateFlow(LoginUiState())
+    val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<LoginSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
     fun loginWithKakaoAccessToken(kakaoAccessToken: String) {
         if (uiState.value.isLoading || kakaoAccessToken.isBlank()) {
@@ -30,19 +30,19 @@ class LoginViewModel(
         }
 
         viewModelScope.launch {
-            _uiState.update { currentUiState: LoginUiState ->
+            _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true)
             }
             runCatching {
                 loginWithKakaoAccessTokenUseCase(kakaoAccessToken = kakaoAccessToken)
             }.onSuccess {
-                _uiState.update { currentUiState: LoginUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(isLoginCompleted = true)
                 }
             }.onFailure {
                 _sideEffect.tryEmit(LoginSideEffect.LoginFailed)
             }.also {
-                _uiState.update { currentUiState: LoginUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(isLoading = false)
                 }
             }
@@ -57,7 +57,7 @@ class LoginViewModel(
         if (!uiState.value.isLoginCompleted) {
             return
         }
-        _uiState.update { currentUiState: LoginUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isLoginCompleted = false)
         }
     }

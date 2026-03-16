@@ -54,10 +54,10 @@ class KtorPlaceDetailRemoteDataSource(
     }
 
     private companion object {
-        private const val DESTINATION_API_PATH: String = "/api/v1/destinations"
-        private const val MEMBER_SAVED_DESTINATIONS_API_PATH: String = "/api/v1/members/saved-destinations"
-        private const val USER_COUNTRY_QUERY_NAME: String = "userCountry"
-        private const val START_DATE_QUERY_NAME: String = "startDate"
-        private const val END_DATE_QUERY_NAME: String = "endDate"
+        private const val DESTINATION_API_PATH = "/api/v1/destinations"
+        private const val MEMBER_SAVED_DESTINATIONS_API_PATH = "/api/v1/members/saved-destinations"
+        private const val USER_COUNTRY_QUERY_NAME = "userCountry"
+        private const val START_DATE_QUERY_NAME = "startDate"
+        private const val END_DATE_QUERY_NAME = "endDate"
     }
 }

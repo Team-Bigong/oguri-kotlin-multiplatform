@@ -9,7 +9,7 @@ import com.bigong.oguri.core.platform.OguriPlatformContextHolder
 import com.bigong.oguri.core.util.HapticType
 
 actual fun HapticType.perform() {
-    val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return
+    val applicationContext = OguriPlatformContextHolder.applicationContext ?: return
     val vibrator = resolveVibrator(applicationContext) ?: return
     if (!vibrator.hasVibrator()) {
         return

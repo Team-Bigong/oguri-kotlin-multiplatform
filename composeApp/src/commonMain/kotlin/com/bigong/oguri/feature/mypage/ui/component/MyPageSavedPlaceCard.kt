@@ -26,8 +26,6 @@ import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_trashcan
 import org.jetbrains.compose.resources.painterResource
 
-private val SAVED_PLACE_CARD_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun MyPageSavedPlaceCard(
     place: Place,
@@ -43,7 +41,7 @@ fun MyPageSavedPlaceCard(
                 Modifier
                     .fillMaxWidth()
                     .height(96.dp)
-                    .clip(SAVED_PLACE_CARD_SHAPE),
+                    .clip(RoundedCornerShape(8.dp)),
         )
         Spacer(modifier = Modifier.height(12.dp))
         Row(

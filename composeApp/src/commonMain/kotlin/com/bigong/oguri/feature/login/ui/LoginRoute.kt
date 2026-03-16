@@ -26,12 +26,12 @@ fun LoginRoute(
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
 ) {
-    val loginViewModel: LoginViewModel = remember {
+    val loginViewModel = remember {
         loginViewModelProvider()
     }
     val loginUiState = loginViewModel.uiState.collectAsStateWithLifecycle().value
     val coroutineScope = rememberCoroutineScope()
-    val loginFailedMessage: String = stringResource(Res.string.snackbar_login_failed)
+    val loginFailedMessage = stringResource(Res.string.snackbar_login_failed)
 
     LaunchedEffect(loginUiState.isLoginCompleted) {
         if (loginUiState.isLoginCompleted) {
@@ -40,7 +40,7 @@ fun LoginRoute(
         }
     }
     LaunchedEffect(loginViewModel) {
-        loginViewModel.sideEffect.collectLatest { sideEffect: LoginSideEffect ->
+        loginViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
                 LoginSideEffect.LoginFailed -> {
                     snackbarHostState.showOguriSnackbar(
@@ -58,8 +58,8 @@ fun LoginRoute(
                 return@LoginScreen
             }
             coroutineScope.launch {
-                val kakaoLoginResult: Result<String> = loginWithKakao()
-                val kakaoAccessToken: String = kakaoLoginResult.getOrNull()?.trim().orEmpty()
+                val kakaoLoginResult = loginWithKakao()
+                val kakaoAccessToken = kakaoLoginResult.getOrNull()?.trim().orEmpty()
                 if (kakaoAccessToken.isBlank()) {
                     loginViewModel.onLoginFailed()
                     return@launch
@@ -72,8 +72,8 @@ fun LoginRoute(
                 return@LoginScreen
             }
             coroutineScope.launch {
-                val appleLoginResult: Result<String> = loginWithApple()
-                val appleToken: String = appleLoginResult.getOrNull()?.trim().orEmpty()
+                val appleLoginResult = loginWithApple()
+                val appleToken = appleLoginResult.getOrNull()?.trim().orEmpty()
                 if (appleToken.isBlank()) {
                     return@launch
                 }

@@ -57,13 +57,13 @@ class KtorCalendarRemoteDataSource(
     }
 
     private companion object {
-        private const val CALENDAR_API_PATH: String = "/api/v1/calendar"
-        private const val CALENDAR_DETAIL_API_PATH: String = "/api/v1/calendar/detail"
-        private const val MEMBER_ME_API_PATH: String = "/api/v1/members/me"
-        private const val CALENDAR_YEAR_MONTH_QUERY_NAME: String = "yearMonth"
-        private const val CALENDAR_DAY_OFF_COUNT_QUERY_NAME: String = "dayOffCount"
-        private const val CALENDAR_DETAIL_START_DATE_QUERY_NAME: String = "startDate"
-        private const val CALENDAR_DETAIL_END_DATE_QUERY_NAME: String = "endDate"
-        private const val USER_COUNTRY_QUERY_NAME: String = "userCountry"
+        private const val CALENDAR_API_PATH = "/api/v1/calendar"
+        private const val CALENDAR_DETAIL_API_PATH = "/api/v1/calendar/detail"
+        private const val MEMBER_ME_API_PATH = "/api/v1/members/me"
+        private const val CALENDAR_YEAR_MONTH_QUERY_NAME = "yearMonth"
+        private const val CALENDAR_DAY_OFF_COUNT_QUERY_NAME = "dayOffCount"
+        private const val CALENDAR_DETAIL_START_DATE_QUERY_NAME = "startDate"
+        private const val CALENDAR_DETAIL_END_DATE_QUERY_NAME = "endDate"
+        private const val USER_COUNTRY_QUERY_NAME = "userCountry"
     }
 }

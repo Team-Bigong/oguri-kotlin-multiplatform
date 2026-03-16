@@ -34,8 +34,6 @@ import oguri.composeapp.generated.resources.mypage_selected_period_information
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val PERIOD_CARD_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun MyPageSelectedPeriodCard(
     period: MyPageSelectedPeriod,
@@ -51,8 +49,8 @@ fun MyPageSelectedPeriodCard(
         modifier =
             modifier
                 .noRippleClickable(onClick = onClick)
-                .background(color = Neutral0, shape = PERIOD_CARD_SHAPE)
-                .border(width = 1.dp, color = Neutral30, shape = PERIOD_CARD_SHAPE)
+                .background(color = Neutral0, shape = RoundedCornerShape(8.dp))
+                .border(width = 1.dp, color = Neutral30, shape = RoundedCornerShape(8.dp))
                 .padding(start = 18.dp, end = 8.dp)
                 .padding(vertical = 18.dp),
     ) {

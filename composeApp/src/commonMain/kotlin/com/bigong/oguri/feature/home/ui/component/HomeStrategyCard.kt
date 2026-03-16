@@ -132,8 +132,8 @@ fun HomeStrategyCard(
 }
 
 private fun formatMonthDay(localDate: LocalDate): String {
-    val dateTokens: List<String> = localDate.toString().split("-")
-    val month: Int = dateTokens[1].toInt()
-    val day: Int = dateTokens[2].toInt()
+    val dateTokens = localDate.toString().split("-")
+    val month = dateTokens[1].toInt()
+    val day = dateTokens[2].toInt()
     return "${month}월 ${day}일"
 }

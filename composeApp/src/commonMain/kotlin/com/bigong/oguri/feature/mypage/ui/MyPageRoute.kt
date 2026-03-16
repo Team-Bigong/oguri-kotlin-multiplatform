@@ -26,16 +26,16 @@ fun MyPageRoute(
     onLoggedOut: () -> Unit,
     onPeriodClick: (String, String) -> Unit,
 ) {
-    val myPageViewModel: MyPageViewModel = remember {
+    val myPageViewModel = remember {
         myPageViewModelProvider()
     }
     val myPageUiState = myPageViewModel.uiState.collectAsStateWithLifecycle().value
-    val leaveDaysUpdatedMessage: String = stringResource(Res.string.snackbar_mypage_leave_days_updated)
-    val selectedPeriodDeletedMessage: String = stringResource(Res.string.snackbar_mypage_selected_period_deleted)
-    val savedPlaceDeletedMessage: String = stringResource(Res.string.snackbar_mypage_saved_place_deleted)
+    val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_mypage_leave_days_updated)
+    val selectedPeriodDeletedMessage = stringResource(Res.string.snackbar_mypage_selected_period_deleted)
+    val savedPlaceDeletedMessage = stringResource(Res.string.snackbar_mypage_saved_place_deleted)
 
     LaunchedEffect(myPageViewModel) {
-        myPageViewModel.sideEffect.collectLatest { sideEffect: MyPageSideEffect ->
+        myPageViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
                 MyPageSideEffect.LeaveDaysUpdated -> {
                     snackbarHostState.showOguriSnackbar(

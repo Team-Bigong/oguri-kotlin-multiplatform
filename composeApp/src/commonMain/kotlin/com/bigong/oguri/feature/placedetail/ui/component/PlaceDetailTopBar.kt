@@ -39,8 +39,6 @@ import oguri.composeapp.generated.resources.place_detail_menu_unsave
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val PLACE_DETAIL_MENU_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun PlaceDetailTopBar(
     city: String,
@@ -115,7 +113,7 @@ fun PlaceDetailTopBar(
                     onDismissRequest = { isMenuExpanded = false },
                     anchorHeightPx = menuAnchorHeightPx,
                     alignment = Alignment.TopEnd,
-                    shape = PLACE_DETAIL_MENU_SHAPE,
+                    shape = RoundedCornerShape(8.dp),
                     containerColor = Neutral0,
                 ) {
                     Column {

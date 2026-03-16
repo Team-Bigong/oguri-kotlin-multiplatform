@@ -65,7 +65,7 @@ fun HomeScreen(
     }
 
     val currentPeriod =
-        homeUiState.recommendPeriods.firstOrNull { recommendPeriod: RecommendPeriod ->
+        homeUiState.recommendPeriods.firstOrNull { recommendPeriod ->
             recommendPeriod.rank == homeUiState.selectedRank
         } ?: homeUiState.recommendPeriods.first()
 
@@ -153,11 +153,11 @@ fun HomeScreen(
             }
             items(
                 count = currentPeriod.advertisements.size,
-                key = { index: Int ->
-                    val advertisement: Advertisement = currentPeriod.advertisements[index]
+                key = { index ->
+                    val advertisement = currentPeriod.advertisements[index]
                     "${advertisement.platform.name}:${advertisement.url}"
                 },
-            ) { index: Int ->
+            ) { index ->
                 val advertisement = currentPeriod.advertisements[index]
                 Spacer(modifier = Modifier.height(18.dp))
                 AdvertisementCard(

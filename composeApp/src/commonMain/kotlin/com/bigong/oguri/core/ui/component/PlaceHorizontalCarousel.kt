@@ -22,7 +22,7 @@ fun PlaceHorizontalCarousel(
         contentPadding = contentPadding,
         horizontalArrangement = Arrangement.spacedBy(space = 10.dp),
     ) {
-        items(items = places, key = { place: Place -> place.id }) { place: Place ->
+        items(items = places, key = { place -> place.id }) { place ->
             PlaceCard(
                 place = place,
                 modifier = Modifier.width(width = 154.dp),

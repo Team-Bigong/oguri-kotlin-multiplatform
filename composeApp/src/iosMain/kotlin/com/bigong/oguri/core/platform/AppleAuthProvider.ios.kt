@@ -26,8 +26,8 @@ actual suspend fun loginWithApple(): Result<String> {
 }
 
 private suspend fun performAppleAuthorization(): String {
-    return suspendCancellableCoroutine { continuation: CancellableContinuation<String> ->
-        val appleIdProvider: ASAuthorizationAppleIDProvider = ASAuthorizationAppleIDProvider()
+    return suspendCancellableCoroutine { continuation ->
+        val appleIdProvider = ASAuthorizationAppleIDProvider()
         val appleAuthorizationRequest = appleIdProvider.createRequest().apply {
             requestedScopes = listOf(ASAuthorizationScopeFullName, ASAuthorizationScopeEmail)
         }
@@ -37,13 +37,13 @@ private suspend fun performAppleAuthorization(): String {
             )
         val delegate =
             AppleAuthorizationDelegate(
-                onAuthorized = { tokenOrUserId: String ->
+                onAuthorized = { tokenOrUserId ->
                     if (continuation.isActive) {
                         continuation.resume(tokenOrUserId)
                     }
                     appleAuthorizationDelegate = null
                 },
-                onFailed = { throwable: Throwable ->
+                onFailed = { throwable ->
                     if (continuation.isActive) {
                         continuation.resumeWithException(throwable)
                     }
@@ -70,13 +70,13 @@ private class AppleAuthorizationDelegate(
         controller: ASAuthorizationController,
         didCompleteWithAuthorization: ASAuthorization,
     ) {
-        val appleCredential: ASAuthorizationAppleIDCredential =
+        val appleCredential =
             didCompleteWithAuthorization.credential as? ASAuthorizationAppleIDCredential
                 ?: run {
                     onFailed(IllegalStateException("Apple credential is missing."))
                     return
                 }
-        val token: String =
+        val token =
             appleCredential.user
         if (token.isBlank()) {
             onFailed(IllegalStateException("Apple identity token is empty."))
@@ -89,7 +89,7 @@ private class AppleAuthorizationDelegate(
         controller: ASAuthorizationController,
         didCompleteWithError: platform.Foundation.NSError,
     ) {
-        val message: String = didCompleteWithError.localizedDescription
+        val message = didCompleteWithError.localizedDescription
         onFailed(IllegalStateException(message))
     }
 

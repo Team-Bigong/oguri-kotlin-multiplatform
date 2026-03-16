@@ -84,7 +84,7 @@ class MainNavigator(
 
 @Composable
 fun rememberMainNavigator(): MainNavigator {
-    val navHostController: NavHostController = rememberNavController()
+    val navHostController = rememberNavController()
     return remember(navHostController) {
         MainNavigator(navHostController = navHostController)
     }

@@ -37,8 +37,6 @@ import oguri.composeapp.generated.resources.place_detail_menu_unsave
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val PERIOD_DETAIL_MENU_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun PeriodDetailTopBar(
     titleText: String,
@@ -96,7 +94,7 @@ fun PeriodDetailTopBar(
                     onDismissRequest = { isMenuExpanded = false },
                     anchorHeightPx = menuAnchorHeightPx,
                     alignment = Alignment.TopEnd,
-                    shape = PERIOD_DETAIL_MENU_SHAPE,
+                    shape = RoundedCornerShape(8.dp),
                     containerColor = Neutral0,
                 ) {
                     Column {

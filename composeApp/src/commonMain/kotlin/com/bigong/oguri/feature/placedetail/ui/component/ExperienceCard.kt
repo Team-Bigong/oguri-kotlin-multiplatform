@@ -32,8 +32,6 @@ import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.place_detail_experience_detail
 import org.jetbrains.compose.resources.stringResource
 
-private val EXPERIENCE_CARD_CORNER_RADIUS = 8.dp
-
 @Composable
 fun ExperienceCard(
     experience: Experience,
@@ -42,6 +40,7 @@ fun ExperienceCard(
     onMeasuredHeight: (Int) -> Unit = {},
     onClick: (String) -> Unit = {},
 ) {
+    val cardCornerRadius = 8.dp
     Column(
         modifier =
             modifier
@@ -64,10 +63,10 @@ fun ExperienceCard(
                     .fillMaxWidth()
                     .height(98.dp)
                     .clip(
-                        RoundedCornerShape(
-                            topStart = EXPERIENCE_CARD_CORNER_RADIUS,
-                            topEnd = EXPERIENCE_CARD_CORNER_RADIUS,
-                        ),
+                            RoundedCornerShape(
+                                topStart = cardCornerRadius,
+                                topEnd = cardCornerRadius,
+                            ),
                     ),
         )
         Text(

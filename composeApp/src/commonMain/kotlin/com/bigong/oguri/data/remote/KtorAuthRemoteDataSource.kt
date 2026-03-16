@@ -18,7 +18,7 @@ class KtorAuthRemoteDataSource(
     private val httpClient: HttpClient,
 ) : AuthRemoteDataSource {
     override suspend fun loginWithKakao(request: KakaoLoginRequest): KakaoLoginResponse {
-        val requestUrl: String = "$DEBUG_BASE_URL$AUTH_LOGIN_KAKAO_API_PATH"
+        val requestUrl = "$DEBUG_BASE_URL$AUTH_LOGIN_KAKAO_API_PATH"
         return httpClient.post(requestUrl) {
             headers.remove(HttpHeaders.Authorization)
             headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
@@ -27,7 +27,7 @@ class KtorAuthRemoteDataSource(
     }
 
     override suspend fun refreshToken(request: RefreshTokenRequest): RefreshTokenResponse {
-        val requestUrl: String = "$DEBUG_BASE_URL$AUTH_REFRESH_API_PATH"
+        val requestUrl = "$DEBUG_BASE_URL$AUTH_REFRESH_API_PATH"
         return httpClient.post(requestUrl) {
             headers.remove(HttpHeaders.Authorization)
             headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
@@ -36,7 +36,7 @@ class KtorAuthRemoteDataSource(
     }
 
     private companion object {
-        private const val AUTH_LOGIN_KAKAO_API_PATH: String = "/api/v1/auth/login/kakao"
-        private const val AUTH_REFRESH_API_PATH: String = "/api/v1/auth/refresh"
+        private const val AUTH_LOGIN_KAKAO_API_PATH = "/api/v1/auth/login/kakao"
+        private const val AUTH_REFRESH_API_PATH = "/api/v1/auth/refresh"
     }
 }

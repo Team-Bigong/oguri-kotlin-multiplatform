@@ -23,16 +23,16 @@ fun HomeRoute(
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
 ) {
-    val homeViewModel: HomeViewModel = remember {
+    val homeViewModel = remember {
         homeViewModelProvider()
     }
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
-    val recommendationSavedMessage: String = stringResource(Res.string.snackbar_home_saved)
-    val recommendationDeletedMessage: String = stringResource(Res.string.snackbar_home_deleted)
+    val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
+    val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(homeViewModel) {
-        homeViewModel.sideEffect.collectLatest { sideEffect: HomeSideEffect ->
+        homeViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
                 HomeSideEffect.RecommendationSaved -> {
                     snackbarHostState.showOguriSnackbar(
@@ -55,7 +55,7 @@ fun HomeRoute(
         onRankSelected = homeViewModel::selectRank,
         onSavedChanged = homeViewModel::toggleSaved,
         onRetryClick = homeViewModel::loadRecommendPeriods,
-        onAdvertisementClick = { destinationUrl: String ->
+        onAdvertisementClick = { destinationUrl ->
             uriHandler.openUri(destinationUrl)
         },
         onPlaceClick = onPlaceClick,

@@ -43,8 +43,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 
-private val MONTH_MENU_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun CalendarMonthSelector(
     selectedYear: Int,
@@ -93,7 +91,7 @@ fun CalendarMonthSelector(
             onDismissRequest = { isDropdownVisible = false },
             anchorHeightPx = menuAnchorHeightPx,
             alignment = Alignment.TopStart,
-            shape = MONTH_MENU_SHAPE,
+            shape = RoundedCornerShape(8.dp),
             containerColor = Neutral0,
         ) {
             Box(

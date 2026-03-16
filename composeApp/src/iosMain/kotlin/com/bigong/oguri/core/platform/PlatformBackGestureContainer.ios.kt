@@ -16,8 +16,8 @@ actual fun PlatformBackGestureContainer(
     content: @Composable () -> Unit,
 ) {
     val density = LocalDensity.current
-    val edgeWidthPx: Float = remember(density) { with(density) { 24.dp.toPx() } }
-    val minimumSwipeBackDistancePx: Float = remember(density) { with(density) { 72.dp.toPx() } }
+    val edgeWidthPx = remember(density) { with(density) { 24.dp.toPx() } }
+    val minimumSwipeBackDistancePx = remember(density) { with(density) { 72.dp.toPx() } }
 
     Box(
         modifier = Modifier
@@ -27,8 +27,8 @@ actual fun PlatformBackGestureContainer(
                     return@pointerInput
                 }
 
-                var isSwipeCandidate: Boolean = false
-                var totalHorizontalDrag: Float = 0f
+                var isSwipeCandidate = false
+                var totalHorizontalDrag = 0f
 
                 detectHorizontalDragGestures(
                     onDragStart = { offset ->
@@ -46,7 +46,7 @@ actual fun PlatformBackGestureContainer(
                         totalHorizontalDrag = 0f
                     },
                     onDragEnd = {
-                        val isSwipeBack: Boolean =
+                        val isSwipeBack =
                             isSwipeCandidate &&
                                 totalHorizontalDrag > minimumSwipeBackDistancePx
                         if (isSwipeBack) {

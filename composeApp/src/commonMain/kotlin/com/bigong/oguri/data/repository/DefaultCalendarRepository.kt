@@ -59,7 +59,7 @@ private fun CalendarRecommendationResponse.toDomain(
         leaveDays = dayOffCount,
         year = year,
         month = month,
-        holidays = holidays.map { calendarHolidayResponse: CalendarHolidayResponse -> calendarHolidayResponse.toDomain() },
+        holidays = holidays.map { calendarHolidayResponse -> calendarHolidayResponse.toDomain() },
         periods =
             bestPeriods.mapIndexed { index: Int, calendarPeriodResponse: CalendarPeriodResponse ->
                 calendarPeriodResponse.toDomain(id = index + 1L)

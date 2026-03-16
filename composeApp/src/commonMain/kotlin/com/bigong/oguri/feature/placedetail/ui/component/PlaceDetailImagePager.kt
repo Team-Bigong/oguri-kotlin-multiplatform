@@ -19,23 +19,22 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.ui.component.NetworkImage
 
-private val PLACE_DETAIL_HERO_HEIGHT = 270.dp
-
 @Composable
 fun PlaceDetailImagePager(
     imageUrls: List<String>,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { imageUrls.size })
+    val heroHeight = 270.dp
 
-    Box(modifier = modifier.fillMaxWidth().height(PLACE_DETAIL_HERO_HEIGHT)) {
+    Box(modifier = modifier.fillMaxWidth().height(heroHeight)) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth().height(PLACE_DETAIL_HERO_HEIGHT),
+            modifier = Modifier.fillMaxWidth().height(heroHeight),
         ) { page ->
             NetworkImage(
                 imageUrl = imageUrls[page],
-                modifier = Modifier.fillMaxWidth().height(PLACE_DETAIL_HERO_HEIGHT),
+                modifier = Modifier.fillMaxWidth().height(heroHeight),
             )
         }
 

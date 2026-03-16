@@ -21,6 +21,6 @@ class GetCalendarPeriodDetailUseCase(
     }
 
     private companion object {
-        private const val DEFAULT_USER_COUNTRY: String = "대한민국"
+        private const val DEFAULT_USER_COUNTRY = "대한민국"
     }
 }

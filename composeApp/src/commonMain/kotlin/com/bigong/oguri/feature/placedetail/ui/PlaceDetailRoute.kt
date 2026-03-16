@@ -30,8 +30,8 @@ fun PlaceDetailRoute(
         placeDetailViewModelProvider()
     }
     val placeDetailUiState = placeDetailViewModel.uiState.collectAsStateWithLifecycle().value
-    val placeSavedMessage: String = stringResource(Res.string.snackbar_place_saved)
-    val placeDeletedMessage: String = stringResource(Res.string.snackbar_place_deleted)
+    val placeSavedMessage = stringResource(Res.string.snackbar_place_saved)
+    val placeDeletedMessage = stringResource(Res.string.snackbar_place_deleted)
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(placeId, startDate, endDate) {
@@ -42,7 +42,7 @@ fun PlaceDetailRoute(
         )
     }
     LaunchedEffect(placeDetailViewModel) {
-        placeDetailViewModel.sideEffect.collectLatest { sideEffect: PlaceDetailSideEffect ->
+        placeDetailViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
                 PlaceDetailSideEffect.Saved -> {
                     snackbarHostState.showOguriSnackbar(
@@ -72,7 +72,7 @@ fun PlaceDetailRoute(
         },
         onShareClick = {},
         onSaveToggleClick = placeDetailViewModel::toggleSaved,
-        onUrlClick = { destinationUrl: String ->
+        onUrlClick = { destinationUrl ->
             uriHandler.openUri(destinationUrl)
         },
         onPlaceClick = onPlaceClick,

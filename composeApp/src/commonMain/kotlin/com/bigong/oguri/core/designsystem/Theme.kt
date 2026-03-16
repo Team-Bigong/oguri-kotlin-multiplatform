@@ -27,7 +27,7 @@ private val LocalTypography =
 private val LocalColorPalette =
     staticCompositionLocalOf<OguriColorPalette> { error("No colors provided") }
 
-val LightOguriMaterialColorScheme: ColorScheme =
+val LightOguriMaterialColorScheme =
     lightColorScheme(
         primary = LightOguriColorPalette.mint,
         onPrimary = LightOguriColorPalette.textOnMint,
@@ -56,7 +56,7 @@ val LightOguriMaterialColorScheme: ColorScheme =
         onErrorContainer = Color(0xFF601410),
     )
 
-val DarkOguriMaterialColorScheme: ColorScheme =
+val DarkOguriMaterialColorScheme =
     darkColorScheme(
         primary = DarkOguriColorPalette.mint,
         onPrimary = DarkOguriColorPalette.textOnMint,
@@ -92,11 +92,11 @@ fun OguriTheme(
     content: @Composable () -> Unit,
 ) {
     @Suppress("UNUSED_VARIABLE")
-    val ignoredDynamicColor: Boolean = dynamicColor
-    val typographySystem: OguriTypographySystem = rememberOguriTypographySystem()
+    val ignoredDynamicColor = dynamicColor
+    val typographySystem = rememberOguriTypographySystem()
     val materialTypography = rememberOguriMaterialTypography(typographySystem)
-    val colorPalette: OguriColorPalette = if (darkTheme) DarkOguriColorPalette else LightOguriColorPalette
-    val colorScheme: ColorScheme = if (darkTheme) DarkOguriMaterialColorScheme else LightOguriMaterialColorScheme
+    val colorPalette = if (darkTheme) DarkOguriColorPalette else LightOguriColorPalette
+    val colorScheme = if (darkTheme) DarkOguriMaterialColorScheme else LightOguriMaterialColorScheme
     CompositionLocalProvider(
         LocalTypography provides typographySystem,
         LocalColorPalette provides colorPalette,

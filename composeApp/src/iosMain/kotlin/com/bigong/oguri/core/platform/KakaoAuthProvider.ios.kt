@@ -25,12 +25,12 @@ import platform.UIKit.UIWindow
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-private const val KAKAO_OAUTH_AUTHORIZE_ENDPOINT: String = "https://kauth.kakao.com/oauth/authorize"
-private const val KAKAO_TALK_OAUTH_AUTHORIZE_ENDPOINT: String = "kakaokompassauth://authorize"
-private const val KAKAO_OAUTH_TOKEN_ENDPOINT: String = "https://kauth.kakao.com/oauth/token"
-private const val OAUTH_RESPONSE_TYPE_CODE: String = "code"
-private const val OAUTH_GRANT_TYPE_AUTHORIZATION_CODE: String = "authorization_code"
-private const val KAKAO_TALK_SCHEME_PREFIX: String = "kakaokompassauth://"
+private const val KAKAO_OAUTH_AUTHORIZE_ENDPOINT = "https://kauth.kakao.com/oauth/authorize"
+private const val KAKAO_TALK_OAUTH_AUTHORIZE_ENDPOINT = "kakaokompassauth://authorize"
+private const val KAKAO_OAUTH_TOKEN_ENDPOINT = "https://kauth.kakao.com/oauth/token"
+private const val OAUTH_RESPONSE_TYPE_CODE = "code"
+private const val OAUTH_GRANT_TYPE_AUTHORIZATION_CODE = "authorization_code"
+private const val KAKAO_TALK_SCHEME_PREFIX = "kakaokompassauth://"
 
 private var webAuthenticationSession: ASWebAuthenticationSession? = null
 private var kakaoTalkLoginContinuation: CancellableContinuation<String>? = null
@@ -62,9 +62,9 @@ private suspend fun requestAuthorizationCode(kakaoNativeAppKey: String): String 
 }
 
 private suspend fun requestAuthorizationCodeByKakaoTalk(kakaoNativeAppKey: String): String {
-    val callbackScheme: String = "kakao$kakaoNativeAppKey"
-    val redirectUri: String = "$callbackScheme://oauth"
-    val state: String = NSUUID().UUIDString
+    val callbackScheme = "kakao$kakaoNativeAppKey"
+    val redirectUri = "$callbackScheme://oauth"
+    val state = NSUUID().UUIDString
     val authorizeUrl =
         "$KAKAO_TALK_OAUTH_AUTHORIZE_ENDPOINT" +
             "?response_type=$OAUTH_RESPONSE_TYPE_CODE" +
@@ -84,7 +84,7 @@ private suspend fun requestAuthorizationCodeByKakaoTalk(kakaoNativeAppKey: Strin
         UIApplication.sharedApplication.openURL(
             url = authorizeNsUrl,
             options = emptyMap<Any?, Any>(),
-            completionHandler = { opened: Boolean ->
+            completionHandler = { opened ->
                 if (!opened && continuation.isActive) {
                     if (kakaoTalkLoginContinuation === continuation) {
                         kakaoTalkLoginContinuation = null
@@ -141,21 +141,21 @@ private suspend fun requestAuthorizationCodeByWeb(kakaoNativeAppKey: String): St
 }
 
 fun handleKakaoLoginOpenUrl(url: String) {
-    val continuation: CancellableContinuation<String> = kakaoTalkLoginContinuation ?: return
+    val continuation = kakaoTalkLoginContinuation ?: return
     if (!continuation.isActive) {
         kakaoTalkLoginContinuation = null
         return
     }
 
-    val callbackUrlString: String = url.trim()
-    val authorizationCode: String? = callbackUrlString.extractQueryValue(name = "code")
+    val callbackUrlString = url.trim()
+    val authorizationCode = callbackUrlString.extractQueryValue(name = "code")
     if (!authorizationCode.isNullOrBlank()) {
         kakaoTalkLoginContinuation = null
         continuation.resume(authorizationCode)
         return
     }
 
-    val errorDescription: String =
+    val errorDescription =
         callbackUrlString.extractQueryValue(name = "error_description")
             ?: callbackUrlString.extractQueryValue(name = "error")
             ?: "Kakao login failed."
@@ -202,9 +202,9 @@ private suspend fun requestKakaoAccessToken(
 private fun String.extractQueryValue(name: String): String? {
     return substringAfter("?", missingDelimiterValue = "")
         .split("&")
-        .firstOrNull { token: String -> token.startsWith("$name=") }
+        .firstOrNull { token -> token.startsWith("$name=") }
         ?.substringAfter("=")
-        ?.takeIf { value: String -> value.isNotBlank() }
+        ?.takeIf { value -> value.isNotBlank() }
 }
 
 private fun iosKakaoNativeAppKey(): String {
@@ -212,7 +212,7 @@ private fun iosKakaoNativeAppKey(): String {
 }
 
 private fun isKakaoTalkLoginAvailable(): Boolean {
-    val kakaoTalkAuthUrl: NSURL = NSURL.URLWithString(KAKAO_TALK_SCHEME_PREFIX) ?: return false
+    val kakaoTalkAuthUrl = NSURL.URLWithString(KAKAO_TALK_SCHEME_PREFIX) ?: return false
     return UIApplication.sharedApplication.canOpenURL(kakaoTalkAuthUrl)
 }
 

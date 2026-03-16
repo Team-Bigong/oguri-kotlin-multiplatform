@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.delay
 
-private const val SPLASH_DELAY_MILLIS: Long = 1200L
+private const val SPLASH_DELAY_MILLIS = 1200L
 
 @Composable
 fun SplashRoute(

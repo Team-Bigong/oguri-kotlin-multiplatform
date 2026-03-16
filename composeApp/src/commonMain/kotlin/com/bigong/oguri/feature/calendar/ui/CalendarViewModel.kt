@@ -23,10 +23,10 @@ import kotlinx.datetime.LocalDate
 class CalendarViewModel(
     private val getCalendarRecommendationUseCase: GetCalendarRecommendationUseCase,
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<CalendarUiState> = MutableStateFlow(CalendarUiState())
-    val uiState: StateFlow<CalendarUiState> = _uiState.asStateFlow()
-    private val _sideEffect: MutableSharedFlow<CalendarSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
-    val sideEffect: SharedFlow<CalendarSideEffect> = _sideEffect.asSharedFlow()
+    private val _uiState = MutableStateFlow(CalendarUiState())
+    val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<CalendarSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
     init {
         loadInitialCalendar()
@@ -39,7 +39,7 @@ class CalendarViewModel(
         if (uiState.value.leaveDays == leaveDays) {
             return
         }
-        _uiState.update { currentUiState: CalendarUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(leaveDays = leaveDays)
         }
         _sideEffect.tryEmit(CalendarSideEffect.LeaveDaysUpdated)
@@ -54,7 +54,7 @@ class CalendarViewModel(
         year: Int,
         month: Int,
     ) {
-        _uiState.update { currentUiState: CalendarUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(
                 selectedYear = year,
                 selectedMonth = month,
@@ -71,7 +71,7 @@ class CalendarViewModel(
         date: LocalDate,
     ) {
         val matchedPeriod =
-            uiState.value.calendarRecommendation?.periods?.firstOrNull { period: CalendarPeriod ->
+            uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->
                 date in period.startDate..period.endDate
             }
         if (matchedPeriod == null) {
@@ -90,7 +90,7 @@ class CalendarViewModel(
             return
         }
 
-        _uiState.update { currentUiState: CalendarUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(
                 selectedDate = date,
                 selectedPeriodId = matchedPeriod.id,
@@ -103,7 +103,7 @@ class CalendarViewModel(
     ) {
         if (uiState.value.selectedPeriodId == periodId) {
             val selectedPeriodForNavigation =
-                uiState.value.calendarRecommendation?.periods?.firstOrNull { period: CalendarPeriod ->
+                uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->
                     period.id == periodId
                 } ?: return
             _sideEffect.tryEmit(
@@ -116,11 +116,11 @@ class CalendarViewModel(
         }
 
         val selectedPeriod =
-            uiState.value.calendarRecommendation?.periods?.firstOrNull { period: CalendarPeriod ->
+            uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->
                 period.id == periodId
             } ?: return
 
-        _uiState.update { currentUiState: CalendarUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(
                 selectedPeriodId = periodId,
                 selectedDate = selectedPeriod.startDate,
@@ -138,7 +138,7 @@ class CalendarViewModel(
 
     private fun loadInitialCalendar() {
         viewModelScope.launch {
-            _uiState.update { currentUiState: CalendarUiState ->
+            _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
             runCatching {
@@ -147,7 +147,7 @@ class CalendarViewModel(
                 }
             }.onSuccess { preferredDayOffCount ->
                 val resolvedLeaveDays = preferredDayOffCount.coerceAtLeast(1)
-                _uiState.update { currentUiState: CalendarUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(leaveDays = resolvedLeaveDays)
                 }
                 fetchCalendarRecommendation(
@@ -156,7 +156,7 @@ class CalendarViewModel(
                     leaveDays = resolvedLeaveDays,
                 )
             }.onFailure {
-                _uiState.update { currentUiState: CalendarUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = true,
@@ -173,7 +173,7 @@ class CalendarViewModel(
         leaveDays: Int,
     ) {
         viewModelScope.launch {
-            _uiState.update { currentUiState: CalendarUiState ->
+            _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
 
@@ -187,7 +187,7 @@ class CalendarViewModel(
                 }
             }.onSuccess { recommendation ->
                 val defaultSelectedPeriod = recommendation.periods.firstOrNull()
-                _uiState.update { currentUiState: CalendarUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = false,
@@ -200,7 +200,7 @@ class CalendarViewModel(
                     )
                 }
             }.onFailure {
-                _uiState.update { currentUiState: CalendarUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = true,

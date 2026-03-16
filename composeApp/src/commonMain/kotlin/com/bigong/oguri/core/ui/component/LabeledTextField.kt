@@ -19,8 +19,6 @@ import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 
-private val TEXT_FIELD_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun LabeledTextField(
     labelText: String,
@@ -46,7 +44,7 @@ fun LabeledTextField(
                 Modifier
                     .fillMaxWidth()
                     .height(48.dp)
-                    .border(width = 1.dp, color = Neutral90, shape = TEXT_FIELD_SHAPE),
+                    .border(width = 1.dp, color = Neutral90, shape = RoundedCornerShape(8.dp)),
         ) {
             BasicTextField(
                 value = value,

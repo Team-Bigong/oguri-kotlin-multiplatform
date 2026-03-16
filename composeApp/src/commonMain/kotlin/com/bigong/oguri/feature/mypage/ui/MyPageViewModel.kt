@@ -29,10 +29,10 @@ class MyPageViewModel(
     private val deleteMyPageSavedPlaceUseCase: DeleteMyPageSavedPlaceUseCase,
     private val logoutUseCase: LogoutUseCase,
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<MyPageUiState> = MutableStateFlow(MyPageUiState())
-    val uiState: StateFlow<MyPageUiState> = _uiState.asStateFlow()
-    private val _sideEffect: MutableSharedFlow<MyPageSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
-    val sideEffect: SharedFlow<MyPageSideEffect> = _sideEffect.asSharedFlow()
+    private val _uiState = MutableStateFlow(MyPageUiState())
+    val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<MyPageSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
     init {
         loadMyPageInfo()
@@ -40,7 +40,7 @@ class MyPageViewModel(
 
     fun loadMyPageInfo() {
         viewModelScope.launch {
-            _uiState.update { currentUiState: MyPageUiState ->
+            _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
 
@@ -49,7 +49,7 @@ class MyPageViewModel(
                     getMyPageInfoUseCase()
                 }
             }.onSuccess { myPageInfo ->
-                _uiState.update { currentUiState: MyPageUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = false,
@@ -57,7 +57,7 @@ class MyPageViewModel(
                     )
                 }
             }.onFailure {
-                _uiState.update { currentUiState: MyPageUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = true,
@@ -69,13 +69,13 @@ class MyPageViewModel(
     }
 
     fun showEditLeaveDaysBottomSheet() {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isEditLeaveDaysBottomSheetVisible = true)
         }
     }
 
     fun hideEditLeaveDaysBottomSheet() {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isEditLeaveDaysBottomSheetVisible = false)
         }
     }
@@ -97,7 +97,7 @@ class MyPageViewModel(
                     )
                 }
             }.onSuccess { myPageInfo ->
-                _uiState.update { currentUiState: MyPageUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         myPageInfo = myPageInfo,
                         isEditLeaveDaysBottomSheetVisible = false,
@@ -109,13 +109,13 @@ class MyPageViewModel(
     }
 
     fun showDeleteScheduleDialog(periodId: Long) {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(pendingDeleteScheduleId = periodId)
         }
     }
 
     fun dismissDeleteScheduleDialog() {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(pendingDeleteScheduleId = null)
         }
     }
@@ -129,7 +129,7 @@ class MyPageViewModel(
                     deleteMyPageSelectedPeriodUseCase(periodId = pendingDeleteScheduleId)
                 }
             }.onSuccess { myPageInfo ->
-                _uiState.update { currentUiState: MyPageUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         myPageInfo = myPageInfo,
                         pendingDeleteScheduleId = null,
@@ -141,13 +141,13 @@ class MyPageViewModel(
     }
 
     fun showDeleteSavedPlaceDialog(placeId: Long) {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(pendingDeletePlaceId = placeId)
         }
     }
 
     fun dismissDeleteSavedPlaceDialog() {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(pendingDeletePlaceId = null)
         }
     }
@@ -161,7 +161,7 @@ class MyPageViewModel(
                     deleteMyPageSavedPlaceUseCase(placeId = pendingDeletePlaceId)
                 }
             }.onSuccess { myPageInfo ->
-                _uiState.update { currentUiState: MyPageUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         myPageInfo = myPageInfo,
                         pendingDeletePlaceId = null,
@@ -173,20 +173,20 @@ class MyPageViewModel(
     }
 
     fun showLogoutDialog() {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isLogoutDialogVisible = true)
         }
     }
 
     fun hideLogoutDialog() {
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isLogoutDialogVisible = false)
         }
     }
 
     fun confirmLogout() {
         logoutUseCase()
-        _uiState.update { currentUiState: MyPageUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isLogoutDialogVisible = false)
         }
         _sideEffect.tryEmit(MyPageSideEffect.LoggedOut)

@@ -50,7 +50,7 @@ fun MyPageSavedPlaceSection(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            items(items = savedPlaces, key = { place: Place -> place.id }) { place: Place ->
+            items(items = savedPlaces, key = { place -> place.id }) { place ->
                 MyPageSavedPlaceCard(
                     place = place,
                     onDeleteClick = onDeleteClick,

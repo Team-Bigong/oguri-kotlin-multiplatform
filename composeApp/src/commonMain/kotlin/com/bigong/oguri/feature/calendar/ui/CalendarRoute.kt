@@ -20,14 +20,14 @@ fun CalendarRoute(
     snackbarHostState: SnackbarHostState,
     onOpenPeriodDetail: (String, String) -> Unit = { _, _ -> },
 ) {
-    val calendarViewModel: CalendarViewModel = remember {
+    val calendarViewModel = remember {
         calendarViewModelProvider()
     }
     val calendarUiState = calendarViewModel.uiState.collectAsStateWithLifecycle().value
-    val leaveDaysUpdatedMessage: String = stringResource(Res.string.snackbar_calendar_leave_days_updated)
+    val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_calendar_leave_days_updated)
 
     LaunchedEffect(calendarViewModel) {
-        calendarViewModel.sideEffect.collectLatest { sideEffect: CalendarSideEffect ->
+        calendarViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
                 CalendarSideEffect.LeaveDaysUpdated -> {
                     snackbarHostState.showOguriSnackbar(

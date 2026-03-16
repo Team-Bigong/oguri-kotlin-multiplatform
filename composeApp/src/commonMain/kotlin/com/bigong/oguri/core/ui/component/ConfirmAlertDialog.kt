@@ -30,9 +30,6 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
-private val ALERT_DIALOG_SHAPE = RoundedCornerShape(size = 8.dp)
-private val DIALOG_BUTTON_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun ConfirmAlertDialog(
     iconResource: DrawableResource,
@@ -58,7 +55,7 @@ fun ConfirmAlertDialog(
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-            shape = ALERT_DIALOG_SHAPE,
+            shape = RoundedCornerShape(8.dp),
             color = Neutral0,
         ) {
             Column(
@@ -97,7 +94,7 @@ fun ConfirmAlertDialog(
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .background(color = Mint70, shape = DIALOG_BUTTON_SHAPE)
+                                .background(color = Mint70, shape = RoundedCornerShape(8.dp))
                                 .noRippleClickable(onClick = onConfirmClick)
                                 .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
@@ -113,7 +110,7 @@ fun ConfirmAlertDialog(
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .background(color = Neutral10, shape = DIALOG_BUTTON_SHAPE)
+                                .background(color = Neutral10, shape = RoundedCornerShape(8.dp))
                                 .noRippleClickable(onClick = onCancelClick)
                                 .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,

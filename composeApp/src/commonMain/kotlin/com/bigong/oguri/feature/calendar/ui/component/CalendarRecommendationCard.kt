@@ -31,8 +31,6 @@ import oguri.composeapp.generated.resources.ic_right_arrow
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val RECOMMENDATION_CARD_SHAPE = RoundedCornerShape(size = 8.dp)
-
 @Composable
 fun CalendarRecommendationCard(
     period: CalendarPeriod,
@@ -49,11 +47,11 @@ fun CalendarRecommendationCard(
                 .fillMaxWidth()
                 .background(
                     color = if (isSelected) Mint70 else Mint5,
-                    shape = RECOMMENDATION_CARD_SHAPE,
+                    shape = RoundedCornerShape(8.dp),
                 ).border(
                     width = 1.dp,
                     color = Mint70,
-                    shape = RECOMMENDATION_CARD_SHAPE,
+                    shape = RoundedCornerShape(8.dp),
                 ).noRippleClickable(
                     onClick = {
                         HapticType.Selection.perform()

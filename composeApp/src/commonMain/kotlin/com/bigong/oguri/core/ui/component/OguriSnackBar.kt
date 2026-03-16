@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral0
@@ -31,14 +30,6 @@ import oguri.composeapp.generated.resources.ic_info
 import oguri.composeapp.generated.resources.ic_success
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-
-private val OguiriSnackBarShape: RoundedCornerShape = RoundedCornerShape(4.dp)
-private val OguiriSnackBarHorizontalPadding = 16.dp
-private val OguiriSnackBarVerticalPadding = 10.dp
-private val OguiriSnackBarIconSize = 32.dp
-private val OguiriSnackBarOuterHorizontalPadding = 16.dp
-private val OguiriSnackBarOuterBottomPadding = 16.dp
-private val OguiriSnackBarBottomNavigationOffset = 12.dp
 
 enum class OguriSnackBarType {
     SUCCESS,
@@ -80,19 +71,19 @@ fun OguriSnackBarHost(
 ) {
     val bottomOffset =
         if (hasBottomNavigation) {
-            OguiriSnackBarBottomNavigationOffset
+            12.dp
         } else {
-            OguiriSnackBarOuterBottomPadding
+            16.dp
         }
     SnackbarHost(
         hostState = hostState,
         modifier =
             modifier
-                .padding(horizontal = OguiriSnackBarOuterHorizontalPadding)
+                .padding(horizontal = 16.dp)
                 .padding(bottom = bottomOffset),
-        snackbar = { snackbarData: SnackbarData ->
-            val visuals: OguriSnackBarVisuals? = snackbarData.visuals as? OguriSnackBarVisuals
-            val type: OguriSnackBarType = visuals?.type ?: OguriSnackBarType.INFO
+        snackbar = { snackbarData ->
+            val visuals = snackbarData.visuals as? OguriSnackBarVisuals
+            val type = visuals?.type ?: OguriSnackBarType.INFO
             OguriSnackBar(
                 message = snackbarData.visuals.message,
                 type = type,
@@ -113,10 +104,10 @@ fun OguriSnackBar(
                 .fillMaxWidth()
                 .background(
                     color = Neutral50.copy(alpha = 0.9f),
-                    shape = OguiriSnackBarShape,
+                    shape = RoundedCornerShape(4.dp),
                 ).padding(
-                    horizontal = OguiriSnackBarHorizontalPadding,
-                    vertical = OguiriSnackBarVerticalPadding,
+                    horizontal = 16.dp,
+                    vertical = 10.dp,
                 ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start,
@@ -124,7 +115,7 @@ fun OguriSnackBar(
         Image(
             painter = painterResource(resource = type.iconResource()),
             contentDescription = null,
-            modifier = Modifier.size(OguiriSnackBarIconSize),
+            modifier = Modifier.size(32.dp),
         )
         Spacer(modifier = Modifier.size(10.dp))
         Text(

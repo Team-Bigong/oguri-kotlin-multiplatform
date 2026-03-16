@@ -21,7 +21,14 @@
 
 ## 문자열/상수
 - 사용자 노출 문자열은 `composeResources` 문자열 리소스로 관리한다.
-- 상수는 `const val`을 사용한다.
+- 상수화 기준:
+: 아래 조건 중 하나라도 만족하면 상수화한다.
+  1) 외부 계약값(API path, header/query key, storage key, scheme/endpoint)
+  2) 비즈니스 규칙값(임계값, 최소/최대 범위, 지연 시간, 가중치)
+  3) 파일/레이어를 넘어서 재사용되는 값
+- 단발성 UI 값(예: 1~2회만 쓰는 `8.dp`, `RoundedCornerShape(8.dp)`)은 상수화하지 않고 인라인한다.
+- 복잡한 표현식이 3회 이상 재사용될 때만 파일 지역 `private val`을 허용한다.
+- `const val`은 원시 타입/문자열 계약값에만 사용하고, `Dp/Shape/Color`는 인라인 또는 지역 `val`을 사용한다.
 
 ## Compose UI 규칙
 - `Route`와 `Screen`은 반드시 별도 파일로 분리한다.

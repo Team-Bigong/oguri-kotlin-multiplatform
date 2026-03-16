@@ -63,7 +63,7 @@ data class BottomNavigationDestination(
 )
 
 object RouteModels {
-    val bottomNavigationDestinations: List<BottomNavigationDestination> =
+    val bottomNavigationDestinations =
         listOf(
             BottomNavigationDestination(
                 routeModel = RouteModel.Home,

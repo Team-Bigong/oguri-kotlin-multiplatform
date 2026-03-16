@@ -56,12 +56,9 @@ import oguri.composeapp.generated.resources.ic_pen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val LEAVE_DAYS_EDITOR_SHAPE = RoundedCornerShape(size = 8.dp)
-private val BOTTOM_SHEET_SHAPE = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-private val PICKER_SELECTED_SHAPE = RoundedCornerShape(size = 8.dp)
-private const val MIN_LEAVE_DAYS: Int = 1
-private const val MAX_LEAVE_DAYS: Int = 30
-private const val PICKER_VISIBLE_ITEM_COUNT: Int = 3
+private const val MIN_LEAVE_DAYS = 1
+private const val MAX_LEAVE_DAYS = 30
+private const val PICKER_VISIBLE_ITEM_COUNT = 3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,8 +74,8 @@ fun CalendarLeaveDaysEditor(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(color = Neutral0, shape = LEAVE_DAYS_EDITOR_SHAPE)
-                .border(width = 1.dp, color = Mint70, shape = LEAVE_DAYS_EDITOR_SHAPE)
+                .background(color = Neutral0, shape = RoundedCornerShape(8.dp))
+                .border(width = 1.dp, color = Mint70, shape = RoundedCornerShape(8.dp))
                 .noRippleClickable(
                     onClick = {
                         selectedLeaveDays = leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
@@ -108,7 +105,7 @@ fun CalendarLeaveDaysEditor(
         ModalBottomSheet(
             onDismissRequest = { isBottomSheetVisible = false },
             sheetState = sheetState,
-            shape = BOTTOM_SHEET_SHAPE,
+            shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
             dragHandle = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -228,7 +225,7 @@ private fun LeaveDaysNumberPicker(
                 Modifier
                     .fillMaxWidth()
                     .height(itemHeight)
-                    .background(color = Mint50.copy(alpha = 0.5f), shape = PICKER_SELECTED_SHAPE),
+                    .background(color = Mint50.copy(alpha = 0.5f), shape = RoundedCornerShape(8.dp)),
         )
         LazyColumn(
             state = pickerState,

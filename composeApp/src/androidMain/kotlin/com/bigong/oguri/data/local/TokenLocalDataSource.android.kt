@@ -18,14 +18,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import java.io.IOException
 
-private const val TOKEN_DATA_STORE_FILE_NAME: String = "oguri_token.preferences_pb"
-private const val KEY_ACCESS_TOKEN: String = "key_access_token"
-private const val KEY_REFRESH_TOKEN: String = "key_refresh_token"
+private const val TOKEN_DATA_STORE_FILE_NAME = "oguri_token.preferences_pb"
+private const val KEY_ACCESS_TOKEN = "key_access_token"
+private const val KEY_REFRESH_TOKEN = "key_refresh_token"
 
 private object AndroidTokenLocalDataSource : TokenLocalDataSource {
     private val accessTokenPreferenceKey = stringPreferencesKey(KEY_ACCESS_TOKEN)
     private val refreshTokenPreferenceKey = stringPreferencesKey(KEY_REFRESH_TOKEN)
-    private val dataStoreCoroutineScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val dataStoreCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Volatile
     private var tokenDataStoreFlow: Flow<Preferences>? = null
@@ -38,7 +38,7 @@ private object AndroidTokenLocalDataSource : TokenLocalDataSource {
         if (tokenDataStore != null && tokenDataStoreFlow != null) {
             return
         }
-        val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return
+        val applicationContext = OguriPlatformContextHolder.applicationContext ?: return
         val dataStore =
             PreferenceDataStoreFactory.create(
                 corruptionHandler = null,
@@ -60,7 +60,7 @@ private object AndroidTokenLocalDataSource : TokenLocalDataSource {
 
     override fun readAccessToken(): String? {
         initialize()
-        val preferencesFlow: Flow<Preferences> = tokenDataStoreFlow ?: return null
+        val preferencesFlow = tokenDataStoreFlow ?: return null
         return runBlocking(Dispatchers.IO) {
             preferencesFlow.first()[accessTokenPreferenceKey]
         }
@@ -68,7 +68,7 @@ private object AndroidTokenLocalDataSource : TokenLocalDataSource {
 
     override fun readRefreshToken(): String? {
         initialize()
-        val preferencesFlow: Flow<Preferences> = tokenDataStoreFlow ?: return null
+        val preferencesFlow = tokenDataStoreFlow ?: return null
         return runBlocking(Dispatchers.IO) {
             preferencesFlow.first()[refreshTokenPreferenceKey]
         }

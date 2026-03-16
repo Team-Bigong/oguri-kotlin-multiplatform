@@ -44,8 +44,6 @@ import oguri.composeapp.generated.resources.mypage_leave_days_unit
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val BOTTOM_SHEET_SHAPE = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MyPageLeaveDaysBottomSheet(
@@ -66,7 +64,7 @@ fun MyPageLeaveDaysBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
         sheetState = sheetState,
-        shape = BOTTOM_SHEET_SHAPE,
+        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         dragHandle = {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(modifier = Modifier.height(16.dp))

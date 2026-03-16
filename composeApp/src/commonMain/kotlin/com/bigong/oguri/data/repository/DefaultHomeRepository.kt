@@ -18,7 +18,7 @@ class DefaultHomeRepository(
     private val homeRemoteDataSource: HomeRemoteDataSource,
 ) : HomeRepository {
     override suspend fun getRecommendPeriods(userCountry: String): List<RecommendPeriod> {
-        return homeRemoteDataSource.getRecommendPeriodResponses(userCountry = userCountry).map { recommendPeriodResponse: RecommendPeriodResponse ->
+        return homeRemoteDataSource.getRecommendPeriodResponses(userCountry = userCountry).map { recommendPeriodResponse ->
             recommendPeriodResponse.toDomain()
         }
     }
@@ -67,8 +67,8 @@ private fun RecommendPeriodResponse.toDomain(): RecommendPeriod {
         holiday = holiday,
         dayOffCount = dayOffCount,
         totalTripCount = totalTripCount,
-        places = places.map { placeResponse: PlaceResponse -> placeResponse.toDomain() },
-        advertisements = advertisements.map { advertisementResponse: AdvertisementResponse -> advertisementResponse.toDomain() },
+        places = places.map { placeResponse -> placeResponse.toDomain() },
+        advertisements = advertisements.map { advertisementResponse -> advertisementResponse.toDomain() },
     )
 }
 

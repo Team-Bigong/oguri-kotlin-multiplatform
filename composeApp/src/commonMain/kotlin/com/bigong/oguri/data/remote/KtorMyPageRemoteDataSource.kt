@@ -21,15 +21,15 @@ import io.ktor.client.request.setBody
 class KtorMyPageRemoteDataSource(
     private val httpClient: HttpClient,
     private val authRequestExecutor: AuthRequestExecutor,
-) : MyPageRemoteDataSource {
+    ) : MyPageRemoteDataSource {
     private var cachedMyPageResponse: MyPageResponse? = null
 
     override suspend fun getMyPageResponse(): MyPageResponse {
-        val memberMeResponse: MemberMeResponse =
+        val memberMeResponse =
             authRequestExecutor.execute {
                 httpClient.get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
                     appendUserIdHeaderWhenGuest()
-                }.body()
+                }.body<MemberMeResponse>()
             }
 
         return memberMeResponse.toMyPageResponse().also { response -> cachedMyPageResponse = response }
@@ -61,7 +61,7 @@ class KtorMyPageRemoteDataSource(
     override suspend fun deleteSelectedPeriod(request: DeleteMyPageSelectedPeriodRequest): MyPageResponse {
         val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
         val selectedPeriod =
-            currentMyPageResponse.selectedPeriods.firstOrNull { selectedPeriodResponse: MyPageSelectedPeriodResponse ->
+            currentMyPageResponse.selectedPeriods.firstOrNull { selectedPeriodResponse ->
                 selectedPeriodResponse.id == request.periodId
             } ?: return currentMyPageResponse
 
@@ -81,7 +81,7 @@ class KtorMyPageRemoteDataSource(
 
         return currentMyPageResponse.copy(
             selectedPeriods =
-                currentMyPageResponse.selectedPeriods.filterNot { selectedPeriodResponse: MyPageSelectedPeriodResponse ->
+                currentMyPageResponse.selectedPeriods.filterNot { selectedPeriodResponse ->
                     selectedPeriodResponse.id == request.periodId
                 },
         ).also { response ->
@@ -96,7 +96,7 @@ class KtorMyPageRemoteDataSource(
             }
         }
 
-        val currentMyPageResponse: MyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
+        val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
         return currentMyPageResponse.copy(
             savedPlaces = currentMyPageResponse.savedPlaces.filterNot { placeResponse -> placeResponse.id == request.placeId },
         ).also { response ->
@@ -141,9 +141,9 @@ class KtorMyPageRemoteDataSource(
     }
 
     private companion object {
-        private const val MEMBER_ME_API_PATH: String = "/api/v1/members/me"
-        private const val MEMBER_DAY_OFF_API_PATH: String = "/api/v1/members/day-off"
-        private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH: String = "/api/v1/members/saved-recommendations"
-        private const val MEMBER_SAVED_DESTINATIONS_API_PATH: String = "/api/v1/members/saved-destinations"
+        private const val MEMBER_ME_API_PATH = "/api/v1/members/me"
+        private const val MEMBER_DAY_OFF_API_PATH = "/api/v1/members/day-off"
+        private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH = "/api/v1/members/saved-recommendations"
+        private const val MEMBER_SAVED_DESTINATIONS_API_PATH = "/api/v1/members/saved-destinations"
     }
 }

@@ -12,8 +12,6 @@ import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import androidx.compose.material3.Text
 
-private val HOME_LOADING_VERTICAL_SPACING = 12.dp
-
 @Composable
 fun HomeLoadingContent(
     message: String,
@@ -22,7 +20,7 @@ fun HomeLoadingContent(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(
-            space = HOME_LOADING_VERTICAL_SPACING,
+            space = 12.dp,
             alignment = Alignment.CenterVertically,
         ),
     ) {

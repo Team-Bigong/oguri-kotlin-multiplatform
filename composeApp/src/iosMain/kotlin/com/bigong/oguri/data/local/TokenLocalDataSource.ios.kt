@@ -2,11 +2,11 @@ package com.bigong.oguri.data.local
 
 import platform.Foundation.NSUserDefaults
 
-private const val KEY_ACCESS_TOKEN: String = "key_access_token"
-private const val KEY_REFRESH_TOKEN: String = "key_refresh_token"
+private const val KEY_ACCESS_TOKEN = "key_access_token"
+private const val KEY_REFRESH_TOKEN = "key_refresh_token"
 
 private object IosTokenLocalDataSource : TokenLocalDataSource {
-    private val userDefaults: NSUserDefaults = NSUserDefaults.standardUserDefaults
+    private val userDefaults = NSUserDefaults.standardUserDefaults
 
     override fun initialize() = Unit
 

@@ -23,15 +23,15 @@ class PeriodDetailViewModel(
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<PeriodDetailUiState> = MutableStateFlow(PeriodDetailUiState())
-    val uiState: StateFlow<PeriodDetailUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(PeriodDetailUiState())
+    val uiState = _uiState.asStateFlow()
 
     fun loadPeriodDetail(
         startDate: String,
         endDate: String,
     ) {
         viewModelScope.launch {
-            _uiState.update { currentUiState: PeriodDetailUiState ->
+            _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
 
@@ -55,7 +55,7 @@ class PeriodDetailViewModel(
                                 selectedPeriod.dayOffCount == periodDetail.dayOffCount
                         }
 
-                _uiState.update { currentUiState: PeriodDetailUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = false,
@@ -64,7 +64,7 @@ class PeriodDetailViewModel(
                     )
                 }
             }.onFailure {
-                _uiState.update { currentUiState: PeriodDetailUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = true,
@@ -81,7 +81,7 @@ class PeriodDetailViewModel(
         val previousSavedState = uiState.value.isSaved
         val nextSavedState = !previousSavedState
 
-        _uiState.update { currentUiState: PeriodDetailUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isSaved = nextSavedState)
         }
 
@@ -105,7 +105,7 @@ class PeriodDetailViewModel(
                     }
                 }
             }.onFailure {
-                _uiState.update { currentUiState: PeriodDetailUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(isSaved = previousSavedState)
                 }
             }

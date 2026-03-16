@@ -61,7 +61,7 @@ fun MyPageSelectedPeriodSection(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(items = selectedPeriods, key = { period: MyPageSelectedPeriod -> period.id }) { period: MyPageSelectedPeriod ->
+            items(items = selectedPeriods, key = { period -> period.id }) { period ->
                 MyPageSelectedPeriodCard(
                     period = period,
                     isCurrentYear = period.startDate.year == currentYear,

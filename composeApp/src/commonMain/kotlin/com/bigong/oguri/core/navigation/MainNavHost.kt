@@ -24,8 +24,8 @@ import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 
-private const val NAVIGATION_FADE_DURATION_MILLIS: Int = 180
-private const val NAVIGATION_SLIDE_DURATION_MILLIS: Int = 240
+private const val NAVIGATION_FADE_DURATION_MILLIS = 180
+private const val NAVIGATION_SLIDE_DURATION_MILLIS = 240
 
 @Composable
 fun MainNavHost(
@@ -45,25 +45,25 @@ fun MainNavHost(
         enterTransition = {
             slideInHorizontally(
                 animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                initialOffsetX = { fullWidth: Int -> fullWidth },
+                initialOffsetX = { fullWidth -> fullWidth },
             ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
         },
         exitTransition = {
             slideOutHorizontally(
                 animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                targetOffsetX = { fullWidth: Int -> -fullWidth / 3 },
+                targetOffsetX = { fullWidth -> -fullWidth / 3 },
             ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
         },
         popEnterTransition = {
             slideInHorizontally(
                 animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                initialOffsetX = { fullWidth: Int -> -fullWidth / 3 },
+                initialOffsetX = { fullWidth -> -fullWidth / 3 },
             ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
         },
         popExitTransition = {
             slideOutHorizontally(
                 animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                targetOffsetX = { fullWidth: Int -> fullWidth },
+                targetOffsetX = { fullWidth -> fullWidth },
             ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
         },
     ) {
@@ -114,7 +114,7 @@ fun MainNavHost(
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
-                onPlaceClick = { targetPlaceId: Long ->
+                onPlaceClick = { targetPlaceId ->
                     navigator.navigateToPlaceDetail(
                         placeId = targetPlaceId,
                         startDate = route.startDate,
@@ -130,7 +130,7 @@ fun MainNavHost(
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
-                onPlaceClick = { placeId: Long ->
+                onPlaceClick = { placeId ->
                     navigator.navigateToPlaceDetail(
                         placeId = placeId,
                         startDate = route.startDate,

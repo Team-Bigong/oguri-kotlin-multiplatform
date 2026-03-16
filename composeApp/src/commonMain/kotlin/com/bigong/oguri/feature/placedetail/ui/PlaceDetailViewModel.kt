@@ -25,10 +25,10 @@ class PlaceDetailViewModel(
     private val saveDestinationUseCase: SaveDestinationUseCase,
     private val deleteSavedDestinationUseCase: DeleteSavedDestinationUseCase,
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<PlaceDetailUiState> = MutableStateFlow(PlaceDetailUiState())
-    val uiState: StateFlow<PlaceDetailUiState> = _uiState.asStateFlow()
-    private val _sideEffect: MutableSharedFlow<PlaceDetailSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
-    val sideEffect: SharedFlow<PlaceDetailSideEffect> = _sideEffect.asSharedFlow()
+    private val _uiState = MutableStateFlow(PlaceDetailUiState())
+    val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<PlaceDetailSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
     fun loadPlaceDetail(
         placeId: Long,
@@ -36,7 +36,7 @@ class PlaceDetailViewModel(
         endDate: String?,
     ) {
         viewModelScope.launch {
-            _uiState.update { currentUiState: PlaceDetailUiState ->
+            _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
 
@@ -49,7 +49,7 @@ class PlaceDetailViewModel(
                     )
                 }
             }.onSuccess { placeDetail ->
-                _uiState.update { currentUiState: PlaceDetailUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = false,
@@ -58,7 +58,7 @@ class PlaceDetailViewModel(
                     )
                 }
             }.onFailure {
-                _uiState.update { currentUiState: PlaceDetailUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = true,
@@ -73,7 +73,7 @@ class PlaceDetailViewModel(
         val currentPlaceDetail = uiState.value.placeDetail ?: return
         val previousSavedState = uiState.value.isSaved
         val nextSavedState = !previousSavedState
-        _uiState.update { currentUiState: PlaceDetailUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(isSaved = nextSavedState)
         }
 
@@ -95,7 +95,7 @@ class PlaceDetailViewModel(
                     },
                 )
             }.onFailure {
-                _uiState.update { currentUiState: PlaceDetailUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(isSaved = previousSavedState)
                 }
             }

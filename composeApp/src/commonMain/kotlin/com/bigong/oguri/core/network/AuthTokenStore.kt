@@ -11,7 +11,7 @@ object AuthTokenStore {
         val refreshToken: String,
     )
 
-    private val refreshTokenMutex: Mutex = Mutex()
+    private val refreshTokenMutex = Mutex()
     private var tokenLocalDataSource: TokenLocalDataSource? = null
 
     @Volatile

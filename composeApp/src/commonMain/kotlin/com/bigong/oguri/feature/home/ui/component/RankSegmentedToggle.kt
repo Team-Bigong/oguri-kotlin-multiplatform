@@ -25,8 +25,7 @@ import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.core.util.extension.noRippleClickable
 
-private val RANK_TOGGLE_CONTAINER_HEIGHT = 26.dp
-private const val RANK_TOGGLE_ANIMATION_DURATION_MILLIS: Int = 220
+private const val RANK_TOGGLE_ANIMATION_DURATION_MILLIS = 220
 
 @Composable
 fun RankSegmentedToggle(
@@ -39,7 +38,7 @@ fun RankSegmentedToggle(
         modifier =
             modifier
                 .fillMaxWidth()
-                .height(height = RANK_TOGGLE_CONTAINER_HEIGHT)
+                .height(height = 26.dp)
                 .background(
                     color = Neutral0,
                     shape = RoundedCornerShape(999.dp),
@@ -59,7 +58,7 @@ fun RankSegmentedToggle(
                 Modifier
                     .offset(x = animatedOffset.value)
                     .width(segmentWidth)
-                    .height(height = RANK_TOGGLE_CONTAINER_HEIGHT)
+                    .height(height = 26.dp)
                     .background(
                         color = Mint40,
                         shape = RoundedCornerShape(999.dp),
@@ -81,7 +80,7 @@ fun RankSegmentedToggle(
                                     onRankSelected(rank)
                                 },
                             )
-                            .height(height = RANK_TOGGLE_CONTAINER_HEIGHT),
+                            .height(height = 26.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(

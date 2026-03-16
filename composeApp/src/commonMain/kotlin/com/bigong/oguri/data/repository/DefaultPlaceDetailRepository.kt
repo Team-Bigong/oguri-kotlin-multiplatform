@@ -46,9 +46,9 @@ private fun PlaceDetailResponse.toDomain(): PlaceDetail {
         thumbnailUrls = thumbnailUrls,
         isSaved = isSaved,
         description = description,
-        experiences = experiences.map { experienceResponse: ExperienceResponse -> experienceResponse.toDomain() },
+        experiences = experiences.map { experienceResponse -> experienceResponse.toDomain() },
         flightUrl = flightUrl,
-        relevantPlaces = relevantPlaces.map { placeResponse: PlaceResponse -> placeResponse.toDomain() },
+        relevantPlaces = relevantPlaces.map { placeResponse -> placeResponse.toDomain() },
     )
 }
 

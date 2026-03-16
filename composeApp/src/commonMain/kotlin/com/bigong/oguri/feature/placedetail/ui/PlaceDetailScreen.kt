@@ -172,7 +172,7 @@ fun PlaceDetailScreen(
                     contentPadding = PaddingValues(horizontal = 20.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    items(items = placeDetail.experiences, key = { experience: Experience -> experience.title }) { experience: Experience ->
+                    items(items = placeDetail.experiences, key = { experience -> experience.title }) { experience ->
                         ExperienceCard(
                             experience = experience,
                             uniformHeight = uniformExperienceCardHeight,

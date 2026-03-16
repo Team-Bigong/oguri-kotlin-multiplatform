@@ -71,7 +71,7 @@ fun CalendarMonthGrid(
     onDateClick: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val holidayNameByDate = holidays.associate { holiday: CalendarHoliday -> holiday.date to holiday.name }
+    val holidayNameByDate = holidays.associate { holiday -> holiday.date to holiday.name }
     val dayCells = dayCells(year = year, month = month)
     val dayLabels =
         listOf(
@@ -101,7 +101,7 @@ fun CalendarMonthGrid(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        dayCells.chunked(size = 7).forEach { weekCells: List<DayCell> ->
+        dayCells.chunked(size = 7).forEach { weekCells ->
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             ) {
@@ -258,7 +258,7 @@ private fun dayCells(
     val rowCount = if (totalVisibleDays <= 35) 5 else 6
     val calendarCellCount = rowCount * 7
 
-    return List(calendarCellCount) { index: Int ->
+    return List(calendarCellCount) { index ->
         val date = startDate.plus(index, DateTimeUnit.DAY)
         val monthNumber = date.month.ordinal + 1
         DayCell(
@@ -394,6 +394,6 @@ private fun Modifier.recommendationDashedBorder(
 }
 
 private fun LocalDate.findPeriod(periods: List<CalendarPeriod>): CalendarPeriod? =
-    periods.firstOrNull { period: CalendarPeriod ->
+    periods.firstOrNull { period ->
         this in period.startDate..period.endDate
     }

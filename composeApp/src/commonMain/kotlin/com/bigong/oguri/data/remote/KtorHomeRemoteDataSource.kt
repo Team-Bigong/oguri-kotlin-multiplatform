@@ -53,8 +53,8 @@ class KtorHomeRemoteDataSource(
     }
 
     private companion object {
-        private const val HOME_API_PATH: String = "/api/v1/home"
-        private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH: String = "/api/v1/members/saved-recommendations"
-        private const val HOME_USER_COUNTRY_QUERY_NAME: String = "userCountry"
+        private const val HOME_API_PATH = "/api/v1/home"
+        private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH = "/api/v1/members/saved-recommendations"
+        private const val HOME_USER_COUNTRY_QUERY_NAME = "userCountry"
     }
 }

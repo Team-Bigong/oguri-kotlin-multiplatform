@@ -56,8 +56,8 @@ private fun MyPageResponse.toDomain(): MyPageInfo {
         nickname = nickname,
         remainingLeaveDays = remainingLeaveDays,
         preferredLeaveDays = preferredLeaveDays,
-        selectedPeriods = selectedPeriods.map { selectedPeriodResponse: MyPageSelectedPeriodResponse -> selectedPeriodResponse.toDomain() },
-        savedPlaces = savedPlaces.map { placeResponse: PlaceResponse -> placeResponse.toDomain() },
+        selectedPeriods = selectedPeriods.map { selectedPeriodResponse -> selectedPeriodResponse.toDomain() },
+        savedPlaces = savedPlaces.map { placeResponse -> placeResponse.toDomain() },
     )
 }
 

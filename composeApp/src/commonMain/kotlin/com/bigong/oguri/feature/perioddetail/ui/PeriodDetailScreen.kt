@@ -165,7 +165,7 @@ fun PeriodDetailScreen(
                     )
                 }
             } else {
-                items(items = periodDetail.places, key = { place: Place -> place.id }) { place: Place ->
+                items(items = periodDetail.places, key = { place -> place.id }) { place ->
                     PlaceCard(
                         place = place,
                         modifier = Modifier.fillMaxWidth(),

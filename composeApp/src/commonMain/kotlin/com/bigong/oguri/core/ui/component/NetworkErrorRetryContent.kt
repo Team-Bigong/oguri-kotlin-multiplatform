@@ -29,13 +29,6 @@ import oguri.composeapp.generated.resources.img_oguri_empty
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val RETRY_CONTENT_HORIZONTAL_PADDING = 24.dp
-private val RETRY_CONTENT_IMAGE_HEIGHT = 220.dp
-private val RETRY_CONTENT_MESSAGE_TOP_SPACING = 12.dp
-private val RETRY_CONTENT_BUTTON_TOP_SPACING = 24.dp
-private val RETRY_CONTENT_BUTTON_HEIGHT = 48.dp
-private val RETRY_CONTENT_BUTTON_CORNER_RADIUS = 8.dp
-
 @Composable
 fun NetworkErrorRetryContent(
     onRetryClick: () -> Unit,
@@ -47,32 +40,32 @@ fun NetworkErrorRetryContent(
         modifier =
             modifier
                 .fillMaxSize()
-                .padding(horizontal = RETRY_CONTENT_HORIZONTAL_PADDING),
+                .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Image(
             painter = painterResource(Res.drawable.img_oguri_empty),
             contentDescription = null,
-            modifier = Modifier.height(RETRY_CONTENT_IMAGE_HEIGHT),
+            modifier = Modifier.height(220.dp),
         )
 
-        SpacerHeight(height = RETRY_CONTENT_MESSAGE_TOP_SPACING)
+        SpacerHeight(height = 12.dp)
         Text(
             text = messageText,
             style = OguriTheme.typography.cardTitle,
             color = Neutral90,
         )
 
-        SpacerHeight(height = RETRY_CONTENT_BUTTON_TOP_SPACING)
+        SpacerHeight(height = 24.dp)
         Box(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(RETRY_CONTENT_BUTTON_HEIGHT)
+                    .height(48.dp)
                     .background(
                         color = Mint70,
-                        shape = RoundedCornerShape(RETRY_CONTENT_BUTTON_CORNER_RADIUS),
+                        shape = RoundedCornerShape(8.dp),
                     )
                     .noRippleClickable(onClick = onRetryClick),
             contentAlignment = Alignment.Center,

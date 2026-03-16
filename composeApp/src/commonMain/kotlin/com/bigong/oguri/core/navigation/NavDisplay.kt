@@ -71,9 +71,9 @@ fun NavDisplay(
     onExitApp: () -> Unit = {},
 ) {
     OguriTheme {
-        val navigator: MainNavigator = rememberMainNavigator()
-        val currentDestination: NavDestination? = navigator.currentDestination()
-        val appGraph: AppGraph =
+        val navigator = rememberMainNavigator()
+        val currentDestination = navigator.currentDestination()
+        val appGraph =
             remember {
                 AuthTokenStore.initialize(localDataSource = provideTokenLocalDataSource())
                 AuthTokenStore.bootstrapFromLocalDataSource()
@@ -100,14 +100,14 @@ fun NavDisplay(
                 )
             }
         val coroutineScope = rememberCoroutineScope()
-        val exitSnackbarMessage: String = stringResource(Res.string.navigation_back_press_exit_message)
-        val logoutCompletedMessage: String = stringResource(Res.string.snackbar_logout_completed)
+        val exitSnackbarMessage = stringResource(Res.string.navigation_back_press_exit_message)
+        val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
-        val shouldShowBottomNavigation: Boolean =
-            RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
+        val shouldShowBottomNavigation =
+            RouteModels.bottomNavigationDestinations.any { destination ->
                 isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
             }
-        val isOnMainTabRoot: Boolean = isMainTabRootDestination(currentDestination)
+        val isOnMainTabRoot = isMainTabRootDestination(currentDestination)
 
         PlatformBackGestureContainer(
             enabled = !isOnMainTabRoot,
@@ -127,7 +127,7 @@ fun NavDisplay(
                         if (shouldShowBottomNavigation) {
                             BottomNavigationBar(
                                 currentDestination = currentDestination,
-                                onDestinationClick = { destination: BottomNavigationDestination ->
+                                onDestinationClick = { destination ->
                                     navigator.navigateToBottomNavigationDestination(destination)
                                 },
                             )
@@ -161,9 +161,9 @@ fun NavDisplay(
 
         key(currentDestination?.route, isOnMainTabRoot) {
             PlatformBackHandler(enabled = isOnMainTabRoot) {
-                val nowMark: TimeMark = TimeSource.Monotonic.markNow()
-                val previousMark: TimeMark? = lastMainBackPressedMark
-                val isWithinExitWindow: Boolean = previousMark != null && previousMark.elapsedNow() < EXIT_BACK_PRESS_WINDOW
+                val nowMark = TimeSource.Monotonic.markNow()
+                val previousMark = lastMainBackPressedMark
+                val isWithinExitWindow = previousMark != null && previousMark.elapsedNow() < EXIT_BACK_PRESS_WINDOW
 
                 if (isWithinExitWindow) {
                     onExitApp()
@@ -186,8 +186,8 @@ private fun isBottomNavigationDestinationSelected(
     currentDestination: NavDestination?,
     destination: BottomNavigationDestination,
 ): Boolean {
-    return currentDestination?.hierarchy?.any { navDestination: NavDestination ->
-        val routeText: String = navDestination.route ?: return@any false
+    return currentDestination?.hierarchy?.any { navDestination ->
+        val routeText = navDestination.route ?: return@any false
         routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
     } == true
 }
@@ -209,10 +209,10 @@ private fun BottomNavigationBar(
                     .navigationBarsPadding(),
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
-            RouteModels.bottomNavigationDestinations.forEach { destination: BottomNavigationDestination ->
-                val isSelected: Boolean =
-                    currentDestination?.hierarchy?.any { navDestination: NavDestination ->
-                        val routeText: String = navDestination.route ?: return@any false
+            RouteModels.bottomNavigationDestinations.forEach { destination ->
+                val isSelected =
+                    currentDestination?.hierarchy?.any { navDestination ->
+                        val routeText = navDestination.route ?: return@any false
                         routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
                     } == true
 
@@ -257,8 +257,8 @@ private fun BottomNavigationBar(
 }
 
 private fun isMainTabRootDestination(currentDestination: NavDestination?): Boolean {
-    val currentRouteText: String = currentDestination?.route ?: return false
-    return RouteModels.bottomNavigationDestinations.any { destination: BottomNavigationDestination ->
+    val currentRouteText = currentDestination?.route ?: return false
+    return RouteModels.bottomNavigationDestinations.any { destination ->
         currentRouteText == destination.routeSerialName
     }
 }

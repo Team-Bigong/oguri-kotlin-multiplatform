@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val DEFAULT_HOME_USER_COUNTRY: String = "대한민국"
+private const val DEFAULT_HOME_USER_COUNTRY = "대한민국"
 
 @Inject
 class HomeViewModel(
@@ -28,10 +28,10 @@ class HomeViewModel(
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
 ) : ViewModel() {
-    private val _uiState: MutableStateFlow<HomeUiState> = MutableStateFlow(HomeUiState())
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    private val _sideEffect: MutableSharedFlow<HomeSideEffect> = MutableSharedFlow(extraBufferCapacity = 1)
-    val sideEffect: SharedFlow<HomeSideEffect> = _sideEffect.asSharedFlow()
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<HomeSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
     init {
         loadRecommendPeriods()
@@ -39,7 +39,7 @@ class HomeViewModel(
 
     fun loadRecommendPeriods() {
         viewModelScope.launch {
-            _uiState.update { currentUiState: HomeUiState ->
+            _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
 
@@ -50,7 +50,7 @@ class HomeViewModel(
             }.onSuccess { recommendPeriods ->
                 val selectedRank = recommendPeriods.firstOrNull()?.rank ?: 1
                 val savedRanks = recommendPeriods.filter { period -> period.isSaved }.map { period -> period.rank }.toSet()
-                _uiState.update { currentUiState: HomeUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = false,
@@ -60,7 +60,7 @@ class HomeViewModel(
                     )
                 }
             }.onFailure {
-                _uiState.update { currentUiState: HomeUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = true,
@@ -72,7 +72,7 @@ class HomeViewModel(
     }
 
     fun selectRank(rank: Int) {
-        _uiState.update { currentUiState: HomeUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(selectedRank = rank)
         }
     }
@@ -82,7 +82,7 @@ class HomeViewModel(
         val previousSavedRankSet = uiState.value.savedRankSet
         val wasSaved = selectedRank in previousSavedRankSet
         val selectedPeriod =
-            uiState.value.recommendPeriods.firstOrNull { period: RecommendPeriod ->
+            uiState.value.recommendPeriods.firstOrNull { period ->
                 period.rank == selectedRank
             } ?: return
 
@@ -92,7 +92,7 @@ class HomeViewModel(
             } else {
                 previousSavedRankSet - selectedRank
             }
-        _uiState.update { currentUiState: HomeUiState ->
+        _uiState.update { currentUiState ->
             currentUiState.copy(savedRankSet = optimisticSavedRankSet)
         }
 
@@ -130,7 +130,7 @@ class HomeViewModel(
                     } else {
                         uiState.value.savedRankSet - selectedRank
                     }
-                _uiState.update { currentUiState: HomeUiState ->
+                _uiState.update { currentUiState ->
                     currentUiState.copy(savedRankSet = restoredSavedRankSet)
                 }
             }
