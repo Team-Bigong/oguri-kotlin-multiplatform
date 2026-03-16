@@ -35,12 +35,12 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
+import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
 import com.bigong.oguri.domain.model.Experience
-import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.placedetail.ui.component.ExperienceCard
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailDescriptionSection
@@ -49,7 +49,6 @@ import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailShareButton
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.home_error_retry
 import oguri.composeapp.generated.resources.home_loading
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
@@ -83,12 +82,7 @@ fun PlaceDetailScreen(
 
     val placeDetail = placeDetailUiState.placeDetail
     if (placeDetailUiState.isError || placeDetail == null) {
-        val errorText = stringResource(Res.string.home_error_retry)
-        HomeErrorContent(
-            message = errorText,
-            retryText = errorText,
-            onRetryClick = onRetryClick,
-        )
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 

@@ -27,10 +27,10 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.GuideHeader
+import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceCard
 import com.bigong.oguri.core.util.extension.getStyledText
 import com.bigong.oguri.domain.model.Place
-import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
@@ -38,7 +38,6 @@ import kotlinx.datetime.LocalDate
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.calendar_period_range
-import oguri.composeapp.generated.resources.home_error_retry
 import oguri.composeapp.generated.resources.home_guide_match_places
 import oguri.composeapp.generated.resources.home_guide_match_places_highlight
 import oguri.composeapp.generated.resources.home_loading
@@ -68,12 +67,7 @@ fun PeriodDetailScreen(
 
     val periodDetail = periodDetailUiState.periodDetail
     if (periodDetailUiState.isError || periodDetail == null) {
-        val retryText = stringResource(Res.string.home_error_retry)
-        HomeErrorContent(
-            message = retryText,
-            retryText = retryText,
-            onRetryClick = onRetryClick,
-        )
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 

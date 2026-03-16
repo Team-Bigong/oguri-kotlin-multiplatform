@@ -19,18 +19,17 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.domain.model.CalendarPeriod
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysEditor
 import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthGrid
 import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthSelector
 import com.bigong.oguri.feature.calendar.ui.component.CalendarRecommendationSection
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
-import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.calendar_error_retry
 import oguri.composeapp.generated.resources.calendar_header_subtitle
 import oguri.composeapp.generated.resources.calendar_header_title
 import oguri.composeapp.generated.resources.calendar_loading
@@ -52,12 +51,7 @@ fun CalendarScreen(
     }
 
     if (calendarUiState.isError || calendarUiState.calendarRecommendation == null) {
-        val retryText = stringResource(Res.string.calendar_error_retry)
-        HomeErrorContent(
-            message = retryText,
-            retryText = retryText,
-            onRetryClick = onRetryClick,
-        )
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 

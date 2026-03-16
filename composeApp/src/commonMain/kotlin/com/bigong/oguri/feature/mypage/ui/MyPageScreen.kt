@@ -17,7 +17,7 @@ import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
-import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
+import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuItem
@@ -34,7 +34,6 @@ import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_messag
 import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_title
 import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
-import oguri.composeapp.generated.resources.mypage_error_retry
 import oguri.composeapp.generated.resources.mypage_loading
 import oguri.composeapp.generated.resources.mypage_logout_dialog_title
 import oguri.composeapp.generated.resources.mypage_menu_logout
@@ -72,12 +71,7 @@ fun MyPageScreen(
     }
 
     if (myPageUiState.isError || myPageUiState.myPageInfo == null) {
-        val retryText = stringResource(Res.string.mypage_error_retry)
-        HomeErrorContent(
-            message = retryText,
-            retryText = retryText,
-            onRetryClick = onRetryClick,
-        )
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 

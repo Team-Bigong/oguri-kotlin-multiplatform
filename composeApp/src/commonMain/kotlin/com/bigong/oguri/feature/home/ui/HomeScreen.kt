@@ -15,10 +15,10 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
+import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.RecommendPeriod
-import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader
@@ -27,7 +27,6 @@ import com.bigong.oguri.feature.home.ui.component.HomeStrategyCard
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.home_cta_more_recommend
-import oguri.composeapp.generated.resources.home_error_retry
 import oguri.composeapp.generated.resources.home_greeting_name
 import oguri.composeapp.generated.resources.home_greeting_question
 import oguri.composeapp.generated.resources.home_guide_match_places
@@ -61,12 +60,7 @@ fun HomeScreen(
     }
 
     if (homeUiState.isError || homeUiState.recommendPeriods.isEmpty()) {
-        val errorText = stringResource(Res.string.home_error_retry)
-        HomeErrorContent(
-            message = errorText,
-            retryText = errorText,
-            onRetryClick = onRetryClick,
-        )
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 

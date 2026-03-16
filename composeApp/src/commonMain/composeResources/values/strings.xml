@@ -4,6 +4,8 @@
     <string name="bottom_navigation_my">My</string>
 
     <string name="navigation_back_press_exit_message">Press back again to exit</string>
+    <string name="common_network_error_message">Unable to load information.</string>
+    <string name="common_retry_button">Try again</string>
 
     <string name="home_greeting_name">This Combination, only Oguri knows this.</string>
     <string name="home_greeting_question">How about resting like this this time?</string>

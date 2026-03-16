@@ -39,6 +39,7 @@
 - 삭제/로그아웃 확인 팝업은 공용 `ConfirmAlertDialog`를 재사용한다.
 - 스낵바는 공용 `OguriSnackBar`를 사용하고, `NavDisplay`의 단일 `SnackbarHostState` + `OguriSnackBarHost`로 관리한다.
 - 스낵바 표시는 `showOguriSnackbar(...)` 확장 함수를 사용하며, 타입(`SUCCESS`, `ALERT`, `INFO`)을 명시한다.
+- 네트워크 에러 재시도 상태 UI는 공용 `NetworkErrorRetryContent`를 사용한다.
 
 ## 패키지 규칙
 - `presentation` 패키지를 사용하지 않는다.
