@@ -79,6 +79,7 @@ private fun HomeScreenPreview() {
             onAdvertisementClick = {},
             onPlaceClick = { _, _, _ -> },
             onPeriodClick = { _, _ -> },
+            onMoveToCalendarClick = {},
         )
     }
 }

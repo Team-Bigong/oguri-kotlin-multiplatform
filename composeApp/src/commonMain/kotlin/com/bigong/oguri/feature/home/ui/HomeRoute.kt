@@ -22,6 +22,7 @@ fun HomeRoute(
     snackbarHostState: SnackbarHostState,
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
+    onMoveToCalendarClick: () -> Unit,
 ) {
     val homeViewModel =
         remember {
@@ -61,5 +62,6 @@ fun HomeRoute(
         },
         onPlaceClick = onPlaceClick,
         onPeriodClick = onPeriodClick,
+        onMoveToCalendarClick = onMoveToCalendarClick,
     )
 }

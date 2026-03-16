@@ -85,6 +85,13 @@ fun MainNavHost(
                 snackbarHostState = snackbarHostState,
                 onPlaceClick = navigator::navigateToPlaceDetail,
                 onPeriodClick = navigator::navigateToPeriodDetail,
+                onMoveToCalendarClick = {
+                    val calendarDestination =
+                        RouteModels.bottomNavigationDestinations.first { destination ->
+                            destination.routeModel == RouteModel.Calendar
+                        }
+                    navigator.navigateToBottomNavigationDestination(calendarDestination)
+                },
             )
         }
         composable<RouteModel.Calendar> {

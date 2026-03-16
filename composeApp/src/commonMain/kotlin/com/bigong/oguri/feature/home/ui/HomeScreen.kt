@@ -50,6 +50,7 @@ fun HomeScreen(
     onAdvertisementClick: (String) -> Unit,
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
+    onMoveToCalendarClick: () -> Unit,
 ) {
     if (homeUiState.isLoading) {
         HomeSkeletonContent()
@@ -168,6 +169,7 @@ fun HomeScreen(
                 HomeMoreRecommendationButton(
                     subtitleText = stringResource(Res.string.home_more_recommendation_subtitle),
                     text = stringResource(Res.string.home_cta_more_recommend),
+                    onClick = onMoveToCalendarClick,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
                 Spacer(modifier = Modifier.height(height = 24.dp))
