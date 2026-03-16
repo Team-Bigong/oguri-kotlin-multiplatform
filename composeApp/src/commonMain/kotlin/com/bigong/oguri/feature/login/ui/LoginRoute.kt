@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.platform.loginWithApple
 import com.bigong.oguri.core.platform.loginWithKakao
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.launch
@@ -43,7 +44,19 @@ fun LoginRoute(
                 loginViewModel.loginWithKakaoAccessToken(kakaoAccessToken = kakaoAccessToken)
             }
         },
-        onAppleLoginClick = onAppleLoginClick,
+        onAppleLoginClick = {
+            if (loginUiState.isLoading) {
+                return@LoginScreen
+            }
+            coroutineScope.launch {
+                val appleLoginResult: Result<String> = loginWithApple()
+                val appleToken: String = appleLoginResult.getOrNull()?.trim().orEmpty()
+                if (appleToken.isBlank()) {
+                    return@launch
+                }
+                onAppleLoginClick()
+            }
+        },
         onGuestBrowseClick = onGuestBrowseClick,
     )
 }
