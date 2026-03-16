@@ -67,7 +67,7 @@
     <string name="snackbar_mypage_selected_period_deleted">휴가 일정을 삭제했어요.</string>
     <string name="snackbar_mypage_saved_place_deleted">담아둔 여행지를 삭제했어요.</string>
 
-    <string name="calendar_header_title">연차 몇 일 쓸 수 있어요?</string>
+    <string name="calendar_header_title">연차 몇 일 써볼까요?</string>
     <string name="calendar_header_subtitle">일수를 바꿔보면서 다른 일정도 찾아보세요</string>
     <string name="calendar_loading">캘린더 추천을 불러오는 중이에요...</string>
     <string name="calendar_error_retry">캘린더 추천을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
