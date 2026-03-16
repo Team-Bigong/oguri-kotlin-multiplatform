@@ -37,9 +37,23 @@ class MyPageViewModel(
     }
 
     fun loadMyPageInfo() {
+        fetchMyPageInfo(showLoading = uiState.value.myPageInfo == null)
+    }
+
+    fun refreshMyPageInfo() {
+        fetchMyPageInfo(showLoading = false)
+    }
+
+    private fun fetchMyPageInfo(showLoading: Boolean) {
         viewModelScope.launch {
-            _uiState.update { currentUiState ->
-                currentUiState.copy(isLoading = true, isError = false)
+            if (showLoading) {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isLoading = true, isError = false)
+                }
+            } else {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isError = false)
+                }
             }
 
             runCatching {
@@ -56,11 +70,18 @@ class MyPageViewModel(
                 }
             }.onFailure {
                 _uiState.update { currentUiState ->
-                    currentUiState.copy(
-                        isLoading = false,
-                        isError = true,
-                        myPageInfo = null,
-                    )
+                    if (currentUiState.myPageInfo != null) {
+                        currentUiState.copy(
+                            isLoading = false,
+                            isError = false,
+                        )
+                    } else {
+                        currentUiState.copy(
+                            isLoading = false,
+                            isError = true,
+                            myPageInfo = null,
+                        )
+                    }
                 }
             }
         }

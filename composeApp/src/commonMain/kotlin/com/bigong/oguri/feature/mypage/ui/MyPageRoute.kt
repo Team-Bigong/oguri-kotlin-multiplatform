@@ -3,12 +3,10 @@ package com.bigong.oguri.feature.mypage.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
-import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.snackbar_mypage_leave_days_updated
@@ -18,7 +16,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MyPageRoute(
-    myPageViewModelProvider: Provider<MyPageViewModel>,
+    myPageViewModel: MyPageViewModel,
     snackbarHostState: SnackbarHostState,
     onOpenSuggestion: () -> Unit,
     onOpenTermsOfService: () -> Unit,
@@ -27,10 +25,6 @@ fun MyPageRoute(
     onPeriodClick: (String, String) -> Unit,
     onSavedPlaceClick: (Long) -> Unit,
 ) {
-    val myPageViewModel =
-        remember {
-            myPageViewModelProvider()
-        }
     val myPageUiState = myPageViewModel.uiState.collectAsStateWithLifecycle().value
     val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_mypage_leave_days_updated)
     val selectedPeriodDeletedMessage = stringResource(Res.string.snackbar_mypage_selected_period_deleted)
@@ -62,6 +56,9 @@ fun MyPageRoute(
                 }
             }
         }
+    }
+    LaunchedEffect(Unit) {
+        myPageViewModel.refreshMyPageInfo()
     }
 
     MyPageScreen(

@@ -35,9 +35,23 @@ class HomeViewModel(
     }
 
     fun loadRecommendPeriods() {
+        fetchRecommendPeriods(showLoading = uiState.value.recommendPeriods.isEmpty())
+    }
+
+    fun refreshRecommendPeriods() {
+        fetchRecommendPeriods(showLoading = false)
+    }
+
+    private fun fetchRecommendPeriods(showLoading: Boolean) {
         viewModelScope.launch {
-            _uiState.update { currentUiState ->
-                currentUiState.copy(isLoading = true, isError = false)
+            if (showLoading) {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isLoading = true, isError = false)
+                }
+            } else {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isError = false)
+                }
             }
 
             runCatching {
@@ -45,7 +59,12 @@ class HomeViewModel(
                     getRecommendPeriodsUseCase(userCountry = DEFAULT_HOME_USER_COUNTRY)
                 }
             }.onSuccess { recommendPeriods ->
-                val selectedRank = recommendPeriods.firstOrNull()?.rank ?: 1
+                val currentSelectedRank = uiState.value.selectedRank
+                val selectedRank =
+                    recommendPeriods
+                        .firstOrNull { period ->
+                            period.rank == currentSelectedRank
+                        }?.rank ?: recommendPeriods.firstOrNull()?.rank ?: 1
                 val savedRanks = recommendPeriods.filter { period -> period.isSaved }.map { period -> period.rank }.toSet()
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
@@ -58,11 +77,19 @@ class HomeViewModel(
                 }
             }.onFailure {
                 _uiState.update { currentUiState ->
-                    currentUiState.copy(
-                        isLoading = false,
-                        isError = true,
-                        recommendPeriods = emptyList(),
-                    )
+                    val hasExistingData = currentUiState.recommendPeriods.isNotEmpty()
+                    if (hasExistingData) {
+                        currentUiState.copy(
+                            isLoading = false,
+                            isError = false,
+                        )
+                    } else {
+                        currentUiState.copy(
+                            isLoading = false,
+                            isError = true,
+                            recommendPeriods = emptyList(),
+                        )
+                    }
                 }
             }
         }

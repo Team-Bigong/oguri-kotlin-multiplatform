@@ -84,8 +84,7 @@ fun OguriSnackBarHost(
                     } else {
                         snackBarModifier.navigationBarsPadding()
                     }
-                }
-                .padding(horizontal = 16.dp)
+                }.padding(horizontal = 16.dp)
                 .padding(bottom = bottomOffset),
         snackbar = { snackbarData ->
             val visuals = snackbarData.visuals as? OguriSnackBarVisuals

@@ -3,13 +3,11 @@ package com.bigong.oguri.feature.home.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
-import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.snackbar_home_deleted
@@ -18,16 +16,12 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun HomeRoute(
-    homeViewModelProvider: Provider<HomeViewModel>,
+    homeViewModel: HomeViewModel,
     snackbarHostState: SnackbarHostState,
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
 ) {
-    val homeViewModel =
-        remember {
-            homeViewModelProvider()
-        }
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
     val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
     val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)
@@ -50,6 +44,9 @@ fun HomeRoute(
                 }
             }
         }
+    }
+    LaunchedEffect(Unit) {
+        homeViewModel.refreshRecommendPeriods()
     }
 
     HomeScreen(

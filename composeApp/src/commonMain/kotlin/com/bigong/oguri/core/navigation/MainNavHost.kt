@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -35,6 +36,19 @@ fun MainNavHost(
     contentPaddingValues: PaddingValues,
     onLoggedOut: () -> Unit,
 ) {
+    val homeViewModel =
+        remember {
+            appGraph.homeViewModelProvider()
+        }
+    val calendarViewModel =
+        remember {
+            appGraph.calendarViewModelProvider()
+        }
+    val myPageViewModel =
+        remember {
+            appGraph.myPageViewModelProvider()
+        }
+
     NavHost(
         navController = navigator.navHostController,
         startDestination = RouteModel.Splash,
@@ -81,7 +95,7 @@ fun MainNavHost(
         }
         composable<RouteModel.Home> {
             HomeRoute(
-                homeViewModelProvider = appGraph.homeViewModelProvider,
+                homeViewModel = homeViewModel,
                 snackbarHostState = snackbarHostState,
                 onPlaceClick = navigator::navigateToPlaceDetail,
                 onPeriodClick = navigator::navigateToPeriodDetail,
@@ -96,14 +110,14 @@ fun MainNavHost(
         }
         composable<RouteModel.Calendar> {
             CalendarRoute(
-                calendarViewModelProvider = appGraph.calendarViewModelProvider,
+                calendarViewModel = calendarViewModel,
                 snackbarHostState = snackbarHostState,
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
         composable<RouteModel.MyPage> {
             MyPageRoute(
-                myPageViewModelProvider = appGraph.myPageViewModelProvider,
+                myPageViewModel = myPageViewModel,
                 snackbarHostState = snackbarHostState,
                 onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
