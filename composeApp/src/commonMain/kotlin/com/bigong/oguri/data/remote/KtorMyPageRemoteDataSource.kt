@@ -21,15 +21,16 @@ import io.ktor.client.request.setBody
 class KtorMyPageRemoteDataSource(
     private val httpClient: HttpClient,
     private val authRequestExecutor: AuthRequestExecutor,
-    ) : MyPageRemoteDataSource {
+) : MyPageRemoteDataSource {
     private var cachedMyPageResponse: MyPageResponse? = null
 
     override suspend fun getMyPageResponse(): MyPageResponse {
         val memberMeResponse =
             authRequestExecutor.execute {
-                httpClient.get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
-                    appendUserIdHeaderWhenGuest()
-                }.body<MemberMeResponse>()
+                httpClient
+                    .get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
+                        appendUserIdHeaderWhenGuest()
+                    }.body<MemberMeResponse>()
             }
 
         return memberMeResponse.toMyPageResponse().also { response -> cachedMyPageResponse = response }
@@ -50,12 +51,13 @@ class KtorMyPageRemoteDataSource(
 
         val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
 
-        return currentMyPageResponse.copy(
-            remainingLeaveDays = request.remainingLeaveDays,
-            preferredLeaveDays = request.preferredLeaveDays,
-        ).also { response ->
-            cachedMyPageResponse = response
-        }
+        return currentMyPageResponse
+            .copy(
+                remainingLeaveDays = request.remainingLeaveDays,
+                preferredLeaveDays = request.preferredLeaveDays,
+            ).also { response ->
+                cachedMyPageResponse = response
+            }
     }
 
     override suspend fun deleteSelectedPeriod(request: DeleteMyPageSelectedPeriodRequest): MyPageResponse {
@@ -79,14 +81,15 @@ class KtorMyPageRemoteDataSource(
             }
         }
 
-        return currentMyPageResponse.copy(
-            selectedPeriods =
-                currentMyPageResponse.selectedPeriods.filterNot { selectedPeriodResponse ->
-                    selectedPeriodResponse.id == request.periodId
-                },
-        ).also { response ->
-            cachedMyPageResponse = response
-        }
+        return currentMyPageResponse
+            .copy(
+                selectedPeriods =
+                    currentMyPageResponse.selectedPeriods.filterNot { selectedPeriodResponse ->
+                        selectedPeriodResponse.id == request.periodId
+                    },
+            ).also { response ->
+                cachedMyPageResponse = response
+            }
     }
 
     override suspend fun deleteSavedPlace(request: DeleteMyPageSavedPlaceRequest): MyPageResponse {
@@ -97,11 +100,12 @@ class KtorMyPageRemoteDataSource(
         }
 
         val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
-        return currentMyPageResponse.copy(
-            savedPlaces = currentMyPageResponse.savedPlaces.filterNot { placeResponse -> placeResponse.id == request.placeId },
-        ).also { response ->
-            cachedMyPageResponse = response
-        }
+        return currentMyPageResponse
+            .copy(
+                savedPlaces = currentMyPageResponse.savedPlaces.filterNot { placeResponse -> placeResponse.id == request.placeId },
+            ).also { response ->
+                cachedMyPageResponse = response
+            }
     }
 
     private fun recommendationId(
@@ -109,9 +113,7 @@ class KtorMyPageRemoteDataSource(
         endDate: String,
         dayOffCount: Int,
         totalTripCount: Int,
-    ): Long {
-        return "${startDate}_${endDate}_${dayOffCount}_${totalTripCount}".hashCode().toLong()
-    }
+    ): Long = "${startDate}_${endDate}_${dayOffCount}_$totalTripCount".hashCode().toLong()
 
     private fun MemberMeResponse.toMyPageResponse(): MyPageResponse {
         val selectedPeriodResponses =

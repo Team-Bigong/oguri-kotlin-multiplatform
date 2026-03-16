@@ -8,7 +8,5 @@ import dev.zacsweers.metro.Inject
 class DeleteMyPageSavedPlaceUseCase(
     private val myPageRepository: MyPageRepository,
 ) {
-    suspend operator fun invoke(placeId: Long): MyPageInfo {
-        return myPageRepository.deleteSavedPlace(placeId = placeId)
-    }
+    suspend operator fun invoke(placeId: Long): MyPageInfo = myPageRepository.deleteSavedPlace(placeId = placeId)
 }

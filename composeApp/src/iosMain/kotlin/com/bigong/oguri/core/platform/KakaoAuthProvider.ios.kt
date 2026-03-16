@@ -16,12 +16,12 @@ import kotlinx.serialization.json.Json
 import platform.AuthenticationServices.ASPresentationAnchor
 import platform.AuthenticationServices.ASWebAuthenticationPresentationContextProvidingProtocol
 import platform.AuthenticationServices.ASWebAuthenticationSession
-import platform.darwin.NSObject
 import platform.Foundation.NSBundle
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
 import platform.UIKit.UIApplication
 import platform.UIKit.UIWindow
+import platform.darwin.NSObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -183,33 +183,31 @@ private suspend fun requestKakaoAccessToken(
 
     return try {
         val response =
-            httpClient.submitForm(
-                url = KAKAO_OAUTH_TOKEN_ENDPOINT,
-                formParameters =
-                    Parameters.build {
-                        append("grant_type", OAUTH_GRANT_TYPE_AUTHORIZATION_CODE)
-                        append("client_id", kakaoNativeAppKey)
-                        append("redirect_uri", redirectUri)
-                        append("code", authorizationCode)
-                    },
-            ).body<KakaoOAuthTokenResponse>()
+            httpClient
+                .submitForm(
+                    url = KAKAO_OAUTH_TOKEN_ENDPOINT,
+                    formParameters =
+                        Parameters.build {
+                            append("grant_type", OAUTH_GRANT_TYPE_AUTHORIZATION_CODE)
+                            append("client_id", kakaoNativeAppKey)
+                            append("redirect_uri", redirectUri)
+                            append("code", authorizationCode)
+                        },
+                ).body<KakaoOAuthTokenResponse>()
         response.accessToken
     } finally {
         httpClient.close()
     }
 }
 
-private fun String.extractQueryValue(name: String): String? {
-    return substringAfter("?", missingDelimiterValue = "")
+private fun String.extractQueryValue(name: String): String? =
+    substringAfter("?", missingDelimiterValue = "")
         .split("&")
         .firstOrNull { token -> token.startsWith("$name=") }
         ?.substringAfter("=")
         ?.takeIf { value -> value.isNotBlank() }
-}
 
-private fun iosKakaoNativeAppKey(): String {
-    return (NSBundle.mainBundle.objectForInfoDictionaryKey("KEY_KAKAO") as? String)?.trim().orEmpty()
-}
+private fun iosKakaoNativeAppKey(): String = (NSBundle.mainBundle.objectForInfoDictionaryKey("KEY_KAKAO") as? String)?.trim().orEmpty()
 
 private fun isKakaoTalkLoginAvailable(): Boolean {
     val kakaoTalkAuthUrl = NSURL.URLWithString(KAKAO_TALK_SCHEME_PREFIX) ?: return false
@@ -219,9 +217,8 @@ private fun isKakaoTalkLoginAvailable(): Boolean {
 private class WebAuthenticationPresentationContextProvider :
     NSObject(),
     ASWebAuthenticationPresentationContextProvidingProtocol {
-    override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): ASPresentationAnchor {
-        return UIApplication.sharedApplication.keyWindow ?: UIWindow()
-    }
+    override fun presentationAnchorForWebAuthenticationSession(session: ASWebAuthenticationSession): ASPresentationAnchor =
+        UIApplication.sharedApplication.keyWindow ?: UIWindow()
 }
 
 @Serializable

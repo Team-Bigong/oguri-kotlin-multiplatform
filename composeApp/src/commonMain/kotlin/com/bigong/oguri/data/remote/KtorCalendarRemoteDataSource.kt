@@ -18,9 +18,11 @@ class KtorCalendarRemoteDataSource(
     override suspend fun getPreferredDayOffCount(): Int {
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_ME_API_PATH"
         return authRequestExecutor.execute {
-            httpClient.get(requestUrl) {
-                appendUserIdHeaderWhenGuest()
-            }.body<MemberMeResponse>().preferredDayOff
+            httpClient
+                .get(requestUrl) {
+                    appendUserIdHeaderWhenGuest()
+                }.body<MemberMeResponse>()
+                .preferredDayOff
         }
     }
 
@@ -30,13 +32,14 @@ class KtorCalendarRemoteDataSource(
         dayOffCount: Int,
     ): CalendarRecommendationResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_API_PATH"
-        val yearMonth = "${year}-${month.toString().padStart(2, '0')}"
+        val yearMonth = "$year-${month.toString().padStart(2, '0')}"
         return authRequestExecutor.execute {
-            httpClient.get(requestUrl) {
-                appendUserIdHeaderWhenGuest()
-                parameter(CALENDAR_YEAR_MONTH_QUERY_NAME, yearMonth)
-                parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, dayOffCount)
-            }.body()
+            httpClient
+                .get(requestUrl) {
+                    appendUserIdHeaderWhenGuest()
+                    parameter(CALENDAR_YEAR_MONTH_QUERY_NAME, yearMonth)
+                    parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, dayOffCount)
+                }.body()
         }
     }
 
@@ -47,12 +50,13 @@ class KtorCalendarRemoteDataSource(
     ): CalendarPeriodDetailResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_DETAIL_API_PATH"
         return authRequestExecutor.execute {
-            httpClient.get(requestUrl) {
-                appendUserIdHeaderWhenGuest()
-                parameter(CALENDAR_DETAIL_START_DATE_QUERY_NAME, startDate)
-                parameter(CALENDAR_DETAIL_END_DATE_QUERY_NAME, endDate)
-                parameter(USER_COUNTRY_QUERY_NAME, userCountry)
-            }.body()
+            httpClient
+                .get(requestUrl) {
+                    appendUserIdHeaderWhenGuest()
+                    parameter(CALENDAR_DETAIL_START_DATE_QUERY_NAME, startDate)
+                    parameter(CALENDAR_DETAIL_END_DATE_QUERY_NAME, endDate)
+                    parameter(USER_COUNTRY_QUERY_NAME, userCountry)
+                }.body()
         }
     }
 

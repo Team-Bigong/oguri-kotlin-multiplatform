@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.ui.component.NetworkImage
@@ -51,9 +50,7 @@ fun PlaceDetailImagePager(
 }
 
 @Composable
-private fun DotIndicator(
-    isSelected: Boolean,
-) {
+private fun DotIndicator(isSelected: Boolean) {
     Box(
         modifier =
             Modifier

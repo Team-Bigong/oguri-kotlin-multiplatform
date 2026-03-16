@@ -77,9 +77,7 @@ class MainNavigator(
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
-    fun popBackStack(): Boolean {
-        return navHostController.popBackStack()
-    }
+    fun popBackStack(): Boolean = navHostController.popBackStack()
 }
 
 @Composable

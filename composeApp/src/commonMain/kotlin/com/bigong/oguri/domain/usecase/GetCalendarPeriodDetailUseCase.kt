@@ -12,13 +12,12 @@ class GetCalendarPeriodDetailUseCase(
         startDate: String,
         endDate: String,
         userCountry: String = DEFAULT_USER_COUNTRY,
-    ): CalendarPeriodDetail {
-        return calendarRepository.getCalendarPeriodDetail(
+    ): CalendarPeriodDetail =
+        calendarRepository.getCalendarPeriodDetail(
             startDate = startDate,
             endDate = endDate,
             userCountry = userCountry,
         )
-    }
 
     private companion object {
         private const val DEFAULT_USER_COUNTRY = "대한민국"

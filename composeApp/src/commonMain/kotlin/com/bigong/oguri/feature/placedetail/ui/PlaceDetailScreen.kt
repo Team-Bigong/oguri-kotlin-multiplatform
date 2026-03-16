@@ -40,7 +40,6 @@ import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
-import com.bigong.oguri.domain.model.Experience
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.placedetail.ui.component.ExperienceCard
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailDescriptionSection

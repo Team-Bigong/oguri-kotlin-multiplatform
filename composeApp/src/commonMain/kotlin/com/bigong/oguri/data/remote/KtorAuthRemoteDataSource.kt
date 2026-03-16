@@ -19,20 +19,22 @@ class KtorAuthRemoteDataSource(
 ) : AuthRemoteDataSource {
     override suspend fun loginWithKakao(request: KakaoLoginRequest): KakaoLoginResponse {
         val requestUrl = "$DEBUG_BASE_URL$AUTH_LOGIN_KAKAO_API_PATH"
-        return httpClient.post(requestUrl) {
-            headers.remove(HttpHeaders.Authorization)
-            headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
-            setBody(request)
-        }.body()
+        return httpClient
+            .post(requestUrl) {
+                headers.remove(HttpHeaders.Authorization)
+                headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
+                setBody(request)
+            }.body()
     }
 
     override suspend fun refreshToken(request: RefreshTokenRequest): RefreshTokenResponse {
         val requestUrl = "$DEBUG_BASE_URL$AUTH_REFRESH_API_PATH"
-        return httpClient.post(requestUrl) {
-            headers.remove(HttpHeaders.Authorization)
-            headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
-            setBody(request)
-        }.body()
+        return httpClient
+            .post(requestUrl) {
+                headers.remove(HttpHeaders.Authorization)
+                headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
+                setBody(request)
+            }.body()
     }
 
     private companion object {

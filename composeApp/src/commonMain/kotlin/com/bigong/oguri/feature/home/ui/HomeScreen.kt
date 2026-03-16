@@ -17,8 +17,6 @@ import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
-import com.bigong.oguri.domain.model.Advertisement
-import com.bigong.oguri.domain.model.RecommendPeriod
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader

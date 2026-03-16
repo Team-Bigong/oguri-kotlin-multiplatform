@@ -1,9 +1,9 @@
 package com.bigong.oguri.feature.calendar.ui
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -20,9 +20,10 @@ fun CalendarRoute(
     snackbarHostState: SnackbarHostState,
     onOpenPeriodDetail: (String, String) -> Unit = { _, _ -> },
 ) {
-    val calendarViewModel = remember {
-        calendarViewModelProvider()
-    }
+    val calendarViewModel =
+        remember {
+            calendarViewModelProvider()
+        }
     val calendarUiState = calendarViewModel.uiState.collectAsStateWithLifecycle().value
     val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_calendar_leave_days_updated)
 

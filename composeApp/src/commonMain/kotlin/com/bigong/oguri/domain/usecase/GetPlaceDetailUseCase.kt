@@ -13,14 +13,13 @@ class GetPlaceDetailUseCase(
         startDate: String? = null,
         endDate: String? = null,
         userCountry: String = DEFAULT_USER_COUNTRY,
-    ): PlaceDetail {
-        return placeDetailRepository.getPlaceDetail(
+    ): PlaceDetail =
+        placeDetailRepository.getPlaceDetail(
             placeId = placeId,
             startDate = startDate,
             endDate = endDate,
             userCountry = userCountry,
         )
-    }
 
     private companion object {
         private const val DEFAULT_USER_COUNTRY = "대한민국"

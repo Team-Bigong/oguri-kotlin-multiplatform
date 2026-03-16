@@ -10,13 +10,9 @@ private object IosTokenLocalDataSource : TokenLocalDataSource {
 
     override fun initialize() = Unit
 
-    override fun readAccessToken(): String? {
-        return userDefaults.stringForKey(KEY_ACCESS_TOKEN)
-    }
+    override fun readAccessToken(): String? = userDefaults.stringForKey(KEY_ACCESS_TOKEN)
 
-    override fun readRefreshToken(): String? {
-        return userDefaults.stringForKey(KEY_REFRESH_TOKEN)
-    }
+    override fun readRefreshToken(): String? = userDefaults.stringForKey(KEY_REFRESH_TOKEN)
 
     override fun writeTokens(
         accessToken: String,

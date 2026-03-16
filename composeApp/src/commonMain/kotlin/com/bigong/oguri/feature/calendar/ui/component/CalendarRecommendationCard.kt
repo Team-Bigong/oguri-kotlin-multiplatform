@@ -57,8 +57,7 @@ fun CalendarRecommendationCard(
                         HapticType.Selection.perform()
                         onClick(period)
                     },
-                )
-                .padding(start = 20.dp, end = 12.dp)
+                ).padding(start = 20.dp, end = 12.dp)
                 .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,

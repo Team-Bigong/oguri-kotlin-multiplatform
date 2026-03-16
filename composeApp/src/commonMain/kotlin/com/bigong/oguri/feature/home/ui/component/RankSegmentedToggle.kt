@@ -22,8 +22,8 @@ import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.HapticType
-import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.perform
 
 private const val RANK_TOGGLE_ANIMATION_DURATION_MILLIS = 220
 
@@ -79,8 +79,7 @@ fun RankSegmentedToggle(
                                     }
                                     onRankSelected(rank)
                                 },
-                            )
-                            .height(height = 26.dp),
+                            ).height(height = 26.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(

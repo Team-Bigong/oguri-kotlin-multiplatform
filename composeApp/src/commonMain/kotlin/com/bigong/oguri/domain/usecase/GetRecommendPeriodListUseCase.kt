@@ -8,7 +8,5 @@ import dev.zacsweers.metro.Inject
 class GetRecommendPeriodListUseCase(
     private val homeRepository: HomeRepository,
 ) {
-    suspend operator fun invoke(userCountry: String): List<RecommendPeriod> {
-        return homeRepository.getRecommendPeriods(userCountry = userCountry)
-    }
+    suspend operator fun invoke(userCountry: String): List<RecommendPeriod> = homeRepository.getRecommendPeriods(userCountry = userCountry)
 }

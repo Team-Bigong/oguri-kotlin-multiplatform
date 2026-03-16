@@ -25,8 +25,8 @@ actual fun HapticType.perform() {
     }
 }
 
-private fun createVibrationEffect(hapticType: HapticType): VibrationEffect {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+private fun createVibrationEffect(hapticType: HapticType): VibrationEffect =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         when (hapticType) {
             HapticType.Selection -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
             HapticType.ImpactLight -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
@@ -36,22 +36,19 @@ private fun createVibrationEffect(hapticType: HapticType): VibrationEffect {
     } else {
         VibrationEffect.createOneShot(legacyDurationMillis(hapticType), VibrationEffect.DEFAULT_AMPLITUDE)
     }
-}
 
-private fun legacyDurationMillis(hapticType: HapticType): Long {
-    return when (hapticType) {
+private fun legacyDurationMillis(hapticType: HapticType): Long =
+    when (hapticType) {
         HapticType.Selection -> 10L
         HapticType.ImpactLight -> 14L
         HapticType.ImpactMedium -> 20L
         HapticType.NotificationSuccess -> 26L
     }
-}
 
-private fun resolveVibrator(context: Context): Vibrator? {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+private fun resolveVibrator(context: Context): Vibrator? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         context.getSystemService(VibratorManager::class.java)?.defaultVibrator
     } else {
         @Suppress("DEPRECATION")
         context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
     }
-}

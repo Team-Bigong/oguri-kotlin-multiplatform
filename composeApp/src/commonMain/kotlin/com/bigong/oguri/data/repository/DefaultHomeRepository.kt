@@ -5,23 +5,22 @@ import com.bigong.oguri.data.remote.model.request.ManageSavedRecommendationReque
 import com.bigong.oguri.data.remote.model.response.AdvertisementResponse
 import com.bigong.oguri.data.remote.model.response.PlaceResponse
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
-import dev.zacsweers.metro.Inject
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.model.RecommendPeriod
 import com.bigong.oguri.domain.repository.HomeRepository
+import dev.zacsweers.metro.Inject
 import kotlinx.datetime.LocalDate
 
 @Inject
 class DefaultHomeRepository(
     private val homeRemoteDataSource: HomeRemoteDataSource,
 ) : HomeRepository {
-    override suspend fun getRecommendPeriods(userCountry: String): List<RecommendPeriod> {
-        return homeRemoteDataSource.getRecommendPeriodResponses(userCountry = userCountry).map { recommendPeriodResponse ->
+    override suspend fun getRecommendPeriods(userCountry: String): List<RecommendPeriod> =
+        homeRemoteDataSource.getRecommendPeriodResponses(userCountry = userCountry).map { recommendPeriodResponse ->
             recommendPeriodResponse.toDomain()
         }
-    }
 
     override suspend fun saveRecommendation(
         startDate: LocalDate,
@@ -58,8 +57,8 @@ class DefaultHomeRepository(
     }
 }
 
-private fun RecommendPeriodResponse.toDomain(): RecommendPeriod {
-    return RecommendPeriod(
+private fun RecommendPeriodResponse.toDomain(): RecommendPeriod =
+    RecommendPeriod(
         rank = rank,
         isSaved = saved,
         startDate = LocalDate.parse(startDate),
@@ -70,10 +69,9 @@ private fun RecommendPeriodResponse.toDomain(): RecommendPeriod {
         places = places.map { placeResponse -> placeResponse.toDomain() },
         advertisements = advertisements.map { advertisementResponse -> advertisementResponse.toDomain() },
     )
-}
 
-private fun PlaceResponse.toDomain(): Place {
-    return Place(
+private fun PlaceResponse.toDomain(): Place =
+    Place(
         id = id,
         country = country,
         city = city,
@@ -81,11 +79,9 @@ private fun PlaceResponse.toDomain(): Place {
         thumbnailUrl = thumbnailUrl,
         isSaved = saved,
     )
-}
 
-private fun AdvertisementResponse.toDomain(): Advertisement {
-    return Advertisement(
+private fun AdvertisementResponse.toDomain(): Advertisement =
+    Advertisement(
         platform = AdvertisementPlatform.from(value = platform),
         url = url,
     )
-}

@@ -23,17 +23,17 @@ class KtorPlaceDetailRemoteDataSource(
     ): PlaceDetailResponse {
         val requestUrl = "$DEBUG_BASE_URL$DESTINATION_API_PATH/$placeId"
         return authRequestExecutor.execute {
-            httpClient.get(requestUrl) {
-                appendUserIdHeaderWhenGuest()
-                parameter(USER_COUNTRY_QUERY_NAME, userCountry)
-                if (startDate != null) {
-                    parameter(START_DATE_QUERY_NAME, startDate)
-                }
-                if (endDate != null) {
-                    parameter(END_DATE_QUERY_NAME, endDate)
-                }
-            }
-                .body()
+            httpClient
+                .get(requestUrl) {
+                    appendUserIdHeaderWhenGuest()
+                    parameter(USER_COUNTRY_QUERY_NAME, userCountry)
+                    if (startDate != null) {
+                        parameter(START_DATE_QUERY_NAME, startDate)
+                    }
+                    if (endDate != null) {
+                        parameter(END_DATE_QUERY_NAME, endDate)
+                    }
+                }.body()
         }
     }
 

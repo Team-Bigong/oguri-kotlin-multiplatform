@@ -63,10 +63,10 @@ fun ExperienceCard(
                     .fillMaxWidth()
                     .height(98.dp)
                     .clip(
-                            RoundedCornerShape(
-                                topStart = cardCornerRadius,
-                                topEnd = cardCornerRadius,
-                            ),
+                        RoundedCornerShape(
+                            topStart = cardCornerRadius,
+                            topEnd = cardCornerRadius,
+                        ),
                     ),
         )
         Text(

@@ -37,21 +37,21 @@ import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
-import com.bigong.oguri.core.ui.component.OguriSnackBarHost
-import com.bigong.oguri.core.ui.component.OguriSnackBarType
-import com.bigong.oguri.core.ui.component.showOguriSnackbar
-import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
+import com.bigong.oguri.core.ui.component.OguriSnackBarHost
+import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import dev.zacsweers.metro.createGraphFactory
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
-import io.ktor.serialization.kotlinx.json.json
 import io.ktor.http.HttpHeaders
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import oguri.composeapp.generated.resources.Res
@@ -233,8 +233,7 @@ private fun BottomNavigationBar(
                                     }
                                     onDestinationClick(destination)
                                 },
-                            )
-                            .padding(horizontal = 18.dp, vertical = 10.dp)
+                            ).padding(horizontal = 18.dp, vertical = 10.dp)
                             .weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),

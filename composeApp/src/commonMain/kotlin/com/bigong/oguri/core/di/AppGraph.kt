@@ -1,8 +1,8 @@
 package com.bigong.oguri.core.di
 
 import com.bigong.oguri.data.remote.AuthRemoteDataSource
-import com.bigong.oguri.data.remote.HomeRemoteDataSource
 import com.bigong.oguri.data.remote.CalendarRemoteDataSource
+import com.bigong.oguri.data.remote.HomeRemoteDataSource
 import com.bigong.oguri.data.remote.KtorAuthRemoteDataSource
 import com.bigong.oguri.data.remote.KtorCalendarRemoteDataSource
 import com.bigong.oguri.data.remote.KtorHomeRemoteDataSource
@@ -27,8 +27,8 @@ import com.bigong.oguri.feature.mypage.ui.MyPageViewModel
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailViewModel
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailViewModel
 import dev.zacsweers.metro.DependencyGraph
-import dev.zacsweers.metro.Provides
 import dev.zacsweers.metro.Provider
+import dev.zacsweers.metro.Provides
 import io.ktor.client.HttpClient
 
 @DependencyGraph

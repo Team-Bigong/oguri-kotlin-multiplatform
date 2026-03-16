@@ -31,8 +31,8 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_back
 import oguri.composeapp.generated.resources.btn_menu
-import oguri.composeapp.generated.resources.place_detail_menu_share
 import oguri.composeapp.generated.resources.place_detail_menu_save
+import oguri.composeapp.generated.resources.place_detail_menu_share
 import oguri.composeapp.generated.resources.place_detail_menu_unsave
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -108,7 +108,8 @@ fun PeriodDetailTopBar(
                                     .noRippleClickable(onClick = {
                                         isMenuExpanded = false
                                         onShareClick()
-                                    }).padding(horizontal = 16.dp, vertical = 12.dp),
+                                    })
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
                         )
                         HorizontalDivider(color = Neutral20)
                         Text(
@@ -126,7 +127,8 @@ fun PeriodDetailTopBar(
                                     .noRippleClickable(onClick = {
                                         isMenuExpanded = false
                                         onSaveToggleClick()
-                                    }).padding(horizontal = 16.dp, vertical = 12.dp),
+                                    })
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
                         )
                     }
                 }

@@ -48,6 +48,14 @@
 - 스낵바 표시는 `showOguriSnackbar(...)` 확장 함수를 사용하며, 타입(`SUCCESS`, `ALERT`, `INFO`)을 명시한다.
 - 네트워크 에러 재시도 상태 UI는 공용 `NetworkErrorRetryContent`를 사용한다.
 
+## Ktlint
+- `composeApp`와 `server`는 모두 `ktlint` 플러그인을 명시적으로 적용한다.
+- 실행 커맨드:
+: `./gradlew :composeApp:ktlintCheck`
+: `./gradlew :composeApp:ktlintFormat`
+: `./gradlew :server:ktlintCheck`
+- 공통 설정은 루트 `build.gradle.kts`의 `subprojects { pluginManager.withPlugin("org.jlleitschuh.gradle.ktlint") { ... } }`에서 관리한다.
+
 ## 패키지 규칙
 - `presentation` 패키지를 사용하지 않는다.
 - 화면 코드는 `ui` 하위에 둔다.

@@ -1,4 +1,3 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -9,6 +8,7 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
+    alias(libs.plugins.ktlint)
 }
 
 val localProperties: Properties =
@@ -28,7 +28,10 @@ val debugBaseUrl: String =
 val kakaoNativeAppKey: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
 
 val generatedNetworkConfigDirectory =
-    layout.buildDirectory.dir("generated/source/networkConfig/commonMain/kotlin").get().asFile
+    layout.buildDirectory
+        .dir("generated/source/networkConfig/commonMain/kotlin")
+        .get()
+        .asFile
 val generatedNetworkConfigFile =
     generatedNetworkConfigDirectory.resolve("com/bigong/oguri/core/network/DebugNetworkConfig.kt")
 

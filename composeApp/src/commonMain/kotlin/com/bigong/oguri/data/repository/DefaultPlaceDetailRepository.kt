@@ -19,15 +19,14 @@ class DefaultPlaceDetailRepository(
         startDate: String?,
         endDate: String?,
         userCountry: String,
-    ): PlaceDetail {
-        return placeDetailRemoteDataSource
+    ): PlaceDetail =
+        placeDetailRemoteDataSource
             .getPlaceDetailResponse(
                 placeId = placeId,
                 startDate = startDate,
                 endDate = endDate,
                 userCountry = userCountry,
             ).toDomain()
-    }
 
     override suspend fun saveDestination(placeId: Long) {
         placeDetailRemoteDataSource.saveDestination(placeId = placeId)
@@ -38,8 +37,8 @@ class DefaultPlaceDetailRepository(
     }
 }
 
-private fun PlaceDetailResponse.toDomain(): PlaceDetail {
-    return PlaceDetail(
+private fun PlaceDetailResponse.toDomain(): PlaceDetail =
+    PlaceDetail(
         id = id,
         country = country,
         city = city,
@@ -50,19 +49,17 @@ private fun PlaceDetailResponse.toDomain(): PlaceDetail {
         flightUrl = flightUrl,
         relevantPlaces = relevantPlaces.map { placeResponse -> placeResponse.toDomain() },
     )
-}
 
-private fun ExperienceResponse.toDomain(): Experience {
-    return Experience(
+private fun ExperienceResponse.toDomain(): Experience =
+    Experience(
         title = title,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
         advertisementUrl = advertisementUrl,
     )
-}
 
-private fun PlaceResponse.toDomain(): Place {
-    return Place(
+private fun PlaceResponse.toDomain(): Place =
+    Place(
         id = id,
         country = country,
         city = city,
@@ -70,4 +67,3 @@ private fun PlaceResponse.toDomain(): Place {
         thumbnailUrl = thumbnailUrl,
         isSaved = saved,
     )
-}

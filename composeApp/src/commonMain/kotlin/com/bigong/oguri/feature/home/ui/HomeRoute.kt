@@ -1,10 +1,10 @@
 package com.bigong.oguri.feature.home.ui
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -23,9 +23,10 @@ fun HomeRoute(
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
 ) {
-    val homeViewModel = remember {
-        homeViewModelProvider()
-    }
+    val homeViewModel =
+        remember {
+            homeViewModelProvider()
+        }
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
     val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
     val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)

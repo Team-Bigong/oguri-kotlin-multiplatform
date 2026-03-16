@@ -1,10 +1,10 @@
 package com.bigong.oguri.feature.placedetail.ui
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -26,9 +26,10 @@ fun PlaceDetailRoute(
     onBackClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
 ) {
-    val placeDetailViewModel = remember {
-        placeDetailViewModelProvider()
-    }
+    val placeDetailViewModel =
+        remember {
+            placeDetailViewModelProvider()
+        }
     val placeDetailUiState = placeDetailViewModel.uiState.collectAsStateWithLifecycle().value
     val placeSavedMessage = stringResource(Res.string.snackbar_place_saved)
     val placeDeletedMessage = stringResource(Res.string.snackbar_place_deleted)

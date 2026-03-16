@@ -7,9 +7,7 @@ import kotlinx.coroutines.delay
 private const val SPLASH_DELAY_MILLIS = 1200L
 
 @Composable
-fun SplashRoute(
-    onSplashCompleted: () -> Unit,
-) {
+fun SplashRoute(onSplashCompleted: () -> Unit) {
     LaunchedEffect(Unit) {
         delay(SPLASH_DELAY_MILLIS)
         onSplashCompleted()

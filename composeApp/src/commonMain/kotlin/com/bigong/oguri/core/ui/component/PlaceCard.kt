@@ -20,9 +20,7 @@ import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
-import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.ui.component.NetworkImage
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.Place
 

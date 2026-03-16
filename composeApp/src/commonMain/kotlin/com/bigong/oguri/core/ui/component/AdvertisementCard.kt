@@ -25,7 +25,6 @@ import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
-import com.bigong.oguri.core.ui.component.NetworkImage
 import com.bigong.oguri.core.util.extension.getStyledText
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.Advertisement

@@ -9,13 +9,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-actual suspend fun loginWithKakao(): Result<String> {
-    return runCatching {
-        val applicationContext = OguriPlatformContextHolder.applicationContext
-            ?: error("Application context is not initialized for Kakao login.")
+actual suspend fun loginWithKakao(): Result<String> =
+    runCatching {
+        val applicationContext =
+            OguriPlatformContextHolder.applicationContext
+                ?: error("Application context is not initialized for Kakao login.")
         performKakaoLogin(context = applicationContext)
     }
-}
 
 private suspend fun performKakaoLogin(context: Context): String {
     return suspendCancellableCoroutine { continuation ->

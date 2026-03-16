@@ -14,9 +14,10 @@ fun PeriodDetailRoute(
     onBackClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
 ) {
-    val periodDetailViewModel = remember {
-        periodDetailViewModelProvider()
-    }
+    val periodDetailViewModel =
+        remember {
+            periodDetailViewModelProvider()
+        }
     val periodDetailUiState = periodDetailViewModel.uiState.collectAsStateWithLifecycle().value
 
     LaunchedEffect(startDate, endDate) {

@@ -30,7 +30,6 @@ import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceCard
 import com.bigong.oguri.core.util.extension.getStyledText
-import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState

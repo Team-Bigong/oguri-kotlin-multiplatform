@@ -1,15 +1,15 @@
 package com.bigong.oguri.feature.login.ui
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bigong.oguri.core.ui.component.OguriSnackBarType
-import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.core.platform.loginWithApple
 import com.bigong.oguri.core.platform.loginWithKakao
+import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.login.ui.model.LoginSideEffect
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.collectLatest
@@ -26,9 +26,10 @@ fun LoginRoute(
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
 ) {
-    val loginViewModel = remember {
-        loginViewModelProvider()
-    }
+    val loginViewModel =
+        remember {
+            loginViewModelProvider()
+        }
     val loginUiState = loginViewModel.uiState.collectAsStateWithLifecycle().value
     val coroutineScope = rememberCoroutineScope()
     val loginFailedMessage = stringResource(Res.string.snackbar_login_failed)

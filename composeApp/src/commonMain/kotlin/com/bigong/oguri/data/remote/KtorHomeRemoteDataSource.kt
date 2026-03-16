@@ -10,8 +10,8 @@ import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.parameter
-import io.ktor.client.request.setBody
 import io.ktor.client.request.post
+import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 
@@ -23,10 +23,11 @@ class KtorHomeRemoteDataSource(
     override suspend fun getRecommendPeriodResponses(userCountry: String): List<RecommendPeriodResponse> {
         val requestUrl = "$DEBUG_BASE_URL$HOME_API_PATH"
         return authRequestExecutor.execute {
-            httpClient.get(requestUrl) {
-                appendUserIdHeaderWhenGuest()
-                parameter(HOME_USER_COUNTRY_QUERY_NAME, userCountry)
-            }.body()
+            httpClient
+                .get(requestUrl) {
+                    appendUserIdHeaderWhenGuest()
+                    parameter(HOME_USER_COUNTRY_QUERY_NAME, userCountry)
+                }.body()
         }
     }
 

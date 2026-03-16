@@ -8,12 +8,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.bigong.oguri.core.navigation.WebDocumentType
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
 import oguri.composeapp.generated.resources.mypage_menu_suggest
+import oguri.composeapp.generated.resources.mypage_menu_terms_of_service
 import oguri.composeapp.generated.resources.uri_privacy_policy
 import oguri.composeapp.generated.resources.uri_suggestion
 import oguri.composeapp.generated.resources.uri_terms_of_service
-import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
-import oguri.composeapp.generated.resources.mypage_menu_terms_of_service
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

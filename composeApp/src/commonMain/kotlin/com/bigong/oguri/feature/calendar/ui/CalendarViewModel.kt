@@ -2,7 +2,6 @@ package com.bigong.oguri.feature.calendar.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bigong.oguri.domain.model.CalendarPeriod
 import com.bigong.oguri.domain.usecase.GetCalendarRecommendationUseCase
 import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
@@ -10,8 +9,6 @@ import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -67,9 +64,7 @@ class CalendarViewModel(
         )
     }
 
-    fun onDateClick(
-        date: LocalDate,
-    ) {
+    fun onDateClick(date: LocalDate) {
         val matchedPeriod =
             uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->
                 date in period.startDate..period.endDate
@@ -98,9 +93,7 @@ class CalendarViewModel(
         }
     }
 
-    fun onPeriodClick(
-        periodId: Long,
-    ) {
+    fun onPeriodClick(periodId: Long) {
         if (uiState.value.selectedPeriodId == periodId) {
             val selectedPeriodForNavigation =
                 uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->

@@ -1,6 +1,5 @@
 package com.bigong.oguri.core.platform
 
-import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.AuthenticationServices.ASAuthorization
 import platform.AuthenticationServices.ASAuthorizationAppleIDCredential
@@ -19,18 +18,18 @@ import kotlin.coroutines.resumeWithException
 
 private var appleAuthorizationDelegate: AppleAuthorizationDelegate? = null
 
-actual suspend fun loginWithApple(): Result<String> {
-    return runCatching {
+actual suspend fun loginWithApple(): Result<String> =
+    runCatching {
         performAppleAuthorization()
     }
-}
 
-private suspend fun performAppleAuthorization(): String {
-    return suspendCancellableCoroutine { continuation ->
+private suspend fun performAppleAuthorization(): String =
+    suspendCancellableCoroutine { continuation ->
         val appleIdProvider = ASAuthorizationAppleIDProvider()
-        val appleAuthorizationRequest = appleIdProvider.createRequest().apply {
-            requestedScopes = listOf(ASAuthorizationScopeFullName, ASAuthorizationScopeEmail)
-        }
+        val appleAuthorizationRequest =
+            appleIdProvider.createRequest().apply {
+                requestedScopes = listOf(ASAuthorizationScopeFullName, ASAuthorizationScopeEmail)
+            }
         val authorizationController =
             ASAuthorizationController(
                 authorizationRequests = listOf(appleAuthorizationRequest),
@@ -58,7 +57,6 @@ private suspend fun performAppleAuthorization(): String {
         }
         authorizationController.performRequests()
     }
-}
 
 private class AppleAuthorizationDelegate(
     private val onAuthorized: (String) -> Unit,
@@ -93,7 +91,6 @@ private class AppleAuthorizationDelegate(
         onFailed(IllegalStateException(message))
     }
 
-    override fun presentationAnchorForAuthorizationController(controller: ASAuthorizationController): ASPresentationAnchor {
-        return UIApplication.sharedApplication.keyWindow ?: UIWindow()
-    }
+    override fun presentationAnchorForAuthorizationController(controller: ASAuthorizationController): ASPresentationAnchor =
+        UIApplication.sharedApplication.keyWindow ?: UIWindow()
 }
