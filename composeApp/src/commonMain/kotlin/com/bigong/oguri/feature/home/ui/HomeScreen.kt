@@ -18,9 +18,9 @@ import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
-import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader
 import com.bigong.oguri.feature.home.ui.component.HomeMoreRecommendationButton
+import com.bigong.oguri.feature.home.ui.component.HomeSkeletonContent
 import com.bigong.oguri.feature.home.ui.component.HomeStrategyCard
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import oguri.composeapp.generated.resources.Res
@@ -33,7 +33,6 @@ import oguri.composeapp.generated.resources.home_guide_trip_products
 import oguri.composeapp.generated.resources.home_guide_trip_products_highlight
 import oguri.composeapp.generated.resources.home_hint_place_cards
 import oguri.composeapp.generated.resources.home_hint_trip_products
-import oguri.composeapp.generated.resources.home_loading
 import oguri.composeapp.generated.resources.home_more_recommendation_subtitle
 import oguri.composeapp.generated.resources.home_tab_rank_one
 import oguri.composeapp.generated.resources.home_tab_rank_three
@@ -53,7 +52,7 @@ fun HomeScreen(
     onPeriodClick: (String, String) -> Unit,
 ) {
     if (homeUiState.isLoading) {
-        HomeLoadingContent(message = stringResource(Res.string.home_loading))
+        HomeSkeletonContent()
         return
     }
 

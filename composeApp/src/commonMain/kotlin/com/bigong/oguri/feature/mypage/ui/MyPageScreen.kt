@@ -18,13 +18,13 @@ import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
-import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuItem
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageProfileSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageSavedPlaceSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageSelectedPeriodSection
+import com.bigong.oguri.feature.mypage.ui.component.MyPageSkeletonContent
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_alert
@@ -34,7 +34,6 @@ import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_messag
 import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_title
 import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
-import oguri.composeapp.generated.resources.mypage_loading
 import oguri.composeapp.generated.resources.mypage_logout_dialog_title
 import oguri.composeapp.generated.resources.mypage_menu_logout
 import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
@@ -66,7 +65,7 @@ fun MyPageScreen(
     onConfirmLogout: () -> Unit,
 ) {
     if (myPageUiState.isLoading) {
-        HomeLoadingContent(message = stringResource(Res.string.mypage_loading))
+        MyPageSkeletonContent()
         return
     }
 

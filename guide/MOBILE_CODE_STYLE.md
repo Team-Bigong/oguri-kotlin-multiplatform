@@ -47,6 +47,8 @@
 - 스낵바는 공용 `OguriSnackBar`를 사용하고, `NavDisplay`의 단일 `SnackbarHostState` + `OguriSnackBarHost`로 관리한다.
 - 스낵바 표시는 `showOguriSnackbar(...)` 확장 함수를 사용하며, 타입(`SUCCESS`, `ALERT`, `INFO`)을 명시한다.
 - 네트워크 에러 재시도 상태 UI는 공용 `NetworkErrorRetryContent`를 사용한다.
+- 네트워크 로딩 상태는 `CircularProgressIndicator`를 사용하지 않고, 화면 구조와 동일한 스켈레톤 UI를 사용한다.
+- 스켈레톤 애니메이션은 공용 `SkeletonBox` 기반 Shimmer로 구현하고, 화면별로 전용 스켈레톤 컴포넌트를 둔다.
 
 ## Ktlint
 - `composeApp`와 `server`는 모두 `ktlint` 플러그인을 명시적으로 적용한다.

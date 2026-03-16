@@ -30,7 +30,7 @@ import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceCard
 import com.bigong.oguri.core.util.extension.getStyledText
-import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
+import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailSkeletonContent
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import kotlinx.datetime.LocalDate
@@ -39,7 +39,6 @@ import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.calendar_period_range
 import oguri.composeapp.generated.resources.home_guide_match_places
 import oguri.composeapp.generated.resources.home_guide_match_places_highlight
-import oguri.composeapp.generated.resources.home_loading
 import oguri.composeapp.generated.resources.home_strategy_day_off_hint
 import oguri.composeapp.generated.resources.home_strategy_holiday_with
 import oguri.composeapp.generated.resources.ic_plane
@@ -60,7 +59,7 @@ fun PeriodDetailScreen(
     onPlaceClick: (Long) -> Unit,
 ) {
     if (periodDetailUiState.isLoading) {
-        HomeLoadingContent(message = stringResource(Res.string.home_loading))
+        PeriodDetailSkeletonContent()
         return
     }
 

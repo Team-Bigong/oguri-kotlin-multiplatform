@@ -40,15 +40,14 @@ import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
-import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.placedetail.ui.component.ExperienceCard
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailDescriptionSection
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailImagePager
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailShareButton
+import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailSkeletonContent
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.home_loading
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
 import oguri.composeapp.generated.resources.ic_ticket
@@ -75,7 +74,7 @@ fun PlaceDetailScreen(
     onPlaceClick: (Long) -> Unit,
 ) {
     if (placeDetailUiState.isLoading) {
-        HomeLoadingContent(message = stringResource(Res.string.home_loading))
+        PlaceDetailSkeletonContent()
         return
     }
 

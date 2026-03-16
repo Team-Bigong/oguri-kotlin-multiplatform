@@ -25,14 +25,13 @@ import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysEditor
 import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthGrid
 import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthSelector
 import com.bigong.oguri.feature.calendar.ui.component.CalendarRecommendationSection
+import com.bigong.oguri.feature.calendar.ui.component.CalendarSkeletonContent
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
-import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_header_subtitle
 import oguri.composeapp.generated.resources.calendar_header_title
-import oguri.composeapp.generated.resources.calendar_loading
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 
@@ -46,7 +45,7 @@ fun CalendarScreen(
     onRetryClick: () -> Unit,
 ) {
     if (calendarUiState.isLoading) {
-        HomeLoadingContent(message = stringResource(Res.string.calendar_loading))
+        CalendarSkeletonContent()
         return
     }
 
