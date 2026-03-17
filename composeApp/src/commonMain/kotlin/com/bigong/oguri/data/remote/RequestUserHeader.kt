@@ -9,7 +9,8 @@ private const val DEFAULT_USER_ID = "GUEST"
 
 internal fun HttpRequestBuilder.appendUserIdHeaderWhenGuest() {
     val accessToken = AuthTokenStore.getAccessToken()
-    if (accessToken.isNullOrBlank()) {
+    val hasExplicitUserIdHeader = headers.contains(name = USER_ID_HEADER_NAME)
+    if (accessToken.isNullOrBlank() && !hasExplicitUserIdHeader) {
         header(USER_ID_HEADER_NAME, DEFAULT_USER_ID)
     }
 }

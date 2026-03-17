@@ -37,7 +37,7 @@ import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
-import com.bigong.oguri.core.network.providePlatformHttpClientEngineFactory
+import com.bigong.oguri.core.network.provideOguriHttpClient
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.OguriSnackBarHost
@@ -46,14 +46,7 @@ import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import dev.zacsweers.metro.createGraphFactory
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.DefaultRequest
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.header
-import io.ktor.http.HttpHeaders
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 import oguri.composeapp.generated.resources.snackbar_logout_completed
@@ -78,23 +71,7 @@ fun NavDisplay(
                 AuthTokenStore.initialize(localDataSource = provideTokenLocalDataSource())
                 AuthTokenStore.bootstrapFromLocalDataSource()
                 val appGraphFactory = createGraphFactory<AppGraph.Factory>()
-                val httpClient =
-                    HttpClient(providePlatformHttpClientEngineFactory()) {
-                        expectSuccess = true
-                        install(DefaultRequest) {
-                            val accessToken = AuthTokenStore.getAccessToken()
-                            if (!accessToken.isNullOrBlank()) {
-                                header(HttpHeaders.Authorization, "Bearer $accessToken")
-                            }
-                        }
-                        install(ContentNegotiation) {
-                            json(
-                                Json {
-                                    ignoreUnknownKeys = true
-                                },
-                            )
-                        }
-                    }
+                val httpClient = provideOguriHttpClient()
                 appGraphFactory.create(
                     httpClient = httpClient,
                 )
