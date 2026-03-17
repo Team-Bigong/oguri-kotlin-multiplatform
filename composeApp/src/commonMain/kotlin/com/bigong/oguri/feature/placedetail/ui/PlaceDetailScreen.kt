@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -170,7 +170,10 @@ fun PlaceDetailScreen(
                             contentPadding = PaddingValues(horizontal = 20.dp),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
-                            items(items = placeDetail.experiences, key = { experience -> experience.title }) { experience ->
+                            itemsIndexed(
+                                items = placeDetail.experiences,
+                                key = { index, experience -> "${experience.title}_$index" },
+                            ) { _, experience ->
                                 ExperienceCard(
                                     experience = experience,
                                     uniformHeight = uniformExperienceCardHeight,

@@ -153,7 +153,7 @@ fun HomeScreen(
                 count = currentPeriod.advertisements.size,
                 key = { index ->
                     val advertisement = currentPeriod.advertisements[index]
-                    "${advertisement.platform.name}:${advertisement.url}"
+                    "${advertisement.platform.name}:${advertisement.url}:$index"
                 },
             ) { index ->
                 val advertisement = currentPeriod.advertisements[index]

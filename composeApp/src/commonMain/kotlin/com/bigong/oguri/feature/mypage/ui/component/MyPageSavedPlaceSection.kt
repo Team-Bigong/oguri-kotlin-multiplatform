@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -51,7 +51,10 @@ fun MyPageSavedPlaceSection(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            items(items = savedPlaces, key = { place -> place.id }) { place ->
+            itemsIndexed(
+                items = savedPlaces,
+                key = { index, place -> "${place.id}_$index" },
+            ) { _, place ->
                 MyPageSavedPlaceCard(
                     place = place,
                     onClick = onSavedPlaceClick,

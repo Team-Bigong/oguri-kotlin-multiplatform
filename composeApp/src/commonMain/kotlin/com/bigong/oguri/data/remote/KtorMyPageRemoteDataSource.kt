@@ -113,11 +113,18 @@ class KtorMyPageRemoteDataSource(
         endDate: String,
         dayOffCount: Int,
         totalTripCount: Int,
-    ): Long = "${startDate}_${endDate}_${dayOffCount}_$totalTripCount".hashCode().toLong()
+        index: Int,
+    ): Long {
+        val key = "${startDate}_${endDate}_${dayOffCount}_$totalTripCount"
+        val primaryHash = key.hashCode().toLong() and 0xffffffffL
+        val secondaryHash = key.reversed().hashCode().toLong() and 0xffffffffL
+        val uniqueLowerBits = (secondaryHash xor index.toLong()) and 0xffffffffL
+        return (primaryHash shl 32) or uniqueLowerBits
+    }
 
     private fun MemberMeResponse.toMyPageResponse(): MyPageResponse {
         val selectedPeriodResponses =
-            savedPeriods.map { savedPeriodResponse ->
+            savedPeriods.mapIndexed { index, savedPeriodResponse ->
                 MyPageSelectedPeriodResponse(
                     id =
                         recommendationId(
@@ -125,6 +132,7 @@ class KtorMyPageRemoteDataSource(
                             endDate = savedPeriodResponse.endDate,
                             dayOffCount = savedPeriodResponse.dayOffCount,
                             totalTripCount = savedPeriodResponse.totalTripCount,
+                            index = index,
                         ),
                     startDate = savedPeriodResponse.startDate,
                     endDate = savedPeriodResponse.endDate,
