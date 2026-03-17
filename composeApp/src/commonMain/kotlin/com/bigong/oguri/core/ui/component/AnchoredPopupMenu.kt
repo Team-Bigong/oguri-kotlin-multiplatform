@@ -2,9 +2,12 @@ package com.bigong.oguri.core.ui.component
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalDensity
@@ -46,7 +49,10 @@ fun AnchoredPopupMenu(
             shape = shape,
             color = containerColor,
         ) {
-            Column(content = content)
+            Column(
+                modifier = Modifier.width(IntrinsicSize.Max),
+                content = content,
+            )
         }
     }
 }
