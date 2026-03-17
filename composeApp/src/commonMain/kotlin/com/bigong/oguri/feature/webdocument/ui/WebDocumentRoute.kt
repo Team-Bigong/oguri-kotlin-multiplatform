@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.bigong.oguri.core.navigation.WebDocumentType
 import oguri.composeapp.generated.resources.Res
@@ -21,8 +21,8 @@ fun WebDocumentRoute(
     documentType: String,
     onBackClick: () -> Unit,
 ) {
-    var canGoBackInWebView by remember { mutableStateOf(false) }
-    var goBackTrigger by remember { mutableIntStateOf(0) }
+    var canGoBackInWebView by rememberSaveable { mutableStateOf(false) }
+    var goBackTrigger by rememberSaveable { mutableIntStateOf(0) }
     val webDocumentType =
         runCatching { WebDocumentType.valueOf(documentType) }
             .getOrDefault(WebDocumentType.TERMS_OF_SERVICE)

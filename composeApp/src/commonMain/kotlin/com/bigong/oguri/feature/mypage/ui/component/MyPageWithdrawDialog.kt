@@ -37,7 +37,6 @@ import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
 import oguri.composeapp.generated.resources.mypage_withdraw_dialog_description
 import oguri.composeapp.generated.resources.mypage_withdraw_dialog_instruction
-import oguri.composeapp.generated.resources.mypage_withdraw_dialog_phrase
 import oguri.composeapp.generated.resources.mypage_withdraw_dialog_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource

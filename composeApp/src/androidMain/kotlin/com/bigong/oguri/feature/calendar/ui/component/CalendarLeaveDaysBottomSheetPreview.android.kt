@@ -6,9 +6,9 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 
 @Preview(showBackground = true)
 @Composable
-private fun CalendarLeaveDaysEditorPreview() {
+private fun CalendarLeaveDaysBottomSheetPreview() {
     OguriTheme {
-        CalendarLeaveDaysEditor(
+        CalendarLeaveDaysBottomSheet(
             leaveDays = 3,
             onLeaveDaysChanged = {},
         )

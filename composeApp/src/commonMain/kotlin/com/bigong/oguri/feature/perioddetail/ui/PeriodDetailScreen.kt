@@ -172,7 +172,7 @@ fun PeriodDetailScreen(
                     } else {
                         itemsIndexed(
                             items = periodDetail.places,
-                            key = { index, place -> "${place.id}_$index" },
+                            key = { _, place -> place.id },
                         ) { _, place ->
                             PlaceCard(
                                 place = place,

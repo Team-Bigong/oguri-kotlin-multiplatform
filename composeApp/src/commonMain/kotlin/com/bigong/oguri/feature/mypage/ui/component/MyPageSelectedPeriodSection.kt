@@ -63,7 +63,7 @@ fun MyPageSelectedPeriodSection(
         ) {
             itemsIndexed(
                 items = selectedPeriods,
-                key = { index, period -> "${period.id}_$index" },
+                key = { _, period -> period.id },
             ) { _, period ->
                 MyPageSelectedPeriodCard(
                     period = period,

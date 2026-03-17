@@ -21,7 +21,7 @@ import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.domain.model.CalendarPeriod
-import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysEditor
+import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthGrid
 import com.bigong.oguri.feature.calendar.ui.component.CalendarMonthSelector
 import com.bigong.oguri.feature.calendar.ui.component.CalendarRecommendationSection
@@ -83,7 +83,7 @@ fun CalendarScreen(
             modifier = Modifier.padding(horizontal = 20.dp),
         )
         Spacer(modifier = Modifier.height(24.dp))
-        CalendarLeaveDaysEditor(
+        CalendarLeaveDaysBottomSheet(
             leaveDays = calendarUiState.leaveDays,
             onLeaveDaysChanged = onLeaveDaysChanged,
             modifier = Modifier.padding(horizontal = 20.dp),

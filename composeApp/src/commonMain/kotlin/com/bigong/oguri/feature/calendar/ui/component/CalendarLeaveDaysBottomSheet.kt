@@ -29,7 +29,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -62,13 +62,13 @@ private const val PICKER_VISIBLE_ITEM_COUNT = 3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarLeaveDaysEditor(
+fun CalendarLeaveDaysBottomSheet(
     leaveDays: Int,
     onLeaveDaysChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    var isBottomSheetVisible by remember { mutableStateOf(false) }
-    var selectedLeaveDays by remember { mutableIntStateOf(leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)) }
+    var isBottomSheetVisible by rememberSaveable { mutableStateOf(false) }
+    var selectedLeaveDays by rememberSaveable(leaveDays) { mutableIntStateOf(leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)) }
 
     Row(
         modifier =

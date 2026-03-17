@@ -53,7 +53,7 @@ fun MyPageSavedPlaceSection(
         ) {
             itemsIndexed(
                 items = savedPlaces,
-                key = { index, place -> "${place.id}_$index" },
+                key = { _, place -> place.id },
             ) { _, place ->
                 MyPageSavedPlaceCard(
                     place = place,
