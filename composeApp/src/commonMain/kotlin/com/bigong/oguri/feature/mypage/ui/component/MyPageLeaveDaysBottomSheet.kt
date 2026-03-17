@@ -21,7 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,8 +52,8 @@ fun MyPageLeaveDaysBottomSheet(
     onDismissRequest: () -> Unit,
     onSubmit: (Int, Int) -> Unit,
 ) {
-    var remainingLeaveDaysInput by remember(currentRemainingLeaveDays) { mutableStateOf(currentRemainingLeaveDays.toString()) }
-    var preferredLeaveDaysInput by remember(currentPreferredLeaveDays) { mutableStateOf(currentPreferredLeaveDays.toString()) }
+    var remainingLeaveDaysInput by rememberSaveable(currentRemainingLeaveDays) { mutableStateOf(currentRemainingLeaveDays.toString()) }
+    var preferredLeaveDaysInput by rememberSaveable(currentPreferredLeaveDays) { mutableStateOf(currentPreferredLeaveDays.toString()) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     LaunchedEffect(currentRemainingLeaveDays, currentPreferredLeaveDays) {

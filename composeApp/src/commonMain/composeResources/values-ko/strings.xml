@@ -113,6 +113,10 @@
     <string name="mypage_delete_place_dialog_message">삭제된 정보는 복구되지 않습니다.</string>
     <string name="mypage_logout_dialog_title">로그아웃 할까요?</string>
     <string name="mypage_logout_dialog_message">로그아웃 후 다시 로그인해야 해요.</string>
+    <string name="mypage_withdraw_dialog_title">회원 탈퇴를 진행하시겠어요?</string>
+    <string name="mypage_withdraw_dialog_description">삭제된 정보는 복구되지 않습니다.</string>
+    <string name="mypage_withdraw_dialog_instruction">정말로 탈퇴를 진행하시려면 아래 문구를 그대로 입력해주세요.</string>
+    <string name="mypage_withdraw_dialog_phrase">오구리의 회원을 탈퇴하겠습니다</string>
     <string name="mypage_loading">마이페이지 정보를 불러오는 중이에요...</string>
     <string name="mypage_error_retry">마이페이지 정보를 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
     <string name="mypage_leave_days_sheet_title">연차 설정</string>

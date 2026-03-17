@@ -8,4 +8,6 @@ sealed interface MyPageSideEffect {
     data object SavedPlaceDeleted : MyPageSideEffect
 
     data object LoggedOut : MyPageSideEffect
+
+    data object WithdrawCompleted : MyPageSideEffect
 }

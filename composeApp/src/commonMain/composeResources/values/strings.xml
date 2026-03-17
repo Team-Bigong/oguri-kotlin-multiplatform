@@ -113,6 +113,10 @@
     <string name="mypage_delete_place_dialog_message">Deleted information cannot be restored.</string>
     <string name="mypage_logout_dialog_title">Log out?</string>
     <string name="mypage_logout_dialog_message">You will need to log in again.</string>
+    <string name="mypage_withdraw_dialog_title">Do you want to delete your account?</string>
+    <string name="mypage_withdraw_dialog_description">Deleted information cannot be restored.</string>
+    <string name="mypage_withdraw_dialog_instruction">To continue, enter the following phrase exactly.</string>
+    <string name="mypage_withdraw_dialog_phrase">I will delete my Oguri account.</string>
     <string name="mypage_loading">Loading my page data...</string>
     <string name="mypage_error_retry">Failed to load my page data. Tap to retry.</string>
     <string name="mypage_leave_days_sheet_title">Leave Settings</string>

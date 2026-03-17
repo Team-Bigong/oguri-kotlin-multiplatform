@@ -25,6 +25,7 @@ import com.bigong.oguri.feature.mypage.ui.component.MyPageProfileSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageSavedPlaceSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageSelectedPeriodSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageSkeletonContent
+import com.bigong.oguri.feature.mypage.ui.component.MyPageWithdrawDialog
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_alert
@@ -40,6 +41,7 @@ import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
 import oguri.composeapp.generated.resources.mypage_menu_suggest
 import oguri.composeapp.generated.resources.mypage_menu_terms_of_service
 import oguri.composeapp.generated.resources.mypage_menu_withdraw
+import oguri.composeapp.generated.resources.mypage_withdraw_dialog_phrase
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -61,6 +63,9 @@ fun MyPageScreen(
     onTermsOfServiceClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onWithdrawClick: () -> Unit,
+    onWithdrawInputChange: (String, String) -> Unit,
+    onDismissWithdrawDialog: () -> Unit,
+    onConfirmWithdraw: () -> Unit,
     onLogoutClick: () -> Unit,
     onDismissLogoutDialog: () -> Unit,
     onConfirmLogout: () -> Unit,
@@ -76,6 +81,7 @@ fun MyPageScreen(
     }
 
     val myPageInfo = myPageUiState.myPageInfo
+    val withdrawTargetPhrase = stringResource(Res.string.mypage_withdraw_dialog_phrase)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(Neutral5),
@@ -176,6 +182,19 @@ fun MyPageScreen(
             onDismissRequest = onDismissLogoutDialog,
             onConfirmClick = onConfirmLogout,
             onCancelClick = onDismissLogoutDialog,
+        )
+    }
+
+    if (myPageUiState.isWithdrawDialogVisible) {
+        MyPageWithdrawDialog(
+            inputText = myPageUiState.withdrawInputText,
+            targetPhrase = withdrawTargetPhrase,
+            isConfirmEnabled = myPageUiState.isWithdrawConfirmEnabled,
+            onInputChange = { inputText ->
+                onWithdrawInputChange(inputText, withdrawTargetPhrase)
+            },
+            onDismissRequest = onDismissWithdrawDialog,
+            onConfirmClick = onConfirmWithdraw,
         )
     }
 }

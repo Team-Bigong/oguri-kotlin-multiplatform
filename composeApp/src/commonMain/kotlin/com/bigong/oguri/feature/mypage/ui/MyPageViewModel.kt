@@ -227,4 +227,51 @@ class MyPageViewModel(
         }
         _sideEffect.tryEmit(MyPageSideEffect.LoggedOut)
     }
+
+    fun showWithdrawDialog() {
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                isWithdrawDialogVisible = true,
+                withdrawInputText = "",
+                isWithdrawConfirmEnabled = false,
+            )
+        }
+    }
+
+    fun hideWithdrawDialog() {
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                isWithdrawDialogVisible = false,
+                withdrawInputText = "",
+                isWithdrawConfirmEnabled = false,
+            )
+        }
+    }
+
+    fun updateWithdrawInput(
+        inputText: String,
+        targetText: String,
+    ) {
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                withdrawInputText = inputText,
+                isWithdrawConfirmEnabled = inputText == targetText,
+            )
+        }
+    }
+
+    fun confirmWithdraw() {
+        if (!uiState.value.isWithdrawConfirmEnabled) {
+            return
+        }
+        logoutUseCase()
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                isWithdrawDialogVisible = false,
+                withdrawInputText = "",
+                isWithdrawConfirmEnabled = false,
+            )
+        }
+        _sideEffect.tryEmit(MyPageSideEffect.WithdrawCompleted)
+    }
 }

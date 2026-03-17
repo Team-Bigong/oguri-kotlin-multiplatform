@@ -54,6 +54,9 @@ fun MyPageRoute(
                 MyPageSideEffect.LoggedOut -> {
                     onLoggedOut()
                 }
+                MyPageSideEffect.WithdrawCompleted -> {
+                    onLoggedOut()
+                }
             }
         }
     }
@@ -78,7 +81,10 @@ fun MyPageRoute(
         onSuggestClick = onOpenSuggestion,
         onTermsOfServiceClick = onOpenTermsOfService,
         onPrivacyPolicyClick = onOpenPrivacyPolicy,
-        onWithdrawClick = {},
+        onWithdrawClick = myPageViewModel::showWithdrawDialog,
+        onWithdrawInputChange = myPageViewModel::updateWithdrawInput,
+        onDismissWithdrawDialog = myPageViewModel::hideWithdrawDialog,
+        onConfirmWithdraw = myPageViewModel::confirmWithdraw,
         onLogoutClick = myPageViewModel::showLogoutDialog,
         onDismissLogoutDialog = myPageViewModel::hideLogoutDialog,
         onConfirmLogout = myPageViewModel::confirmLogout,
