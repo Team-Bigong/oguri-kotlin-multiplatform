@@ -62,38 +62,36 @@ data class BottomNavigationDestination(
     val iconResource: DrawableResource,
 )
 
-object RouteModels {
-    val bottomNavigationDestinations =
-        listOf(
-            BottomNavigationDestination(
-                routeModel = RouteModel.Home,
-                routeClass = RouteModel.Home::class,
-                routeSerialName =
-                    RouteModel.Home
-                        .serializer()
-                        .descriptor.serialName,
-                labelResource = Res.string.bottom_navigation_home,
-                iconResource = Res.drawable.ic_home,
-            ),
-            BottomNavigationDestination(
-                routeModel = RouteModel.Calendar,
-                routeClass = RouteModel.Calendar::class,
-                routeSerialName =
-                    RouteModel.Calendar
-                        .serializer()
-                        .descriptor.serialName,
-                labelResource = Res.string.bottom_navigation_calendar,
-                iconResource = Res.drawable.ic_calendar,
-            ),
-            BottomNavigationDestination(
-                routeModel = RouteModel.MyPage,
-                routeClass = RouteModel.MyPage::class,
-                routeSerialName =
-                    RouteModel.MyPage
-                        .serializer()
-                        .descriptor.serialName,
-                labelResource = Res.string.bottom_navigation_my,
-                iconResource = Res.drawable.ic_mypage,
-            ),
-        )
-}
+val bottomNavigationDestinations =
+    listOf(
+        BottomNavigationDestination(
+            routeModel = RouteModel.Home,
+            routeClass = RouteModel.Home::class,
+            routeSerialName =
+                RouteModel.Home
+                    .serializer()
+                    .descriptor.serialName,
+            labelResource = Res.string.bottom_navigation_home,
+            iconResource = Res.drawable.ic_home,
+        ),
+        BottomNavigationDestination(
+            routeModel = RouteModel.Calendar,
+            routeClass = RouteModel.Calendar::class,
+            routeSerialName =
+                RouteModel.Calendar
+                    .serializer()
+                    .descriptor.serialName,
+            labelResource = Res.string.bottom_navigation_calendar,
+            iconResource = Res.drawable.ic_calendar,
+        ),
+        BottomNavigationDestination(
+            routeModel = RouteModel.MyPage,
+            routeClass = RouteModel.MyPage::class,
+            routeSerialName =
+                RouteModel.MyPage
+                    .serializer()
+                    .descriptor.serialName,
+            labelResource = Res.string.bottom_navigation_my,
+            iconResource = Res.drawable.ic_mypage,
+        ),
+    )

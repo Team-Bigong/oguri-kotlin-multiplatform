@@ -5,7 +5,9 @@ import platform.Foundation.NSUserDefaults
 private const val KEY_ACCESS_TOKEN = "key_access_token"
 private const val KEY_REFRESH_TOKEN = "key_refresh_token"
 
-private object IosTokenLocalDataSource : TokenLocalDataSource {
+private var tokenLocalDataSourceInstance: TokenLocalDataSource? = null
+
+private class IosTokenLocalDataSource : TokenLocalDataSource {
     private val userDefaults = NSUserDefaults.standardUserDefaults
 
     override fun initialize() = Unit
@@ -28,4 +30,13 @@ private object IosTokenLocalDataSource : TokenLocalDataSource {
     }
 }
 
-actual fun provideTokenLocalDataSource(): TokenLocalDataSource = IosTokenLocalDataSource
+actual fun provideTokenLocalDataSource(): TokenLocalDataSource {
+    val existingInstance = tokenLocalDataSourceInstance
+    if (existingInstance != null) {
+        return existingInstance
+    }
+
+    val newInstance = IosTokenLocalDataSource()
+    tokenLocalDataSourceInstance = newInstance
+    return newInstance
+}

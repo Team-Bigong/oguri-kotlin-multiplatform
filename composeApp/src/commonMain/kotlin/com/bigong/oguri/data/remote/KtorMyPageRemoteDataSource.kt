@@ -32,7 +32,6 @@ class KtorMyPageRemoteDataSource(
             authRequestExecutor.execute {
                 httpClient
                     .get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
-                        appendUserIdHeaderWhenGuest()
                     }.body<MemberMeResponse>()
             }
 
@@ -42,7 +41,6 @@ class KtorMyPageRemoteDataSource(
     override suspend fun updateLeaveDays(request: UpdateMyPageLeaveDaysRequest): MyPageResponse {
         authRequestExecutor.execute {
             httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
-                appendUserIdHeaderWhenGuest()
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(
                     UpdateMemberDayOffRequest(
@@ -73,7 +71,6 @@ class KtorMyPageRemoteDataSource(
 
         authRequestExecutor.execute {
             httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH") {
-                appendUserIdHeaderWhenGuest()
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(
                     ManageSavedRecommendationRequest(
@@ -99,9 +96,7 @@ class KtorMyPageRemoteDataSource(
 
     override suspend fun deleteSavedPlace(request: DeleteMyPageSavedPlaceRequest): MyPageResponse {
         authRequestExecutor.execute {
-            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/${request.placeId}") {
-                appendUserIdHeaderWhenGuest()
-            }
+            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/${request.placeId}")
         }
 
         val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()

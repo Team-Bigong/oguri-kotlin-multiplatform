@@ -25,7 +25,6 @@ class KtorHomeRemoteDataSource(
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
-                    appendUserIdHeaderWhenGuest()
                     parameter(HOME_USER_COUNTRY_QUERY_NAME, userCountry)
                 }.body()
         }
@@ -35,7 +34,6 @@ class KtorHomeRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         authRequestExecutor.execute {
             httpClient.post(requestUrl) {
-                appendUserIdHeaderWhenGuest()
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(request)
             }
@@ -46,7 +44,6 @@ class KtorHomeRemoteDataSource(
         val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         authRequestExecutor.execute {
             httpClient.delete(requestUrl) {
-                appendUserIdHeaderWhenGuest()
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(request)
             }

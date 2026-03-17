@@ -126,18 +126,18 @@ fun rememberOguriTypographySystem(): OguriTypographySystem {
 }
 
 @Composable
-fun rememberOguriMaterialTypography(oguriTypographySystem: OguriTypographySystem): MaterialTypography =
+fun rememberOguriMaterialTypography(typographySystem: OguriTypographySystem): MaterialTypography =
     MaterialTypography(
-        displayLarge = oguriTypographySystem.heroTitle,
-        headlineMedium = oguriTypographySystem.sectionTitle,
-        titleLarge = oguriTypographySystem.cardTitle,
-        titleMedium = oguriTypographySystem.cardSubtitle,
-        bodyLarge = oguriTypographySystem.bodyLarge,
-        bodyMedium = oguriTypographySystem.bodyMedium,
-        bodySmall = oguriTypographySystem.bodySmall,
-        labelLarge = oguriTypographySystem.labelLarge,
-        labelMedium = oguriTypographySystem.labelMedium,
-        labelSmall = oguriTypographySystem.labelSmall,
+        displayLarge = typographySystem.heroTitle,
+        headlineMedium = typographySystem.sectionTitle,
+        titleLarge = typographySystem.cardTitle,
+        titleMedium = typographySystem.cardSubtitle,
+        bodyLarge = typographySystem.bodyLarge,
+        bodyMedium = typographySystem.bodyMedium,
+        bodySmall = typographySystem.bodySmall,
+        labelLarge = typographySystem.labelLarge,
+        labelMedium = typographySystem.labelMedium,
+        labelSmall = typographySystem.labelSmall,
     )
 
 @Composable

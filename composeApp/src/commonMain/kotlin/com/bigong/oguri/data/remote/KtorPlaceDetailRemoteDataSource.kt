@@ -25,7 +25,6 @@ class KtorPlaceDetailRemoteDataSource(
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
-                    appendUserIdHeaderWhenGuest()
                     parameter(USER_COUNTRY_QUERY_NAME, userCountry)
                     if (startDate != null) {
                         parameter(START_DATE_QUERY_NAME, startDate)
@@ -39,17 +38,13 @@ class KtorPlaceDetailRemoteDataSource(
 
     override suspend fun saveDestination(placeId: Long) {
         authRequestExecutor.execute {
-            httpClient.post("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId") {
-                appendUserIdHeaderWhenGuest()
-            }
+            httpClient.post("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId")
         }
     }
 
     override suspend fun deleteSavedDestination(placeId: Long) {
         authRequestExecutor.execute {
-            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId") {
-                appendUserIdHeaderWhenGuest()
-            }
+            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId")
         }
     }
 

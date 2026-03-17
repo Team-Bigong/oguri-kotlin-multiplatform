@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStoreFile
+import android.content.Context
 import com.bigong.oguri.core.platform.OguriPlatformContextHolder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,7 +22,12 @@ private const val TOKEN_DATA_STORE_FILE_NAME = "oguri_token.preferences_pb"
 private const val KEY_ACCESS_TOKEN = "key_access_token"
 private const val KEY_REFRESH_TOKEN = "key_refresh_token"
 
-private object AndroidTokenLocalDataSource : TokenLocalDataSource {
+@Volatile
+private var tokenLocalDataSourceInstance: TokenLocalDataSource? = null
+
+private class AndroidTokenLocalDataSource(
+    private val applicationContext: Context,
+) : TokenLocalDataSource {
     private val accessTokenPreferenceKey = stringPreferencesKey(KEY_ACCESS_TOKEN)
     private val refreshTokenPreferenceKey = stringPreferencesKey(KEY_REFRESH_TOKEN)
     private val dataStoreCoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -37,7 +43,6 @@ private object AndroidTokenLocalDataSource : TokenLocalDataSource {
         if (tokenDataStore != null && tokenDataStoreFlow != null) {
             return
         }
-        val applicationContext = OguriPlatformContextHolder.applicationContext ?: return
         val dataStore =
             PreferenceDataStoreFactory.create(
                 corruptionHandler = null,
@@ -99,4 +104,15 @@ private object AndroidTokenLocalDataSource : TokenLocalDataSource {
     }
 }
 
-actual fun provideTokenLocalDataSource(): TokenLocalDataSource = AndroidTokenLocalDataSource
+actual fun provideTokenLocalDataSource(): TokenLocalDataSource {
+    val existingInstance = tokenLocalDataSourceInstance
+    if (existingInstance != null) {
+        return existingInstance
+    }
+
+    val applicationContext =
+        OguriPlatformContextHolder.applicationContext ?: error("Application context is not initialized for token local data source.")
+    val newInstance = AndroidTokenLocalDataSource(applicationContext = applicationContext)
+    tokenLocalDataSourceInstance = newInstance
+    return newInstance
+}

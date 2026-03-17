@@ -20,7 +20,6 @@ class KtorCalendarRemoteDataSource(
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
-                    appendUserIdHeaderWhenGuest()
                 }.body<MemberMeResponse>()
                 .preferredDayOff
         }
@@ -36,7 +35,6 @@ class KtorCalendarRemoteDataSource(
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
-                    appendUserIdHeaderWhenGuest()
                     parameter(CALENDAR_YEAR_MONTH_QUERY_NAME, yearMonth)
                     parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, dayOffCount)
                 }.body()
@@ -52,7 +50,6 @@ class KtorCalendarRemoteDataSource(
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
-                    appendUserIdHeaderWhenGuest()
                     parameter(CALENDAR_DETAIL_START_DATE_QUERY_NAME, startDate)
                     parameter(CALENDAR_DETAIL_END_DATE_QUERY_NAME, endDate)
                     parameter(USER_COUNTRY_QUERY_NAME, userCountry)

@@ -102,7 +102,7 @@ fun MainNavHost(
                 onPeriodClick = navigator::navigateToPeriodDetail,
                 onMoveToCalendarClick = {
                     val calendarDestination =
-                        RouteModels.bottomNavigationDestinations.first { destination ->
+                        bottomNavigationDestinations.first { destination ->
                             destination.routeModel == RouteModel.Calendar
                         }
                     navigator.navigateToBottomNavigationDestination(calendarDestination)

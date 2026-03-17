@@ -85,7 +85,7 @@ fun NavDisplay(
         val incomingDeepLinkUrl = appGraph.deepLinkStore.incomingUrl.collectAsState().value
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation =
-            RouteModels.bottomNavigationDestinations.any { destination ->
+            bottomNavigationDestinations.any { destination ->
                 isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
             }
         val isOnMainTabRoot = isMainTabRootDestination(currentDestination)
@@ -201,7 +201,7 @@ private fun BottomNavigationBar(
                     .navigationBarsPadding(),
             horizontalArrangement = Arrangement.SpaceAround,
         ) {
-            RouteModels.bottomNavigationDestinations.forEach { destination ->
+            bottomNavigationDestinations.forEach { destination ->
                 val isSelected =
                     currentDestination?.hierarchy?.any { navDestination ->
                         val routeText = navDestination.route ?: return@any false
@@ -249,7 +249,7 @@ private fun BottomNavigationBar(
 
 private fun isMainTabRootDestination(currentDestination: NavDestination?): Boolean {
     val currentRouteText = currentDestination?.route ?: return false
-    return RouteModels.bottomNavigationDestinations.any { destination ->
+    return bottomNavigationDestinations.any { destination ->
         currentRouteText == destination.routeSerialName
     }
 }
