@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -24,14 +23,15 @@ import com.bigong.oguri.core.ui.component.PlaceCardSkeleton
 import com.bigong.oguri.core.ui.component.SkeletonBox
 
 @Composable
-fun PeriodDetailSkeletonContent() {
+fun PeriodDetailSkeletonContent(
+    modifier: Modifier = Modifier,
+) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         modifier =
-            Modifier
+            modifier
                 .fillMaxSize()
-                .background(Neutral5)
-                .navigationBarsPadding(),
+                .background(Neutral5),
         verticalArrangement = Arrangement.spacedBy(18.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 18.dp),

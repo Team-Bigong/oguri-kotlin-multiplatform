@@ -73,17 +73,7 @@ fun PlaceDetailScreen(
     onUrlClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
 ) {
-    if (placeDetailUiState.isLoading) {
-        PlaceDetailSkeletonContent()
-        return
-    }
-
     val placeDetail = placeDetailUiState.placeDetail
-    if (placeDetailUiState.isError || placeDetail == null) {
-        NetworkErrorRetryContent(onRetryClick = onRetryClick)
-        return
-    }
-
     val lazyListState = rememberLazyListState()
     val isTopBarCollapsed by rememberPlaceDetailTopBarCollapsedState(listState = lazyListState)
     var maxExperienceCardHeightPx by remember { mutableIntStateOf(0) }
@@ -102,137 +92,149 @@ fun PlaceDetailScreen(
                 .background(Neutral5)
                 .navigationBarsPadding(),
     ) {
-        LazyColumn(
-            state = lazyListState,
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp),
-        ) {
-            item {
-                PlaceDetailImagePager(imageUrls = placeDetail.thumbnailUrls)
+        when {
+            placeDetailUiState.isLoading -> {
+                PlaceDetailSkeletonContent()
             }
-            item(key = PLACE_DETAIL_TITLE_ITEM_KEY) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+
+            placeDetailUiState.isError || placeDetail == null -> {
+                NetworkErrorRetryContent(onRetryClick = onRetryClick)
+            }
+
+            else -> {
+                LazyColumn(
+                    state = lazyListState,
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 24.dp),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 12.dp),
-                    ) {
-                        Text(
-                            text = placeDetail.city,
-                            style = OguriTheme.typography.sectionTitle,
-                            color = Neutral100,
-                        )
-                        Text(
-                            text = stringResource(Res.string.place_detail_country, placeDetail.country),
-                            style = OguriTheme.typography.labelMedium,
-                            color = Neutral40,
+                    item {
+                        PlaceDetailImagePager(imageUrls = placeDetail.thumbnailUrls)
+                    }
+                    item(key = PLACE_DETAIL_TITLE_ITEM_KEY) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(start = 20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.Bottom,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(top = 12.dp),
+                            ) {
+                                Text(
+                                    text = placeDetail.city,
+                                    style = OguriTheme.typography.sectionTitle,
+                                    color = Neutral100,
+                                )
+                                Text(
+                                    text = stringResource(Res.string.place_detail_country, placeDetail.country),
+                                    style = OguriTheme.typography.labelMedium,
+                                    color = Neutral40,
+                                )
+                            }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(top = 2.dp),
+                            ) {
+                                PlaceDetailShareButton(
+                                    onShareClick = onShareClick,
+                                    modifier = Modifier.padding(start = 12.dp),
+                                )
+                                SaveToggleButton(
+                                    checked = placeDetailUiState.isSaved,
+                                    onCheckedChange = { onSaveToggleClick() },
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        PlaceDetailDescriptionSection(
+                            description = placeDetail.description,
+                            modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 2.dp),
-                    ) {
-                        PlaceDetailShareButton(
-                            onShareClick = onShareClick,
-                            modifier = Modifier.padding(start = 12.dp),
-                        )
-                        SaveToggleButton(
-                            checked = placeDetailUiState.isSaved,
-                            onCheckedChange = { onSaveToggleClick() },
+                    item {
+                        Spacer(modifier = Modifier.height(28.dp))
+                        GuideHeader(
+                            iconResource = Res.drawable.ic_binoculars,
+                            titleText = stringResource(Res.string.place_detail_section_experience),
+                            highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
+                            subtitleText = null,
+                            modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }
-                }
-            }
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                PlaceDetailDescriptionSection(
-                    description = placeDetail.description,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-            }
-            item {
-                Spacer(modifier = Modifier.height(28.dp))
-                GuideHeader(
-                    iconResource = Res.drawable.ic_binoculars,
-                    titleText = stringResource(Res.string.place_detail_section_experience),
-                    highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
-                    subtitleText = null,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-            }
-            item {
-                Spacer(modifier = Modifier.height(14.dp))
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    items(items = placeDetail.experiences, key = { experience -> experience.title }) { experience ->
-                        ExperienceCard(
-                            experience = experience,
-                            uniformHeight = uniformExperienceCardHeight,
-                            onMeasuredHeight = { measuredHeightPx ->
-                                if (measuredHeightPx > maxExperienceCardHeightPx) {
-                                    maxExperienceCardHeightPx = measuredHeightPx
-                                }
-                            },
+                    item {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            items(items = placeDetail.experiences, key = { experience -> experience.title }) { experience ->
+                                ExperienceCard(
+                                    experience = experience,
+                                    uniformHeight = uniformExperienceCardHeight,
+                                    onMeasuredHeight = { measuredHeightPx ->
+                                        if (measuredHeightPx > maxExperienceCardHeightPx) {
+                                            maxExperienceCardHeightPx = measuredHeightPx
+                                        }
+                                    },
+                                    onClick = onUrlClick,
+                                )
+                            }
+                        }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(28.dp))
+                        GuideHeader(
+                            iconResource = Res.drawable.ic_ticket,
+                            titleText = stringResource(Res.string.place_detail_flight_title),
+                            highlightedText = stringResource(Res.string.place_detail_flight_title_highlight),
+                            subtitleText = null,
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                        )
+                        Spacer(modifier = Modifier.height(18.dp))
+                        AdvertisementCard(
+                            advertisement =
+                                Advertisement(
+                                    platform = AdvertisementPlatform.SKYSCANNER,
+                                    url = placeDetail.flightUrl,
+                                ),
+                            titleText = stringResource(Res.string.place_detail_flight_card_title, placeDetail.city),
+                            highlightedText = placeDetail.city,
+                            highlightedColor = Mint70,
+                            modifier = Modifier.padding(horizontal = 20.dp),
                             onClick = onUrlClick,
                         )
                     }
-                }
-            }
-            item {
-                Spacer(modifier = Modifier.height(28.dp))
-                GuideHeader(
-                    iconResource = Res.drawable.ic_ticket,
-                    titleText = stringResource(Res.string.place_detail_flight_title),
-                    highlightedText = stringResource(Res.string.place_detail_flight_title_highlight),
-                    subtitleText = null,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
-                Spacer(modifier = Modifier.height(18.dp))
-                AdvertisementCard(
-                    advertisement =
-                        Advertisement(
-                            platform = AdvertisementPlatform.SKYSCANNER,
-                            url = placeDetail.flightUrl,
-                        ),
-                    titleText = stringResource(Res.string.place_detail_flight_card_title, placeDetail.city),
-                    highlightedText = placeDetail.city,
-                    highlightedColor = Mint70,
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    onClick = onUrlClick,
-                )
-            }
-            if (placeDetail.relevantPlaces.isNotEmpty()) {
-                item {
-                    Spacer(modifier = Modifier.height(28.dp))
-                    GuideHeader(
-                        iconResource = Res.drawable.ic_plane,
-                        titleText = stringResource(Res.string.place_detail_relevant_places),
-                        highlightedText = stringResource(Res.string.place_detail_relevant_places_highlight),
-                        subtitleText = null,
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
-                    PlaceHorizontalCarousel(
-                        places = placeDetail.relevantPlaces,
-                        onPlaceClick = { place -> onPlaceClick(place.id) },
-                    )
+                    if (placeDetail.relevantPlaces.isNotEmpty()) {
+                        item {
+                            Spacer(modifier = Modifier.height(28.dp))
+                            GuideHeader(
+                                iconResource = Res.drawable.ic_plane,
+                                titleText = stringResource(Res.string.place_detail_relevant_places),
+                                highlightedText = stringResource(Res.string.place_detail_relevant_places_highlight),
+                                subtitleText = null,
+                                modifier = Modifier.padding(horizontal = 20.dp),
+                            )
+                            Spacer(modifier = Modifier.height(18.dp))
+                            PlaceHorizontalCarousel(
+                                places = placeDetail.relevantPlaces,
+                                onPlaceClick = { place -> onPlaceClick(place.id) },
+                            )
+                        }
+                    }
                 }
             }
         }
 
         PlaceDetailTopBar(
-            city = placeDetail.city,
+            city = placeDetail?.city.orEmpty(),
             isSaved = placeDetailUiState.isSaved,
-            isCollapsed = isTopBarCollapsed,
+            isCollapsed = !placeDetailUiState.isLoading && !placeDetailUiState.isError && placeDetail != null && isTopBarCollapsed,
             onBackClick = onBackClick,
-            onShareClick = onShareClick,
-            onSaveToggleClick = onSaveToggleClick,
+            onShareClick = if (placeDetail == null) ({}) else onShareClick,
+            onSaveToggleClick = if (placeDetail == null) ({}) else onSaveToggleClick,
             modifier = Modifier.align(Alignment.TopCenter),
         )
     }

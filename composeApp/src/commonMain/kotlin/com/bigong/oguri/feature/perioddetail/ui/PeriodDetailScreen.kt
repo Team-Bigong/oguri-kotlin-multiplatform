@@ -58,26 +58,7 @@ fun PeriodDetailScreen(
     onSaveToggleClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
 ) {
-    if (periodDetailUiState.isLoading) {
-        PeriodDetailSkeletonContent()
-        return
-    }
-
     val periodDetail = periodDetailUiState.periodDetail
-    if (periodDetailUiState.isError || periodDetail == null) {
-        NetworkErrorRetryContent(onRetryClick = onRetryClick)
-        return
-    }
-
-    val startDateText = periodDetail.startDate.toMonthDayText()
-    val endDateText = periodDetail.endDate.toMonthDayText()
-    val periodText = stringResource(Res.string.calendar_period_range, startDateText, endDateText)
-    val holidayText =
-        periodDetail.holiday.joinToString(separator = ", ").ifBlank {
-            stringResource(Res.string.period_detail_holiday_fallback)
-        }
-    val holidayDescriptionText = stringResource(Res.string.home_strategy_holiday_with, holidayText)
-    val leaveDayHintText = stringResource(Res.string.home_strategy_day_off_hint, periodDetail.dayOffCount, periodDetail.totalTripCount)
 
     Column(
         modifier =
@@ -90,86 +71,114 @@ fun PeriodDetailScreen(
             titleText = stringResource(Res.string.period_detail_title),
             isSaved = periodDetailUiState.isSaved,
             onBackClick = onBackClick,
-            onShareClick = onShareClick,
-            onSaveToggleClick = onSaveToggleClick,
+            onShareClick = if (periodDetail == null) ({}) else onShareClick,
+            onSaveToggleClick = if (periodDetail == null) ({}) else onSaveToggleClick,
         )
 
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(count = 2),
-            modifier = Modifier.weight(weight = 1f),
-            verticalArrangement = Arrangement.spacedBy(space = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
-            contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 18.dp),
-        ) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top,
-                ) {
-                    Column(
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Text(
-                            text = periodText,
-                            style = OguriTheme.typography.sectionTitle,
-                            color = Neutral100,
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text(
-                            text =
-                                holidayDescriptionText.getStyledText(
-                                    style =
-                                        OguriTheme.typography.cardSubtitle.copy(
-                                            color = Mint70,
-                                            fontWeight = FontWeight.Bold,
-                                        ),
-                                    holidayText,
-                                ),
-                            style = OguriTheme.typography.cardSubtitle,
-                            color = Neutral100,
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = leaveDayHintText,
-                            style = OguriTheme.typography.caption,
-                            color = Neutral50,
-                        )
-                    }
-                    Image(
-                        painter = painterResource(Res.drawable.img_oguri_parasol),
-                        contentDescription = null,
-                        modifier = Modifier.height(120.dp),
-                    )
-                }
+        when {
+            periodDetailUiState.isLoading -> {
+                PeriodDetailSkeletonContent(
+                    modifier = Modifier.weight(weight = 1f),
+                )
             }
 
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                GuideHeader(
-                    iconResource = Res.drawable.ic_plane,
-                    titleText = stringResource(Res.string.home_guide_match_places),
-                    highlightedText = stringResource(Res.string.home_guide_match_places_highlight),
-                    subtitleText = null,
+            periodDetailUiState.isError || periodDetail == null -> {
+                NetworkErrorRetryContent(
+                    onRetryClick = onRetryClick,
+                    modifier = Modifier.weight(weight = 1f),
                 )
-                Spacer(modifier = Modifier.height(18.dp))
             }
-            if (periodDetail.places.isEmpty()) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Text(
-                        text = stringResource(Res.string.period_detail_empty_places_hint),
-                        style = OguriTheme.typography.bodyMedium,
-                        color = Neutral50,
-                    )
-                }
-            } else {
-                items(items = periodDetail.places, key = { place -> place.id }) { place ->
-                    PlaceCard(
-                        place = place,
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { onPlaceClick(place.id) },
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
+
+            else -> {
+                val startDateText = periodDetail.startDate.toMonthDayText()
+                val endDateText = periodDetail.endDate.toMonthDayText()
+                val periodText = stringResource(Res.string.calendar_period_range, startDateText, endDateText)
+                val holidayText =
+                    periodDetail.holiday.joinToString(separator = ", ").ifBlank {
+                        stringResource(Res.string.period_detail_holiday_fallback)
+                    }
+                val holidayDescriptionText = stringResource(Res.string.home_strategy_holiday_with, holidayText)
+                val leaveDayHintText =
+                    stringResource(Res.string.home_strategy_day_off_hint, periodDetail.dayOffCount, periodDetail.totalTripCount)
+
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(count = 2),
+                    modifier = Modifier.weight(weight = 1f),
+                    verticalArrangement = Arrangement.spacedBy(space = 18.dp),
+                    horizontalArrangement = Arrangement.spacedBy(space = 12.dp),
+                    contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 14.dp, bottom = 18.dp),
+                ) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top,
+                        ) {
+                            Column(
+                                modifier = Modifier.weight(1f),
+                            ) {
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = periodText,
+                                    style = OguriTheme.typography.sectionTitle,
+                                    color = Neutral100,
+                                )
+                                Spacer(modifier = Modifier.height(24.dp))
+                                Text(
+                                    text =
+                                        holidayDescriptionText.getStyledText(
+                                            style =
+                                                OguriTheme.typography.cardSubtitle.copy(
+                                                    color = Mint70,
+                                                    fontWeight = FontWeight.Bold,
+                                                ),
+                                            holidayText,
+                                        ),
+                                    style = OguriTheme.typography.cardSubtitle,
+                                    color = Neutral100,
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = leaveDayHintText,
+                                    style = OguriTheme.typography.caption,
+                                    color = Neutral50,
+                                )
+                            }
+                            Image(
+                                painter = painterResource(Res.drawable.img_oguri_parasol),
+                                contentDescription = null,
+                                modifier = Modifier.height(120.dp),
+                            )
+                        }
+                    }
+
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        GuideHeader(
+                            iconResource = Res.drawable.ic_plane,
+                            titleText = stringResource(Res.string.home_guide_match_places),
+                            highlightedText = stringResource(Res.string.home_guide_match_places_highlight),
+                            subtitleText = null,
+                        )
+                        Spacer(modifier = Modifier.height(18.dp))
+                    }
+                    if (periodDetail.places.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Text(
+                                text = stringResource(Res.string.period_detail_empty_places_hint),
+                                style = OguriTheme.typography.bodyMedium,
+                                color = Neutral50,
+                            )
+                        }
+                    } else {
+                        items(items = periodDetail.places, key = { place -> place.id }) { place ->
+                            PlaceCard(
+                                place = place,
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { onPlaceClick(place.id) },
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    }
                 }
             }
         }
