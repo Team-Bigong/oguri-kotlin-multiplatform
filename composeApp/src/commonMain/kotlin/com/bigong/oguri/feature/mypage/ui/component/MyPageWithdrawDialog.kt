@@ -95,14 +95,14 @@ fun MyPageWithdrawDialog(
                     style = OguriTheme.typography.bodyMedium,
                     color = Neutral50,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
                 Text(
                     text = targetPhrase,
-                    style = OguriTheme.typography.sectionTitle,
+                    style = OguriTheme.typography.bodyLarge,
                     color = Mint70,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
                 )
 
                 Box(
@@ -110,7 +110,8 @@ fun MyPageWithdrawDialog(
                         Modifier
                             .fillMaxWidth()
                             .padding(top = 16.dp)
-                            .border(width = 1.dp, color = Neutral90, shape = RoundedCornerShape(16.dp))
+                            .padding(horizontal = 8.dp)
+                            .border(width = 1.dp, color = Neutral90, shape = RoundedCornerShape(8.dp))
                             .padding(horizontal = 16.dp, vertical = 14.dp),
                 ) {
                     BasicTextField(
@@ -119,14 +120,14 @@ fun MyPageWithdrawDialog(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true,
                         textStyle =
-                            OguriTheme.typography.sectionTitle.merge(
+                            OguriTheme.typography.bodyLarge.merge(
                                 TextStyle(color = Neutral90),
                             ),
                         decorationBox = { innerTextField ->
                             if (inputText.isBlank()) {
                                 Text(
                                     text = targetPhrase,
-                                    style = OguriTheme.typography.sectionTitle,
+                                    style = OguriTheme.typography.bodyLarge,
                                     color = Neutral40,
                                 )
                             }
