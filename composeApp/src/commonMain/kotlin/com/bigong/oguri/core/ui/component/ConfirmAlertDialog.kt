@@ -22,7 +22,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
-import com.bigong.oguri.core.designsystem.Neutral70
+import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.util.extension.noRippleClickable
@@ -70,7 +70,7 @@ fun ConfirmAlertDialog(
                 Text(
                     text = titleText,
                     style = OguriTheme.typography.cardTitle,
-                    color = Neutral70,
+                    color = Neutral90,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 )
@@ -117,7 +117,7 @@ fun ConfirmAlertDialog(
                         Text(
                             text = cancelButtonText,
                             style = OguriTheme.typography.bodyMedium,
-                            color = Neutral70,
+                            color = Neutral90,
                         )
                     }
                 }
