@@ -58,16 +58,44 @@ fun MainNavHost(
                 .fillMaxSize()
                 .padding(contentPaddingValues),
         enterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                initialOffsetX = { fullWidth -> fullWidth },
-            ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+            val initialRoute = initialState.destination.route
+            val targetRoute = targetState.destination.route
+            val initialTabIndex = bottomNavigationTabIndex(routeText = initialRoute)
+            val targetTabIndex = bottomNavigationTabIndex(routeText = targetRoute)
+            val isBottomNavigationTabTransition = initialTabIndex != null && targetTabIndex != null
+
+            if (isBottomNavigationTabTransition) {
+                val isForward = targetTabIndex > initialTabIndex
+                slideInHorizontally(
+                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                    initialOffsetX = { fullWidth -> if (isForward) fullWidth else -fullWidth },
+                ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+            } else {
+                slideInHorizontally(
+                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                    initialOffsetX = { fullWidth -> fullWidth },
+                ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+            }
         },
         exitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                targetOffsetX = { fullWidth -> -fullWidth / 3 },
-            ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+            val initialRoute = initialState.destination.route
+            val targetRoute = targetState.destination.route
+            val initialTabIndex = bottomNavigationTabIndex(routeText = initialRoute)
+            val targetTabIndex = bottomNavigationTabIndex(routeText = targetRoute)
+            val isBottomNavigationTabTransition = initialTabIndex != null && targetTabIndex != null
+
+            if (isBottomNavigationTabTransition) {
+                val isForward = targetTabIndex > initialTabIndex
+                slideOutHorizontally(
+                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                    targetOffsetX = { fullWidth -> if (isForward) -fullWidth else fullWidth },
+                ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+            } else {
+                slideOutHorizontally(
+                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
+                    targetOffsetX = { fullWidth -> -fullWidth / 3 },
+                ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+            }
         },
         popEnterTransition = {
             slideInHorizontally(
@@ -176,4 +204,15 @@ fun MainNavHost(
             )
         }
     }
+}
+
+private fun bottomNavigationTabIndex(routeText: String?): Int? {
+    if (routeText.isNullOrBlank()) {
+        return null
+    }
+    val index =
+        bottomNavigationDestinations.indexOfFirst { destination ->
+            routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
+        }
+    return if (index >= 0) index else null
 }
