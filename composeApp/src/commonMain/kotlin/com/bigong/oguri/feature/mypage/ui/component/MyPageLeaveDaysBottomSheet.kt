@@ -33,6 +33,7 @@ import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.LabeledTextField
+import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_exit
@@ -80,7 +81,11 @@ fun MyPageLeaveDaysBottomSheet(
         containerColor = Neutral0,
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .dismissKeyboardOnOutsideTouch()
+                    .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
