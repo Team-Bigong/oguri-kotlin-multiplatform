@@ -126,8 +126,8 @@ fun MyPageLeaveDaysBottomSheet(
                         .background(color = Mint70, shape = RoundedCornerShape(size = 8.dp))
                         .noRippleClickable(
                             onClick = {
-                                val remainingLeaveDays = remainingLeaveDaysInput.toIntOrNull() ?: return@noRippleClickable
-                                val preferredLeaveDays = preferredLeaveDaysInput.toIntOrNull() ?: return@noRippleClickable
+                                val remainingLeaveDays = remainingLeaveDaysInput.toIntOrNull() ?: currentRemainingLeaveDays
+                                val preferredLeaveDays = preferredLeaveDaysInput.toIntOrNull() ?: currentPreferredLeaveDays
                                 onSubmit(remainingLeaveDays, preferredLeaveDays)
                             },
                         ).padding(vertical = 14.dp),

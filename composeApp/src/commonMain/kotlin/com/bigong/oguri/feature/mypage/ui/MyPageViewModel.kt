@@ -103,8 +103,22 @@ class MyPageViewModel(
         remainingLeaveDays: Int,
         preferredLeaveDays: Int,
     ) {
-        if (remainingLeaveDays <= 0 || preferredLeaveDays <= 0) {
+        if (remainingLeaveDays < 0 || preferredLeaveDays < 0) {
             return
+        }
+
+        val currentMyPageInfo = uiState.value.myPageInfo ?: return
+        val optimisticMyPageInfo =
+            currentMyPageInfo.copy(
+                remainingLeaveDays = remainingLeaveDays,
+                preferredLeaveDays = preferredLeaveDays,
+            )
+
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                isEditLeaveDaysBottomSheetVisible = false,
+                myPageInfo = optimisticMyPageInfo,
+            )
         }
 
         viewModelScope.launch {
@@ -119,10 +133,13 @@ class MyPageViewModel(
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
                         myPageInfo = myPageInfo,
-                        isEditLeaveDaysBottomSheetVisible = false,
                     )
                 }
                 _sideEffect.tryEmit(MyPageSideEffect.LeaveDaysUpdated)
+            }.onFailure {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(myPageInfo = currentMyPageInfo)
+                }
             }
         }
     }

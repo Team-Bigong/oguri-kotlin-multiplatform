@@ -14,8 +14,11 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 
 @Inject
 class KtorMyPageRemoteDataSource(
@@ -40,6 +43,7 @@ class KtorMyPageRemoteDataSource(
         authRequestExecutor.execute {
             httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
                 appendUserIdHeaderWhenGuest()
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(
                     UpdateMemberDayOffRequest(
                         preferredDayOff = request.preferredLeaveDays,
@@ -70,6 +74,7 @@ class KtorMyPageRemoteDataSource(
         authRequestExecutor.execute {
             httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH") {
                 appendUserIdHeaderWhenGuest()
+                header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(
                     ManageSavedRecommendationRequest(
                         startDate = selectedPeriod.startDate,
