@@ -77,6 +77,38 @@ class MainNavigator(
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
+    fun navigateToRouteModel(routeModel: RouteModel) {
+        when (routeModel) {
+            is RouteModel.PlaceDetail -> {
+                navigateToPlaceDetail(
+                    placeId = routeModel.placeId,
+                    startDate = routeModel.startDate,
+                    endDate = routeModel.endDate,
+                )
+            }
+
+            is RouteModel.PeriodDetail -> {
+                navigateToPeriodDetail(
+                    startDate = routeModel.startDate,
+                    endDate = routeModel.endDate,
+                )
+            }
+
+            is RouteModel.WebDocument -> {
+                navHostController.navigate(routeModel)
+            }
+
+            RouteModel.Home,
+            RouteModel.Calendar,
+            RouteModel.MyPage,
+            RouteModel.Login,
+            RouteModel.Splash,
+            -> {
+                navHostController.navigate(routeModel)
+            }
+        }
+    }
+
     fun popBackStack(): Boolean = navHostController.popBackStack()
 }
 

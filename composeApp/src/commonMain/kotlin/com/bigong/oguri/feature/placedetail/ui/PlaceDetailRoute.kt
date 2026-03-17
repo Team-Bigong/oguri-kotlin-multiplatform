@@ -6,6 +6,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.deeplink.buildPlaceDetailDeepLink
+import com.bigong.oguri.core.platform.shareText
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.snackbar_place_deleted
 import oguri.composeapp.generated.resources.snackbar_place_saved
+import oguri.composeapp.generated.resources.share_place_detail_message
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -33,6 +36,7 @@ fun PlaceDetailRoute(
     val placeDetailUiState = placeDetailViewModel.uiState.collectAsStateWithLifecycle().value
     val placeSavedMessage = stringResource(Res.string.snackbar_place_saved)
     val placeDeletedMessage = stringResource(Res.string.snackbar_place_deleted)
+    val sharePlaceDetailMessageTemplate = stringResource(Res.string.share_place_detail_message)
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(placeId, startDate, endDate) {
@@ -71,7 +75,20 @@ fun PlaceDetailRoute(
                 endDate = endDate,
             )
         },
-        onShareClick = {},
+        onShareClick = {
+            val placeName = placeDetailUiState.placeDetail?.city ?: return@PlaceDetailScreen
+            val deepLinkUrl =
+                buildPlaceDetailDeepLink(
+                    placeId = placeId,
+                    startDate = startDate,
+                    endDate = endDate,
+                )
+            val shareMessage =
+                sharePlaceDetailMessageTemplate
+                    .replace("%1\$s", placeName)
+                    .replace("%2\$s", deepLinkUrl)
+            shareText(shareMessage)
+        },
         onSaveToggleClick = placeDetailViewModel::toggleSaved,
         onUrlClick = { destinationUrl ->
             uriHandler.openUri(destinationUrl)

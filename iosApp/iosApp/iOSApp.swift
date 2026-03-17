@@ -7,7 +7,12 @@ struct iOSApp: App {
         WindowGroup {
             ContentView()
                 .onOpenURL { url in
-                    KakaoAuthProvider_iosKt.handleKakaoLoginOpenUrl(url: url.absoluteString)
+                    let urlText = url.absoluteString
+                    if urlText.hasPrefix("kakao") {
+                        KakaoAuthProvider_iosKt.handleKakaoLoginOpenUrl(url: urlText)
+                    } else {
+                        DeepLinkStoreProviderKt.handleIncomingAppUrl(urlText: urlText)
+                    }
                 }
         }
     }

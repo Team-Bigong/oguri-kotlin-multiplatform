@@ -17,6 +17,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,7 @@ import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
+import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
@@ -79,12 +82,21 @@ fun NavDisplay(
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage = stringResource(Res.string.navigation_back_press_exit_message)
         val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
+        val incomingDeepLinkUrl = appGraph.deepLinkStore.incomingUrl.collectAsState().value
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation =
             RouteModels.bottomNavigationDestinations.any { destination ->
                 isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
             }
         val isOnMainTabRoot = isMainTabRootDestination(currentDestination)
+
+        LaunchedEffect(incomingDeepLinkUrl) {
+            val deepLinkUrl = incomingDeepLinkUrl ?: return@LaunchedEffect
+            appGraph.deepLinkStore.clearConsumed(urlText = deepLinkUrl)
+
+            val targetRoute = parseAppDeepLinkRoute(urlText = deepLinkUrl) ?: return@LaunchedEffect
+            navigator.navigateToRouteModel(targetRoute)
+        }
 
         PlatformBackGestureContainer(
             enabled = !isOnMainTabRoot,
@@ -122,6 +134,9 @@ fun NavDisplay(
                         navigator = navigator,
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
+                        onLoginCompleted = {
+                            navigator.navigateToHomeFromLogin()
+                        },
                         onLoggedOut = {
                             navigator.navigateToLogin()
                             coroutineScope.launch {

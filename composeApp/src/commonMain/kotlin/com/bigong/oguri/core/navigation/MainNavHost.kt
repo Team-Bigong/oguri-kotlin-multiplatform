@@ -35,6 +35,7 @@ fun MainNavHost(
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
     onLoggedOut: () -> Unit,
+    onLoginCompleted: () -> Unit,
 ) {
     val homeViewModel =
         remember {
@@ -88,9 +89,9 @@ fun MainNavHost(
             LoginRoute(
                 loginViewModelProvider = appGraph.loginViewModelProvider,
                 snackbarHostState = snackbarHostState,
-                onLoginCompleted = navigator::navigateToHomeFromLogin,
-                onAppleLoginClick = navigator::navigateToHomeFromLogin,
-                onGuestBrowseClick = navigator::navigateToHomeFromLogin,
+                onLoginCompleted = onLoginCompleted,
+                onAppleLoginClick = onLoginCompleted,
+                onGuestBrowseClick = onLoginCompleted,
             )
         }
         composable<RouteModel.Home> {

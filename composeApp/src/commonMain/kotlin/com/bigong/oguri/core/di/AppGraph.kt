@@ -1,5 +1,7 @@
 package com.bigong.oguri.core.di
 
+import com.bigong.oguri.core.deeplink.DeepLinkStore
+import com.bigong.oguri.core.deeplink.provideDeepLinkStore
 import com.bigong.oguri.data.remote.AuthRemoteDataSource
 import com.bigong.oguri.data.remote.CalendarRemoteDataSource
 import com.bigong.oguri.data.remote.HomeRemoteDataSource
@@ -33,6 +35,7 @@ import io.ktor.client.HttpClient
 
 @DependencyGraph
 interface AppGraph {
+    val deepLinkStore: DeepLinkStore
     val calendarViewModelProvider: Provider<CalendarViewModel>
     val homeViewModelProvider: Provider<HomeViewModel>
     val loginViewModelProvider: Provider<LoginViewModel>
@@ -69,6 +72,9 @@ interface AppGraph {
 
     @Provides
     fun providePlaceDetailRepository(implementation: DefaultPlaceDetailRepository): PlaceDetailRepository = implementation
+
+    @Provides
+    fun provideDeepLinkStoreInstance(): DeepLinkStore = provideDeepLinkStore()
 
     @DependencyGraph.Factory
     fun interface Factory {

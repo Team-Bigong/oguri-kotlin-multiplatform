@@ -14,6 +14,14 @@
 				<string>kakao$(KEY_KAKAO)</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.bigong.oguri.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>oguri</string>
+			</array>
+		</dict>
 	</array>
 	<key>KEY_KAKAO</key>
 	<string>$(KEY_KAKAO)</string>

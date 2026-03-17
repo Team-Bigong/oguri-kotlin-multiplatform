@@ -66,6 +66,8 @@
     <string name="snackbar_mypage_leave_days_updated">연차 설정을 저장했어요.</string>
     <string name="snackbar_mypage_selected_period_deleted">휴가 일정을 삭제했어요.</string>
     <string name="snackbar_mypage_saved_place_deleted">담아둔 여행지를 삭제했어요.</string>
+    <string name="share_place_detail_message">오구리에서 %1$s 여행지를 확인해보세요.\n\n%2$s</string>
+    <string name="share_period_detail_message">오구리에서 이 기간을 확인해보세요. (%1$s - %2$s)\n%3$s</string>
 
     <string name="calendar_header_title">연차 몇 일 써볼까요?</string>
     <string name="calendar_header_subtitle">일수를 바꿔보면서 다른 일정도 찾아보세요</string>
