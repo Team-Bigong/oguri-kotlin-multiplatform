@@ -40,13 +40,9 @@ fun CalendarRoute(
     CalendarScreen(
         calendarUiState = calendarUiState,
         onLeaveDaysChanged = calendarViewModel::updateLeaveDays,
-        onYearMonthSelected = calendarViewModel::updateYearMonth,
-        onDateClick = { selectedDate ->
-            calendarViewModel.onDateClick(date = selectedDate)
-        },
-        onPeriodClick = { selectedPeriod ->
-            calendarViewModel.onPeriodClick(periodId = selectedPeriod.id)
-        },
+        onCardClick = calendarViewModel::onCardClick,
+        onDetailClick = calendarViewModel::onDetailClick,
+        onLoadNextPage = calendarViewModel::loadNextPage,
         onRetryClick = calendarViewModel::retry,
     )
 }

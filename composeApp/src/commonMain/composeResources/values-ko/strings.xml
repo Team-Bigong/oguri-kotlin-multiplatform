@@ -70,7 +70,7 @@
     <string name="share_period_detail_message">오구리에서 이 기간을 확인해보세요. (%1$s - %2$s)\n%3$s</string>
 
     <string name="calendar_header_title">연차 몇 일 써볼까요?</string>
-    <string name="calendar_header_subtitle">일수를 바꿔보면서 다른 일정도 찾아보세요</string>
+    <string name="calendar_header_subtitle">연차를 바꿔보면서 가장 알찬 조합을 찾아보세요</string>
     <string name="calendar_loading">캘린더 추천을 불러오는 중이에요...</string>
     <string name="calendar_error_retry">캘린더 추천을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
     <string name="calendar_dialog_leave_days_title">연차 일수를 입력해 주세요</string>
@@ -86,10 +86,15 @@
     <string name="calendar_day_fri">금</string>
     <string name="calendar_day_sat">토</string>
     <string name="calendar_recommendation_guide_title">가장 알차게 쉴 수 있는 날이에요</string>
-    <string name="calendar_recommendation_guide_highlight">가장 알차게</string>
+    <string name="calendar_recommendation_guide_highlight">가장 알차게 쉴 수 있는 날</string>
     <string name="calendar_recommendation_guide_subtitle">두 번 누르면 여행지도 함께 볼 수 있어요</string>
     <string name="calendar_period_range">%1$s - %2$s</string>
     <string name="calendar_month_day">%1$d월 %2$d일</string>
+    <string name="calendar_card_total_days">%1$s (%2$d일)</string>
+    <string name="calendar_card_summary_with_holiday">%1$s・휴일 %2$d일・연차 %3$d일</string>
+    <string name="calendar_card_summary_without_holiday">휴일 %1$d일 · 연차 %2$d일</string>
+    <string name="calendar_card_detail">자세히 보기</string>
+    <string name="calendar_end_of_list_message">이 연차로 가능한 일정은 여기까지예요 👋</string>
     <string name="calendar_leave_days_sheet_title">연차 사용 일수</string>
     <string name="calendar_leave_days_sheet_done">완료</string>
     <string name="period_detail_title">기간 상세</string>

@@ -14,9 +14,9 @@ import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.share_place_detail_message
 import oguri.composeapp.generated.resources.snackbar_place_deleted
 import oguri.composeapp.generated.resources.snackbar_place_saved
-import oguri.composeapp.generated.resources.share_place_detail_message
 import org.jetbrains.compose.resources.stringResource
 
 @Composable

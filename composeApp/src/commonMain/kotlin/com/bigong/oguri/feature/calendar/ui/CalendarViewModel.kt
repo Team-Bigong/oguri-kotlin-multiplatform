@@ -2,7 +2,10 @@ package com.bigong.oguri.feature.calendar.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.domain.model.CalendarPeriod
+import com.bigong.oguri.domain.model.CalendarRecommendation
 import com.bigong.oguri.domain.usecase.GetCalendarRecommendationUseCase
+import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
 import dev.zacsweers.metro.Inject
@@ -14,7 +17,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 @Inject
 class CalendarViewModel(
@@ -22,111 +30,99 @@ class CalendarViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState = _uiState.asStateFlow()
+
     private val _sideEffect = MutableSharedFlow<CalendarSideEffect>(extraBufferCapacity = 1)
     val sideEffect = _sideEffect.asSharedFlow()
 
+    private var currentPageIndex: Int = 0
+
     init {
+        val today =
+            Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                selectedYear = today.year,
+                selectedMonth = today.month.ordinal + 1,
+            )
+        }
         loadInitialCalendar()
     }
 
     fun updateLeaveDays(leaveDays: Int) {
-        if (leaveDays <= 0) {
-            return
-        }
-        if (uiState.value.leaveDays == leaveDays) {
+        if (leaveDays <= 0 || leaveDays == uiState.value.leaveDays) {
             return
         }
         _uiState.update { currentUiState ->
             currentUiState.copy(leaveDays = leaveDays)
         }
         _sideEffect.tryEmit(CalendarSideEffect.LeaveDaysUpdated)
-        fetchCalendarRecommendation(
-            year = uiState.value.selectedYear,
-            month = uiState.value.selectedMonth,
-            leaveDays = leaveDays,
-        )
+        refreshPagedRecommendations()
     }
 
-    fun updateYearMonth(
-        year: Int,
-        month: Int,
+    fun onCardClick(periodId: Long) {
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                expandedPeriodId = if (currentUiState.expandedPeriodId == periodId) null else periodId,
+            )
+        }
+    }
+
+    fun onCardDateClick(
+        periodId: Long,
+        date: LocalDate,
     ) {
-        _uiState.update { currentUiState ->
-            currentUiState.copy(
-                selectedYear = year,
-                selectedMonth = month,
-            )
-        }
-        fetchCalendarRecommendation(
-            year = year,
-            month = month,
-            leaveDays = uiState.value.leaveDays,
-        )
-    }
-
-    fun onDateClick(date: LocalDate) {
-        val matchedPeriod =
-            uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->
-                date in period.startDate..period.endDate
-            }
-        if (matchedPeriod == null) {
-            return
-        }
-
-        val isSameDateTapped = uiState.value.selectedDate == date
-        val isSamePeriodTapped = matchedPeriod.id == uiState.value.selectedPeriodId
-        if (isSameDateTapped && isSamePeriodTapped) {
-            _sideEffect.tryEmit(
-                CalendarSideEffect.NavigateToPeriodDetail(
-                    startDate = matchedPeriod.startDate.toString(),
-                    endDate = matchedPeriod.endDate.toString(),
-                ),
-            )
-            return
-        }
-
-        _uiState.update { currentUiState ->
-            currentUiState.copy(
-                selectedDate = date,
-                selectedPeriodId = matchedPeriod.id,
-            )
-        }
-    }
-
-    fun onPeriodClick(periodId: Long) {
-        if (uiState.value.selectedPeriodId == periodId) {
-            val selectedPeriodForNavigation =
-                uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->
-                    period.id == periodId
-                } ?: return
-            _sideEffect.tryEmit(
-                CalendarSideEffect.NavigateToPeriodDetail(
-                    startDate = selectedPeriodForNavigation.startDate.toString(),
-                    endDate = selectedPeriodForNavigation.endDate.toString(),
-                ),
-            )
-            return
-        }
-
-        val selectedPeriod =
-            uiState.value.calendarRecommendation?.periods?.firstOrNull { period ->
-                period.id == periodId
+        val period =
+            uiState.value.periodCards.firstOrNull { card ->
+                card.id == periodId
             } ?: return
 
+        if (date !in period.startDate..period.endDate) {
+            return
+        }
+
         _uiState.update { currentUiState ->
             currentUiState.copy(
-                selectedPeriodId = periodId,
-                selectedDate = selectedPeriod.startDate,
+                selectedDateByPeriodId =
+                    currentUiState.selectedDateByPeriodId +
+                        (periodId to date),
             )
         }
+
+        _sideEffect.tryEmit(
+            CalendarSideEffect.NavigateToPeriodDetail(
+                startDate = period.startDate.toString(),
+                endDate = period.endDate.toString(),
+            ),
+        )
+    }
+
+    fun onDetailClick(periodId: Long) {
+        val period =
+            uiState.value.periodCards.firstOrNull { card ->
+                card.id == periodId
+            } ?: return
+
+        _sideEffect.tryEmit(
+            CalendarSideEffect.NavigateToPeriodDetail(
+                startDate = period.startDate.toString(),
+                endDate = period.endDate.toString(),
+            ),
+        )
+    }
+
+    fun loadNextPage() {
+        val currentUiState = uiState.value
+        if (!currentUiState.hasMorePage || currentUiState.isLoading || currentUiState.isLoadingNextPage) {
+            return
+        }
+        fetchRecommendationPage(isInitial = false)
     }
 
     fun retry() {
-        fetchCalendarRecommendation(
-            year = uiState.value.selectedYear,
-            month = uiState.value.selectedMonth,
-            leaveDays = uiState.value.leaveDays,
-        )
+        refreshPagedRecommendations()
     }
 
     private fun loadInitialCalendar() {
@@ -134,6 +130,7 @@ class CalendarViewModel(
             _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
+
             runCatching {
                 withContext(Dispatchers.Default) {
                     getCalendarRecommendationUseCase.getPreferredDayOffCount()
@@ -143,64 +140,118 @@ class CalendarViewModel(
                 _uiState.update { currentUiState ->
                     currentUiState.copy(leaveDays = resolvedLeaveDays)
                 }
-                fetchCalendarRecommendation(
-                    year = uiState.value.selectedYear,
-                    month = uiState.value.selectedMonth,
-                    leaveDays = resolvedLeaveDays,
-                )
+                refreshPagedRecommendations()
             }.onFailure {
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
                         isLoading = false,
                         isError = true,
-                        calendarRecommendation = null,
                     )
                 }
             }
         }
     }
 
-    private fun fetchCalendarRecommendation(
-        year: Int,
-        month: Int,
-        leaveDays: Int,
-    ) {
+    private fun refreshPagedRecommendations() {
+        currentPageIndex = 0
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                isLoading = true,
+                isError = false,
+                hasMorePage = true,
+                expandedPeriodId = null,
+                periodCards = emptyList(),
+                selectedDateByPeriodId = emptyMap(),
+            )
+        }
+        fetchRecommendationPage(isInitial = true)
+    }
+
+    private fun fetchRecommendationPage(isInitial: Boolean) {
         viewModelScope.launch {
-            _uiState.update { currentUiState ->
-                currentUiState.copy(isLoading = true, isError = false)
+            val currentUiState = uiState.value
+            _uiState.update { previousUiState ->
+                previousUiState.copy(
+                    isLoading = if (isInitial) true else previousUiState.isLoading,
+                    isLoadingNextPage = if (isInitial) false else true,
+                    isError = false,
+                )
             }
 
             runCatching {
                 withContext(Dispatchers.Default) {
+                    val baseDate =
+                        LocalDate.parse(
+                            "${currentUiState.selectedYear}-${currentUiState.selectedMonth.toString().padStart(2, '0')}-01",
+                        )
+                    val targetDate = baseDate.plus(value = currentPageIndex, unit = DateTimeUnit.MONTH)
                     getCalendarRecommendationUseCase(
-                        year = year,
-                        month = month,
-                        dayOffCount = leaveDays,
+                        year = targetDate.year,
+                        month = targetDate.month.ordinal + 1,
+                        dayOffCount = currentUiState.leaveDays,
                     )
                 }
             }.onSuccess { recommendation ->
-                val defaultSelectedPeriod = recommendation.periods.firstOrNull()
-                _uiState.update { currentUiState ->
-                    currentUiState.copy(
+                val appendedCards =
+                    recommendation.toPeriodCards(pageIndex = currentPageIndex)
+                val isLastPage = appendedCards.isEmpty() || currentPageIndex >= MAX_PAGE_INDEX
+
+                _uiState.update { previousUiState ->
+                    val mergedCards = if (isInitial) appendedCards else previousUiState.periodCards + appendedCards
+                    val defaultExpandedId = previousUiState.expandedPeriodId ?: mergedCards.firstOrNull()?.id
+                    val mergedSelectedDate =
+                        previousUiState.selectedDateByPeriodId +
+                            appendedCards.associate { periodCard ->
+                                periodCard.id to periodCard.startDate
+                            }
+
+                    previousUiState.copy(
                         isLoading = false,
+                        isLoadingNextPage = false,
                         isError = false,
-                        leaveDays = leaveDays,
-                        selectedYear = recommendation.year,
-                        selectedMonth = recommendation.month,
-                        selectedDate = defaultSelectedPeriod?.startDate,
-                        selectedPeriodId = defaultSelectedPeriod?.id,
-                        calendarRecommendation = recommendation,
+                        hasMorePage = !isLastPage,
+                        periodCards = mergedCards,
+                        expandedPeriodId = defaultExpandedId,
+                        selectedDateByPeriodId = mergedSelectedDate,
                     )
                 }
+
+                currentPageIndex += 1
             }.onFailure {
-                _uiState.update { currentUiState ->
-                    currentUiState.copy(
+                _uiState.update { previousUiState ->
+                    previousUiState.copy(
                         isLoading = false,
-                        isError = true,
-                        calendarRecommendation = null,
+                        isLoadingNextPage = false,
+                        isError = previousUiState.periodCards.isEmpty(),
                     )
                 }
             }
         }
+    }
+
+    private fun CalendarRecommendation.toPeriodCards(pageIndex: Int): List<CalendarPeriodCardUiModel> =
+        periods.mapIndexed { index: Int, period: CalendarPeriod ->
+            val holidayNames =
+                holidays
+                    .filter { holiday ->
+                        holiday.date in period.startDate..period.endDate
+                    }.map { holiday -> holiday.name }
+
+            CalendarPeriodCardUiModel(
+                id = (pageIndex.toLong() * PAGE_ID_MULTIPLIER) + index + 1L,
+                startDate = period.startDate,
+                endDate = period.endDate,
+                dayOffCount = leaveDays,
+                totalTripCount = period.totalDayCount(),
+                holidayNames = holidayNames,
+                holidays = holidays,
+            )
+        }
+
+    private fun CalendarPeriod.totalDayCount(): Int = (endDate.toEpochDays() - startDate.toEpochDays() + 1).toInt()
+
+    private companion object {
+        private const val PAGE_ID_MULTIPLIER = 1_000L
+        private const val MAX_PAGE_INDEX = 11
     }
 }

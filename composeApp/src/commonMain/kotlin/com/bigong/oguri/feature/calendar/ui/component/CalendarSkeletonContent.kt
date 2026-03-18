@@ -39,18 +39,16 @@ fun CalendarSkeletonContent() {
         Spacer(modifier = Modifier.height(24.dp))
         HorizontalDivider(color = Neutral20)
         Spacer(modifier = Modifier.height(18.dp))
-        SkeletonBox(modifier = Modifier.padding(horizontal = 20.dp).width(160.dp).height(36.dp))
-        Spacer(modifier = Modifier.height(14.dp))
-        SkeletonBox(modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(268.dp))
-        Spacer(modifier = Modifier.height(22.dp))
         GuideHeaderSkeleton(
             modifier = Modifier.padding(horizontal = 20.dp),
-            withSubtitle = true,
+            withSubtitle = false,
         )
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         repeat(3) {
-            SkeletonBox(modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(78.dp))
-            Spacer(modifier = Modifier.height(12.dp))
+            SkeletonBox(modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(64.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+            SkeletonBox(modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(180.dp))
+            Spacer(modifier = Modifier.height(18.dp))
         }
         Spacer(modifier = Modifier.height(24.dp))
     }

@@ -32,11 +32,11 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
-import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
@@ -82,7 +82,10 @@ fun NavDisplay(
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage = stringResource(Res.string.navigation_back_press_exit_message)
         val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
-        val incomingDeepLinkUrl = appGraph.deepLinkStore.incomingUrl.collectAsState().value
+        val incomingDeepLinkUrl =
+            appGraph.deepLinkStore.incomingUrl
+                .collectAsState()
+                .value
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation =
             bottomNavigationDestinations.any { destination ->
