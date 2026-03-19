@@ -46,7 +46,9 @@ import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.OguriSnackBarHost
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
+import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import dev.zacsweers.metro.createGraphFactory
 import kotlinx.coroutines.launch
@@ -226,6 +228,7 @@ private fun BottomNavigationBar(
                                     if (isSelected) {
                                         return@noRippleClickable
                                     }
+                                    HapticType.Selection.perform()
                                     onDestinationClick(destination)
                                 },
                             ).padding(horizontal = 18.dp, vertical = 10.dp)
