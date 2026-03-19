@@ -81,10 +81,6 @@ fun MyPageRoute(
             }
         }
     }
-    LaunchedEffect(Unit) {
-        myPageViewModel.refreshMyPageInfo()
-    }
-
     MyPageScreen(
         myPageUiState = myPageUiState,
         onRetryClick = myPageViewModel::loadMyPageInfo,

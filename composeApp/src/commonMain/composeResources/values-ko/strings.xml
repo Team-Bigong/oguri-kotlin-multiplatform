@@ -83,14 +83,14 @@
     <string name="snackbar_login_failed">로그인에 실패했어요. 다시 시도해 주세요.</string>
     <string name="snackbar_login_success">로그인에 성공했어요.</string>
     <string name="snackbar_login_required">해당 기능은 로그인이 필요해요.</string>
-    <string name="snackbar_onboarding_completed">환영해요! 오구리에 오신 것을 반가워요.</string>
+    <string name="snackbar_onboarding_completed">오구리에 오신 것을 환영해요!</string>
     <string name="snackbar_onboarding_failed">온보딩 완료에 실패했어요. 다시 시도해 주세요.</string>
     <string name="snackbar_home_saved">일정을 저장했어요.</string>
     <string name="snackbar_home_deleted">저장한 일정을 삭제했어요.</string>
     <string name="snackbar_place_saved">여행지를 저장했어요.</string>
     <string name="snackbar_place_deleted">저장한 여행지를 삭제했어요.</string>
     <string name="snackbar_calendar_leave_days_updated">연차 일수를 변경했어요.</string>
-    <string name="snackbar_logout_completed">로그아웃되었어요.</string>
+    <string name="snackbar_logout_completed">성공적으로 로그아웃되었어요.</string>
     <string name="snackbar_withdraw_completed">회원 탈퇴가 완료되었어요.</string>
     <string name="snackbar_mypage_leave_days_updated">연차 설정을 저장했어요.</string>
     <string name="snackbar_mypage_selected_period_deleted">휴가 일정을 삭제했어요.</string>

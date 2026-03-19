@@ -82,6 +82,24 @@ fun NavDisplay(
                     httpClient = httpClient,
                 )
             }
+        val homeViewModelLazy =
+            remember {
+                lazy(LazyThreadSafetyMode.NONE) {
+                    appGraph.homeViewModelProvider()
+                }
+            }
+        val calendarViewModelLazy =
+            remember {
+                lazy(LazyThreadSafetyMode.NONE) {
+                    appGraph.calendarViewModelProvider()
+                }
+            }
+        val myPageViewModelLazy =
+            remember {
+                lazy(LazyThreadSafetyMode.NONE) {
+                    appGraph.myPageViewModelProvider()
+                }
+            }
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage = stringResource(Res.string.navigation_back_press_exit_message)
         val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
@@ -90,6 +108,7 @@ fun NavDisplay(
             appGraph.deepLinkStore.incomingUrl
                 .collectAsState()
                 .value
+        var previousRouteText by remember { mutableStateOf<String?>(null) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation =
             bottomNavigationDestinations.any { destination ->
@@ -103,6 +122,23 @@ fun NavDisplay(
 
             val targetRoute = parseAppDeepLinkRoute(urlText = deepLinkUrl) ?: return@LaunchedEffect
             navigator.navigateToRouteModel(targetRoute)
+        }
+        LaunchedEffect(currentDestination?.route) {
+            val currentRouteText = currentDestination?.route
+            val previousRoute = previousRouteText
+            if (currentRouteText != null && previousRoute != null) {
+                if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
+                    if (homeViewModelLazy.isInitialized()) {
+                        homeViewModelLazy.value.refreshRecommendPeriods()
+                    }
+                }
+                if (isMyPageRoute(currentRouteText) && !isMyPageRoute(previousRoute)) {
+                    if (myPageViewModelLazy.isInitialized()) {
+                        myPageViewModelLazy.value.refreshMyPageInfo()
+                    }
+                }
+            }
+            previousRouteText = currentRouteText
         }
 
         PlatformBackGestureContainer(
@@ -138,6 +174,9 @@ fun NavDisplay(
                 ) { contentPaddingValues ->
                     MainNavHost(
                         appGraph = appGraph,
+                        homeViewModelProvider = { homeViewModelLazy.value },
+                        calendarViewModelProvider = { calendarViewModelLazy.value },
+                        myPageViewModelProvider = { myPageViewModelLazy.value },
                         navigator = navigator,
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
@@ -266,4 +305,14 @@ private fun isMainTabRootDestination(currentDestination: NavDestination?): Boole
     return bottomNavigationDestinations.any { destination ->
         currentRouteText == destination.routeSerialName
     }
+}
+
+private fun isHomeRoute(routeText: String): Boolean {
+    val homeRouteSerialName = RouteModel.Home.serializer().descriptor.serialName
+    return routeText == homeRouteSerialName || routeText.startsWith(homeRouteSerialName)
+}
+
+private fun isMyPageRoute(routeText: String): Boolean {
+    val myPageRouteSerialName = RouteModel.MyPage.serializer().descriptor.serialName
+    return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
 }

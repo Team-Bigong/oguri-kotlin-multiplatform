@@ -55,10 +55,6 @@ fun HomeRoute(
             }
         }
     }
-    LaunchedEffect(Unit) {
-        homeViewModel.refreshRecommendPeriods()
-    }
-
     HomeScreen(
         homeUiState = homeUiState,
         onRankSelected = homeViewModel::selectRank,
