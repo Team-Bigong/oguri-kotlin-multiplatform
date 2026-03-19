@@ -9,18 +9,26 @@ import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.model.RecommendPeriod
+import com.bigong.oguri.domain.model.RecommendationSavedChange
 import com.bigong.oguri.domain.repository.HomeRepository
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.datetime.LocalDate
 
 @Inject
 class DefaultHomeRepository(
     private val homeRemoteDataSource: HomeRemoteDataSource,
 ) : HomeRepository {
+    private val recommendationSavedChangeFlow = MutableSharedFlow<RecommendationSavedChange>(extraBufferCapacity = 32)
+
     override suspend fun getRecommendPeriods(userCountry: String): List<RecommendPeriod> =
         homeRemoteDataSource.getRecommendPeriodResponses(userCountry = userCountry).map { recommendPeriodResponse ->
             recommendPeriodResponse.toDomain()
         }
+
+    override fun observeRecommendationSavedChanges(): Flow<RecommendationSavedChange> = recommendationSavedChangeFlow.asSharedFlow()
 
     override suspend fun saveRecommendation(
         startDate: LocalDate,
@@ -36,6 +44,15 @@ class DefaultHomeRepository(
                     dayOffCount = dayOffCount,
                     totalTripCount = totalTripCount,
                 ),
+        )
+        recommendationSavedChangeFlow.tryEmit(
+            RecommendationSavedChange(
+                startDate = startDate,
+                endDate = endDate,
+                dayOffCount = dayOffCount,
+                totalTripCount = totalTripCount,
+                isSaved = true,
+            ),
         )
     }
 
@@ -53,6 +70,15 @@ class DefaultHomeRepository(
                     dayOffCount = dayOffCount,
                     totalTripCount = totalTripCount,
                 ),
+        )
+        recommendationSavedChangeFlow.tryEmit(
+            RecommendationSavedChange(
+                startDate = startDate,
+                endDate = endDate,
+                dayOffCount = dayOffCount,
+                totalTripCount = totalTripCount,
+                isSaved = false,
+            ),
         )
     }
 }

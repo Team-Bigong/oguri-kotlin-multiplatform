@@ -20,14 +20,14 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -47,8 +47,8 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarRecommendationSection
 import com.bigong.oguri.feature.calendar.ui.component.CalendarSkeletonContent
+import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_header_subtitle
@@ -62,20 +62,28 @@ private val SCROLL_TOP_BUTTON_SIZE: Dp = 48.dp
 @Composable
 fun CalendarScreen(
     calendarUiState: CalendarUiState,
+    pagedPeriodCards: LazyPagingItems<CalendarPeriodCardUiModel>,
+    savedStateByPeriodKey: Map<String, Boolean>,
     onLeaveDaysChanged: (Int) -> Unit,
     onCardClick: (Long) -> Unit,
     onSaveToggleClick: (Long) -> Unit,
     onDetailClick: (Long) -> Unit,
-    onLoadNextPage: () -> Unit,
-    onRetryClick: () -> Unit,
 ) {
-    if (calendarUiState.isLoading && calendarUiState.periodCards.isEmpty()) {
+    val isInitialLoading =
+        pagedPeriodCards.loadState.refresh is LoadState.Loading &&
+            pagedPeriodCards.itemCount == 0
+    val isInitialError =
+        pagedPeriodCards.loadState.refresh is LoadState.Error &&
+            pagedPeriodCards.itemCount == 0
+    val isAppending = pagedPeriodCards.loadState.append is LoadState.Loading
+
+    if (isInitialLoading) {
         CalendarSkeletonContent()
         return
     }
 
-    if (calendarUiState.isError && calendarUiState.periodCards.isEmpty()) {
-        NetworkErrorRetryContent(onRetryClick = onRetryClick)
+    if (isInitialError) {
+        NetworkErrorRetryContent(onRetryClick = pagedPeriodCards::retry)
         return
     }
 
@@ -88,37 +96,12 @@ fun CalendarScreen(
                 (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset > 280)
         }
     }
-    val shouldShowEndHint by remember(calendarUiState.hasMorePage, calendarUiState.isLoadingNextPage) {
+    val shouldShowEndHint by remember(pagedPeriodCards.loadState.append) {
         androidx.compose.runtime.derivedStateOf {
             !listState.canScrollForward &&
                 listState.isScrollInProgress &&
-                !calendarUiState.isLoadingNextPage &&
-                !calendarUiState.hasMorePage
+                pagedPeriodCards.loadState.append is LoadState.NotLoading
         }
-    }
-
-    LaunchedEffect(
-        listState,
-        calendarUiState.hasMorePage,
-        calendarUiState.isLoadingNextPage,
-        calendarUiState.periodCards.size,
-    ) {
-        snapshotFlow {
-            listState.layoutInfo.visibleItemsInfo
-                .lastOrNull()
-                ?.index
-        }.distinctUntilChanged()
-            .collect { lastVisibleIndex ->
-                val targetIndex = listState.layoutInfo.totalItemsCount - 3
-                if (
-                    lastVisibleIndex != null &&
-                    lastVisibleIndex >= targetIndex &&
-                    calendarUiState.hasMorePage &&
-                    !calendarUiState.isLoadingNextPage
-                ) {
-                    onLoadNextPage()
-                }
-            }
     }
 
     Box(
@@ -163,9 +146,10 @@ fun CalendarScreen(
 
             item {
                 CalendarRecommendationSection(
-                    periodCards = calendarUiState.periodCards,
+                    pagedPeriodCards = pagedPeriodCards,
+                    savedStateByPeriodKey = savedStateByPeriodKey,
                     expandedPeriodId = calendarUiState.expandedPeriodId,
-                    isLoadingNextPage = calendarUiState.isLoadingNextPage,
+                    isLoadingNextPage = isAppending,
                     showEndHint = shouldShowEndHint,
                     listViewportBottomInWindow = listViewportBottomInWindow,
                     onCardClick = onCardClick,

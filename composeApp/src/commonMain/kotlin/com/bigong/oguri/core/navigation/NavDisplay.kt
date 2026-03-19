@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -72,8 +73,9 @@ fun NavDisplay(
     OguriTheme {
         val navigator = rememberMainNavigator()
         val currentDestination = navigator.currentDestination()
+        var authSessionVersion by remember { mutableIntStateOf(0) }
         val appGraph =
-            remember {
+            remember(authSessionVersion) {
                 AuthTokenStore.initialize(localDataSource = provideTokenLocalDataSource())
                 AuthTokenStore.bootstrapFromLocalDataSource()
                 val appGraphFactory = createGraphFactory<AppGraph.Factory>()
@@ -81,6 +83,24 @@ fun NavDisplay(
                 appGraphFactory.create(
                     httpClient = httpClient,
                 )
+            }
+        val homeViewModelLazy =
+            remember(authSessionVersion) {
+                lazy(LazyThreadSafetyMode.NONE) {
+                    appGraph.homeViewModelProvider()
+                }
+            }
+        val calendarViewModelLazy =
+            remember(authSessionVersion) {
+                lazy(LazyThreadSafetyMode.NONE) {
+                    appGraph.calendarViewModelProvider()
+                }
+            }
+        val myPageViewModelLazy =
+            remember(authSessionVersion) {
+                lazy(LazyThreadSafetyMode.NONE) {
+                    appGraph.myPageViewModelProvider()
+                }
             }
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage = stringResource(Res.string.navigation_back_press_exit_message)
@@ -90,6 +110,7 @@ fun NavDisplay(
             appGraph.deepLinkStore.incomingUrl
                 .collectAsState()
                 .value
+        var previousRouteText by remember { mutableStateOf<String?>(null) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation =
             bottomNavigationDestinations.any { destination ->
@@ -103,6 +124,23 @@ fun NavDisplay(
 
             val targetRoute = parseAppDeepLinkRoute(urlText = deepLinkUrl) ?: return@LaunchedEffect
             navigator.navigateToRouteModel(targetRoute)
+        }
+        LaunchedEffect(currentDestination?.route) {
+            val currentRouteText = currentDestination?.route
+            val previousRoute = previousRouteText
+            if (currentRouteText != null && previousRoute != null) {
+                if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
+                    if (homeViewModelLazy.isInitialized()) {
+                        homeViewModelLazy.value.refreshRecommendPeriods()
+                    }
+                }
+                if (isMyPageRoute(currentRouteText) && !isMyPageRoute(previousRoute)) {
+                    if (myPageViewModelLazy.isInitialized()) {
+                        myPageViewModelLazy.value.refreshMyPageInfo()
+                    }
+                }
+            }
+            previousRouteText = currentRouteText
         }
 
         PlatformBackGestureContainer(
@@ -138,11 +176,15 @@ fun NavDisplay(
                 ) { contentPaddingValues ->
                     MainNavHost(
                         appGraph = appGraph,
+                        homeViewModelProvider = { homeViewModelLazy.value },
+                        calendarViewModelProvider = { calendarViewModelLazy.value },
+                        myPageViewModelProvider = { myPageViewModelLazy.value },
                         navigator = navigator,
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
                         onLoggedOut = {
-                            navigator.navigateToLogin()
+                            authSessionVersion += 1
+                            navigator.navigateToLoginAndClearBackStack()
                             coroutineScope.launch {
                                 snackbarHostState.showOguriSnackbar(
                                     message = logoutCompletedMessage,
@@ -151,7 +193,8 @@ fun NavDisplay(
                             }
                         },
                         onWithdrawCompleted = {
-                            navigator.navigateToLogin()
+                            authSessionVersion += 1
+                            navigator.navigateToLoginAndClearBackStack()
                             coroutineScope.launch {
                                 snackbarHostState.showOguriSnackbar(
                                     message = withdrawCompletedMessage,
@@ -266,4 +309,14 @@ private fun isMainTabRootDestination(currentDestination: NavDestination?): Boole
     return bottomNavigationDestinations.any { destination ->
         currentRouteText == destination.routeSerialName
     }
+}
+
+private fun isHomeRoute(routeText: String): Boolean {
+    val homeRouteSerialName = RouteModel.Home.serializer().descriptor.serialName
+    return routeText == homeRouteSerialName || routeText.startsWith(homeRouteSerialName)
+}
+
+private fun isMyPageRoute(routeText: String): Boolean {
+    val myPageRouteSerialName = RouteModel.MyPage.serializer().descriptor.serialName
+    return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
 }

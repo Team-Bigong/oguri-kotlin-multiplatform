@@ -19,6 +19,8 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
+import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestProfileSection
+import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuItem
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageProfileSection
@@ -35,6 +37,7 @@ import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_messag
 import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_title
 import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
+import oguri.composeapp.generated.resources.mypage_guest_name
 import oguri.composeapp.generated.resources.mypage_logout_dialog_title
 import oguri.composeapp.generated.resources.mypage_menu_logout
 import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
@@ -67,6 +70,7 @@ fun MyPageScreen(
     onDismissWithdrawDialog: () -> Unit,
     onConfirmWithdraw: () -> Unit,
     onLogoutClick: () -> Unit,
+    onGuestLoginClick: () -> Unit,
     onDismissLogoutDialog: () -> Unit,
     onConfirmLogout: () -> Unit,
 ) {
@@ -75,12 +79,59 @@ fun MyPageScreen(
         return
     }
 
-    if (myPageUiState.isError || myPageUiState.myPageInfo == null) {
+    if (myPageUiState.isError) {
         NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 
+    if (myPageUiState.isGuestMode) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().background(Neutral5),
+        ) {
+            item {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(Mint10)
+                            .statusBarsPadding()
+                            .padding(vertical = 18.dp),
+                ) {
+                    MyPageGuestProfileSection(
+                        guestName = stringResource(Res.string.mypage_guest_name),
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                    )
+                }
+                HorizontalDivider(color = Neutral20)
+            }
+            item {
+                MyPageGuestSection(
+                    onLoginClick = onGuestLoginClick,
+                )
+            }
+            item {
+                HorizontalDivider(color = Neutral20)
+                MyPageMenuSection(
+                    menuItems =
+                        listOf(
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_terms_of_service), onClick = onTermsOfServiceClick),
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_privacy_policy), onClick = onPrivacyPolicyClick),
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_withdraw), onClick = onGuestLoginClick),
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onGuestLoginClick),
+                        ),
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+        return
+    }
+
     val myPageInfo = myPageUiState.myPageInfo
+    if (myPageInfo == null) {
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
+        return
+    }
     val withdrawTargetPhrase = stringResource(Res.string.mypage_withdraw_dialog_phrase)
 
     LazyColumn(

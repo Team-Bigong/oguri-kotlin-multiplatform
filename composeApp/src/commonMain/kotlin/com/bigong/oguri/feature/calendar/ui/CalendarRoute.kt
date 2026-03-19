@@ -4,6 +4,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
@@ -21,6 +22,7 @@ fun CalendarRoute(
     onOpenPeriodDetail: (String, String) -> Unit = { _, _ -> },
 ) {
     val calendarUiState = calendarViewModel.uiState.collectAsStateWithLifecycle().value
+    val pagedPeriodCards = calendarViewModel.pagedPeriodCards.collectAsLazyPagingItems()
     val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_calendar_leave_days_updated)
     val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
     val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)
@@ -55,11 +57,11 @@ fun CalendarRoute(
 
     CalendarScreen(
         calendarUiState = calendarUiState,
+        pagedPeriodCards = pagedPeriodCards,
+        savedStateByPeriodKey = calendarUiState.savedStateByPeriodKey,
         onLeaveDaysChanged = calendarViewModel::updateLeaveDays,
         onCardClick = calendarViewModel::onCardClick,
         onSaveToggleClick = calendarViewModel::toggleSaved,
         onDetailClick = calendarViewModel::onDetailClick,
-        onLoadNextPage = calendarViewModel::loadNextPage,
-        onRetryClick = calendarViewModel::retry,
     )
 }

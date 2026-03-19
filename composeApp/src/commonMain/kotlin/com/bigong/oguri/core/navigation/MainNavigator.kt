@@ -38,6 +38,17 @@ class MainNavigator(
         }
     }
 
+    fun navigateToLoginAndClearBackStack() {
+        navHostController.navigate(RouteModel.Login) {
+            launchSingleTop = true
+            restoreState = false
+            popUpTo(navHostController.graph.id) {
+                inclusive = true
+                saveState = false
+            }
+        }
+    }
+
     fun navigateToLoginFromSplash() {
         navHostController.navigate(RouteModel.Login) {
             launchSingleTop = true

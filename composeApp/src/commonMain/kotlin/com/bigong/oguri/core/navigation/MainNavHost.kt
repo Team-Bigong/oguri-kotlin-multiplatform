@@ -10,16 +10,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.feature.calendar.ui.CalendarRoute
+import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
 import com.bigong.oguri.feature.home.ui.HomeRoute
+import com.bigong.oguri.feature.home.ui.HomeViewModel
 import com.bigong.oguri.feature.login.ui.LoginRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageRoute
+import com.bigong.oguri.feature.mypage.ui.MyPageViewModel
 import com.bigong.oguri.feature.onboarding.ui.OnboardingRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
@@ -32,25 +34,15 @@ private const val NAVIGATION_SLIDE_DURATION_MILLIS = 240
 @Composable
 fun MainNavHost(
     appGraph: AppGraph,
+    homeViewModelProvider: () -> HomeViewModel,
+    calendarViewModelProvider: () -> CalendarViewModel,
+    myPageViewModelProvider: () -> MyPageViewModel,
     navigator: MainNavigator,
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
 ) {
-    val homeViewModel =
-        remember {
-            appGraph.homeViewModelProvider()
-        }
-    val calendarViewModel =
-        remember {
-            appGraph.calendarViewModelProvider()
-        }
-    val myPageViewModel =
-        remember {
-            appGraph.myPageViewModelProvider()
-        }
-
     NavHost(
         navController = navigator.navHostController,
         startDestination = RouteModel.Splash,
@@ -144,7 +136,7 @@ fun MainNavHost(
         }
         composable<RouteModel.Home> {
             HomeRoute(
-                homeViewModel = homeViewModel,
+                homeViewModel = homeViewModelProvider(),
                 snackbarHostState = snackbarHostState,
                 onPlaceClick = navigator::navigateToPlaceDetail,
                 onPeriodClick = navigator::navigateToPeriodDetail,
@@ -160,14 +152,14 @@ fun MainNavHost(
         }
         composable<RouteModel.Calendar> {
             CalendarRoute(
-                calendarViewModel = calendarViewModel,
+                calendarViewModel = calendarViewModelProvider(),
                 snackbarHostState = snackbarHostState,
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
         composable<RouteModel.MyPage> {
             MyPageRoute(
-                myPageViewModel = myPageViewModel,
+                myPageViewModel = myPageViewModelProvider(),
                 snackbarHostState = snackbarHostState,
                 onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },

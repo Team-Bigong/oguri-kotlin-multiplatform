@@ -1,11 +1,9 @@
 package com.bigong.oguri.data.repository
 
 import com.bigong.oguri.data.remote.CalendarRemoteDataSource
-import com.bigong.oguri.data.remote.model.response.CalendarHolidayResponse
 import com.bigong.oguri.data.remote.model.response.CalendarPeriodDetailResponse
 import com.bigong.oguri.data.remote.model.response.CalendarPeriodResponse
 import com.bigong.oguri.data.remote.model.response.CalendarRecommendationResponse
-import com.bigong.oguri.domain.model.CalendarHoliday
 import com.bigong.oguri.domain.model.CalendarPeriod
 import com.bigong.oguri.domain.model.CalendarPeriodDetail
 import com.bigong.oguri.domain.model.CalendarRecommendation
@@ -18,55 +16,50 @@ import kotlinx.datetime.LocalDate
 class DefaultCalendarRepository(
     private val calendarRemoteDataSource: CalendarRemoteDataSource,
 ) : CalendarRepository {
-    override suspend fun getPreferredDayOffCount(): Int = calendarRemoteDataSource.getPreferredDayOffCount()
-
     override suspend fun getCalendarRecommendation(
         year: Int,
         month: Int,
-        dayOffCount: Int,
+        dayOffCount: Int?,
+        page: Int,
+        size: Int,
     ): CalendarRecommendation =
         calendarRemoteDataSource
             .getCalendarRecommendationResponse(
                 year = year,
                 month = month,
                 dayOffCount = dayOffCount,
-            ).toDomain(
-                year = year,
-                month = month,
-            )
+                page = page,
+                size = size,
+            ).toDomain()
 
     override suspend fun getCalendarPeriodDetail(
         startDate: String,
         endDate: String,
         userCountry: String,
+        page: Int,
+        size: Int,
     ): CalendarPeriodDetail =
         calendarRemoteDataSource
             .getCalendarPeriodDetailResponse(
                 startDate = startDate,
                 endDate = endDate,
                 userCountry = userCountry,
+                page = page,
+                size = size,
             ).toDomain()
 }
 
-private fun CalendarRecommendationResponse.toDomain(
-    year: Int,
-    month: Int,
-): CalendarRecommendation =
+private fun CalendarRecommendationResponse.toDomain(): CalendarRecommendation =
     CalendarRecommendation(
-        leaveDays = dayOffCount,
-        year = year,
-        month = month,
-        holidays = holidays.map { calendarHolidayResponse -> calendarHolidayResponse.toDomain() },
+        dayOffCount = dayOffCount,
+        page = page,
+        size = size,
+        hasNext = hasNext,
         periods =
-            bestPeriods.mapIndexed { index: Int, calendarPeriodResponse: CalendarPeriodResponse ->
-                calendarPeriodResponse.toDomain(id = index + 1L)
+            periods.mapIndexed { index: Int, calendarPeriodResponse: CalendarPeriodResponse ->
+                val periodId = (page.toLong() * size.toLong()) + index + 1L
+                calendarPeriodResponse.toDomain(id = periodId)
             },
-    )
-
-private fun CalendarHolidayResponse.toDomain(): CalendarHoliday =
-    CalendarHoliday(
-        date = LocalDate.parse(date),
-        name = label,
     )
 
 private fun CalendarPeriodResponse.toDomain(id: Long): CalendarPeriod =
@@ -74,6 +67,11 @@ private fun CalendarPeriodResponse.toDomain(id: Long): CalendarPeriod =
         id = id,
         startDate = LocalDate.parse(startDate),
         endDate = LocalDate.parse(endDate),
+        totalTripCount = totalTripCount,
+        holidayCount = holidayCount,
+        dayOffCount = dayOffCount,
+        holidayNames = holidays,
+        isSaved = saved ?: isSaved ?: false,
     )
 
 private fun CalendarPeriodDetailResponse.toDomain(): CalendarPeriodDetail =
@@ -83,6 +81,9 @@ private fun CalendarPeriodDetailResponse.toDomain(): CalendarPeriodDetail =
         holiday = holiday,
         dayOffCount = dayOffCount,
         totalTripCount = totalTripCount,
+        page = page,
+        size = size,
+        hasNext = hasNext,
         places = places.map { placeResponse -> placeResponse.toDomain() },
     )
 

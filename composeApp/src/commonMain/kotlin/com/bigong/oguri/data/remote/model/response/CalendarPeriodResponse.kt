@@ -9,4 +9,16 @@ data class CalendarPeriodResponse(
     val startDate: String,
     @SerialName("endDate")
     val endDate: String,
+    @SerialName("totalTripCount")
+    val totalTripCount: Int,
+    @SerialName("holidayCount")
+    val holidayCount: Int,
+    @SerialName("dayOffCount")
+    val dayOffCount: Int,
+    @SerialName("holidays")
+    val holidays: List<String>,
+    @SerialName("saved")
+    val saved: Boolean? = null,
+    @SerialName("isSaved")
+    val isSaved: Boolean? = null,
 )

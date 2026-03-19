@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.paging.compose.LazyPagingItems
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -12,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
+import com.bigong.oguri.feature.calendar.ui.model.toRecommendationPeriodKey
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_end_of_list_message
 import oguri.composeapp.generated.resources.calendar_recommendation_guide_highlight
@@ -21,7 +23,8 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CalendarRecommendationSection(
-    periodCards: List<CalendarPeriodCardUiModel>,
+    pagedPeriodCards: LazyPagingItems<CalendarPeriodCardUiModel>,
+    savedStateByPeriodKey: Map<String, Boolean>,
     expandedPeriodId: Long?,
     isLoadingNextPage: Boolean,
     showEndHint: Boolean,
@@ -45,16 +48,27 @@ fun CalendarRecommendationSection(
             verticalArrangement = Arrangement.spacedBy(18.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            periodCards.forEach { periodCard ->
-                CalendarRecommendationCard(
-                    periodCard = periodCard,
-                    isExpanded = expandedPeriodId == periodCard.id,
-                    onCardClick = onCardClick,
-                    onSaveToggleClick = onSaveToggleClick,
-                    onDetailClick = onDetailClick,
-                    listViewportBottomInWindow = listViewportBottomInWindow,
-                    onRequestScrollBy = onRequestScrollBy,
-                )
+            for (index in 0 until pagedPeriodCards.itemCount) {
+                val periodCard: CalendarPeriodCardUiModel = pagedPeriodCards[index] ?: continue
+                val periodKey: String = periodCard.toRecommendationPeriodKey()
+                val resolvedSavedState: Boolean = savedStateByPeriodKey[periodKey] ?: periodCard.isSaved
+                val resolvedPeriodCard =
+                    if (resolvedSavedState == periodCard.isSaved) {
+                        periodCard
+                    } else {
+                        periodCard.copy(isSaved = resolvedSavedState)
+                    }
+                androidx.compose.runtime.key(periodCard.id) {
+                    CalendarRecommendationCard(
+                        periodCard = resolvedPeriodCard,
+                        isExpanded = expandedPeriodId == resolvedPeriodCard.id,
+                        onCardClick = onCardClick,
+                        onSaveToggleClick = onSaveToggleClick,
+                        onDetailClick = onDetailClick,
+                        listViewportBottomInWindow = listViewportBottomInWindow,
+                        onRequestScrollBy = onRequestScrollBy,
+                    )
+                }
             }
         }
 

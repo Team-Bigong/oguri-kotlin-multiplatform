@@ -15,6 +15,12 @@ data class CalendarPeriodDetailResponse(
     val dayOffCount: Int,
     @SerialName("totalTripCount")
     val totalTripCount: Int,
+    @SerialName("page")
+    val page: Int,
+    @SerialName("size")
+    val size: Int,
+    @SerialName("hasNext")
+    val hasNext: Boolean,
     @SerialName("places")
     val places: List<PlaceResponse>,
 )
