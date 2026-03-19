@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.model.CalendarPeriod
 import com.bigong.oguri.domain.model.CalendarRecommendation
+import com.bigong.oguri.domain.usecase.CalculateDDayUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarRecommendationUseCase
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
@@ -27,6 +28,7 @@ import kotlin.time.Clock
 @Inject
 class CalendarViewModel(
     private val getCalendarRecommendationUseCase: GetCalendarRecommendationUseCase,
+    private val calculateDDayUseCase: CalculateDDayUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState = _uiState.asStateFlow()
@@ -231,6 +233,11 @@ class CalendarViewModel(
 
     private fun CalendarRecommendation.toPeriodCards(pageIndex: Int): List<CalendarPeriodCardUiModel> =
         periods.mapIndexed { index: Int, period: CalendarPeriod ->
+            val todayDate =
+                Clock.System
+                    .now()
+                    .toLocalDateTime(TimeZone.currentSystemDefault())
+                    .date
             val holidayNames =
                 holidays
                     .filter { holiday ->
@@ -241,6 +248,7 @@ class CalendarViewModel(
                 id = (pageIndex.toLong() * PAGE_ID_MULTIPLIER) + index + 1L,
                 startDate = period.startDate,
                 endDate = period.endDate,
+                dDay = calculateDDayUseCase(todayDate = todayDate, targetDate = period.startDate),
                 dayOffCount = leaveDays,
                 totalTripCount = period.totalDayCount(),
                 holidayNames = holidayNames,

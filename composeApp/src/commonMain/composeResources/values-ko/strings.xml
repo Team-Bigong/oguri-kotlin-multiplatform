@@ -94,6 +94,8 @@
     <string name="calendar_card_summary_with_holiday">%1$s・휴일 %2$d일・연차 %3$d일</string>
     <string name="calendar_card_summary_without_holiday">휴일 %1$d일 · 연차 %2$d일</string>
     <string name="calendar_card_detail">자세히 보기</string>
+    <string name="calendar_d_day_before">D-%1$d</string>
+    <string name="calendar_d_day_after">D+%1$d</string>
     <string name="calendar_end_of_list_message">이 연차로 가능한 일정은 여기까지예요 👋</string>
     <string name="calendar_leave_days_sheet_title">연차 사용 일수</string>
     <string name="calendar_leave_days_sheet_done">완료</string>

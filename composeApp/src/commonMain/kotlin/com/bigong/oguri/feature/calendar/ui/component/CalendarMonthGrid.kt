@@ -139,7 +139,7 @@ fun CalendarMonthGrid(
                         if (isRecommendedDate && !holidayName.isNullOrBlank()) {
                             Text(
                                 text = holidayName,
-                                style = OguriTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                                style = OguriTheme.typography.labelSmall,
                                 color = Orange50,
                                 textAlign = TextAlign.Center,
                                 modifier = Modifier.padding(top = 4.dp),

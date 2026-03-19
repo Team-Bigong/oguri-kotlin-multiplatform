@@ -35,6 +35,8 @@ import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import kotlinx.datetime.LocalDate
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.calendar_d_day_after
+import oguri.composeapp.generated.resources.calendar_d_day_before
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.calendar_period_range
 import oguri.composeapp.generated.resources.home_guide_match_places
@@ -100,6 +102,12 @@ fun PeriodDetailScreen(
                 val holidayDescriptionText = stringResource(Res.string.home_strategy_holiday_with, holidayText)
                 val leaveDayHintText =
                     stringResource(Res.string.home_strategy_day_off_hint, periodDetail.dayOffCount, periodDetail.totalTripCount)
+                val dDayText =
+                    if (periodDetailUiState.dDay >= 0) {
+                        stringResource(Res.string.calendar_d_day_before, periodDetailUiState.dDay)
+                    } else {
+                        stringResource(Res.string.calendar_d_day_after, -periodDetailUiState.dDay)
+                    }
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(count = 2),
@@ -122,6 +130,12 @@ fun PeriodDetailScreen(
                                     text = periodText,
                                     style = OguriTheme.typography.sectionTitle,
                                     color = Neutral100,
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = dDayText,
+                                    style = OguriTheme.typography.labelMedium,
+                                    color = Mint70,
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Text(
@@ -147,7 +161,7 @@ fun PeriodDetailScreen(
                             Image(
                                 painter = painterResource(Res.drawable.img_oguri_parasol),
                                 contentDescription = null,
-                                modifier = Modifier.height(120.dp),
+                                modifier = Modifier.height(132.dp),
                             )
                         }
                     }

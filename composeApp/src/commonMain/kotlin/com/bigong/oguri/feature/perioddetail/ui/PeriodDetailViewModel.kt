@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.perioddetail.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.domain.usecase.CalculateDDayUseCase
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarPeriodDetailUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
@@ -14,6 +15,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Clock
 
 @Inject
 class PeriodDetailViewModel(
@@ -21,6 +25,7 @@ class PeriodDetailViewModel(
     private val getMyPageInfoUseCase: GetMyPageInfoUseCase,
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
+    private val calculateDDayUseCase: CalculateDDayUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(PeriodDetailUiState())
     val uiState = _uiState.asStateFlow()
@@ -42,6 +47,11 @@ class PeriodDetailViewModel(
                     )
                 }
             }.onSuccess { periodDetail ->
+                val todayDate =
+                    Clock.System
+                        .now()
+                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                        .date
                 val isInitiallySaved =
                     runCatching {
                         withContext(Dispatchers.Default) {
@@ -60,6 +70,7 @@ class PeriodDetailViewModel(
                         isError = false,
                         periodDetail = periodDetail,
                         isSaved = isInitiallySaved,
+                        dDay = calculateDDayUseCase(todayDate = todayDate, targetDate = periodDetail.startDate),
                     )
                 }
             }.onFailure {
@@ -69,6 +80,7 @@ class PeriodDetailViewModel(
                         isError = true,
                         periodDetail = null,
                         isSaved = false,
+                        dDay = 0,
                     )
                 }
             }

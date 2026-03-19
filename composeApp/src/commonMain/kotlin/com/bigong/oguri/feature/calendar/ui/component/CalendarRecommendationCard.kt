@@ -13,7 +13,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,15 +48,14 @@ import com.bigong.oguri.core.util.extension.perform
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toEpochDays
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_card_detail
-import oguri.composeapp.generated.resources.calendar_d_day_after
-import oguri.composeapp.generated.resources.calendar_d_day_before
 import oguri.composeapp.generated.resources.calendar_card_summary_with_holiday
 import oguri.composeapp.generated.resources.calendar_card_summary_without_holiday
 import oguri.composeapp.generated.resources.calendar_card_total_days
+import oguri.composeapp.generated.resources.calendar_d_day_after
+import oguri.composeapp.generated.resources.calendar_d_day_before
 import oguri.composeapp.generated.resources.calendar_period_range
 import oguri.composeapp.generated.resources.ic_right_arrow
 import org.jetbrains.compose.resources.painterResource
@@ -90,17 +91,11 @@ fun CalendarRecommendationCard(
             endDateText,
         )
     val plainCalendarCardTitleText = stringResource(Res.string.calendar_card_total_days, plainTitleText, periodCard.totalTripCount)
-    val todayDate =
-        Clock.System
-            .now()
-            .toLocalDateTime(TimeZone.currentSystemDefault())
-            .date
-    val daysUntilStartDate = (periodCard.startDate.toEpochDays() - todayDate.toEpochDays()).toInt()
     val dDayText =
-        if (daysUntilStartDate >= 0) {
-            stringResource(Res.string.calendar_d_day_before, daysUntilStartDate)
+        if (periodCard.dDay >= 0) {
+            stringResource(Res.string.calendar_d_day_before, periodCard.dDay)
         } else {
-            stringResource(Res.string.calendar_d_day_after, -daysUntilStartDate)
+            stringResource(Res.string.calendar_d_day_after, -periodCard.dDay)
         }
 
     val summaryHolidayText = periodCard.holidayNames.joinToString(separator = "・")
@@ -208,7 +203,7 @@ fun CalendarRecommendationCard(
                         color = Neutral30,
                         shape = RoundedCornerShape(bottomStart = 8.dp, bottomEnd = 8.dp),
                     ).animateContentSize(animationSpec = tween(durationMillis = 280))
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                    .padding(horizontal = 14.dp, vertical = 12.dp),
         ) {
             AnimatedVisibility(
                 visible = isExpanded,
@@ -229,9 +224,7 @@ fun CalendarRecommendationCard(
                         style = OguriTheme.typography.labelMedium,
                         color = Mint70,
                     )
-                    Box(
-                        modifier = Modifier.padding(top = 4.dp),
-                    )
+                    Spacer(modifier = Modifier.height(12.dp))
                     CalendarMonthGrid(
                         periodCard = periodCard,
                     )
@@ -272,6 +265,7 @@ fun CalendarRecommendationCard(
                             color = Mint70,
                         )
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
 

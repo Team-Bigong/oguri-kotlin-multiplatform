@@ -94,6 +94,8 @@
     <string name="calendar_card_summary_with_holiday">%1$s · Holiday %2$d days · Leave %3$d days</string>
     <string name="calendar_card_summary_without_holiday">Holiday %1$d days · Leave %2$d days</string>
     <string name="calendar_card_detail">See details</string>
+    <string name="calendar_d_day_before">D-%1$d</string>
+    <string name="calendar_d_day_after">D+%1$d</string>
     <string name="calendar_end_of_list_message">This is the last available schedule for this leave setting 👋</string>
     <string name="calendar_leave_days_sheet_title">Leave Settings</string>
     <string name="calendar_leave_days_sheet_done">Done</string>

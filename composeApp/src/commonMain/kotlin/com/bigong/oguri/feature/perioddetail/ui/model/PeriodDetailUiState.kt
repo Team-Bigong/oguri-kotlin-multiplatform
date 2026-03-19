@@ -7,4 +7,5 @@ data class PeriodDetailUiState(
     val isError: Boolean = false,
     val periodDetail: CalendarPeriodDetail? = null,
     val isSaved: Boolean = false,
+    val dDay: Int = 0,
 )
