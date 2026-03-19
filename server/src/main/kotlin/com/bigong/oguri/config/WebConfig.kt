@@ -22,6 +22,7 @@ class WebConfig(
             .addPathPatterns("/api/**")
             .excludePathPatterns(
                 "/api/v1/auth/login/kakao",
+                "/api/v1/auth/login/apple",
                 "/api/v1/auth/refresh"
             )
     }

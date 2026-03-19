@@ -14,6 +14,7 @@ import com.bigong.oguri.repository.MemberRepository
 import com.bigong.oguri.repository.NounRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
+import com.bigong.oguri.util.AppleIdentityTokenVerifier
 import com.bigong.oguri.util.JwtTokenProvider
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -33,6 +34,7 @@ class MemberService(
     private val adjectiveRepository: AdjectiveRepository,
     private val nounRepository: NounRepository,
     private val jwtTokenProvider: JwtTokenProvider,
+    private val appleIdentityTokenVerifier: AppleIdentityTokenVerifier,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
     private val destinationRepository: DestinationRepository
@@ -45,24 +47,18 @@ class MemberService(
     fun loginWithKakao(accessToken: String): LoginResponse {
         val kakaoUserInfo = getKakaoUserInfo(accessToken)
         val kakaoId = "KAKAO_${kakaoUserInfo.id}"
+        val member = findOrCreateMember(kakaoId)
+        return issueLoginTokens(member)
+    }
 
-        val member = memberRepository.findById(kakaoId).orElseGet {
-            val newMember = Member(id = kakaoId)
-            newMember.setNicknameOnce(generateUniqueNickname())
-            memberRepository.save(newMember)
-        }
-
-        val serviceAccessToken = jwtTokenProvider.createAccessToken(member.id)
-        val serviceRefreshToken = jwtTokenProvider.createRefreshToken(member.id)
-
-        member.updateRefreshToken(serviceRefreshToken)
-        memberRepository.save(member)
-
-        return LoginResponse(
-            accessToken = serviceAccessToken,
-            refreshToken = serviceRefreshToken,
-            nickname = member.nickname ?: ""
-        )
+    /**
+     * Apple 로그인 및 가입
+     */
+    fun loginWithApple(identityToken: String): LoginResponse {
+        val appleSubject = appleIdentityTokenVerifier.extractAppleSubject(identityToken)
+        val appleMemberId = "APPLE_$appleSubject"
+        val member = findOrCreateMember(appleMemberId)
+        return issueLoginTokens(member)
     }
 
     /**
@@ -131,6 +127,26 @@ class MemberService(
         }
         return restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), KakaoUserInfoResponse::class.java).body
             ?: throw RuntimeException("카카오 통신 실패")
+    }
+
+    private fun findOrCreateMember(memberId: String): Member {
+        return memberRepository.findById(memberId).orElseGet {
+            val newMember = Member(id = memberId)
+            newMember.setNicknameOnce(generateUniqueNickname())
+            memberRepository.save(newMember)
+        }
+    }
+
+    private fun issueLoginTokens(member: Member): LoginResponse {
+        val serviceAccessToken = jwtTokenProvider.createAccessToken(member.id)
+        val serviceRefreshToken = jwtTokenProvider.createRefreshToken(member.id)
+        member.updateRefreshToken(serviceRefreshToken)
+        memberRepository.save(member)
+        return LoginResponse(
+            accessToken = serviceAccessToken,
+            refreshToken = serviceRefreshToken,
+            nickname = member.nickname ?: ""
+        )
     }
 
     fun updateDayOffInfo(memberId: String, preferred: Int, remaining: Int) {
