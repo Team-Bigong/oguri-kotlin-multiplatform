@@ -40,6 +40,7 @@ private fun CalendarRecommendationSectionPreview() {
     OguriTheme {
         CalendarRecommendationSection(
             pagedPeriodCards = pagedPeriodCards,
+            savedStateByPeriodKey = emptyMap(),
             expandedPeriodId = 1L,
             isLoadingNextPage = false,
             showEndHint = false,

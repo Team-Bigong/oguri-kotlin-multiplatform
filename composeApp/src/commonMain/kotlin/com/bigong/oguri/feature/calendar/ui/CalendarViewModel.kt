@@ -8,10 +8,14 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarRecommendationUseCase
+import com.bigong.oguri.domain.usecase.ObservePreferredLeaveDaysChangesUseCase
+import com.bigong.oguri.domain.usecase.ObserveRecommendationSavedChangesUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
+import com.bigong.oguri.feature.calendar.ui.model.createRecommendationPeriodKey
+import com.bigong.oguri.feature.calendar.ui.model.toRecommendationPeriodKey
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,6 +24,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -37,6 +42,8 @@ class CalendarViewModel(
     private val calculateDDayUseCase: com.bigong.oguri.domain.usecase.CalculateDDayUseCase,
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
+    private val observeRecommendationSavedChangesUseCase: ObserveRecommendationSavedChangesUseCase,
+    private val observePreferredLeaveDaysChangesUseCase: ObservePreferredLeaveDaysChangesUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState = _uiState.asStateFlow()
@@ -114,6 +121,8 @@ class CalendarViewModel(
                 dayOffCount = null,
                 requestVersion = 0,
             )
+        observeRecommendationSavedChanges()
+        observePreferredLeaveDaysChanges()
     }
 
     fun updateLeaveDays(leaveDays: Int) {
@@ -130,14 +139,6 @@ class CalendarViewModel(
         periodCardById.value = emptyMap()
         _sideEffect.tryEmit(CalendarSideEffect.LeaveDaysUpdated)
         refreshByDayOffCount(dayOffCount = leaveDays)
-    }
-
-    fun refreshCalendarRecommendationSilently() {
-        val query: CalendarPagingQuery = pagingQueryFlow.value
-        pagingQueryFlow.value =
-            query.copy(
-                requestVersion = query.requestVersion + 1,
-            )
     }
 
     fun onCardClick(periodId: Long) {
@@ -181,7 +182,16 @@ class CalendarViewModel(
 
     fun toggleSaved(periodId: Long) {
         val periodCard: CalendarPeriodCardUiModel = periodCardById.value[periodId] ?: return
-        val nextSavedState: Boolean = !periodCard.isSaved
+        val periodKey: String = periodCard.toRecommendationPeriodKey()
+        val previousSavedState = uiState.value.savedStateByPeriodKey[periodKey] ?: periodCard.isSaved
+        val nextSavedState: Boolean = !previousSavedState
+
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                savedStateByPeriodKey =
+                    currentUiState.savedStateByPeriodKey + (periodKey to nextSavedState),
+            )
+        }
         viewModelScope.launch {
             runCatching {
                 withContext(Dispatchers.Default) {
@@ -209,7 +219,51 @@ class CalendarViewModel(
                         CalendarSideEffect.RecommendationDeleted
                     },
                 )
-                refreshCalendarRecommendationSilently()
+            }.onFailure {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
+                        savedStateByPeriodKey =
+                            currentUiState.savedStateByPeriodKey + (periodKey to previousSavedState),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeRecommendationSavedChanges() {
+        viewModelScope.launch {
+            observeRecommendationSavedChangesUseCase().collect { change ->
+                val periodKey =
+                    createRecommendationPeriodKey(
+                        startDate = change.startDate,
+                        endDate = change.endDate,
+                        dayOffCount = change.dayOffCount,
+                        totalTripCount = change.totalTripCount,
+                    )
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
+                        savedStateByPeriodKey =
+                            currentUiState.savedStateByPeriodKey + (periodKey to change.isSaved),
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observePreferredLeaveDaysChanges() {
+        viewModelScope.launch {
+            observePreferredLeaveDaysChangesUseCase().collect { change ->
+                val preferredLeaveDays: Int = change.preferredLeaveDays.coerceAtLeast(1)
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
+                        leaveDays = preferredLeaveDays,
+                        expandedPeriodId = null,
+                        selectedDateByPeriodId = emptyMap(),
+                        savedStateByPeriodKey = emptyMap(),
+                    )
+                }
+                periodCardById.value = emptyMap()
+                refreshByDayOffCount(dayOffCount = preferredLeaveDays)
             }
         }
     }

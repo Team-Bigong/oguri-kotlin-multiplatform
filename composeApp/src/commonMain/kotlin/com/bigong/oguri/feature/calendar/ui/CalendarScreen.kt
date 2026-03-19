@@ -63,6 +63,7 @@ private val SCROLL_TOP_BUTTON_SIZE: Dp = 48.dp
 fun CalendarScreen(
     calendarUiState: CalendarUiState,
     pagedPeriodCards: LazyPagingItems<CalendarPeriodCardUiModel>,
+    savedStateByPeriodKey: Map<String, Boolean>,
     onLeaveDaysChanged: (Int) -> Unit,
     onCardClick: (Long) -> Unit,
     onSaveToggleClick: (Long) -> Unit,
@@ -146,6 +147,7 @@ fun CalendarScreen(
             item {
                 CalendarRecommendationSection(
                     pagedPeriodCards = pagedPeriodCards,
+                    savedStateByPeriodKey = savedStateByPeriodKey,
                     expandedPeriodId = calendarUiState.expandedPeriodId,
                     isLoadingNextPage = isAppending,
                     showEndHint = shouldShowEndHint,

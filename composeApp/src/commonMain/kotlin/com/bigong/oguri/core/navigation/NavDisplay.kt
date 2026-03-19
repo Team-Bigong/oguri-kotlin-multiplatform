@@ -137,11 +137,6 @@ fun NavDisplay(
                         myPageViewModelLazy.value.refreshMyPageInfo()
                     }
                 }
-                if (isCalendarRoute(currentRouteText) && !isCalendarRoute(previousRoute)) {
-                    if (calendarViewModelLazy.isInitialized()) {
-                        calendarViewModelLazy.value.refreshCalendarRecommendationSilently()
-                    }
-                }
             }
             previousRouteText = currentRouteText
         }
@@ -320,9 +315,4 @@ private fun isHomeRoute(routeText: String): Boolean {
 private fun isMyPageRoute(routeText: String): Boolean {
     val myPageRouteSerialName = RouteModel.MyPage.serializer().descriptor.serialName
     return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
-}
-
-private fun isCalendarRoute(routeText: String): Boolean {
-    val calendarRouteSerialName = RouteModel.Calendar.serializer().descriptor.serialName
-    return routeText == calendarRouteSerialName || routeText.startsWith(calendarRouteSerialName)
 }

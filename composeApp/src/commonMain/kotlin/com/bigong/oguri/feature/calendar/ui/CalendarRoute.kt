@@ -58,6 +58,7 @@ fun CalendarRoute(
     CalendarScreen(
         calendarUiState = calendarUiState,
         pagedPeriodCards = pagedPeriodCards,
+        savedStateByPeriodKey = calendarUiState.savedStateByPeriodKey,
         onLeaveDaysChanged = calendarViewModel::updateLeaveDays,
         onCardClick = calendarViewModel::onCardClick,
         onSaveToggleClick = calendarViewModel::toggleSaved,

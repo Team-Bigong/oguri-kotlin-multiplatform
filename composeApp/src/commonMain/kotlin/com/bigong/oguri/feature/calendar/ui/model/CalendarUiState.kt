@@ -8,4 +8,5 @@ data class CalendarUiState(
     val selectedMonth: Int = 3,
     val expandedPeriodId: Long? = null,
     val selectedDateByPeriodId: Map<Long, LocalDate> = emptyMap(),
+    val savedStateByPeriodKey: Map<String, Boolean> = emptyMap(),
 )

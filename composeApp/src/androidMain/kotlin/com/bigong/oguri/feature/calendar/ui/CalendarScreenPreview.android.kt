@@ -22,6 +22,7 @@ private fun CalendarScreenPreview() {
                     selectedDateByPeriodId = mapOf(1L to LocalDate.parse("2026-02-28")),
                 ),
             pagedPeriodCards = pagedPeriodCards,
+            savedStateByPeriodKey = emptyMap(),
             onLeaveDaysChanged = {},
             onCardClick = {},
             onSaveToggleClick = {},

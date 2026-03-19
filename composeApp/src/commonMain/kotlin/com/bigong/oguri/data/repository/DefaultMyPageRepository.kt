@@ -10,21 +10,30 @@ import com.bigong.oguri.data.remote.model.response.PlaceResponse
 import com.bigong.oguri.domain.model.MyPageInfo
 import com.bigong.oguri.domain.model.MyPageSelectedPeriod
 import com.bigong.oguri.domain.model.Place
+import com.bigong.oguri.domain.model.PreferredLeaveDaysChange
 import com.bigong.oguri.domain.repository.MyPageRepository
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.datetime.LocalDate
 
 @Inject
 class DefaultMyPageRepository(
     private val myPageRemoteDataSource: MyPageRemoteDataSource,
 ) : MyPageRepository {
+    private val preferredLeaveDaysChangeFlow = MutableSharedFlow<PreferredLeaveDaysChange>(extraBufferCapacity = 8)
+
     override suspend fun getMyPageInfo(): MyPageInfo = myPageRemoteDataSource.getMyPageResponse().toDomain()
+
+    override fun observePreferredLeaveDaysChanges(): Flow<PreferredLeaveDaysChange> = preferredLeaveDaysChangeFlow.asSharedFlow()
 
     override suspend fun updateLeaveDays(
         remainingLeaveDays: Int,
         preferredLeaveDays: Int,
-    ): MyPageInfo =
-        myPageRemoteDataSource
+    ): MyPageInfo {
+        val myPageInfo =
+            myPageRemoteDataSource
             .updateLeaveDays(
                 request =
                     UpdateMyPageLeaveDaysRequest(
@@ -32,6 +41,13 @@ class DefaultMyPageRepository(
                         preferredLeaveDays = preferredLeaveDays,
                     ),
             ).toDomain()
+        preferredLeaveDaysChangeFlow.tryEmit(
+            PreferredLeaveDaysChange(
+                preferredLeaveDays = myPageInfo.preferredLeaveDays,
+            ),
+        )
+        return myPageInfo
+    }
 
     override suspend fun deleteSelectedPeriod(periodId: Long): MyPageInfo =
         myPageRemoteDataSource
