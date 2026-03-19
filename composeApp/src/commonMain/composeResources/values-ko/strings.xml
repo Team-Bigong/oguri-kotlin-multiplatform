@@ -137,7 +137,8 @@
     <string name="mypage_guest_login_message">로그인하고 휴가 일정을 저장해보세요!</string>
     <string name="mypage_section_selected_period">내가 고른 휴가 일정</string>
     <string name="mypage_section_saved_place">내가 담아둔 여행지</string>
-    <string name="mypage_selected_period_date_range">%1$d월 %2$d일 - %3$d월 %4$d일</string>
+    <string name="mypage_selected_period_date_range">%1$s - %2$s</string>
+    <string name="mypage_selected_period_date_with_year">%1$d년 %2$d월 %3$d일</string>
     <string name="mypage_selected_period_information">휴일 %1$d일 · 연차 %2$d일</string>
     <string name="mypage_empty_selected_period">아직 골라둔 휴가 일정이 없어요.</string>
     <string name="mypage_empty_saved_place">아직 담아둔 여행지가 없어요.</string>

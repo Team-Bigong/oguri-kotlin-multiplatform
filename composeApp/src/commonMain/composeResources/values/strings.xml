@@ -137,7 +137,8 @@
     <string name="mypage_guest_login_message">Log in to save your vacation plans.</string>
     <string name="mypage_section_selected_period">Selected vacation periods</string>
     <string name="mypage_section_saved_place">Saved places</string>
-    <string name="mypage_selected_period_date_range">%1$d/%2$d - %3$d/%4$d</string>
+    <string name="mypage_selected_period_date_range">%1$s - %2$s</string>
+    <string name="mypage_selected_period_date_with_year">%1$d/%2$d/%3$d</string>
     <string name="mypage_selected_period_information">Holiday %1$d days · Leave %2$d days</string>
     <string name="mypage_empty_selected_period">No saved vacation period.</string>
     <string name="mypage_empty_saved_place">No saved place.</string>
