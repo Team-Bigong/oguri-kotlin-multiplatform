@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native"
 import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
 import { resizeAndCompressImage } from "../../lib/imageProcessing"
-import { uploadImageToFirebaseStorage } from "../../lib/firebase"
+import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
 import {
   AdminLoginResponse,
   Country,
@@ -32,6 +32,7 @@ type DestinationFormState = {
   recommendEndMonth2: string
   flightTime: string
   images: DestinationImageRequest[]
+  existingImageUrls: string[]
 }
 
 type MemberFormState = {
@@ -63,7 +64,8 @@ const createInitialDestinationFormState = (): DestinationFormState => ({
   recommendStartMonth2: "",
   recommendEndMonth2: "",
   flightTime: "",
-  images: []
+  images: [],
+  existingImageUrls: []
 })
 
 const createInitialMemberFormState = (): MemberFormState => ({
@@ -201,6 +203,23 @@ const parseStorageSlugsFromImageUrl = (imageUrl: string): { countrySlug: string;
   return { countrySlug: "", citySlug: "" }
 }
 
+const parseImageSequenceNumberFromImageUrl = (imageUrl: string): number | null => {
+  try {
+    const parsedUrl = new URL(imageUrl)
+    const objectPathEncoded = parsedUrl.pathname.split("/o/")[1] ?? ""
+    const objectPath = decodeURIComponent(objectPathEncoded)
+    const fileName = objectPath.split("/").pop() ?? ""
+    const sequenceText = fileName.replace(/\.jpg$/i, "")
+    const parsedSequence = Number(sequenceText)
+    if (Number.isInteger(parsedSequence) && parsedSequence > 0) {
+      return parsedSequence
+    }
+  } catch (error) {
+    return null
+  }
+  return null
+}
+
 export const AdminApp = (): React.JSX.Element => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
   const [loginUsername, setLoginUsername] = useState<string>("")
@@ -330,38 +349,65 @@ export const AdminApp = (): React.JSX.Element => {
     }
   }, [])
 
+  const deleteImagesInFirebaseStorage = useCallback(async (imageUrls: string[]): Promise<number> => {
+    if (imageUrls.length === 0) {
+      return 0
+    }
+
+    const deleteResults = await Promise.allSettled(
+      imageUrls.map((imageUrl) => deleteImageFromFirebaseStorageByUrl(imageUrl))
+    )
+
+    return deleteResults.filter((result) => result.status === "rejected").length
+  }, [])
+
   const submitDestination = useCallback(async () => {
     setErrorMessage("")
     setNoticeMessage("")
 
     try {
       const payload = createDestinationPayload(destinationFormState)
+      const removedExistingImageUrls = destinationFormState.existingImageUrls.filter(
+        (imageUrl) => !destinationFormState.images.some((image) => image.imageUrl === imageUrl)
+      )
+
       if (destinationFormState.selectedId == null) {
         await adminApiClient.post<Destination>("/api/admin/v1/destinations", payload)
         setNoticeMessage("장소가 생성되었습니다.")
       } else {
         await adminApiClient.put<Destination>(`/api/admin/v1/destinations/${destinationFormState.selectedId}`, payload)
-        setNoticeMessage("장소가 수정되었습니다.")
+        const failedDeleteCount = await deleteImagesInFirebaseStorage(removedExistingImageUrls)
+        if (failedDeleteCount > 0) {
+          setNoticeMessage(`장소가 수정되었습니다. 삭제된 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
+        } else {
+          setNoticeMessage("장소가 수정되었습니다.")
+        }
       }
       setDestinationFormState(createInitialDestinationFormState())
       await loadAll()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "장소 저장에 실패했습니다.")
     }
-  }, [createDestinationPayload, destinationFormState, loadAll])
+  }, [createDestinationPayload, deleteImagesInFirebaseStorage, destinationFormState, loadAll])
 
   const deleteDestination = useCallback(async (destinationId: number) => {
     setErrorMessage("")
     setNoticeMessage("")
 
     try {
+      const targetDestination = destinations.find((destination) => destination.id === destinationId)
       await adminApiClient.delete<void>(`/api/admin/v1/destinations/${destinationId}`)
-      setNoticeMessage("장소가 삭제되었습니다.")
+      const failedDeleteCount = await deleteImagesInFirebaseStorage(targetDestination?.images.map((image) => image.imageUrl) ?? [])
+      if (failedDeleteCount > 0) {
+        setNoticeMessage(`장소가 삭제되었습니다. 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
+      } else {
+        setNoticeMessage("장소가 삭제되었습니다.")
+      }
       await loadAll()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "장소 삭제에 실패했습니다.")
     }
-  }, [loadAll])
+  }, [deleteImagesInFirebaseStorage, destinations, loadAll])
 
   const submitMember = useCallback(async () => {
     setErrorMessage("")
@@ -466,10 +512,19 @@ export const AdminApp = (): React.JSX.Element => {
       }
 
       const selectedFiles = Array.from(fileList)
+      const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
+        (maximumSequenceNumber, image) => {
+          const parsedSequenceNumber = parseImageSequenceNumberFromImageUrl(image.imageUrl)
+          return parsedSequenceNumber == null
+            ? maximumSequenceNumber
+            : Math.max(maximumSequenceNumber, parsedSequenceNumber)
+        },
+        0
+      )
       const uploadedImages = await Promise.all(
         selectedFiles.map(async (file, index) => {
           const compressedBinary = await resizeAndCompressImage(file)
-          const imageSequenceNumber = destinationFormState.images.length + index + 1
+          const imageSequenceNumber = currentMaximumImageSequenceNumber + index + 1
           const objectPath = `places/${countryPathSegment}/${cityPathSegment}/${imageSequenceNumber}.jpg`
           const imageUrl = await uploadImageToFirebaseStorage(compressedBinary, objectPath)
 
@@ -628,12 +683,12 @@ export const AdminApp = (): React.JSX.Element => {
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, name: value }))}
               />
               <LabelInput
-                label="요약"
+                label="요약 (25자 내외)"
                 value={destinationFormState.summary}
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, summary: value }))}
               />
               <LabelInput
-                label="설명"
+                label="설명 (150자 내외)"
                 value={destinationFormState.description}
                 multiline
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, description: value }))}
@@ -677,7 +732,7 @@ export const AdminApp = (): React.JSX.Element => {
               />
 
               <View style={styles.uploadRow}>
-                <Text style={styles.fieldLabel}>사진 업로드 (가로 1280px / 800KB 이하로 자동 압축 후 Firebase 업로드)</Text>
+                <Text style={styles.fieldLabel}>사진 업로드</Text>
                 <input type="file" accept="image/*" multiple onChange={handleImageFileSelection} />
                 {uploadingImages && <Text style={styles.helperText}>이미지를 처리 중입니다...</Text>}
               </View>
@@ -704,12 +759,27 @@ export const AdminApp = (): React.JSX.Element => {
                         </Pressable>
                         <Pressable
                           onPress={() => {
-                            setDestinationFormState((previousState) => ({
-                              ...previousState,
-                              images: previousState.images
-                                .filter((_, targetIndex) => targetIndex !== index)
-                                .map((targetImage, sequence) => ({ ...targetImage, sortOrder: sequence + 1 }))
-                            }))
+                            void (async () => {
+                              const targetImage = destinationFormState.images[index]
+                              const shouldDeleteImmediately = targetImage != null &&
+                                !destinationFormState.existingImageUrls.includes(targetImage.imageUrl)
+
+                              if (shouldDeleteImmediately) {
+                                try {
+                                  await deleteImageFromFirebaseStorageByUrl(targetImage.imageUrl)
+                                } catch (error) {
+                                  setErrorMessage("이미지 삭제 중 오류가 발생했습니다. 다시 시도해주세요.")
+                                  return
+                                }
+                              }
+
+                              setDestinationFormState((previousState) => ({
+                                ...previousState,
+                                images: previousState.images
+                                  .filter((_, targetIndex) => targetIndex !== index)
+                                  .map((targetImageInList, sequence) => ({ ...targetImageInList, sortOrder: sequence + 1 }))
+                              }))
+                            })()
                           }}
                           style={styles.badgeDanger}
                         >
@@ -758,7 +828,8 @@ export const AdminApp = (): React.JSX.Element => {
                             imageUrl: image.imageUrl,
                             isThumbnail: image.isThumbnail,
                             sortOrder: image.sortOrder
-                          }))
+                          })),
+                          existingImageUrls: destination.images.map((image) => image.imageUrl)
                         })
                       }}
                     />
