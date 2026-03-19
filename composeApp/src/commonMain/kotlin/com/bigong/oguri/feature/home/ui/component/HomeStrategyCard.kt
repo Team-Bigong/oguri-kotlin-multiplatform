@@ -23,11 +23,14 @@ import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.core.util.extension.getStyledText
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.RecommendPeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.home_strategy_day_off_hint
 import oguri.composeapp.generated.resources.home_strategy_holiday_with
@@ -35,6 +38,7 @@ import oguri.composeapp.generated.resources.home_strategy_period
 import oguri.composeapp.generated.resources.img_oguri_teacher
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 @Composable
 fun HomeStrategyCard(
@@ -47,6 +51,15 @@ fun HomeStrategyCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val currentYear =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .year
+    val isOutOfCurrentYear = currentPeriod.startDate.year != currentYear || currentPeriod.endDate.year != currentYear
+    val periodTextColor = if (isOutOfCurrentYear) Orange50 else Mint70
+    val holidayHighlightColor = if (isOutOfCurrentYear) Orange50 else Mint70
+
     Box(
         modifier =
             modifier
@@ -85,7 +98,7 @@ fun HomeStrategyCard(
                             formatMonthDay(localDate = currentPeriod.endDate),
                         ),
                     style = OguriTheme.typography.heroTitle,
-                    color = Mint70,
+                    color = periodTextColor,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -96,7 +109,7 @@ fun HomeStrategyCard(
                         ).getStyledText(
                             style =
                                 TextStyle(
-                                    color = Mint70,
+                                    color = holidayHighlightColor,
                                     fontWeight = FontWeight.Bold,
                                 ),
                             currentPeriod.holiday.joinToString(separator = " · "),

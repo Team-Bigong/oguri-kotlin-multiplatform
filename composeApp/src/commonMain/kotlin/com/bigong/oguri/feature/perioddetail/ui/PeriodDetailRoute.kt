@@ -6,10 +6,15 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.bigong.oguri.core.deeplink.buildPeriodDetailDeepLink
-import com.bigong.oguri.core.platform.shareText
+import com.bigong.oguri.core.platform.SharePayload
+import com.bigong.oguri.core.platform.shareContent
 import dev.zacsweers.metro.Provider
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.share_period_detail_message
+import oguri.composeapp.generated.resources.share_button_open_in_app
+import oguri.composeapp.generated.resources.share_default_fallback_message
+import oguri.composeapp.generated.resources.share_default_fallback_url
+import oguri.composeapp.generated.resources.share_period_description
+import oguri.composeapp.generated.resources.share_title
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -26,7 +31,11 @@ fun PeriodDetailRoute(
         }
     val periodDetailUiState = periodDetailViewModel.uiState.collectAsStateWithLifecycle().value
     val pagedPlaces = periodDetailViewModel.pagedPlaces.collectAsLazyPagingItems()
-    val sharePeriodDetailMessageTemplate = stringResource(Res.string.share_period_detail_message)
+    val shareTitle = stringResource(Res.string.share_title)
+    val shareButtonTitle = stringResource(Res.string.share_button_open_in_app)
+    val sharePeriodDescriptionTemplate = stringResource(Res.string.share_period_description)
+    val shareFallbackMessage = stringResource(Res.string.share_default_fallback_message)
+    val shareFallbackUrl = stringResource(Res.string.share_default_fallback_url)
 
     LaunchedEffect(startDate, endDate) {
         periodDetailViewModel.loadPeriodDetail(
@@ -46,17 +55,28 @@ fun PeriodDetailRoute(
         },
         onBackClick = onBackClick,
         onShareClick = {
+            val periodDetail = periodDetailUiState.periodDetail ?: return@PeriodDetailScreen
             val deepLinkUrl =
                 buildPeriodDetailDeepLink(
                     startDate = startDate,
                     endDate = endDate,
                 )
-            val shareMessage =
-                sharePeriodDetailMessageTemplate
-                    .replace("%1\$s", startDate)
-                    .replace("%2\$s", endDate)
-                    .replace("%3\$s", deepLinkUrl)
-            shareText(shareMessage)
+            val sharePeriodDescription =
+                sharePeriodDescriptionTemplate
+                    .replace("%1\$d", periodDetail.dayOffCount.toString())
+                    .replace("%2\$d", periodDetail.totalTripCount.toString())
+            shareContent(
+                payload =
+                    SharePayload(
+                        title = shareTitle,
+                        description = sharePeriodDescription,
+                        imageUrl = periodDetail.places.firstOrNull()?.thumbnailUrl.orEmpty(),
+                        deepLinkUrl = deepLinkUrl,
+                        buttonTitle = shareButtonTitle,
+                        fallbackMessage = shareFallbackMessage,
+                        fallbackUrl = shareFallbackUrl,
+                    ),
+            )
         },
         onSaveToggleClick = periodDetailViewModel::toggleSavedRecommendation,
         onPlaceClick = onPlaceClick,

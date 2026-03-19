@@ -20,6 +20,7 @@ internal class CalendarRecommendationPagingSource(
     private val pageSize: Int,
     private val onDayOffCountResolved: (Int) -> Unit,
     private val onPageLoaded: (List<CalendarPeriodCardUiModel>) -> Unit,
+    private val onRefreshLoadFailed: () -> Unit,
 ) : PagingSource<Int, CalendarPeriodCardUiModel>() {
     override fun getRefreshKey(state: PagingState<Int, CalendarPeriodCardUiModel>): Int? {
         val anchorPosition: Int = state.anchorPosition ?: return null
@@ -49,6 +50,9 @@ internal class CalendarRecommendationPagingSource(
                 )
             },
             onFailure = { throwable: Throwable ->
+                if (page == INITIAL_PAGE) {
+                    onRefreshLoadFailed()
+                }
                 LoadResult.Error(throwable)
             },
         )
@@ -78,5 +82,6 @@ private fun CalendarRecommendation.toPeriodCards(
             dayOffCount = period.dayOffCount,
             totalTripCount = period.totalTripCount,
             holidayNames = period.holidayNames,
+            holidays = period.holidayDateDetails,
         )
     }

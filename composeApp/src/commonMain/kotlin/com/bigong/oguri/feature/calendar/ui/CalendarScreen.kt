@@ -69,6 +69,11 @@ fun CalendarScreen(
     onSaveToggleClick: (Long) -> Unit,
     onDetailClick: (Long) -> Unit,
 ) {
+    if (calendarUiState.isLeaveDaysRefreshing) {
+        CalendarSkeletonContent()
+        return
+    }
+
     val isInitialLoading =
         pagedPeriodCards.loadState.refresh is LoadState.Loading &&
             pagedPeriodCards.itemCount == 0

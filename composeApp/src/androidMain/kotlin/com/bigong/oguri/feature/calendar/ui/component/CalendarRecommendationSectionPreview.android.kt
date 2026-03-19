@@ -23,6 +23,7 @@ private fun CalendarRecommendationSectionPreview() {
                 dayOffCount = 2,
                 totalTripCount = 5,
                 holidayNames = listOf("삼일절", "대체휴일"),
+                holidays = emptyList(),
             ),
             CalendarPeriodCardUiModel(
                 id = 2L,
@@ -33,6 +34,7 @@ private fun CalendarRecommendationSectionPreview() {
                 dayOffCount = 2,
                 totalTripCount = 4,
                 holidayNames = listOf("주말"),
+                holidays = emptyList(),
             ),
         )
     val pagedPeriodCards = flowOf(PagingData.from(cards)).collectAsLazyPagingItems()

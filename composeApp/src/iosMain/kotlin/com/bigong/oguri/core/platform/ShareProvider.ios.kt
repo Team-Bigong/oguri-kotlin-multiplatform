@@ -1,37 +1,29 @@
 package com.bigong.oguri.core.platform
 
-import kotlinx.cinterop.ExperimentalForeignApi
-import platform.UIKit.UIActivityViewController
-import platform.UIKit.UIApplication
-import platform.UIKit.UIViewController
+import platform.Foundation.NSNotificationCenter
 
-@OptIn(ExperimentalForeignApi::class)
-actual fun shareText(text: String) {
-    if (text.isBlank()) {
-        return
-    }
+private const val KAKAO_SHARE_REQUEST_NOTIFICATION_NAME = "OguriKakaoShareRequest"
+private const val KAKAO_SHARE_TITLE_KEY = "title"
+private const val KAKAO_SHARE_DESCRIPTION_KEY = "description"
+private const val KAKAO_SHARE_IMAGE_URL_KEY = "imageUrl"
+private const val KAKAO_SHARE_DEEP_LINK_URL_KEY = "deepLinkUrl"
+private const val KAKAO_SHARE_BUTTON_TITLE_KEY = "buttonTitle"
+private const val KAKAO_SHARE_FALLBACK_MESSAGE_KEY = "fallbackMessage"
+private const val KAKAO_SHARE_FALLBACK_URL_KEY = "fallbackUrl"
 
-    val rootViewController =
-        UIApplication.sharedApplication.keyWindow?.rootViewController
-            ?: return
-    val topViewController = rootViewController.findTopMostViewController()
-    val activityViewController =
-        UIActivityViewController(
-            activityItems = listOf(text),
-            applicationActivities = null,
-        )
-
-    topViewController.presentViewController(
-        viewControllerToPresent = activityViewController,
-        animated = true,
-        completion = null,
+actual fun shareContent(payload: SharePayload) {
+    NSNotificationCenter.defaultCenter.postNotificationName(
+        aName = KAKAO_SHARE_REQUEST_NOTIFICATION_NAME,
+        `object` = null,
+        userInfo =
+            mapOf(
+                KAKAO_SHARE_TITLE_KEY to payload.title,
+                KAKAO_SHARE_DESCRIPTION_KEY to payload.description,
+                KAKAO_SHARE_IMAGE_URL_KEY to payload.imageUrl,
+                KAKAO_SHARE_DEEP_LINK_URL_KEY to payload.deepLinkUrl,
+                KAKAO_SHARE_BUTTON_TITLE_KEY to payload.buttonTitle,
+                KAKAO_SHARE_FALLBACK_MESSAGE_KEY to payload.fallbackMessage,
+                KAKAO_SHARE_FALLBACK_URL_KEY to payload.fallbackUrl,
+            ),
     )
-}
-
-private fun UIViewController.findTopMostViewController(): UIViewController {
-    var currentViewController: UIViewController = this
-    while (currentViewController.presentedViewController != null) {
-        currentViewController = currentViewController.presentedViewController!!
-    }
-    return currentViewController
 }

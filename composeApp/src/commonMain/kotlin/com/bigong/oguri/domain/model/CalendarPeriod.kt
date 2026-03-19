@@ -10,5 +10,6 @@ data class CalendarPeriod(
     val holidayCount: Int,
     val dayOffCount: Int,
     val holidayNames: List<String>,
+    val holidayDateDetails: List<CalendarHoliday>,
     val isSaved: Boolean,
 )
