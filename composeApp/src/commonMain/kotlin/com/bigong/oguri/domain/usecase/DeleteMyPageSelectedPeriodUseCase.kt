@@ -8,7 +8,5 @@ import dev.zacsweers.metro.Inject
 class DeleteMyPageSelectedPeriodUseCase(
     private val myPageRepository: MyPageRepository,
 ) {
-    suspend operator fun invoke(periodId: Long): MyPageInfo {
-        return myPageRepository.deleteSelectedPeriod(periodId = periodId)
-    }
+    suspend operator fun invoke(periodId: Long): MyPageInfo = myPageRepository.deleteSelectedPeriod(periodId = periodId)
 }

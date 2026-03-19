@@ -2,9 +2,9 @@ package com.bigong.oguri.feature.placedetail.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -38,8 +38,6 @@ import oguri.composeapp.generated.resources.place_detail_menu_share
 import oguri.composeapp.generated.resources.place_detail_menu_unsave
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-
-private val PLACE_DETAIL_MENU_SHAPE = RoundedCornerShape(size = 8.dp)
 
 @Composable
 fun PlaceDetailTopBar(
@@ -115,7 +113,7 @@ fun PlaceDetailTopBar(
                     onDismissRequest = { isMenuExpanded = false },
                     anchorHeightPx = menuAnchorHeightPx,
                     alignment = Alignment.TopEnd,
-                    shape = PLACE_DETAIL_MENU_SHAPE,
+                    shape = RoundedCornerShape(8.dp),
                     containerColor = Neutral0,
                 ) {
                     Column {

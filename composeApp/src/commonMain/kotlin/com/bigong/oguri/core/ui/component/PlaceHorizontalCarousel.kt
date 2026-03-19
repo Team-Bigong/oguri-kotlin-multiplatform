@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -22,7 +22,7 @@ fun PlaceHorizontalCarousel(
         contentPadding = contentPadding,
         horizontalArrangement = Arrangement.spacedBy(space = 10.dp),
     ) {
-        items(items = places, key = { place: Place -> place.id }) { place: Place ->
+        itemsIndexed(items = places, key = { _, place -> place.id }) { _, place ->
             PlaceCard(
                 place = place,
                 modifier = Modifier.width(width = 154.dp),

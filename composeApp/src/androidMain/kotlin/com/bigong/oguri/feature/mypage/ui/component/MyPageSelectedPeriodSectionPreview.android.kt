@@ -29,6 +29,7 @@ private fun MyPageSelectedPeriodSectionPreview() {
                     ),
                 ),
             onDeleteClick = {},
+            onPeriodClick = { _, _ -> },
         )
     }
 }

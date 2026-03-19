@@ -20,13 +20,9 @@ import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
-import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.ui.component.NetworkImage
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.Place
-
-private val PLACE_CARD_CORNER_RADIUS = 8.dp
 
 @Composable
 fun PlaceCard(
@@ -37,8 +33,8 @@ fun PlaceCard(
     Column(
         modifier =
             modifier
-                .clip(shape = RoundedCornerShape(size = PLACE_CARD_CORNER_RADIUS))
-                .background(color = Mint10, shape = RoundedCornerShape(size = PLACE_CARD_CORNER_RADIUS))
+                .clip(shape = RoundedCornerShape(size = 8.dp))
+                .background(color = Mint10, shape = RoundedCornerShape(size = 8.dp))
                 .noRippleClickable(onClick = { onClick(place) }),
     ) {
         NetworkImage(
@@ -50,8 +46,8 @@ fun PlaceCard(
                     .clip(
                         shape =
                             RoundedCornerShape(
-                                topStart = PLACE_CARD_CORNER_RADIUS,
-                                topEnd = PLACE_CARD_CORNER_RADIUS,
+                                topStart = 8.dp,
+                                topEnd = 8.dp,
                             ),
                     ),
         )

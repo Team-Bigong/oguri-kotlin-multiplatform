@@ -14,6 +14,7 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
 │  │  └─ component
 │  └─ util
 ├─ data
+│  ├─ local
 │  ├─ remote
 │  │  └─ model
 │  │     ├─ request
@@ -62,3 +63,4 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
 ## 리소스
 - 문자열/이미지는 `composeResources`를 사용한다.
 - 원격 이미지/문서 URI는 리소스(`uris.xml`) 키 기반으로 관리한다.
+- 디바이스 영속 저장소 접근은 `data/local` 인터페이스로 추상화하고 플랫폼별 구현으로 분리한다.

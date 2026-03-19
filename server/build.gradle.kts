@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.dependencyManagement)
     alias(libs.plugins.kotlinSpring)
     alias(libs.plugins.kotlinJpa)
+    alias(libs.plugins.ktlint)
 }
 
 group = "com.bigong.oguri"

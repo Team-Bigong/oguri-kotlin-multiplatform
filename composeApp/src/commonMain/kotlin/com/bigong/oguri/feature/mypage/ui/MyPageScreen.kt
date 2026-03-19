@@ -17,14 +17,15 @@ import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
-import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
-import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
+import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuItem
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageProfileSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageSavedPlaceSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageSelectedPeriodSection
+import com.bigong.oguri.feature.mypage.ui.component.MyPageSkeletonContent
+import com.bigong.oguri.feature.mypage.ui.component.MyPageWithdrawDialog
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_alert
@@ -34,14 +35,13 @@ import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_messag
 import oguri.composeapp.generated.resources.mypage_delete_schedule_dialog_title
 import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
-import oguri.composeapp.generated.resources.mypage_error_retry
-import oguri.composeapp.generated.resources.mypage_loading
 import oguri.composeapp.generated.resources.mypage_logout_dialog_title
 import oguri.composeapp.generated.resources.mypage_menu_logout
 import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
 import oguri.composeapp.generated.resources.mypage_menu_suggest
 import oguri.composeapp.generated.resources.mypage_menu_terms_of_service
 import oguri.composeapp.generated.resources.mypage_menu_withdraw
+import oguri.composeapp.generated.resources.mypage_withdraw_dialog_phrase
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -52,35 +52,36 @@ fun MyPageScreen(
     onDismissLeaveDaysBottomSheet: () -> Unit,
     onSubmitLeaveDays: (Int, Int) -> Unit,
     onDeleteScheduleClick: (Long) -> Unit,
+    onSelectedPeriodClick: (String, String) -> Unit,
     onDismissDeleteScheduleDialog: () -> Unit,
     onConfirmDeleteSchedule: () -> Unit,
     onDeleteSavedPlaceClick: (Long) -> Unit,
+    onSavedPlaceClick: (Long) -> Unit,
     onDismissDeleteSavedPlaceDialog: () -> Unit,
     onConfirmDeleteSavedPlace: () -> Unit,
     onSuggestClick: () -> Unit,
     onTermsOfServiceClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onWithdrawClick: () -> Unit,
+    onWithdrawInputChange: (String, String) -> Unit,
+    onDismissWithdrawDialog: () -> Unit,
+    onConfirmWithdraw: () -> Unit,
     onLogoutClick: () -> Unit,
     onDismissLogoutDialog: () -> Unit,
     onConfirmLogout: () -> Unit,
 ) {
     if (myPageUiState.isLoading) {
-        HomeLoadingContent(message = stringResource(Res.string.mypage_loading))
+        MyPageSkeletonContent()
         return
     }
 
     if (myPageUiState.isError || myPageUiState.myPageInfo == null) {
-        val retryText = stringResource(Res.string.mypage_error_retry)
-        HomeErrorContent(
-            message = retryText,
-            retryText = retryText,
-            onRetryClick = onRetryClick,
-        )
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 
     val myPageInfo = myPageUiState.myPageInfo
+    val withdrawTargetPhrase = stringResource(Res.string.mypage_withdraw_dialog_phrase)
 
     LazyColumn(
         modifier = Modifier.fillMaxSize().background(Neutral5),
@@ -109,12 +110,14 @@ fun MyPageScreen(
             MyPageSelectedPeriodSection(
                 selectedPeriods = myPageInfo.selectedPeriods,
                 onDeleteClick = onDeleteScheduleClick,
+                onPeriodClick = onSelectedPeriodClick,
             )
         }
         item {
             Spacer(modifier = Modifier.height(24.dp))
             MyPageSavedPlaceSection(
                 savedPlaces = myPageInfo.savedPlaces,
+                onSavedPlaceClick = onSavedPlaceClick,
                 onDeleteClick = onDeleteSavedPlaceClick,
             )
             Spacer(modifier = Modifier.height(24.dp))
@@ -179,6 +182,19 @@ fun MyPageScreen(
             onDismissRequest = onDismissLogoutDialog,
             onConfirmClick = onConfirmLogout,
             onCancelClick = onDismissLogoutDialog,
+        )
+    }
+
+    if (myPageUiState.isWithdrawDialogVisible) {
+        MyPageWithdrawDialog(
+            inputText = myPageUiState.withdrawInputText,
+            targetPhrase = withdrawTargetPhrase,
+            isConfirmEnabled = myPageUiState.isWithdrawConfirmEnabled,
+            onInputChange = { inputText ->
+                onWithdrawInputChange(inputText, withdrawTargetPhrase)
+            },
+            onDismissRequest = onDismissWithdrawDialog,
+            onConfirmClick = onConfirmWithdraw,
         )
     }
 }

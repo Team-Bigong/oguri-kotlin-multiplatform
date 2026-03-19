@@ -14,12 +14,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.ui.component.NetworkImage
-
-private val PLACE_DETAIL_HERO_HEIGHT = 270.dp
 
 @Composable
 fun PlaceDetailImagePager(
@@ -27,15 +24,16 @@ fun PlaceDetailImagePager(
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { imageUrls.size })
+    val heroHeight = 270.dp
 
-    Box(modifier = modifier.fillMaxWidth().height(PLACE_DETAIL_HERO_HEIGHT)) {
+    Box(modifier = modifier.fillMaxWidth().height(heroHeight)) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxWidth().height(PLACE_DETAIL_HERO_HEIGHT),
+            modifier = Modifier.fillMaxWidth().height(heroHeight),
         ) { page ->
             NetworkImage(
                 imageUrl = imageUrls[page],
-                modifier = Modifier.fillMaxWidth().height(PLACE_DETAIL_HERO_HEIGHT),
+                modifier = Modifier.fillMaxWidth().height(heroHeight),
             )
         }
 
@@ -52,9 +50,7 @@ fun PlaceDetailImagePager(
 }
 
 @Composable
-private fun DotIndicator(
-    isSelected: Boolean,
-) {
+private fun DotIndicator(isSelected: Boolean) {
     Box(
         modifier =
             Modifier

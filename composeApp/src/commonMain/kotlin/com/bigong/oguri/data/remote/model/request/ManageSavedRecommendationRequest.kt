@@ -11,4 +11,6 @@ data class ManageSavedRecommendationRequest(
     val endDate: String,
     @SerialName("dayOffCount")
     val dayOffCount: Int,
+    @SerialName("totalTripCount")
+    val totalTripCount: Int,
 )

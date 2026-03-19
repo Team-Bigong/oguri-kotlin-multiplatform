@@ -11,10 +11,9 @@ class UpdateMyPageLeaveDaysUseCase(
     suspend operator fun invoke(
         remainingLeaveDays: Int,
         preferredLeaveDays: Int,
-    ): MyPageInfo {
-        return myPageRepository.updateLeaveDays(
+    ): MyPageInfo =
+        myPageRepository.updateLeaveDays(
             remainingLeaveDays = remainingLeaveDays,
             preferredLeaveDays = preferredLeaveDays,
         )
-    }
 }

@@ -16,6 +16,7 @@ private fun HomeStrategyCardPreview() {
             currentPeriod = previewRecommendPeriod,
             onRankSelected = {},
             onSavedChanged = {},
+            onClick = {},
         )
     }
 }

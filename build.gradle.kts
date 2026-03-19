@@ -1,3 +1,5 @@
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
+
 plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.androidLibrary) apply false
@@ -6,34 +8,40 @@ plugins {
     alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.ktor) apply false
-    alias(libs.plugins.ktlint)
+    alias(libs.plugins.ktlint) apply false
 }
 
-allprojects {
-    apply(plugin = "org.jlleitschuh.gradle.ktlint")
+subprojects {
+    pluginManager.withPlugin("org.jlleitschuh.gradle.ktlint") {
+        configure<KtlintExtension> {
+            version.set("1.4.0")
+            debug.set(false)
+            verbose.set(true)
+            android.set(true)
+            outputToConsole.set(true)
+            ignoreFailures.set(true)
+            enableExperimentalRules.set(false)
 
-    configure<org.jlleitschuh.gradle.ktlint.KtlintExtension> {
-        version.set("1.3.1")
-        debug.set(false)
-        verbose.set(true)
-        android.set(true)
-        outputToConsole.set(true)
-        ignoreFailures.set(true)
-        enableExperimentalRules.set(false)
-        
-        additionalEditorconfig.set(mapOf(
-            "ktlint_standard_license-header" to "disabled"
-        ))
+            additionalEditorconfig.set(
+                mapOf(
+                    "ktlint_standard_license-header" to "disabled",
+                ),
+            )
 
-        filter {
-            exclude("**/generated/**")
-            include("**/kotlin/**")
+            filter {
+                exclude("**/build/**")
+                exclude("**/generated/**")
+                include("**/kotlin/**")
+            }
         }
-    }
 
-    // 빌드 스크립트(.kts) 검사 태스크를 모두 비활성화
-    tasks.matching { it.name.contains("KotlinScript") || it.name.contains("kotlinScript") }.configureEach {
-        enabled = false
+        // 빌드 스크립트(.kts) 검사 태스크를 모두 비활성화
+        tasks
+            .matching {
+                it.name.contains("KotlinScript") || it.name.contains("kotlinScript")
+            }.configureEach {
+                enabled = false
+            }
     }
 
     // 컴파일 시 자동으로 ktlintFormat 실행

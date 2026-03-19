@@ -8,7 +8,5 @@ import dev.zacsweers.metro.Inject
 class GetMyPageInfoUseCase(
     private val myPageRepository: MyPageRepository,
 ) {
-    suspend operator fun invoke(): MyPageInfo {
-        return myPageRepository.getMyPageInfo()
-    }
+    suspend operator fun invoke(): MyPageInfo = myPageRepository.getMyPageInfo()
 }

@@ -1,5 +1,10 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.TaskAction
 import java.util.Properties
 
 plugins {
@@ -9,6 +14,36 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
+    alias(libs.plugins.ktlint)
+}
+
+abstract class GenerateNetworkConfigTask : DefaultTask() {
+    @get:Input
+    abstract val debugBaseUrl: Property<String>
+
+    @get:Input
+    abstract val releaseBaseUrl: Property<String>
+
+    @get:Input
+    abstract val kakaoNativeAppKey: Property<String>
+
+    @get:OutputFile
+    abstract val outputFile: RegularFileProperty
+
+    @TaskAction
+    fun generate() {
+        val targetFile = outputFile.get().asFile
+        targetFile.parentFile.mkdirs()
+        targetFile.writeText(
+            """
+            package com.bigong.oguri.core.network
+
+            const val DEBUG_BASE_URL: String = "${debugBaseUrl.get()}"
+            const val RELEASE_BASE_URL: String = "${releaseBaseUrl.get()}"
+            const val KAKAO_NATIVE_APP_KEY: String = "${kakaoNativeAppKey.get()}"
+            """.trimIndent(),
+        )
+    }
 }
 
 val localProperties: Properties =
@@ -21,24 +56,41 @@ val localProperties: Properties =
         }
     }
 
-val debugBaseUrl: String =
+val debugBaseUrlValue: String =
     (localProperties.getProperty("debug.base.url") ?: "https://oguri-kotlin-multiplatform.onrender.com")
         .trim()
         .trimEnd('/')
+val releaseBaseUrlValue: String =
+    (localProperties.getProperty("release.base.url")
+        ?: localProperties.getProperty("debug.base.url")
+        ?: "https://oguri-kotlin-multiplatform.onrender.com")
+        .trim()
+        .trimEnd('/')
+val kakaoNativeAppKeyValue: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
 
 val generatedNetworkConfigDirectory =
-    layout.buildDirectory.dir("generated/source/networkConfig/commonMain/kotlin").get().asFile
+    layout.buildDirectory
+        .dir("generated/source/networkConfig/commonMain/kotlin")
+        .get()
+        .asFile
 val generatedNetworkConfigFile =
     generatedNetworkConfigDirectory.resolve("com/bigong/oguri/core/network/DebugNetworkConfig.kt")
 
-generatedNetworkConfigFile.parentFile.mkdirs()
-generatedNetworkConfigFile.writeText(
-    """
-    package com.bigong.oguri.core.network
+val generateNetworkConfigTask =
+    tasks.register<GenerateNetworkConfigTask>("generateNetworkConfig") {
+        debugBaseUrl.set(debugBaseUrlValue)
+        releaseBaseUrl.set(releaseBaseUrlValue)
+        kakaoNativeAppKey.set(kakaoNativeAppKeyValue)
+        outputFile.set(generatedNetworkConfigFile)
+    }
 
-    const val DEBUG_BASE_URL: String = "$debugBaseUrl"
-    """.trimIndent(),
-)
+tasks
+    .matching { task ->
+        task.name.contains("compile", ignoreCase = true) &&
+            task.name.contains("kotlin", ignoreCase = true)
+    }.configureEach {
+        dependsOn(generateNetworkConfigTask)
+    }
 
 kotlin {
     androidTarget {
@@ -64,6 +116,8 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.kakao.android.user)
             implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
@@ -71,6 +125,7 @@ kotlin {
         }
         commonMain.dependencies {
             implementation(libs.compose.runtime)
+            implementation(libs.compose.runtime.saveable)
             implementation(libs.compose.foundation)
             implementation(libs.compose.material3)
             implementation(libs.compose.ui)
@@ -113,6 +168,7 @@ android {
                 .toInt()
         versionCode = 1
         versionName = "1.0"
+        manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
     }
     packaging {
         resources {

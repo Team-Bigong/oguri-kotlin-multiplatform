@@ -22,16 +22,12 @@ import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
-import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
-
-private val ALERT_DIALOG_SHAPE = RoundedCornerShape(size = 8.dp)
-private val DIALOG_BUTTON_SHAPE = RoundedCornerShape(size = 8.dp)
 
 @Composable
 fun ConfirmAlertDialog(
@@ -49,8 +45,8 @@ fun ConfirmAlertDialog(
         properties =
             DialogProperties(
                 usePlatformDefaultWidth = false,
-                dismissOnBackPress = false,
-                dismissOnClickOutside = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true,
             ),
     ) {
         Surface(
@@ -58,7 +54,7 @@ fun ConfirmAlertDialog(
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
-            shape = ALERT_DIALOG_SHAPE,
+            shape = RoundedCornerShape(8.dp),
             color = Neutral0,
         ) {
             Column(
@@ -74,7 +70,7 @@ fun ConfirmAlertDialog(
                 Text(
                     text = titleText,
                     style = OguriTheme.typography.cardTitle,
-                    color = Neutral70,
+                    color = Neutral90,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
                 )
@@ -97,7 +93,7 @@ fun ConfirmAlertDialog(
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .background(color = Mint70, shape = DIALOG_BUTTON_SHAPE)
+                                .background(color = Mint70, shape = RoundedCornerShape(8.dp))
                                 .noRippleClickable(onClick = onConfirmClick)
                                 .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
@@ -113,7 +109,7 @@ fun ConfirmAlertDialog(
                         modifier =
                             Modifier
                                 .weight(1f)
-                                .background(color = Neutral10, shape = DIALOG_BUTTON_SHAPE)
+                                .background(color = Neutral10, shape = RoundedCornerShape(8.dp))
                                 .noRippleClickable(onClick = onCancelClick)
                                 .padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
@@ -121,7 +117,7 @@ fun ConfirmAlertDialog(
                         Text(
                             text = cancelButtonText,
                             style = OguriTheme.typography.bodyMedium,
-                            color = Neutral70,
+                            color = Neutral90,
                         )
                     }
                 }

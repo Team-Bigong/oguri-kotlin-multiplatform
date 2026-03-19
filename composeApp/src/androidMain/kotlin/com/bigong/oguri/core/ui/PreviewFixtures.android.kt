@@ -6,7 +6,7 @@ import com.bigong.oguri.domain.model.PlaceDetail
 import com.bigong.oguri.domain.model.RecommendPeriod
 import kotlinx.datetime.LocalDate
 
-internal val previewPlace: Place =
+internal val previewPlace =
     Place(
         id = 1L,
         country = "필리핀",
@@ -15,7 +15,7 @@ internal val previewPlace: Place =
         thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
     )
 
-internal val previewRecommendPeriod: RecommendPeriod =
+internal val previewRecommendPeriod =
     RecommendPeriod(
         rank = 1,
         isSaved = false,
@@ -28,7 +28,7 @@ internal val previewRecommendPeriod: RecommendPeriod =
         advertisements = emptyList(),
     )
 
-internal val previewPlaceDetail: PlaceDetail =
+internal val previewPlaceDetail =
     PlaceDetail(
         id = 1L,
         country = "필리핀",

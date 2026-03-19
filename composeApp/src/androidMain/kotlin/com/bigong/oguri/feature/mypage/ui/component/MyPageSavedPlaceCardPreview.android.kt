@@ -18,6 +18,7 @@ private fun MyPageSavedPlaceCardPreview() {
                     summary = "",
                     thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
                 ),
+            onClick = {},
             onDeleteClick = {},
         )
     }

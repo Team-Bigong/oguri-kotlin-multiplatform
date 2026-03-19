@@ -7,16 +7,28 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.bigong.oguri.app.OguriApp
+import com.bigong.oguri.core.deeplink.handleIncomingAppUrl
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        intent?.dataString?.let { urlText ->
+            handleIncomingAppUrl(urlText = urlText)
+        }
 
         setContent {
             OguriApp(
                 onExitApp = ::finish,
             )
+        }
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        intent.dataString?.let { urlText ->
+            handleIncomingAppUrl(urlText = urlText)
         }
     }
 }

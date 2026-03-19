@@ -21,6 +21,7 @@ private fun MyPageSelectedPeriodCardPreview() {
                 ),
             isCurrentYear = true,
             onDeleteClick = {},
+            onClick = {},
         )
     }
 }

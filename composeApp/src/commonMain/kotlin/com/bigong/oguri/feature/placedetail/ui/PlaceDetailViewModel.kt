@@ -1,61 +1,102 @@
 package com.bigong.oguri.feature.placedetail.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.domain.usecase.DeleteSavedDestinationUseCase
 import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
+import com.bigong.oguri.domain.usecase.SaveDestinationUseCase
+import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Inject
 class PlaceDetailViewModel(
     private val getPlaceDetailUseCase: GetPlaceDetailUseCase,
+    private val saveDestinationUseCase: SaveDestinationUseCase,
+    private val deleteSavedDestinationUseCase: DeleteSavedDestinationUseCase,
 ) : ViewModel() {
-    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val _uiState = MutableStateFlow(PlaceDetailUiState())
+    val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<PlaceDetailSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
-    var placeDetailUiState: PlaceDetailUiState by mutableStateOf(PlaceDetailUiState())
-        private set
-
-    fun loadPlaceDetail(placeId: Long) {
+    fun loadPlaceDetail(
+        placeId: Long,
+        startDate: String?,
+        endDate: String?,
+    ) {
         viewModelScope.launch {
-            placeDetailUiState = placeDetailUiState.copy(isLoading = true, isError = false)
+            _uiState.update { currentUiState ->
+                currentUiState.copy(isLoading = true, isError = false)
+            }
 
             runCatching {
                 withContext(Dispatchers.Default) {
-                    getPlaceDetailUseCase(placeId = placeId)
+                    getPlaceDetailUseCase(
+                        placeId = placeId,
+                        startDate = startDate,
+                        endDate = endDate,
+                    )
                 }
             }.onSuccess { placeDetail ->
-                placeDetailUiState =
-                    placeDetailUiState.copy(
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
                         isLoading = false,
                         isError = false,
                         placeDetail = placeDetail,
                         isSaved = placeDetail.isSaved,
                     )
+                }
             }.onFailure {
-                placeDetailUiState =
-                    placeDetailUiState.copy(
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
                         isLoading = false,
                         isError = true,
                         placeDetail = null,
                     )
+                }
             }
         }
     }
 
     fun toggleSaved() {
-        placeDetailUiState = placeDetailUiState.copy(isSaved = !placeDetailUiState.isSaved)
-    }
+        val currentPlaceDetail = uiState.value.placeDetail ?: return
+        val previousSavedState = uiState.value.isSaved
+        val nextSavedState = !previousSavedState
+        _uiState.update { currentUiState ->
+            currentUiState.copy(isSaved = nextSavedState)
+        }
 
-    override fun onCleared() {
-        viewModelScope.cancel()
-        super.onCleared()
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    if (nextSavedState) {
+                        saveDestinationUseCase(placeId = currentPlaceDetail.id)
+                    } else {
+                        deleteSavedDestinationUseCase(placeId = currentPlaceDetail.id)
+                    }
+                }
+            }.onSuccess {
+                _sideEffect.tryEmit(
+                    if (nextSavedState) {
+                        PlaceDetailSideEffect.Saved
+                    } else {
+                        PlaceDetailSideEffect.Deleted
+                    },
+                )
+            }.onFailure {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isSaved = previousSavedState)
+                }
+            }
+        }
     }
 }
