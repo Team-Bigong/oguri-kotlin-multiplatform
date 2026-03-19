@@ -29,6 +29,10 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
    │  └─ ui
    ├─ login
    │  └─ ui
+   ├─ onboarding
+   │  └─ ui
+   │     ├─ component
+   │     └─ model
    ├─ home
    │  └─ ui
    │     ├─ component

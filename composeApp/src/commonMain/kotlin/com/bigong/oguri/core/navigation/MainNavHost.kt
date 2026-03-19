@@ -20,6 +20,7 @@ import com.bigong.oguri.feature.calendar.ui.CalendarRoute
 import com.bigong.oguri.feature.home.ui.HomeRoute
 import com.bigong.oguri.feature.login.ui.LoginRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageRoute
+import com.bigong.oguri.feature.onboarding.ui.OnboardingRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
@@ -35,7 +36,7 @@ fun MainNavHost(
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
     onLoggedOut: () -> Unit,
-    onLoginCompleted: () -> Unit,
+    onWithdrawCompleted: () -> Unit,
 ) {
     val homeViewModel =
         remember {
@@ -111,15 +112,34 @@ fun MainNavHost(
         },
     ) {
         composable<RouteModel.Splash> {
-            SplashRoute(onSplashCompleted = navigator::navigateToLogin)
+            SplashRoute(
+                splashViewModelProvider = appGraph.splashViewModelProvider,
+                onNavigateToLogin = navigator::navigateToLoginFromSplash,
+                onNavigateToOnboarding = navigator::navigateToOnboardingFromSplash,
+                onNavigateToHome = navigator::navigateToHomeFromSplash,
+            )
         }
         composable<RouteModel.Login> {
             LoginRoute(
                 loginViewModelProvider = appGraph.loginViewModelProvider,
                 snackbarHostState = snackbarHostState,
-                onLoginCompleted = onLoginCompleted,
-                onAppleLoginClick = onLoginCompleted,
-                onGuestBrowseClick = onLoginCompleted,
+                onLoginCompleted = { isOnboardingCompleted ->
+                    if (isOnboardingCompleted) {
+                        navigator.navigateToHomeFromLogin()
+                    } else {
+                        navigator.navigateToOnboardingFromLogin()
+                    }
+                },
+                onGuestBrowseClick = navigator::navigateToHomeFromLogin,
+            )
+        }
+        composable<RouteModel.Onboarding> {
+            OnboardingRoute(
+                onboardingViewModelProvider = appGraph.onboardingViewModelProvider,
+                snackbarHostState = snackbarHostState,
+                onBackClick = navigator::navigateToLogin,
+                onHomeClick = navigator::navigateToHomeFromOnboarding,
+                onOpenWebDocument = navigator::navigateToWebDocument,
             )
         }
         composable<RouteModel.Home> {
@@ -135,6 +155,7 @@ fun MainNavHost(
                         }
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
+                onLoginRequired = navigator::navigateToLogin,
             )
         }
         composable<RouteModel.Calendar> {
@@ -152,6 +173,8 @@ fun MainNavHost(
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
                 onLoggedOut = onLoggedOut,
+                onWithdrawCompleted = onWithdrawCompleted,
+                onLoginRequired = navigator::navigateToLogin,
                 onPeriodClick = navigator::navigateToPeriodDetail,
                 onSavedPlaceClick = { placeId ->
                     navigator.navigateToPlaceDetail(

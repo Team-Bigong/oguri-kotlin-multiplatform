@@ -7,6 +7,6 @@ import dev.zacsweers.metro.Inject
 class LoginWithKakaoAccessTokenUseCase(
     private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(kakaoAccessToken: String): String =
+    suspend operator fun invoke(kakaoAccessToken: String): Boolean =
         authRepository.loginWithKakaoAccessToken(kakaoAccessToken = kakaoAccessToken)
 }

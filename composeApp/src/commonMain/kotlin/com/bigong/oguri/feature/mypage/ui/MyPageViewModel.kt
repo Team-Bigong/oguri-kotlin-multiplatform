@@ -7,9 +7,12 @@ import com.bigong.oguri.domain.usecase.DeleteMyPageSelectedPeriodUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
 import com.bigong.oguri.domain.usecase.LogoutUseCase
 import com.bigong.oguri.domain.usecase.UpdateMyPageLeaveDaysUseCase
+import com.bigong.oguri.domain.usecase.WithdrawUseCase
 import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import dev.zacsweers.metro.Inject
+import io.ktor.client.plugins.ClientRequestException
+import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +29,7 @@ class MyPageViewModel(
     private val deleteMyPageSelectedPeriodUseCase: DeleteMyPageSelectedPeriodUseCase,
     private val deleteMyPageSavedPlaceUseCase: DeleteMyPageSavedPlaceUseCase,
     private val logoutUseCase: LogoutUseCase,
+    private val withdrawUseCase: WithdrawUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MyPageUiState())
     val uiState = _uiState.asStateFlow()
@@ -68,7 +72,17 @@ class MyPageViewModel(
                         myPageInfo = myPageInfo,
                     )
                 }
-            }.onFailure {
+            }.onFailure { throwable ->
+                if (throwable.isUnauthorized()) {
+                    _uiState.update { currentUiState ->
+                        currentUiState.copy(
+                            isLoading = false,
+                            isError = false,
+                        )
+                    }
+                    _sideEffect.tryEmit(MyPageSideEffect.LoginRequired)
+                    return@onFailure
+                }
                 _uiState.update { currentUiState ->
                     if (currentUiState.myPageInfo != null) {
                         currentUiState.copy(
@@ -264,14 +278,36 @@ class MyPageViewModel(
         if (!uiState.value.isWithdrawConfirmEnabled) {
             return
         }
-        logoutUseCase()
-        _uiState.update { currentUiState ->
-            currentUiState.copy(
-                isWithdrawDialogVisible = false,
-                withdrawInputText = "",
-                isWithdrawConfirmEnabled = false,
-            )
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    withdrawUseCase()
+                }
+            }.onSuccess {
+                logoutUseCase()
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
+                        isWithdrawDialogVisible = false,
+                        withdrawInputText = "",
+                        isWithdrawConfirmEnabled = false,
+                    )
+                }
+                _sideEffect.tryEmit(MyPageSideEffect.WithdrawCompleted)
+            }.onFailure { throwable ->
+                if (throwable.isUnauthorized()) {
+                    _sideEffect.tryEmit(MyPageSideEffect.LoginRequired)
+                } else {
+                    _sideEffect.tryEmit(MyPageSideEffect.WithdrawFailed)
+                }
+            }
         }
-        _sideEffect.tryEmit(MyPageSideEffect.WithdrawCompleted)
+    }
+
+    private fun Throwable.isUnauthorized(): Boolean {
+        if (this !is ClientRequestException) {
+            return false
+        }
+        val statusCode = response.status
+        return statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
     }
 }

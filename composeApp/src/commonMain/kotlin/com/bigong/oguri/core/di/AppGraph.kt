@@ -26,8 +26,10 @@ import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
 import com.bigong.oguri.feature.home.ui.HomeViewModel
 import com.bigong.oguri.feature.login.ui.LoginViewModel
 import com.bigong.oguri.feature.mypage.ui.MyPageViewModel
+import com.bigong.oguri.feature.onboarding.ui.OnboardingViewModel
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailViewModel
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailViewModel
+import com.bigong.oguri.feature.splash.ui.SplashViewModel
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provider
 import dev.zacsweers.metro.Provides
@@ -40,8 +42,10 @@ interface AppGraph {
     val homeViewModelProvider: Provider<HomeViewModel>
     val loginViewModelProvider: Provider<LoginViewModel>
     val myPageViewModelProvider: Provider<MyPageViewModel>
+    val onboardingViewModelProvider: Provider<OnboardingViewModel>
     val periodDetailViewModelProvider: Provider<PeriodDetailViewModel>
     val placeDetailViewModelProvider: Provider<PlaceDetailViewModel>
+    val splashViewModelProvider: Provider<SplashViewModel>
 
     @Provides
     fun provideAuthRemoteDataSource(implementation: KtorAuthRemoteDataSource): AuthRemoteDataSource = implementation

@@ -9,9 +9,11 @@ import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.snackbar_login_required
 import oguri.composeapp.generated.resources.snackbar_mypage_leave_days_updated
 import oguri.composeapp.generated.resources.snackbar_mypage_saved_place_deleted
 import oguri.composeapp.generated.resources.snackbar_mypage_selected_period_deleted
+import oguri.composeapp.generated.resources.snackbar_withdraw_failed
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -22,6 +24,8 @@ fun MyPageRoute(
     onOpenTermsOfService: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
     onLoggedOut: () -> Unit,
+    onWithdrawCompleted: () -> Unit,
+    onLoginRequired: () -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onSavedPlaceClick: (Long) -> Unit,
 ) {
@@ -29,6 +33,8 @@ fun MyPageRoute(
     val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_mypage_leave_days_updated)
     val selectedPeriodDeletedMessage = stringResource(Res.string.snackbar_mypage_selected_period_deleted)
     val savedPlaceDeletedMessage = stringResource(Res.string.snackbar_mypage_saved_place_deleted)
+    val loginRequiredMessage = stringResource(Res.string.snackbar_login_required)
+    val withdrawFailedMessage = stringResource(Res.string.snackbar_withdraw_failed)
 
     LaunchedEffect(myPageViewModel) {
         myPageViewModel.sideEffect.collectLatest { sideEffect ->
@@ -55,7 +61,22 @@ fun MyPageRoute(
                     onLoggedOut()
                 }
                 MyPageSideEffect.WithdrawCompleted -> {
-                    onLoggedOut()
+                    onWithdrawCompleted()
+                }
+
+                MyPageSideEffect.WithdrawFailed -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = withdrawFailedMessage,
+                        type = OguriSnackBarType.ALERT,
+                    )
+                }
+
+                MyPageSideEffect.LoginRequired -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = loginRequiredMessage,
+                        type = OguriSnackBarType.INFO,
+                    )
+                    onLoginRequired()
                 }
             }
         }

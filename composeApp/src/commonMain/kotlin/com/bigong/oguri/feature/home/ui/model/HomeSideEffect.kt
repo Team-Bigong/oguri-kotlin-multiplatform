@@ -4,4 +4,6 @@ sealed interface HomeSideEffect {
     data object RecommendationSaved : HomeSideEffect
 
     data object RecommendationDeleted : HomeSideEffect
+
+    data object LoginRequired : HomeSideEffect
 }
