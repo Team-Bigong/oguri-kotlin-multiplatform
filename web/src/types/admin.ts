@@ -21,7 +21,7 @@ export type Destination = {
   recommendEndMonth1: number | null
   recommendStartMonth2: number | null
   recommendEndMonth2: number | null
-  flightTime: string | null
+  flightTimeMinutes: number | null
   images: DestinationImage[]
 }
 
@@ -40,7 +40,7 @@ export type DestinationUpsertRequest = {
   recommendEndMonth1: number | null
   recommendStartMonth2: number | null
   recommendEndMonth2: number | null
-  flightTime: string | null
+  flightTimeMinutes: number | null
   images: DestinationImageRequest[]
 }
 

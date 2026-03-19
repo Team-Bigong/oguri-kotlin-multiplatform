@@ -55,7 +55,8 @@ class AdminDestinationService(
                 recommendEndMonth1 = request.recommendEndMonth1,
                 recommendStartMonth2 = request.recommendStartMonth2,
                 recommendEndMonth2 = request.recommendEndMonth2,
-                flightTime = normalizeNullableText(request.flightTime)
+                flightTime = null,
+                flightTimeMinutes = request.flightTimeMinutes
             )
         )
 
@@ -85,7 +86,8 @@ class AdminDestinationService(
         destination.recommendEndMonth1 = request.recommendEndMonth1
         destination.recommendStartMonth2 = request.recommendStartMonth2
         destination.recommendEndMonth2 = request.recommendEndMonth2
-        destination.flightTime = normalizeNullableText(request.flightTime)
+        destination.flightTime = null
+        destination.flightTimeMinutes = request.flightTimeMinutes
 
         destinationRepository.save(destination)
         replaceDestinationImages(destination, request)
@@ -147,6 +149,10 @@ class AdminDestinationService(
         if (request.images.any { image -> image.sortOrder < MINIMUM_IMAGE_SORT_ORDER }) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "이미지 정렬 순서는 1 이상이어야 합니다.")
         }
+
+        if (request.flightTimeMinutes != null && request.flightTimeMinutes < MINIMUM_FLIGHT_TIME_MINUTES) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "비행 시간(분)은 0 이상이어야 합니다.")
+        }
     }
 
     private fun validateMonthRange(startMonth: Int?, endMonth: Int?, label: String) {
@@ -181,7 +187,7 @@ class AdminDestinationService(
             recommendEndMonth1 = recommendEndMonth1,
             recommendStartMonth2 = recommendStartMonth2,
             recommendEndMonth2 = recommendEndMonth2,
-            flightTime = flightTime,
+            flightTimeMinutes = flightTimeMinutes ?: parseLegacyFlightTimeMinutes(flightTime),
             images = sortedImages.map { image ->
                 AdminDestinationImageResponse(
                     id = image.id,
@@ -198,5 +204,15 @@ class AdminDestinationService(
         private const val MAXIMUM_MONTH = 12
         private const val EXACT_THUMBNAIL_COUNT = 1
         private const val MINIMUM_IMAGE_SORT_ORDER = 1
+        private const val MINIMUM_FLIGHT_TIME_MINUTES = 0
+        private val NUMBER_ONLY_REGEX = Regex("[^0-9]")
+    }
+
+    private fun parseLegacyFlightTimeMinutes(legacyFlightTime: String?): Int? {
+        if (legacyFlightTime == null) {
+            return null
+        }
+        val number = legacyFlightTime.replace(NUMBER_ONLY_REGEX, "")
+        return number.toIntOrNull()
     }
 }

@@ -5,6 +5,7 @@
 - 어드민 웹은 장소/사용자/공휴일 DB를 CRUD로 관리한다.
 - 장소 이미지는 업로드 시 가로 1280px 리사이즈 + 800KB 이하 압축 후 Firebase Storage로 업로드한다.
 - Firebase Storage 저장 경로는 `places/{country}/{city}/{index}.jpg` 규칙을 사용한다.
+- 어드민 장소 폼에서 Storage 경로(`country`, `city`)는 드롭다운으로 선택하거나 직접 입력할 수 있다.
 
 ## 구조
 ```text
