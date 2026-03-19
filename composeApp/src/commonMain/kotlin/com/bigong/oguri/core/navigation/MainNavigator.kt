@@ -38,10 +38,55 @@ class MainNavigator(
         }
     }
 
+    fun navigateToLoginFromSplash() {
+        navHostController.navigate(RouteModel.Login) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Splash) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToHomeFromSplash() {
+        navHostController.navigate(RouteModel.Home) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Splash) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToOnboardingFromSplash() {
+        navHostController.navigate(RouteModel.Onboarding) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Splash) {
+                inclusive = true
+            }
+        }
+    }
+
     fun navigateToHomeFromLogin() {
         navHostController.navigate(RouteModel.Home) {
             launchSingleTop = true
             popUpTo(RouteModel.Login) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToOnboardingFromLogin() {
+        navHostController.navigate(RouteModel.Onboarding) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Login) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToHomeFromOnboarding() {
+        navHostController.navigate(RouteModel.Home) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Onboarding) {
                 inclusive = true
             }
         }
@@ -98,6 +143,7 @@ class MainNavigator(
                 navHostController.navigate(routeModel)
             }
 
+            RouteModel.Onboarding,
             RouteModel.Home,
             RouteModel.Calendar,
             RouteModel.MyPage,

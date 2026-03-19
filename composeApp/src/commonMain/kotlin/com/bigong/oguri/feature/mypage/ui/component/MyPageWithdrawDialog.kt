@@ -25,6 +25,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
+import com.bigong.oguri.core.designsystem.Neutral30
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
@@ -145,8 +146,7 @@ fun MyPageWithdrawDialog(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
                 ) {
-                    val confirmButtonBackground = if (isConfirmEnabled) Mint70 else Neutral10
-                    val confirmButtonTextColor = if (isConfirmEnabled) Neutral0 else Neutral40
+                    val confirmButtonBackground = if (isConfirmEnabled) Mint70 else Neutral30
 
                     Box(
                         modifier =
@@ -165,7 +165,7 @@ fun MyPageWithdrawDialog(
                         Text(
                             text = stringResource(Res.string.mypage_dialog_confirm),
                             style = OguriTheme.typography.bodyMedium,
-                            color = confirmButtonTextColor,
+                            color = Neutral0,
                         )
                     }
 

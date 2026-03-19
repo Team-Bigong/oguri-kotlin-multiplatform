@@ -27,6 +27,9 @@ sealed interface RouteModel {
     data object Login : RouteModel
 
     @Serializable
+    data object Onboarding : RouteModel
+
+    @Serializable
     data object Home : RouteModel
 
     @Serializable

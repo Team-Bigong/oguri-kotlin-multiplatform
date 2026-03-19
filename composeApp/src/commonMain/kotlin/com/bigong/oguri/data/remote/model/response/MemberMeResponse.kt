@@ -9,6 +9,8 @@ data class MemberMeResponse(
     val id: String,
     @SerialName("nickname")
     val nickname: String,
+    @SerialName("onboardingCompleted")
+    val onboardingCompleted: Boolean = true,
     @SerialName("preferredDayOff")
     val preferredDayOff: Int,
     @SerialName("remainingDayOff")

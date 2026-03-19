@@ -13,4 +13,6 @@ interface MyPageRepository {
     suspend fun deleteSelectedPeriod(periodId: Long): MyPageInfo
 
     suspend fun deleteSavedPlace(placeId: Long): MyPageInfo
+
+    suspend fun withdraw()
 }

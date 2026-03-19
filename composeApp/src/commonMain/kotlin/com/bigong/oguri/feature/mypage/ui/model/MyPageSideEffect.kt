@@ -10,4 +10,8 @@ sealed interface MyPageSideEffect {
     data object LoggedOut : MyPageSideEffect
 
     data object WithdrawCompleted : MyPageSideEffect
+
+    data object WithdrawFailed : MyPageSideEffect
+
+    data object LoginRequired : MyPageSideEffect
 }

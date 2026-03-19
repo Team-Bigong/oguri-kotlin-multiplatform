@@ -44,6 +44,10 @@ class DefaultMyPageRepository(
             .deleteSavedPlace(
                 request = DeleteMyPageSavedPlaceRequest(placeId = placeId),
             ).toDomain()
+
+    override suspend fun withdraw() {
+        myPageRemoteDataSource.withdraw()
+    }
 }
 
 private fun MyPageResponse.toDomain(): MyPageInfo =
