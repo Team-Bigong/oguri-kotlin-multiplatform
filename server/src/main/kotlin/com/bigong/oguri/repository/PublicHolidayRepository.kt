@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface PublicHolidayRepository : JpaRepository<PublicHoliday, Int>
+interface PublicHolidayRepository : JpaRepository<PublicHoliday, Int> {
+    fun findAllByOrderByHolidayDateAsc(): List<PublicHoliday>
+}

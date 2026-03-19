@@ -44,3 +44,9 @@ jwt:
 
 apple:
   client-id: ${APPLE_CLIENT_ID:}
+
+admin:
+  username: ${ADMIN_USERNAME:}
+  password: ${ADMIN_PASSWORD:}
+  session-secret: ${ADMIN_SESSION_SECRET:}
+  session-validity-seconds: ${ADMIN_SESSION_VALIDITY_SECONDS:28800}
