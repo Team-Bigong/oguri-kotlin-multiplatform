@@ -2,9 +2,25 @@ import React from "react"
 import { OfficialHomePage } from "./features/official/OfficialHomePage"
 import { AdminApp } from "./features/admin/AdminApp"
 
-const isAdminPath = window.location.pathname.startsWith("/admin")
+const resolveIsAdminPath = (): boolean => {
+  return window.location.pathname.startsWith("/admin") || window.location.hash.startsWith("#/admin")
+}
 
 export const App = (): React.JSX.Element => {
+  const [isAdminPath, setIsAdminPath] = React.useState<boolean>(resolveIsAdminPath())
+
+  React.useEffect(() => {
+    const handleLocationChanged = (): void => {
+      setIsAdminPath(resolveIsAdminPath())
+    }
+    window.addEventListener("hashchange", handleLocationChanged)
+    window.addEventListener("popstate", handleLocationChanged)
+    return () => {
+      window.removeEventListener("hashchange", handleLocationChanged)
+      window.removeEventListener("popstate", handleLocationChanged)
+    }
+  }, [])
+
   if (isAdminPath) {
     return <AdminApp />
   }

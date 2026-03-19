@@ -80,6 +80,7 @@ web/
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `dist`
 - Rewrite Rule: `/* -> /index.html`
+- 경로 fallback: rewrite 설정 전에는 `/#/admin` 해시 경로로도 어드민 진입 가능
 
 ## 주의 사항
 - 어드민 API는 Swagger에 노출하지 않는다.
