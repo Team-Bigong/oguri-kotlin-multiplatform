@@ -24,7 +24,8 @@ class SavedRecommendationService(
             memberId = memberId,
             startDate = request.startDate,
             endDate = request.endDate,
-            dayOffCount = request.dayOffCount
+            dayOffCount = request.dayOffCount,
+            totalTripCount = request.totalTripCount
         )
         savedRecommendationRepository.save(entity)
     }

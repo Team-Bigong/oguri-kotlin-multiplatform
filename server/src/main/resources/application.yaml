@@ -37,3 +37,10 @@ management:
 
 server:
   port: ${PORT:8080}
+
+jwt:
+  access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:1800}
+  refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
+
+apple:
+  client-id: ${APPLE_CLIENT_ID:}

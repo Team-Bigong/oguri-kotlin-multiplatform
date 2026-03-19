@@ -23,11 +23,21 @@ class Member(
     var remainingDayOff: Int = 3,
 
     @Column(nullable = false)
+    var onboardingCompleted: Boolean = false,
+
+    @Column(nullable = false)
     var updatedAt: LocalDateTime = LocalDateTime.now()
 ) {
     fun updateDayOffInfo(preferred: Int, remaining: Int) {
         this.preferredDayOff = preferred
         this.remainingDayOff = remaining
+        this.updatedAt = LocalDateTime.now()
+    }
+
+    fun completeOnboarding(preferred: Int, remaining: Int) {
+        this.preferredDayOff = preferred
+        this.remainingDayOff = remaining
+        this.onboardingCompleted = true
         this.updatedAt = LocalDateTime.now()
     }
 
