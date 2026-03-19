@@ -5,7 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.model.CalendarPeriod
 import com.bigong.oguri.domain.model.CalendarRecommendation
 import com.bigong.oguri.domain.usecase.CalculateDDayUseCase
+import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarRecommendationUseCase
+import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
+import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
@@ -29,6 +32,9 @@ import kotlin.time.Clock
 class CalendarViewModel(
     private val getCalendarRecommendationUseCase: GetCalendarRecommendationUseCase,
     private val calculateDDayUseCase: CalculateDDayUseCase,
+    private val getMyPageInfoUseCase: GetMyPageInfoUseCase,
+    private val saveRecommendationUseCase: SaveRecommendationUseCase,
+    private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CalendarUiState())
     val uiState = _uiState.asStateFlow()
@@ -37,6 +43,7 @@ class CalendarViewModel(
     val sideEffect = _sideEffect.asSharedFlow()
 
     private var currentPageIndex: Int = 0
+    private var savedPeriodKeys: Set<String> = emptySet()
 
     init {
         val today =
@@ -127,11 +134,110 @@ class CalendarViewModel(
         refreshPagedRecommendations()
     }
 
+    fun toggleSaved(periodId: Long) {
+        val periodCard =
+            uiState.value.periodCards.firstOrNull { card ->
+                card.id == periodId
+            } ?: return
+        val nextSavedState = !periodCard.isSaved
+
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                periodCards =
+                    currentUiState.periodCards.map { card ->
+                        if (card.id == periodId) {
+                            card.copy(isSaved = nextSavedState)
+                        } else {
+                            card
+                        }
+                    },
+            )
+        }
+
+        val periodKey =
+            createPeriodKey(
+                startDate = periodCard.startDate,
+                endDate = periodCard.endDate,
+                dayOffCount = periodCard.dayOffCount,
+                totalTripCount = periodCard.totalTripCount,
+            )
+        savedPeriodKeys =
+            if (nextSavedState) {
+                savedPeriodKeys + periodKey
+            } else {
+                savedPeriodKeys - periodKey
+            }
+        _sideEffect.tryEmit(
+            if (nextSavedState) {
+                CalendarSideEffect.RecommendationSaved
+            } else {
+                CalendarSideEffect.RecommendationDeleted
+            },
+        )
+
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    if (nextSavedState) {
+                        saveRecommendationUseCase(
+                            startDate = periodCard.startDate,
+                            endDate = periodCard.endDate,
+                            dayOffCount = periodCard.dayOffCount,
+                            totalTripCount = periodCard.totalTripCount,
+                        )
+                    } else {
+                        deleteRecommendationUseCase(
+                            startDate = periodCard.startDate,
+                            endDate = periodCard.endDate,
+                            dayOffCount = periodCard.dayOffCount,
+                            totalTripCount = periodCard.totalTripCount,
+                        )
+                    }
+                }
+            }.onFailure {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
+                        periodCards =
+                            currentUiState.periodCards.map { card ->
+                                if (card.id == periodId) {
+                                    card.copy(isSaved = periodCard.isSaved)
+                                } else {
+                                    card
+                                }
+                            },
+                    )
+                }
+                savedPeriodKeys =
+                    if (periodCard.isSaved) {
+                        savedPeriodKeys + periodKey
+                    } else {
+                        savedPeriodKeys - periodKey
+                    }
+            }
+        }
+    }
+
     private fun loadInitialCalendar() {
         viewModelScope.launch {
             _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true, isError = false)
             }
+
+            savedPeriodKeys =
+                runCatching {
+                    withContext(Dispatchers.Default) {
+                        getMyPageInfoUseCase()
+                            .selectedPeriods
+                            .map { selectedPeriod ->
+                                createPeriodKey(
+                                    startDate = selectedPeriod.startDate,
+                                    endDate = selectedPeriod.endDate,
+                                    dayOffCount = selectedPeriod.dayOffCount,
+                                    totalTripCount = selectedPeriod.totalTripCount,
+                                )
+                            }.toSet()
+                    }
+                }.getOrDefault(emptySet())
 
             runCatching {
                 withContext(Dispatchers.Default) {
@@ -249,6 +355,15 @@ class CalendarViewModel(
                 startDate = period.startDate,
                 endDate = period.endDate,
                 dDay = calculateDDayUseCase(todayDate = todayDate, targetDate = period.startDate),
+                isSaved =
+                    savedPeriodKeys.contains(
+                        createPeriodKey(
+                            startDate = period.startDate,
+                            endDate = period.endDate,
+                            dayOffCount = leaveDays,
+                            totalTripCount = period.totalDayCount(),
+                        ),
+                    ),
                 dayOffCount = leaveDays,
                 totalTripCount = period.totalDayCount(),
                 holidayNames = holidayNames,
@@ -257,6 +372,13 @@ class CalendarViewModel(
         }
 
     private fun CalendarPeriod.totalDayCount(): Int = (endDate.toEpochDays() - startDate.toEpochDays() + 1).toInt()
+
+    private fun createPeriodKey(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        dayOffCount: Int,
+        totalTripCount: Int,
+    ): String = "${startDate}_${endDate}_${dayOffCount}_${totalTripCount}"
 
     private companion object {
         private const val PAGE_ID_MULTIPLIER = 1_000L

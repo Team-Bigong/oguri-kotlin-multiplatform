@@ -46,6 +46,7 @@ fun CalendarScreen(
     calendarUiState: CalendarUiState,
     onLeaveDaysChanged: (Int) -> Unit,
     onCardClick: (Long) -> Unit,
+    onSaveToggleClick: (Long) -> Unit,
     onDetailClick: (Long) -> Unit,
     onLoadNextPage: () -> Unit,
     onRetryClick: () -> Unit,
@@ -141,6 +142,7 @@ fun CalendarScreen(
                 showEndHint = shouldShowEndHint,
                 listViewportBottomInWindow = listViewportBottomInWindow,
                 onCardClick = onCardClick,
+                onSaveToggleClick = onSaveToggleClick,
                 onDetailClick = onDetailClick,
                 onRequestScrollBy = { scrollByPixels ->
                     if (scrollByPixels <= 0f) {

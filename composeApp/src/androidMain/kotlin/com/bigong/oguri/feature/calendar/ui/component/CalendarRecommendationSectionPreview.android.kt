@@ -17,6 +17,7 @@ private fun CalendarRecommendationSectionPreview() {
                 startDate = LocalDate.parse("2026-02-28"),
                 endDate = LocalDate.parse("2026-03-04"),
                 dDay = 10,
+                isSaved = true,
                 dayOffCount = 2,
                 totalTripCount = 5,
                 holidayNames = listOf("삼일절", "대체휴일"),
@@ -31,6 +32,7 @@ private fun CalendarRecommendationSectionPreview() {
                 startDate = LocalDate.parse("2026-03-07"),
                 endDate = LocalDate.parse("2026-03-10"),
                 dDay = 17,
+                isSaved = false,
                 dayOffCount = 2,
                 totalTripCount = 4,
                 holidayNames = listOf("주말"),
@@ -46,6 +48,7 @@ private fun CalendarRecommendationSectionPreview() {
             showEndHint = false,
             listViewportBottomInWindow = 2_000f,
             onCardClick = {},
+            onSaveToggleClick = {},
             onDetailClick = {},
             onRequestScrollBy = {},
         )

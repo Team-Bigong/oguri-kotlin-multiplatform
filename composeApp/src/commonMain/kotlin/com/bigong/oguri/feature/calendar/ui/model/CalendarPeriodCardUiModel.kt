@@ -8,6 +8,7 @@ data class CalendarPeriodCardUiModel(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val dDay: Int,
+    val isSaved: Boolean,
     val dayOffCount: Int,
     val totalTripCount: Int,
     val holidayNames: List<String>,

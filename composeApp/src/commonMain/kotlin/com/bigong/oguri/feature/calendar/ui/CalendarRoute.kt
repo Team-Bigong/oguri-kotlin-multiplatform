@@ -10,6 +10,8 @@ import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.snackbar_calendar_leave_days_updated
+import oguri.composeapp.generated.resources.snackbar_home_deleted
+import oguri.composeapp.generated.resources.snackbar_home_saved
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -20,6 +22,8 @@ fun CalendarRoute(
 ) {
     val calendarUiState = calendarViewModel.uiState.collectAsStateWithLifecycle().value
     val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_calendar_leave_days_updated)
+    val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
+    val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)
 
     LaunchedEffect(calendarViewModel) {
         calendarViewModel.sideEffect.collectLatest { sideEffect ->
@@ -27,6 +31,18 @@ fun CalendarRoute(
                 CalendarSideEffect.LeaveDaysUpdated -> {
                     snackbarHostState.showOguriSnackbar(
                         message = leaveDaysUpdatedMessage,
+                        type = OguriSnackBarType.INFO,
+                    )
+                }
+                CalendarSideEffect.RecommendationSaved -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = recommendationSavedMessage,
+                        type = OguriSnackBarType.SUCCESS,
+                    )
+                }
+                CalendarSideEffect.RecommendationDeleted -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = recommendationDeletedMessage,
                         type = OguriSnackBarType.INFO,
                     )
                 }
@@ -41,6 +57,7 @@ fun CalendarRoute(
         calendarUiState = calendarUiState,
         onLeaveDaysChanged = calendarViewModel::updateLeaveDays,
         onCardClick = calendarViewModel::onCardClick,
+        onSaveToggleClick = calendarViewModel::toggleSaved,
         onDetailClick = calendarViewModel::onDetailClick,
         onLoadNextPage = calendarViewModel::loadNextPage,
         onRetryClick = calendarViewModel::retry,

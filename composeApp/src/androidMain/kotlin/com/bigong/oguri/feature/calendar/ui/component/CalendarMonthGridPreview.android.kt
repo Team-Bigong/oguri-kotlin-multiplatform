@@ -18,6 +18,7 @@ private fun CalendarMonthGridPreview() {
                     startDate = LocalDate.parse("2026-02-28"),
                     endDate = LocalDate.parse("2026-03-04"),
                     dDay = 10,
+                    isSaved = true,
                     dayOffCount = 2,
                     totalTripCount = 5,
                     holidayNames = listOf("삼일절", "대체휴일"),
