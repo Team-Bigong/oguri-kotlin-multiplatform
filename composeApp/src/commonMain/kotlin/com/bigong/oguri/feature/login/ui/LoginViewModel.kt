@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.login.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.domain.usecase.LoginWithAppleIdentityTokenUseCase
 import com.bigong.oguri.domain.usecase.LoginWithKakaoAccessTokenUseCase
 import com.bigong.oguri.feature.login.ui.model.LoginSideEffect
 import com.bigong.oguri.feature.login.ui.model.LoginUiState
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
 @Inject
 class LoginViewModel(
     private val loginWithKakaoAccessTokenUseCase: LoginWithKakaoAccessTokenUseCase,
+    private val loginWithAppleIdentityTokenUseCase: LoginWithAppleIdentityTokenUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState = _uiState.asStateFlow()
@@ -27,15 +29,35 @@ class LoginViewModel(
             return
         }
 
+        login(
+            loginRequest = {
+                loginWithKakaoAccessTokenUseCase(kakaoAccessToken = kakaoAccessToken)
+            },
+        )
+    }
+
+    fun loginWithAppleIdentityToken(identityToken: String) {
+        if (uiState.value.isLoading || identityToken.isBlank()) {
+            return
+        }
+
+        login(
+            loginRequest = {
+                loginWithAppleIdentityTokenUseCase(identityToken = identityToken)
+            },
+        )
+    }
+
+    private fun login(loginRequest: suspend () -> Boolean) {
         viewModelScope.launch {
             _uiState.update { currentUiState ->
                 currentUiState.copy(isLoading = true)
             }
             runCatching {
-                loginWithKakaoAccessTokenUseCase(kakaoAccessToken = kakaoAccessToken)
-            }.onSuccess {
+                loginRequest()
+            }.onSuccess { isOnboardingCompleted ->
                 _uiState.update { currentUiState ->
-                    currentUiState.copy(isLoginCompleted = true)
+                    currentUiState.copy(isOnboardingCompleted = isOnboardingCompleted)
                 }
             }.onFailure {
                 _sideEffect.tryEmit(LoginSideEffect.LoginFailed)
@@ -52,11 +74,11 @@ class LoginViewModel(
     }
 
     fun consumeLoginCompleted() {
-        if (!uiState.value.isLoginCompleted) {
+        if (uiState.value.isOnboardingCompleted == null) {
             return
         }
         _uiState.update { currentUiState ->
-            currentUiState.copy(isLoginCompleted = false)
+            currentUiState.copy(isOnboardingCompleted = null)
         }
     }
 }

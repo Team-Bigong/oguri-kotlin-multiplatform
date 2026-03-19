@@ -4,9 +4,9 @@ import com.bigong.oguri.domain.repository.AuthRepository
 import dev.zacsweers.metro.Inject
 
 @Inject
-class LoginWithKakaoAccessTokenUseCase(
+class LoginWithAppleIdentityTokenUseCase(
     private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(kakaoAccessToken: String): Boolean =
-        authRepository.loginWithKakaoAccessToken(kakaoAccessToken = kakaoAccessToken)
+    suspend operator fun invoke(identityToken: String): Boolean =
+        authRepository.loginWithAppleIdentityToken(identityToken = identityToken)
 }

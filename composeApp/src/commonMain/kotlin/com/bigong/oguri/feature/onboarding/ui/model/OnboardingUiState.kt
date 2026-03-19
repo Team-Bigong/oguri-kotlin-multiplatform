@@ -12,4 +12,5 @@ data class OnboardingUiState(
     val isPreferredDayOffConfirmed: Boolean = false,
     val remainingDayOffError: OnboardingLeaveDaysValidationError? = null,
     val preferredDayOffError: OnboardingLeaveDaysValidationError? = null,
+    val isSubmitting: Boolean = false,
 )

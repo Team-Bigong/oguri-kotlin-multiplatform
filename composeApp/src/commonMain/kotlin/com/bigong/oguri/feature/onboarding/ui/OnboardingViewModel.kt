@@ -1,7 +1,9 @@
 package com.bigong.oguri.feature.onboarding.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.core.navigation.WebDocumentType
+import com.bigong.oguri.domain.usecase.CompleteOnboardingUseCase
 import com.bigong.oguri.domain.usecase.ValidateOnboardingLeaveDaysUseCase
 import com.bigong.oguri.feature.onboarding.ui.model.OnboardingSideEffect
 import com.bigong.oguri.feature.onboarding.ui.model.OnboardingStep
@@ -12,10 +14,12 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @Inject
 class OnboardingViewModel(
     private val validateOnboardingLeaveDaysUseCase: ValidateOnboardingLeaveDaysUseCase,
+    private val completeOnboardingUseCase: CompleteOnboardingUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(OnboardingUiState())
     val uiState = _uiState.asStateFlow()
@@ -133,6 +137,9 @@ class OnboardingViewModel(
     }
 
     fun completeOnboarding() {
+        if (uiState.value.isSubmitting) {
+            return
+        }
         val remainingDayOff = uiState.value.remainingDayOffInput.toIntOrNull()
         val preferredDayOff = uiState.value.preferredDayOffInput.toIntOrNull()
         val validation =
@@ -150,7 +157,25 @@ class OnboardingViewModel(
             }
             return
         }
-        _sideEffect.tryEmit(OnboardingSideEffect.NavigateToHome)
+        viewModelScope.launch {
+            _uiState.update { currentUiState ->
+                currentUiState.copy(isSubmitting = true)
+            }
+            runCatching {
+                completeOnboardingUseCase(
+                    preferredDayOff = preferredDayOff,
+                    remainingDayOff = remainingDayOff,
+                )
+            }.onSuccess {
+                _sideEffect.tryEmit(OnboardingSideEffect.OnboardingCompleted)
+            }.onFailure {
+                _sideEffect.tryEmit(OnboardingSideEffect.OnboardingFailed)
+            }.also {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isSubmitting = false)
+                }
+            }
+        }
     }
 
     private fun sanitizeDayOffInput(inputText: String): String = inputText.filter { character -> character.isDigit() }.take(2)

@@ -78,15 +78,21 @@
     <string name="onboarding_day_off_error_max_remaining">Remaining leave days must be 40 or less.</string>
     <string name="onboarding_day_off_error_preferred_exceeds_remaining">Preferred leave days cannot exceed remaining leave days.</string>
     <string name="snackbar_login_failed">Login failed. Please try again.</string>
+    <string name="snackbar_login_success">Signed in successfully.</string>
+    <string name="snackbar_login_required">Login is required to use this feature.</string>
+    <string name="snackbar_onboarding_completed">Welcome to Oguri!</string>
+    <string name="snackbar_onboarding_failed">Failed to complete onboarding. Please try again.</string>
     <string name="snackbar_home_saved">Vacation period saved.</string>
     <string name="snackbar_home_deleted">Saved vacation period removed.</string>
     <string name="snackbar_place_saved">Place saved.</string>
     <string name="snackbar_place_deleted">Saved place removed.</string>
     <string name="snackbar_calendar_leave_days_updated">Leave days updated.</string>
     <string name="snackbar_logout_completed">You have been logged out.</string>
+    <string name="snackbar_withdraw_completed">Your account has been deleted.</string>
     <string name="snackbar_mypage_leave_days_updated">Leave settings saved.</string>
     <string name="snackbar_mypage_selected_period_deleted">Selected vacation period removed.</string>
     <string name="snackbar_mypage_saved_place_deleted">Saved place removed.</string>
+    <string name="snackbar_withdraw_failed">Failed to delete account. Please try again.</string>
     <string name="share_place_detail_message">Check %1$s on Oguri.\n\n%2$s</string>
     <string name="share_period_detail_message">Check this period on Oguri (%1$s - %2$s).\n%3$s</string>
 

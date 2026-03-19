@@ -128,6 +128,7 @@ fun OnboardingScreen(
                         onPreferredDayOffCommit = onPreferredDayOffCommit,
                         isRemainingDayOffConfirmed = onboardingUiState.isRemainingDayOffConfirmed,
                         isPreferredDayOffConfirmed = onboardingUiState.isPreferredDayOffConfirmed,
+                        isSubmitting = onboardingUiState.isSubmitting,
                         onCompleteClick = onCompleteClick,
                         modifier = Modifier.padding(horizontal = 20.dp),
                     )

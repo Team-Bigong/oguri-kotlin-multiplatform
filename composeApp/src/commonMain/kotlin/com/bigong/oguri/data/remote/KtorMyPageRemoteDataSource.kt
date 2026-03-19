@@ -108,6 +108,13 @@ class KtorMyPageRemoteDataSource(
             }
     }
 
+    override suspend fun withdraw() {
+        authRequestExecutor.execute {
+            httpClient.delete("$DEBUG_BASE_URL$MEMBER_ME_API_PATH")
+        }
+        cachedMyPageResponse = null
+    }
+
     private fun recommendationId(
         startDate: String,
         endDate: String,

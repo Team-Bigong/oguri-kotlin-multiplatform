@@ -38,6 +38,33 @@ class MainNavigator(
         }
     }
 
+    fun navigateToLoginFromSplash() {
+        navHostController.navigate(RouteModel.Login) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Splash) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToHomeFromSplash() {
+        navHostController.navigate(RouteModel.Home) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Splash) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToOnboardingFromSplash() {
+        navHostController.navigate(RouteModel.Onboarding) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Splash) {
+                inclusive = true
+            }
+        }
+    }
+
     fun navigateToHomeFromLogin() {
         navHostController.navigate(RouteModel.Home) {
             launchSingleTop = true

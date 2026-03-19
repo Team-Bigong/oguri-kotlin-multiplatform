@@ -36,6 +36,7 @@ fun MainNavHost(
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
     onLoggedOut: () -> Unit,
+    onWithdrawCompleted: () -> Unit,
 ) {
     val homeViewModel =
         remember {
@@ -111,20 +112,31 @@ fun MainNavHost(
         },
     ) {
         composable<RouteModel.Splash> {
-            SplashRoute(onSplashCompleted = navigator::navigateToLogin)
+            SplashRoute(
+                splashViewModelProvider = appGraph.splashViewModelProvider,
+                onNavigateToLogin = navigator::navigateToLoginFromSplash,
+                onNavigateToOnboarding = navigator::navigateToOnboardingFromSplash,
+                onNavigateToHome = navigator::navigateToHomeFromSplash,
+            )
         }
         composable<RouteModel.Login> {
             LoginRoute(
                 loginViewModelProvider = appGraph.loginViewModelProvider,
                 snackbarHostState = snackbarHostState,
-                onLoginCompleted = navigator::navigateToOnboardingFromLogin,
-                onAppleLoginClick = navigator::navigateToOnboardingFromLogin,
-                onGuestBrowseClick = navigator::navigateToOnboardingFromLogin,
+                onLoginCompleted = { isOnboardingCompleted ->
+                    if (isOnboardingCompleted) {
+                        navigator.navigateToHomeFromLogin()
+                    } else {
+                        navigator.navigateToOnboardingFromLogin()
+                    }
+                },
+                onGuestBrowseClick = navigator::navigateToHomeFromLogin,
             )
         }
         composable<RouteModel.Onboarding> {
             OnboardingRoute(
                 onboardingViewModelProvider = appGraph.onboardingViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 onBackClick = navigator::navigateToLogin,
                 onHomeClick = navigator::navigateToHomeFromOnboarding,
                 onOpenWebDocument = navigator::navigateToWebDocument,
@@ -143,6 +155,7 @@ fun MainNavHost(
                         }
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
+                onLoginRequired = navigator::navigateToLogin,
             )
         }
         composable<RouteModel.Calendar> {
@@ -160,6 +173,8 @@ fun MainNavHost(
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
                 onLoggedOut = onLoggedOut,
+                onWithdrawCompleted = onWithdrawCompleted,
+                onLoginRequired = navigator::navigateToLogin,
                 onPeriodClick = navigator::navigateToPeriodDetail,
                 onSavedPlaceClick = { placeId ->
                     navigator.navigateToPlaceDetail(

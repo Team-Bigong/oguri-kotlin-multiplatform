@@ -13,4 +13,6 @@ interface MyPageRemoteDataSource {
     suspend fun deleteSelectedPeriod(request: DeleteMyPageSelectedPeriodRequest): MyPageResponse
 
     suspend fun deleteSavedPlace(request: DeleteMyPageSavedPlaceRequest): MyPageResponse
+
+    suspend fun withdraw()
 }

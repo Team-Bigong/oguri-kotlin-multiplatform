@@ -59,6 +59,7 @@ fun OnboardingLeaveDaysContent(
     onPreferredDayOffCommit: () -> Unit,
     isRemainingDayOffConfirmed: Boolean,
     isPreferredDayOffConfirmed: Boolean,
+    isSubmitting: Boolean,
     onCompleteClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -68,6 +69,7 @@ fun OnboardingLeaveDaysContent(
     val isDoneStage = isRemainingDayOffConfirmed && isPreferredDayOffConfirmed
     val isCompleteButtonEnabled =
         isDoneStage &&
+            !isSubmitting &&
             remainingDayOffValue != null &&
             preferredDayOffValue != null &&
             remainingDayOffError == null &&

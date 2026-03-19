@@ -10,6 +10,7 @@ import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.snackbar_login_required
 import oguri.composeapp.generated.resources.snackbar_home_deleted
 import oguri.composeapp.generated.resources.snackbar_home_saved
 import org.jetbrains.compose.resources.stringResource
@@ -21,10 +22,12 @@ fun HomeRoute(
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
+    onLoginRequired: () -> Unit,
 ) {
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
     val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
     val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)
+    val loginRequiredMessage = stringResource(Res.string.snackbar_login_required)
     val uriHandler = LocalUriHandler.current
 
     LaunchedEffect(homeViewModel) {
@@ -41,6 +44,13 @@ fun HomeRoute(
                         message = recommendationDeletedMessage,
                         type = OguriSnackBarType.INFO,
                     )
+                }
+                HomeSideEffect.LoginRequired -> {
+                    snackbarHostState.showOguriSnackbar(
+                        message = loginRequiredMessage,
+                        type = OguriSnackBarType.INFO,
+                    )
+                    onLoginRequired()
                 }
             }
         }

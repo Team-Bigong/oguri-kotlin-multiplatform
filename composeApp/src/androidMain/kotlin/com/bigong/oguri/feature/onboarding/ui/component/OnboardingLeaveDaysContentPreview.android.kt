@@ -19,6 +19,7 @@ private fun OnboardingLeaveDaysContentWelcomePreview() {
             onPreferredDayOffCommit = {},
             isRemainingDayOffConfirmed = false,
             isPreferredDayOffConfirmed = false,
+            isSubmitting = false,
             onCompleteClick = {},
         )
     }
@@ -39,6 +40,7 @@ private fun OnboardingLeaveDaysContentAlmostPreview() {
             onPreferredDayOffCommit = {},
             isRemainingDayOffConfirmed = true,
             isPreferredDayOffConfirmed = false,
+            isSubmitting = false,
             onCompleteClick = {},
         )
     }
@@ -59,6 +61,7 @@ private fun OnboardingLeaveDaysContentDonePreview() {
             onPreferredDayOffCommit = {},
             isRemainingDayOffConfirmed = true,
             isPreferredDayOffConfirmed = true,
+            isSubmitting = false,
             onCompleteClick = {},
         )
     }
