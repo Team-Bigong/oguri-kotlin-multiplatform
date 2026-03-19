@@ -10,14 +10,19 @@ import javax.crypto.SecretKey
 @Component
 class JwtTokenProvider(
     @Value("\${JWT_SECRET:very-long-and-secure-secret-key-at-least-32-chars-long}")
-    private val secretKeyString: String
+    private val secretKeyString: String,
+    @Value("\${jwt.access-token-validity-seconds:1800}")
+    private val accessTokenValidityInSeconds: Long,
+    @Value("\${jwt.refresh-token-validity-seconds:1209600}")
+    private val refreshTokenValidityInSeconds: Long
 ) {
     private val key: SecretKey = Keys.hmacShaKeyFor(secretKeyString.toByteArray())
-    
-    // Access Token 만료 시간: 1시간
-    private val accessTokenValidityInMilliseconds: Long = 3600000 
-    // Refresh Token 만료 시간: 14일
-    private val refreshTokenValidityInMilliseconds: Long = 1209600000
+
+    private val accessTokenValidityInMilliseconds: Long =
+        accessTokenValidityInSeconds.coerceAtLeast(MINIMUM_TOKEN_VALIDITY_IN_SECONDS) * MILLISECONDS_PER_SECOND
+
+    private val refreshTokenValidityInMilliseconds: Long =
+        refreshTokenValidityInSeconds.coerceAtLeast(MINIMUM_TOKEN_VALIDITY_IN_SECONDS) * MILLISECONDS_PER_SECOND
 
     fun createAccessToken(memberId: String): String {
         return createToken(memberId, accessTokenValidityInMilliseconds)
@@ -58,5 +63,10 @@ class JwtTokenProvider(
         } catch (e: Exception) {
             false
         }
+    }
+
+    private companion object {
+        private const val MILLISECONDS_PER_SECOND: Long = 1000
+        private const val MINIMUM_TOKEN_VALIDITY_IN_SECONDS: Long = 60
     }
 }

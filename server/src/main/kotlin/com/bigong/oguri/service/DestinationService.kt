@@ -1,28 +1,45 @@
 package com.bigong.oguri.service
 
+import com.bigong.oguri.domain.SavedDestination
 import com.bigong.oguri.dto.ExperienceResponse
 import com.bigong.oguri.dto.PlaceDetailResponse
 import com.bigong.oguri.repository.DestinationRepository
-import com.bigong.oguri.repository.SavedRecommendationRepository
+import com.bigong.oguri.repository.SavedDestinationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
+/**
+ * 여행지 상세 정보 및 저장(찜) 관련 기능을 담당하는 서비스
+ */
 @Service
 @Transactional(readOnly = true)
 class DestinationService(
     private val destinationRepository: DestinationRepository,
-    private val savedRecommendationRepository: SavedRecommendationRepository,
+    private val savedDestinationRepository: SavedDestinationRepository,
     private val homeService: HomeService,
-    private val memberService: MemberService
 ) {
     /**
-     * 장소 상세 정보 조회
-     * @param id 장소 ID
-     * @param startDate 당시 추천받았던 시작일 (관련 장소 계산용)
-     * @param userCountry 사용자 국가 (정렬용)
-     * @param memberId 멤버 ID (저장 여부 확인용)
+     * 마음에 드는 여행지 저장하기
+     */
+    @Transactional
+    fun saveDestination(id: Int, memberId: String) {
+        val existing = savedDestinationRepository.findByMemberIdAndDestinationId(memberId, id)
+        if (existing != null) return
+        savedDestinationRepository.save(SavedDestination(memberId = memberId, destinationId = id))
+    }
+
+    /**
+     * 저장했던 여행지 취소하기 (삭제)
+     */
+    @Transactional
+    fun deleteDestination(id: Int, memberId: String) {
+        savedDestinationRepository.deleteByMemberIdAndDestinationId(memberId, id)
+    }
+
+    /**
+     * 여행지 상세 정보 및 맞춤형 관련 장소 목록 조회
      */
     fun getDestinationDetail(
         id: Int,
@@ -31,26 +48,19 @@ class DestinationService(
         userCountry: String,
         memberId: String
     ): PlaceDetailResponse {
-        // 1. 장소 기본 정보 조회 (N+1 최적화 쿼리 사용)
+        // 1. 여행지 및 국가, 이미지 통합 조회 (성능 최적화)
         val destinations = destinationRepository.findAllWithCountryAndImages()
-        val target = destinations.find { it.id == id } 
+        val target = destinations.find { it.id == id }
             ?: throw IllegalArgumentException("장소를 찾을 수 없습니다. ID: $id")
 
-        // 2. 이미지 URL 리스트 정렬 (sortOrder 기준)
+        // 2. 이미지 리스트 및 찜 여부 확인
         val thumbnailUrls = target.images.sortedBy { it.sortOrder }.map { it.imageUrl }
+        val isSaved = savedDestinationRepository.findByMemberIdAndDestinationId(memberId, id) != null
 
-        // 3. 사용자 연차 설정 조회
-        val dayOffCount = memberService.getRemainingDayOff(memberId)
-
-        // 4. 저장 여부 확인 (해당 기간에 대해 저장했는지 여부)
-        val isSaved = if (startDate != null && endDate != null) {
-            savedRecommendationRepository.findByMemberIdAndStartDateAndEndDate(memberId, startDate, endDate) != null
-        } else false
-
-        // 5. 설명문 가공 (**굵게** 표시 적용)
+        // 3. 마크다운 처리된 상세 설명
         val description = target.description?.let { processDescription(it) } ?: ""
 
-        // 6. 더미 경험 데이터 생성
+        // 4. 추천 경험 데이터 (현재 더미)
         val experiences = listOf(
             ExperienceResponse(
                 title = "현지인들만 아는 숨은 카페 투어",
@@ -66,15 +76,17 @@ class DestinationService(
             )
         )
 
-        // 7. 관련 장소(relevantPlaces) 계산
-        // 당시 1순위(또는 현재 선택된 기간) 내의 다른 추천 장소들을 가져옵니다.
+        // 5. 관련 장소 목록 계산 (당시 추천되었던 다른 도시들)
+        val savedDestinationIds = savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }.toSet()
+
         val relevantPlaces = if (startDate != null && endDate != null) {
             val totalDays = ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
             homeService.calculateRecommendedPlaces(startDate, destinations, userCountry, totalDays)
-                .filter { it.id != id.toLong() } // 현재 보고 있는 장소는 제외
+                .filter { it.id != id.toLong() }
+                .map { it.copy(isSaved = savedDestinationIds.contains(it.id.toInt())) }
         } else emptyList()
 
-        // 8. 항공권 검색 URL (Skyscanner 예시)
+        // 6. 스카이스캐너 검색 링크 생성
         val flightUrl = "https://www.skyscanner.co.kr/transport/flights/sel/${target.name}"
 
         return PlaceDetailResponse(
@@ -91,12 +103,9 @@ class DestinationService(
     }
 
     /**
-     * 설명문 마크다운 처리 (예시: 특정 키워드 굵게 만들기)
-     * 실제로는 DB에 이미 **텍스트** 형태로 들어있다면 그대로 반환해도 되지만,
-     * 여기서는 예시로 "추천" 단어를 굵게 만들어 보겠습니다.
+     * 설명문 마크다운 변환 (볼드 처리)
      */
     private fun processDescription(text: String): String {
-        // 이미 ** 가 포함되어 있다면 그대로 반환, 없으면 특정 로직 수행
         return if (text.contains("**")) text else text.replace("추천", "**추천**")
     }
 }
