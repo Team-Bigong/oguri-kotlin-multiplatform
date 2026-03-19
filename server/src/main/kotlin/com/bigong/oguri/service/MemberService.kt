@@ -19,9 +19,11 @@ import com.bigong.oguri.util.JwtTokenProvider
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
+import org.springframework.web.server.ResponseStatusException
 import kotlin.random.Random
 
 /**
@@ -95,6 +97,7 @@ class MemberService(
         return MemberMeResponse(
             id = member.id,
             nickname = member.nickname ?: "",
+            onboardingCompleted = member.onboardingCompleted,
             preferredDayOff = member.preferredDayOff,
             remainingDayOff = member.remainingDayOff,
             savedPeriods = savedPeriods,
@@ -145,15 +148,26 @@ class MemberService(
         return LoginResponse(
             accessToken = serviceAccessToken,
             refreshToken = serviceRefreshToken,
-            nickname = member.nickname ?: ""
+            nickname = member.nickname ?: "",
+            onboardingCompleted = member.onboardingCompleted
         )
     }
 
     fun updateDayOffInfo(memberId: String, preferred: Int, remaining: Int) {
+        validateDayOffRules(preferred, remaining)
         val member = memberRepository.findById(memberId).orElseGet {
             memberRepository.save(Member(id = memberId).apply { setNicknameOnce(generateUniqueNickname()) })
         }
         member.updateDayOffInfo(preferred, remaining)
+        memberRepository.save(member)
+    }
+
+    fun completeOnboarding(memberId: String, preferred: Int, remaining: Int) {
+        validateDayOffRules(preferred, remaining)
+        val member = memberRepository.findById(memberId).orElseThrow {
+            ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.")
+        }
+        member.completeOnboarding(preferred, remaining)
         memberRepository.save(member)
     }
 
@@ -168,6 +182,21 @@ class MemberService(
 
     @Transactional(readOnly = true)
     fun getRemainingDayOff(memberId: String): Int = memberRepository.findById(memberId).map { it.remainingDayOff }.orElse(3)
+
+    private fun validateDayOffRules(preferredDayOff: Int, remainingDayOff: Int) {
+        if (remainingDayOff < MINIMUM_DAY_OFF) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "남은 연차는 0일 이상이어야 합니다.")
+        }
+        if (remainingDayOff > MAXIMUM_REMAINING_DAY_OFF) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "남은 연차는 최대 40일까지 입력할 수 있습니다.")
+        }
+        if (preferredDayOff < MINIMUM_DAY_OFF) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "선호 연차는 0일 이상이어야 합니다.")
+        }
+        if (preferredDayOff > remainingDayOff) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "선호 연차는 남은 연차를 초과할 수 없습니다.")
+        }
+    }
 
     /**
      * 유니크한 랜덤 닉네임 생성 로직 (형식: 형용사 명사_숫자5자리)
@@ -190,5 +219,10 @@ class MemberService(
         } while (memberRepository.existsByNickname(nickname))
 
         return nickname
+    }
+
+    private companion object {
+        private const val MINIMUM_DAY_OFF: Int = 0
+        private const val MAXIMUM_REMAINING_DAY_OFF: Int = 40
     }
 }

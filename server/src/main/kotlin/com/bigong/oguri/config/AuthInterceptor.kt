@@ -51,6 +51,7 @@ class AuthInterceptor(
         return when {
             requestPath == "/api/v1/members/me" && requestMethod == HttpMethod.GET.name() -> true
             requestPath == "/api/v1/members/day-off" && requestMethod == HttpMethod.POST.name() -> true
+            requestPath == "/api/v1/members/onboarding" && requestMethod == HttpMethod.POST.name() -> true
             requestPath == "/api/v1/members/saved-recommendations" &&
                 (requestMethod == HttpMethod.POST.name() || requestMethod == HttpMethod.DELETE.name()) -> true
             requestPath.startsWith("/api/v1/members/saved-destinations/") &&

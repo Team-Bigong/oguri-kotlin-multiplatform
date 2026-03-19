@@ -37,6 +37,22 @@ class MemberController(
         memberService.updateDayOffInfo(httpServletRequest.resolveMemberId(), request.preferredDayOff, request.remainingDayOff)
     }
 
+    @Operation(
+        summary = "온보딩 완료 처리",
+        description = "온보딩에서 선호 연차와 남은 연차를 저장하고 온보딩 완료 상태로 전환합니다. 선호 연차는 남은 연차를 초과할 수 없고, 남은 연차는 최대 40일까지 입력할 수 있습니다."
+    )
+    @PostMapping("/onboarding")
+    fun completeOnboarding(
+        @RequestBody request: MemberDayOffRequest,
+        httpServletRequest: HttpServletRequest
+    ) {
+        memberService.completeOnboarding(
+            memberId = httpServletRequest.resolveMemberId(),
+            preferred = request.preferredDayOff,
+            remaining = request.remainingDayOff
+        )
+    }
+
     @Operation(summary = "연휴 저장", description = "마음에 드는 연휴 구간을 내 목록에 저장합니다.")
     @PostMapping("/saved-recommendations")
     fun saveRecommendation(
