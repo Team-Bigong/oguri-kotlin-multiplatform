@@ -76,8 +76,6 @@ class KtorMyPageRemoteDataSource(
                     ManageSavedRecommendationRequest(
                         startDate = selectedPeriod.startDate,
                         endDate = selectedPeriod.endDate,
-                        dayOffCount = selectedPeriod.dayOffCount,
-                        totalTripCount = selectedPeriod.totalTripCount,
                     ),
                 )
             }

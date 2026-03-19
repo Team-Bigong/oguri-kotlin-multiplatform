@@ -78,5 +78,6 @@ private fun CalendarRecommendation.toPeriodCards(
             dayOffCount = period.dayOffCount,
             totalTripCount = period.totalTripCount,
             holidayNames = period.holidayNames,
+            holidays = period.holidayDateDetails,
         )
     }

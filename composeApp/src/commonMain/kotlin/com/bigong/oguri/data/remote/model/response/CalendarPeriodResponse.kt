@@ -17,6 +17,8 @@ data class CalendarPeriodResponse(
     val dayOffCount: Int,
     @SerialName("holidays")
     val holidays: List<String>,
+    @SerialName("holidayDateDetails")
+    val holidayDateDetails: List<CalendarHolidayResponse> = emptyList(),
     @SerialName("saved")
     val saved: Boolean? = null,
     @SerialName("isSaved")

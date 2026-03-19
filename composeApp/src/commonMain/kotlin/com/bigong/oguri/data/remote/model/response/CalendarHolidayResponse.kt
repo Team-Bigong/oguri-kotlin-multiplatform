@@ -9,4 +9,8 @@ data class CalendarHolidayResponse(
     val date: String,
     @SerialName("label")
     val label: String,
+    @SerialName("weekend")
+    val weekend: Boolean = false,
+    @SerialName("publicHoliday")
+    val publicHoliday: Boolean = false,
 )

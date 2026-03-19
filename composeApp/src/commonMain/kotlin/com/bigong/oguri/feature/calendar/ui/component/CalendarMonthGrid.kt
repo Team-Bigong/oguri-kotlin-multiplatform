@@ -52,6 +52,7 @@ fun CalendarMonthGrid(
             .now()
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
+    val holidayByDate = periodCard.holidays.associateBy { holiday -> holiday.date }
     val dominantYearMonth = dominantYearMonth(periodCard.startDate, periodCard.endDate)
     val visibleWeeks = displayWeeks(periodCard = periodCard, dominantYearMonth = dominantYearMonth)
 
@@ -85,6 +86,7 @@ fun CalendarMonthGrid(
             Row(modifier = Modifier.fillMaxWidth()) {
                 weekDays.forEachIndexed { dayIndex, date ->
                     val isRecommendedDate = date in periodCard.startDate..periodCard.endDate
+                    val isHoliday = holidayByDate[date] != null
                     val isTodayDate = date == todayDate
                     val isWeekendDate =
                         date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
@@ -125,7 +127,7 @@ fun CalendarMonthGrid(
                                 color =
                                     when {
                                         isTodayDate -> Mint70
-                                        isWeekendDate -> Orange50
+                                        isWeekendDate || isHoliday -> Orange50
                                         isRecommendedDate -> Neutral70
                                         else -> Neutral50
                                     },
@@ -133,7 +135,18 @@ fun CalendarMonthGrid(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(18.dp))
+                        val holidayName = holidayByDate[date]?.name
+                        if (isRecommendedDate && !holidayName.isNullOrBlank()) {
+                            Text(
+                                text = holidayName,
+                                style = OguriTheme.typography.labelSmall,
+                                color = Orange50,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(top = 4.dp),
+                            )
+                        } else {
+                            Spacer(modifier = Modifier.height(18.dp))
+                        }
                     }
                 }
             }

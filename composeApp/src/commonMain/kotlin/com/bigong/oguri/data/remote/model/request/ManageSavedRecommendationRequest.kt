@@ -9,8 +9,4 @@ data class ManageSavedRecommendationRequest(
     val startDate: String,
     @SerialName("endDate")
     val endDate: String,
-    @SerialName("dayOffCount")
-    val dayOffCount: Int,
-    @SerialName("totalTripCount")
-    val totalTripCount: Int,
 )

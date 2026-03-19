@@ -41,8 +41,6 @@ class DefaultHomeRepository(
                 ManageSavedRecommendationRequest(
                     startDate = startDate.toString(),
                     endDate = endDate.toString(),
-                    dayOffCount = dayOffCount,
-                    totalTripCount = totalTripCount,
                 ),
         )
         recommendationSavedChangeFlow.tryEmit(
@@ -67,8 +65,6 @@ class DefaultHomeRepository(
                 ManageSavedRecommendationRequest(
                     startDate = startDate.toString(),
                     endDate = endDate.toString(),
-                    dayOffCount = dayOffCount,
-                    totalTripCount = totalTripCount,
                 ),
         )
         recommendationSavedChangeFlow.tryEmit(

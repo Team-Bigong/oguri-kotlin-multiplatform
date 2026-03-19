@@ -21,6 +21,7 @@ private fun CalendarMonthGridPreview() {
                     dayOffCount = 2,
                     totalTripCount = 5,
                     holidayNames = listOf("삼일절", "대체휴일"),
+                    holidays = emptyList(),
                 ),
         )
     }
