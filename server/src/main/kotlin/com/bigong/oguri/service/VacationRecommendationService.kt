@@ -89,14 +89,14 @@ class VacationRecommendationService {
 
             val selectedMonthlyCandidates = monthlyCandidates
                 .distinctBy { period -> buildPeriodKey(period.start, period.end) }
-                .sortedWith(RECOMMENDATION_COMPARATOR)
+                .sortedWith(buildRecommendationComparator())
                 .take(periodLimitPerMonth)
             candidates.addAll(selectedMonthlyCandidates)
         }
 
         return candidates
             .distinctBy { period -> buildPeriodKey(period.start, period.end) }
-            .sortedWith(RECOMMENDATION_COMPARATOR)
+            .sortedWith(buildRecommendationComparator())
     }
 
     data class RecommendationPeriod(
@@ -111,12 +111,28 @@ class VacationRecommendationService {
 
     private fun buildPeriodKey(startDate: LocalDate, endDate: LocalDate): String = "${startDate}_${endDate}"
 
+    private fun buildRecommendationComparator(): Comparator<RecommendationPeriod> {
+        val currentYear = LocalDate.now().year
+        return compareByDescending<RecommendationPeriod> { period ->
+            weightedTotalTripCount(period, currentYear)
+        }
+            .thenBy { it.usedDayOffCount }
+            .thenByDescending { it.holidayCount }
+            .thenBy { it.start }
+    }
+
+    private fun weightedTotalTripCount(period: RecommendationPeriod, currentYear: Int): Double {
+        val yearWeight = if (period.start.year == currentYear) {
+            CURRENT_YEAR_WEIGHT
+        } else {
+            NON_CURRENT_YEAR_WEIGHT
+        }
+        return period.totalDays * yearWeight
+    }
+
     private companion object {
         private const val DEFAULT_HOLIDAY_NAME = "주말"
-        private val RECOMMENDATION_COMPARATOR =
-            compareByDescending<RecommendationPeriod> { it.totalDays }
-                .thenBy { it.usedDayOffCount }
-                .thenByDescending { it.holidayCount }
-                .thenBy { it.start }
+        private const val CURRENT_YEAR_WEIGHT = 1.0
+        private const val NON_CURRENT_YEAR_WEIGHT = 0.85
     }
 }
