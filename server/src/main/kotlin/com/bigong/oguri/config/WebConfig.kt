@@ -7,7 +7,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
 class WebConfig(
-    private val authInterceptor: AuthInterceptor
+    private val authInterceptor: AuthInterceptor,
+    private val adminAuthInterceptor: AdminAuthInterceptor
 ) : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/**") // 모든 경로에 대해
@@ -18,9 +19,13 @@ class WebConfig(
     }
 
     override fun addInterceptors(registry: InterceptorRegistry) {
+        registry.addInterceptor(adminAuthInterceptor)
+            .addPathPatterns("/api/admin/**")
+
         registry.addInterceptor(authInterceptor)
             .addPathPatterns("/api/**")
             .excludePathPatterns(
+                "/api/admin/**",
                 "/api/v1/auth/login/kakao",
                 "/api/v1/auth/login/apple",
                 "/api/v1/auth/refresh"
