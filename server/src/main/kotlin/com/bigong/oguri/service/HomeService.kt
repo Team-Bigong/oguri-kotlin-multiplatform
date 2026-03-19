@@ -112,6 +112,16 @@ class HomeService(
         userCountry: String,
         totalTripCount: Int
     ): List<PlaceResponse> {
+        return calculateRecommendedPlacesAll(startDate, destinations, userCountry, totalTripCount)
+            .take(MAX_RECOMMENDATIONS)
+    }
+
+    fun calculateRecommendedPlacesAll(
+        startDate: LocalDate,
+        destinations: List<Destination>,
+        userCountry: String,
+        totalTripCount: Int
+    ): List<PlaceResponse> {
         val targetMonth = startDate.monthValue
         
         // 1단계: 해당 월에 추천되는 장소들만 필터링
@@ -155,7 +165,6 @@ class HomeService(
             compareBy<Pair<Destination, Double>> { if (it.first.country?.name == userCountry) 1 else 0 }
             .thenByDescending { it.second }
         )
-        .take(MAX_RECOMMENDATIONS)
         .map { (dest, _) ->
             val thumbnailUrl = dest.images.find { it.isThumbnail }?.imageUrl ?: ""
             PlaceResponse(
