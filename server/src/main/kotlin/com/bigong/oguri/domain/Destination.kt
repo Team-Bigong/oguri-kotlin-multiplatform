@@ -34,9 +34,6 @@ class Destination(
     @Column(name = "recommend_end_month_2")
     var recommendEndMonth2: Int? = null,
 
-    @Column(length = 50)
-    var flightTime: String? = null,
-
     @Column(name = "flight_time_minutes")
     var flightTimeMinutes: Int? = null,
 
