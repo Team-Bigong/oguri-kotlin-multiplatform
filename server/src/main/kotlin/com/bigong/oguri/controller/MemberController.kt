@@ -53,7 +53,7 @@ class MemberController(
         )
     }
 
-    @Operation(summary = "연휴 저장", description = "마음에 드는 연휴 구간을 내 목록에 저장합니다.")
+    @Operation(summary = "연휴 저장", description = "마음에 드는 연휴 구간을 내 목록에 저장합니다. dayOffCount/totalTripCount는 서버에서 자동 계산합니다.")
     @PostMapping("/saved-recommendations")
     fun saveRecommendation(
         @RequestBody request: SaveRecommendationRequest,
@@ -62,7 +62,7 @@ class MemberController(
         savedRecommendationService.save(request, httpServletRequest.resolveMemberId())
     }
 
-    @Operation(summary = "연휴 저장 취소", description = "저장했던 연휴 구간을 목록에서 삭제합니다.")
+    @Operation(summary = "연휴 저장 취소", description = "저장했던 연휴 구간을 목록에서 삭제합니다. startDate/endDate 기준으로 삭제합니다.")
     @DeleteMapping("/saved-recommendations")
     fun deleteRecommendation(
         @RequestBody request: SaveRecommendationRequest,

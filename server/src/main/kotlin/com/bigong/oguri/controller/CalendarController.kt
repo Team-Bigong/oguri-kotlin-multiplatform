@@ -20,7 +20,7 @@ class CalendarController(
 ) {
     @Operation(
         summary = "캘린더 추천 일정 조회",
-        description = "가장 추천할만한 일정 순으로 정렬된 캘린더 추천 목록을 페이지 단위로 반환합니다."
+        description = "가장 추천할만한 일정 순으로 정렬된 캘린더 추천 목록을 페이지 단위로 반환합니다. 각 일정에는 휴일 날짜 상세(holidayDateDetails)가 포함됩니다."
     )
     @GetMapping
     fun getCalendar(

@@ -29,6 +29,19 @@ data class CalendarPeriodRecommendationResponse(
     val dayOffCount: Int,
     @field:Schema(description = "기간 내 포함된 공휴일 이름 목록", example = "[\"삼일절\", \"대체휴일\"]")
     val holidays: List<String>,
+    @field:Schema(description = "기간 내 휴일 날짜 상세 목록")
+    val holidayDateDetails: List<CalendarHolidayDateResponse>,
     @field:Schema(description = "저장된 일정 여부", example = "false")
     val isSaved: Boolean
+)
+
+data class CalendarHolidayDateResponse(
+    @field:Schema(description = "휴일 날짜", example = "2026-09-21")
+    val date: LocalDate,
+    @field:Schema(description = "휴일 라벨(공휴일명 또는 주말)", example = "추석")
+    val label: String,
+    @field:Schema(description = "주말 여부", example = "false")
+    val weekend: Boolean,
+    @field:Schema(description = "공휴일 테이블 기반 휴일 여부", example = "true")
+    val publicHoliday: Boolean
 )
