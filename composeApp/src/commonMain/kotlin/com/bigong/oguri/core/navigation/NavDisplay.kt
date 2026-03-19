@@ -21,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -72,8 +73,9 @@ fun NavDisplay(
     OguriTheme {
         val navigator = rememberMainNavigator()
         val currentDestination = navigator.currentDestination()
+        var authSessionVersion by remember { mutableIntStateOf(0) }
         val appGraph =
-            remember {
+            remember(authSessionVersion) {
                 AuthTokenStore.initialize(localDataSource = provideTokenLocalDataSource())
                 AuthTokenStore.bootstrapFromLocalDataSource()
                 val appGraphFactory = createGraphFactory<AppGraph.Factory>()
@@ -83,19 +85,19 @@ fun NavDisplay(
                 )
             }
         val homeViewModelLazy =
-            remember {
+            remember(authSessionVersion) {
                 lazy(LazyThreadSafetyMode.NONE) {
                     appGraph.homeViewModelProvider()
                 }
             }
         val calendarViewModelLazy =
-            remember {
+            remember(authSessionVersion) {
                 lazy(LazyThreadSafetyMode.NONE) {
                     appGraph.calendarViewModelProvider()
                 }
             }
         val myPageViewModelLazy =
-            remember {
+            remember(authSessionVersion) {
                 lazy(LazyThreadSafetyMode.NONE) {
                     appGraph.myPageViewModelProvider()
                 }
@@ -181,7 +183,8 @@ fun NavDisplay(
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
                         onLoggedOut = {
-                            navigator.navigateToLogin()
+                            authSessionVersion += 1
+                            navigator.navigateToLoginAndClearBackStack()
                             coroutineScope.launch {
                                 snackbarHostState.showOguriSnackbar(
                                     message = logoutCompletedMessage,
@@ -190,7 +193,8 @@ fun NavDisplay(
                             }
                         },
                         onWithdrawCompleted = {
-                            navigator.navigateToLogin()
+                            authSessionVersion += 1
+                            navigator.navigateToLoginAndClearBackStack()
                             coroutineScope.launch {
                                 snackbarHostState.showOguriSnackbar(
                                     message = withdrawCompletedMessage,
