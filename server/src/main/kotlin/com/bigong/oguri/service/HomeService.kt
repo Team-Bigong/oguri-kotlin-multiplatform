@@ -142,7 +142,7 @@ class HomeService(
         if (candidates.isEmpty()) return emptyList()
 
         // 2단계: 정규화를 위한 최소/최대 지표 파악
-        val flightTimes = candidates.map { parseFlightTime(it.flightTime) }
+        val flightTimes = candidates.map { parseFlightTime(it.flightTimeMinutes, it.flightTime) }
         val bigMacIndices = candidates.map { it.country?.bigMacIndex?.toDouble() ?: 5.0 }
         val minFlight = flightTimes.minOrNull() ?: 0.0
         val maxFlight = flightTimes.maxOrNull() ?: 1.0
@@ -158,7 +158,7 @@ class HomeService(
 
         // 4단계: 개별 장소별 점수 산산 및 정규화
         return candidates.map { dest ->
-            val flightVal = parseFlightTime(dest.flightTime)
+            val flightVal = parseFlightTime(dest.flightTimeMinutes, dest.flightTime)
             val bigMacVal = dest.country?.bigMacIndex?.toDouble() ?: 5.0
             val normalizedFlight = if (maxFlight != minFlight) (flightVal - minFlight) / (maxFlight - minFlight) else 0.0
             
@@ -199,9 +199,14 @@ class HomeService(
     /**
      * 비행시간 문자열에서 숫자 추출
      */
-    private fun parseFlightTime(flightTime: String?): Double {
-        if (flightTime == null) return 0.0
-        return flightTime.replace(NUMBER_ONLY_REGEX, "").toDoubleOrNull() ?: 0.0
+    private fun parseFlightTime(flightTimeMinutes: Int?, legacyFlightTime: String?): Double {
+        if (flightTimeMinutes != null) {
+            return flightTimeMinutes.toDouble()
+        }
+        if (legacyFlightTime == null) {
+            return 0.0
+        }
+        return legacyFlightTime.replace(NUMBER_ONLY_REGEX, "").toDoubleOrNull() ?: 0.0
     }
 
     private fun selectNonOverlappingTopPeriods(

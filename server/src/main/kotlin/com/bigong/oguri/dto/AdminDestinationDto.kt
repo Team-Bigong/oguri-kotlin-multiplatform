@@ -15,7 +15,7 @@ data class AdminDestinationUpsertRequest(
     val recommendEndMonth1: Int?,
     val recommendStartMonth2: Int?,
     val recommendEndMonth2: Int?,
-    val flightTime: String?,
+    val flightTimeMinutes: Int?,
     val images: List<AdminDestinationImageUpsertRequest>
 )
 
@@ -37,7 +37,7 @@ data class AdminDestinationResponse(
     val recommendEndMonth1: Int?,
     val recommendStartMonth2: Int?,
     val recommendEndMonth2: Int?,
-    val flightTime: String?,
+    val flightTimeMinutes: Int?,
     val images: List<AdminDestinationImageResponse>
 )
 

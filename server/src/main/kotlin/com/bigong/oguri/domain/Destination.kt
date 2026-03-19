@@ -37,6 +37,9 @@ class Destination(
     @Column(length = 50)
     var flightTime: String? = null,
 
+    @Column(name = "flight_time_minutes")
+    var flightTimeMinutes: Int? = null,
+
     @OneToMany(mappedBy = "destination", fetch = FetchType.LAZY)
     var images: List<DestinationImage> = mutableListOf()
 )
