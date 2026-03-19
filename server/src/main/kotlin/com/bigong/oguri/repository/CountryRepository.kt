@@ -6,3 +6,6 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface CountryRepository : JpaRepository<Country, Int>
+{
+    fun findAllByOrderByNameAsc(): List<Country>
+}
