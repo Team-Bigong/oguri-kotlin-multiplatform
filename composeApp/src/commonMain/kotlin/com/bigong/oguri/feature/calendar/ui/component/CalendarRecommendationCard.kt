@@ -66,7 +66,6 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 
-private const val MAX_AUTO_SCROLL_PIXELS = 420f
 private const val CLIPPED_THRESHOLD_PIXELS = 2f
 
 @Composable
@@ -81,6 +80,7 @@ fun CalendarRecommendationCard(
     modifier: Modifier = Modifier,
 ) {
     var shouldAutoScrollAfterExpand by remember(periodCard.id) { mutableStateOf(false) }
+    var expandedContentBottomInWindow by remember(periodCard.id) { mutableStateOf(0f) }
     val currentYear =
         Clock.System
             .now()
@@ -145,6 +145,23 @@ fun CalendarRecommendationCard(
         } else {
             shouldAutoScrollAfterExpand = false
         }
+    }
+
+    LaunchedEffect(
+        isExpanded,
+        shouldAutoScrollAfterExpand,
+        listViewportBottomInWindow,
+        expandedContentBottomInWindow,
+    ) {
+        if (!isExpanded || !shouldAutoScrollAfterExpand || listViewportBottomInWindow <= 0f || expandedContentBottomInWindow <= 0f) {
+            return@LaunchedEffect
+        }
+
+        val clippedHeight = expandedContentBottomInWindow - listViewportBottomInWindow
+        if (clippedHeight > CLIPPED_THRESHOLD_PIXELS) {
+            onRequestScrollBy(clippedHeight)
+        }
+        shouldAutoScrollAfterExpand = false
     }
 
     Column(
@@ -276,15 +293,7 @@ fun CalendarRecommendationCard(
                                     color = Mint70,
                                     shape = RoundedCornerShape(8.dp),
                                 ).onGloballyPositioned { coordinates ->
-                                    if (!isExpanded || !shouldAutoScrollAfterExpand || listViewportBottomInWindow <= 0f) {
-                                        return@onGloballyPositioned
-                                    }
-                                    val expandedBottomInWindow = coordinates.positionInWindow().y + coordinates.size.height
-                                    val clippedHeight = expandedBottomInWindow - listViewportBottomInWindow
-                                    if (clippedHeight > CLIPPED_THRESHOLD_PIXELS) {
-                                        onRequestScrollBy(clippedHeight.coerceAtMost(MAX_AUTO_SCROLL_PIXELS))
-                                    }
-                                    shouldAutoScrollAfterExpand = false
+                                    expandedContentBottomInWindow = coordinates.positionInWindow().y + coordinates.size.height
                                 }.noRippleClickable(
                                     onClick = {
                                         HapticType.Selection.perform()
