@@ -5,6 +5,7 @@ import com.bigong.oguri.domain.model.MyPageInfo
 data class MyPageUiState(
     val isLoading: Boolean = true,
     val isError: Boolean = false,
+    val isGuestMode: Boolean = false,
     val myPageInfo: MyPageInfo? = null,
     val isEditLeaveDaysBottomSheetVisible: Boolean = false,
     val pendingDeleteScheduleId: Long? = null,

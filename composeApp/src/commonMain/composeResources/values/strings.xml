@@ -56,6 +56,9 @@
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_kakao_with_account">Sign in with Kakao account</string>
     <string name="login_guest_browse">Browse without login</string>
+    <string name="login_required_title">This feature requires login</string>
+    <string name="login_required_title_highlight">login</string>
+    <string name="login_required_button">Go to login</string>
     <string name="onboarding_terms_title">Before you begin,\nplease agree to the terms</string>
     <string name="onboarding_terms_title_highlight">terms</string>
     <string name="onboarding_terms_service_required">Terms of Service (Required)</string>
@@ -130,6 +133,8 @@
     <string name="period_detail_holiday_fallback">holiday</string>
     <string name="period_detail_empty_places_hint">No recommended places for this period yet.</string>
     <string name="mypage_profile_leave_days">Remaining leave: %1$d days / Preferred leave: %2$d days</string>
+    <string name="mypage_guest_name">Guest</string>
+    <string name="mypage_guest_login_message">Log in to save your vacation plans.</string>
     <string name="mypage_section_selected_period">Selected vacation periods</string>
     <string name="mypage_section_saved_place">Saved places</string>
     <string name="mypage_selected_period_date_range">%1$d/%2$d - %3$d/%4$d</string>

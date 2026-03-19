@@ -3,13 +3,17 @@ package com.bigong.oguri.feature.mypage.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.snackbar_login_required
 import oguri.composeapp.generated.resources.snackbar_mypage_leave_days_updated
 import oguri.composeapp.generated.resources.snackbar_mypage_saved_place_deleted
 import oguri.composeapp.generated.resources.snackbar_mypage_selected_period_deleted
@@ -33,8 +37,8 @@ fun MyPageRoute(
     val leaveDaysUpdatedMessage = stringResource(Res.string.snackbar_mypage_leave_days_updated)
     val selectedPeriodDeletedMessage = stringResource(Res.string.snackbar_mypage_selected_period_deleted)
     val savedPlaceDeletedMessage = stringResource(Res.string.snackbar_mypage_saved_place_deleted)
-    val loginRequiredMessage = stringResource(Res.string.snackbar_login_required)
     val withdrawFailedMessage = stringResource(Res.string.snackbar_withdraw_failed)
+    var isLoginRequiredDialogVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(myPageViewModel) {
         myPageViewModel.sideEffect.collectLatest { sideEffect ->
@@ -72,11 +76,7 @@ fun MyPageRoute(
                 }
 
                 MyPageSideEffect.LoginRequired -> {
-                    snackbarHostState.showOguriSnackbar(
-                        message = loginRequiredMessage,
-                        type = OguriSnackBarType.INFO,
-                    )
-                    onLoginRequired()
+                    isLoginRequiredDialogVisible = true
                 }
             }
         }
@@ -107,7 +107,22 @@ fun MyPageRoute(
         onDismissWithdrawDialog = myPageViewModel::hideWithdrawDialog,
         onConfirmWithdraw = myPageViewModel::confirmWithdraw,
         onLogoutClick = myPageViewModel::showLogoutDialog,
+        onGuestLoginClick = {
+            isLoginRequiredDialogVisible = true
+        },
         onDismissLogoutDialog = myPageViewModel::hideLogoutDialog,
         onConfirmLogout = myPageViewModel::confirmLogout,
     )
+
+    if (isLoginRequiredDialogVisible) {
+        LoginRequiredDialog(
+            onDismissRequest = {
+                isLoginRequiredDialogVisible = false
+            },
+            onLoginClick = {
+                isLoginRequiredDialogVisible = false
+                onLoginRequired()
+            },
+        )
+    }
 }

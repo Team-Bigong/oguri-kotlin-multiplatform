@@ -56,6 +56,9 @@
     <string name="login_apple_with_account">Apple 계정으로 로그인</string>
     <string name="login_kakao_with_account">카카오 계정으로 로그인</string>
     <string name="login_guest_browse">로그인 없이 둘러보기</string>
+    <string name="login_required_title">로그인이 필요한 기능이에요</string>
+    <string name="login_required_title_highlight">로그인</string>
+    <string name="login_required_button">로그인 하러가기</string>
     <string name="onboarding_terms_title">시작하기 전,\n이용약관에 동의해주세요</string>
     <string name="onboarding_terms_title_highlight">이용약관</string>
     <string name="onboarding_terms_service_required">서비스 이용약관 (필수)</string>
@@ -130,6 +133,8 @@
     <string name="period_detail_holiday_fallback">연휴</string>
     <string name="period_detail_empty_places_hint">이 기간에 맞는 추천 여행지가 아직 없어요.</string>
     <string name="mypage_profile_leave_days">남은 연차: %1$d일 / 선호하는 연차: %2$d일</string>
+    <string name="mypage_guest_name">게스트님</string>
+    <string name="mypage_guest_login_message">로그인하고 휴가 일정을 저장해보세요!</string>
     <string name="mypage_section_selected_period">내가 고른 휴가 일정</string>
     <string name="mypage_section_saved_place">내가 담아둔 여행지</string>
     <string name="mypage_selected_period_date_range">%1$d월 %2$d일 - %3$d월 %4$d일</string>

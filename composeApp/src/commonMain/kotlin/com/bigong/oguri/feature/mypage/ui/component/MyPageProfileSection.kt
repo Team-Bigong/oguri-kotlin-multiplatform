@@ -47,8 +47,14 @@ fun MyPageProfileSection(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.padding(top = 8.dp),
         ) {
+            val profileNameText =
+                if (nickname.endsWith(suffix = NAME_SUFFIX)) {
+                    nickname
+                } else {
+                    nickname + NAME_SUFFIX
+                }
             Text(
-                text = nickname,
+                text = profileNameText,
                 style = OguriTheme.typography.cardTitle,
                 color = Mint70,
             )
@@ -78,3 +84,5 @@ fun MyPageProfileSection(
         }
     }
 }
+
+private const val NAME_SUFFIX = "님"
