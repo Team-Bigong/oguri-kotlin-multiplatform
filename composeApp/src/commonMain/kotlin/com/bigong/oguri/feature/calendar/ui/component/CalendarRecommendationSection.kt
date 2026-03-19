@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.paging.compose.LazyPagingItems
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -21,7 +22,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun CalendarRecommendationSection(
-    periodCards: List<CalendarPeriodCardUiModel>,
+    pagedPeriodCards: LazyPagingItems<CalendarPeriodCardUiModel>,
     expandedPeriodId: Long?,
     isLoadingNextPage: Boolean,
     showEndHint: Boolean,
@@ -45,16 +46,19 @@ fun CalendarRecommendationSection(
             verticalArrangement = Arrangement.spacedBy(18.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            periodCards.forEach { periodCard ->
-                CalendarRecommendationCard(
-                    periodCard = periodCard,
-                    isExpanded = expandedPeriodId == periodCard.id,
-                    onCardClick = onCardClick,
-                    onSaveToggleClick = onSaveToggleClick,
-                    onDetailClick = onDetailClick,
-                    listViewportBottomInWindow = listViewportBottomInWindow,
-                    onRequestScrollBy = onRequestScrollBy,
-                )
+            for (index in 0 until pagedPeriodCards.itemCount) {
+                val periodCard: CalendarPeriodCardUiModel = pagedPeriodCards[index] ?: continue
+                androidx.compose.runtime.key(periodCard.id) {
+                    CalendarRecommendationCard(
+                        periodCard = periodCard,
+                        isExpanded = expandedPeriodId == periodCard.id,
+                        onCardClick = onCardClick,
+                        onSaveToggleClick = onSaveToggleClick,
+                        onDetailClick = onDetailClick,
+                        listViewportBottomInWindow = listViewportBottomInWindow,
+                        onRequestScrollBy = onRequestScrollBy,
+                    )
+                }
             }
         }
 

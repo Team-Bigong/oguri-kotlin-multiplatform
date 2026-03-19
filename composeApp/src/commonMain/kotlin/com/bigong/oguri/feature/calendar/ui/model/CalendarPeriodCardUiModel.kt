@@ -1,6 +1,5 @@
 package com.bigong.oguri.feature.calendar.ui.model
 
-import com.bigong.oguri.domain.model.CalendarHoliday
 import kotlinx.datetime.LocalDate
 
 data class CalendarPeriodCardUiModel(
@@ -12,5 +11,4 @@ data class CalendarPeriodCardUiModel(
     val dayOffCount: Int,
     val totalTripCount: Int,
     val holidayNames: List<String>,
-    val holidays: List<CalendarHoliday>,
 )

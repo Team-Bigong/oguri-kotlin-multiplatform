@@ -29,6 +29,7 @@ coil = "3.3.0"
 kotlinx-datetime = "0.7.1"
 jjwt = "0.12.6"
 kakao = "2.23.3"
+androidx-paging = "3.4.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -64,6 +65,8 @@ coil-network-ktor3 = { module = "io.coil-kt.coil3:coil-network-ktor3", version.r
 coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coil" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kakao-android-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao" }
+androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "androidx-paging" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "springBoot" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa", version.ref = "springBoot" }

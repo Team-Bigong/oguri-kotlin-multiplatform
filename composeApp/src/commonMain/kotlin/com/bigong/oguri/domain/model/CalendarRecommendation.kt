@@ -1,9 +1,9 @@
 package com.bigong.oguri.domain.model
 
 data class CalendarRecommendation(
-    val leaveDays: Int,
-    val year: Int,
-    val month: Int,
-    val holidays: List<CalendarHoliday>,
+    val dayOffCount: Int,
+    val page: Int,
+    val size: Int,
+    val hasNext: Boolean,
     val periods: List<CalendarPeriod>,
 )
