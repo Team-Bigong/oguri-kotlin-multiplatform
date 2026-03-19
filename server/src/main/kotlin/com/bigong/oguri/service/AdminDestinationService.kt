@@ -55,7 +55,6 @@ class AdminDestinationService(
                 recommendEndMonth1 = request.recommendEndMonth1,
                 recommendStartMonth2 = request.recommendStartMonth2,
                 recommendEndMonth2 = request.recommendEndMonth2,
-                flightTime = null,
                 flightTimeMinutes = request.flightTimeMinutes
             )
         )
@@ -86,7 +85,6 @@ class AdminDestinationService(
         destination.recommendEndMonth1 = request.recommendEndMonth1
         destination.recommendStartMonth2 = request.recommendStartMonth2
         destination.recommendEndMonth2 = request.recommendEndMonth2
-        destination.flightTime = null
         destination.flightTimeMinutes = request.flightTimeMinutes
 
         destinationRepository.save(destination)
@@ -187,7 +185,7 @@ class AdminDestinationService(
             recommendEndMonth1 = recommendEndMonth1,
             recommendStartMonth2 = recommendStartMonth2,
             recommendEndMonth2 = recommendEndMonth2,
-            flightTimeMinutes = flightTimeMinutes ?: parseLegacyFlightTimeMinutes(flightTime),
+            flightTimeMinutes = flightTimeMinutes,
             images = sortedImages.map { image ->
                 AdminDestinationImageResponse(
                     id = image.id,
@@ -205,14 +203,5 @@ class AdminDestinationService(
         private const val EXACT_THUMBNAIL_COUNT = 1
         private const val MINIMUM_IMAGE_SORT_ORDER = 1
         private const val MINIMUM_FLIGHT_TIME_MINUTES = 0
-        private val NUMBER_ONLY_REGEX = Regex("[^0-9]")
-    }
-
-    private fun parseLegacyFlightTimeMinutes(legacyFlightTime: String?): Int? {
-        if (legacyFlightTime == null) {
-            return null
-        }
-        val number = legacyFlightTime.replace(NUMBER_ONLY_REGEX, "")
-        return number.toIntOrNull()
     }
 }
