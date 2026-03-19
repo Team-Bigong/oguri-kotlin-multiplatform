@@ -1,9 +1,11 @@
 package com.bigong.oguri.controller
 
+import com.bigong.oguri.config.resolveMemberId
 import com.bigong.oguri.dto.PlaceDetailResponse
 import com.bigong.oguri.service.DestinationService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
@@ -21,8 +23,8 @@ class DestinationController(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate?,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate?,
         @RequestParam(defaultValue = "대한민국") userCountry: String,
-        @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") memberId: String
+        request: HttpServletRequest
     ): PlaceDetailResponse {
-        return destinationService.getDestinationDetail(id, startDate, endDate, userCountry, memberId)
+        return destinationService.getDestinationDetail(id, startDate, endDate, userCountry, request.resolveMemberId())
     }
 }

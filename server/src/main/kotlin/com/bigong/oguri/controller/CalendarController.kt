@@ -1,10 +1,12 @@
 package com.bigong.oguri.controller
 
+import com.bigong.oguri.config.resolveMemberId
 import com.bigong.oguri.dto.CalendarResponse
 import com.bigong.oguri.service.CalendarService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
@@ -30,11 +32,11 @@ class CalendarController(
         @RequestParam(defaultValue = "0") page: Int,
         @Parameter(description = "페이지 크기(1~50)", example = "10")
         @RequestParam(defaultValue = "10") size: Int,
-        @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") memberId: String
+        request: HttpServletRequest
     ): CalendarResponse {
         return calendarService.getCalendarData(
             yearMonth = yearMonth,
-            memberId = memberId,
+            memberId = request.resolveMemberId(),
             dayOffCount = dayOffCount,
             page = page,
             size = size
@@ -54,13 +56,13 @@ class CalendarController(
         @RequestParam(defaultValue = "0") page: Int,
         @Parameter(description = "페이지 크기(1~50)", example = "10")
         @RequestParam(defaultValue = "10") size: Int,
-        @RequestHeader(value = "X-USER-ID", defaultValue = "GUEST") memberId: String
+        request: HttpServletRequest
     ): com.bigong.oguri.dto.PeriodDetailResponse {
         return calendarService.getPeriodDetail(
             startDate = startDate,
             endDate = endDate,
             userCountry = userCountry,
-            memberId = memberId,
+            memberId = request.resolveMemberId(),
             page = page,
             size = size
         )
