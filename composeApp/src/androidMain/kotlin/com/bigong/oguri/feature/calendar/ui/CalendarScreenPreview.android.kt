@@ -42,6 +42,7 @@ private fun previewPeriodCards(): List<CalendarPeriodCardUiModel> =
             dayOffCount = 2,
             totalTripCount = 5,
             holidayNames = listOf("삼일절", "대체휴일"),
+            holidays = emptyList(),
         ),
         CalendarPeriodCardUiModel(
             id = 2L,
@@ -52,5 +53,6 @@ private fun previewPeriodCards(): List<CalendarPeriodCardUiModel> =
             dayOffCount = 2,
             totalTripCount = 4,
             holidayNames = listOf("주말"),
+            holidays = emptyList(),
         ),
     )

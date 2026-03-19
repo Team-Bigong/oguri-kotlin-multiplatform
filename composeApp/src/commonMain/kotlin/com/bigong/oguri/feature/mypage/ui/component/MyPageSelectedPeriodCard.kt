@@ -17,19 +17,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral30
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.MyPageSelectedPeriod
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_trashcan
-import oguri.composeapp.generated.resources.mypage_selected_period_date_range
 import oguri.composeapp.generated.resources.mypage_selected_period_information
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -37,13 +35,13 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MyPageSelectedPeriodCard(
     period: MyPageSelectedPeriod,
-    isCurrentYear: Boolean,
+    dDayText: String,
+    dDayColor: Color,
+    dateRangeText: String,
     onDeleteClick: (Long) -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val yearColor = if (isCurrentYear) Mint70 else Orange50
-
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier =
@@ -62,20 +60,13 @@ fun MyPageSelectedPeriodCard(
             ) {
                 Column {
                     Text(
-                        text = period.startDate.year.toString(),
+                        text = dDayText,
                         style = OguriTheme.typography.labelMedium,
-                        color = yearColor,
+                        color = dDayColor,
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text =
-                            stringResource(
-                                Res.string.mypage_selected_period_date_range,
-                                period.startDate.month.ordinal + 1,
-                                period.startDate.day,
-                                period.endDate.month.ordinal + 1,
-                                period.endDate.day,
-                            ),
+                        text = dateRangeText,
                         style = OguriTheme.typography.bodyLarge,
                         color = Neutral90,
                     )

@@ -1,9 +1,11 @@
 package com.bigong.oguri.data.repository
 
 import com.bigong.oguri.data.remote.CalendarRemoteDataSource
+import com.bigong.oguri.data.remote.model.response.CalendarHolidayResponse
 import com.bigong.oguri.data.remote.model.response.CalendarPeriodDetailResponse
 import com.bigong.oguri.data.remote.model.response.CalendarPeriodResponse
 import com.bigong.oguri.data.remote.model.response.CalendarRecommendationResponse
+import com.bigong.oguri.domain.model.CalendarHoliday
 import com.bigong.oguri.domain.model.CalendarPeriod
 import com.bigong.oguri.domain.model.CalendarPeriodDetail
 import com.bigong.oguri.domain.model.CalendarRecommendation
@@ -71,7 +73,14 @@ private fun CalendarPeriodResponse.toDomain(id: Long): CalendarPeriod =
         holidayCount = holidayCount,
         dayOffCount = dayOffCount,
         holidayNames = holidays,
+        holidayDateDetails = holidayDateDetails.map { holidayResponse -> holidayResponse.toDomain() },
         isSaved = saved ?: isSaved ?: false,
+    )
+
+private fun CalendarHolidayResponse.toDomain(): CalendarHoliday =
+    CalendarHoliday(
+        date = LocalDate.parse(date),
+        name = label,
     )
 
 private fun CalendarPeriodDetailResponse.toDomain(): CalendarPeriodDetail =

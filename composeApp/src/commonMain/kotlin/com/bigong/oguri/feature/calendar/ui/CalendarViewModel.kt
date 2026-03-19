@@ -90,10 +90,16 @@ class CalendarViewModel(
                                             .filterNot { card -> currentUiState.selectedDateByPeriodId.containsKey(card.id) }
                                             .associate { card -> card.id to card.startDate }
                                     currentUiState.copy(
+                                        isLeaveDaysRefreshing = false,
                                         selectedDateByPeriodId =
                                             currentUiState.selectedDateByPeriodId + addedSelections,
                                         expandedPeriodId = currentUiState.expandedPeriodId ?: loadedCards.firstOrNull()?.id,
                                     )
+                                }
+                            },
+                            onRefreshLoadFailed = {
+                                _uiState.update { currentUiState ->
+                                    currentUiState.copy(isLeaveDaysRefreshing = false)
                                 }
                             },
                         )
@@ -132,6 +138,7 @@ class CalendarViewModel(
         _uiState.update { currentUiState ->
             currentUiState.copy(
                 leaveDays = leaveDays,
+                isLeaveDaysRefreshing = true,
                 expandedPeriodId = null,
                 selectedDateByPeriodId = emptyMap(),
             )
