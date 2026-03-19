@@ -118,6 +118,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kakao.android.user)
+            implementation(libs.kakao.android.share)
             implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {

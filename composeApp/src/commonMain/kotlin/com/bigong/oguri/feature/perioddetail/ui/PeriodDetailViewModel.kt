@@ -166,7 +166,7 @@ class PeriodDetailViewModel(
                 currentUiState.copy(
                     isLoading = false,
                     isError = false,
-                    periodDetail = periodDetail.copy(places = emptyList()),
+                    periodDetail = periodDetail,
                     isSaved = isInitiallySaved,
                     dDay = calculateDDayUseCase(todayDate = todayDate, targetDate = periodDetail.startDate),
                 )
