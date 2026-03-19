@@ -139,9 +139,6 @@ fun NavDisplay(
                         navigator = navigator,
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
-                        onLoginCompleted = {
-                            navigator.navigateToHomeFromLogin()
-                        },
                         onLoggedOut = {
                             navigator.navigateToLogin()
                             coroutineScope.launch {

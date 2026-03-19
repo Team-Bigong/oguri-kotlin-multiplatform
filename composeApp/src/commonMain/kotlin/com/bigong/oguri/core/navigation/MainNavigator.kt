@@ -47,6 +47,24 @@ class MainNavigator(
         }
     }
 
+    fun navigateToOnboardingFromLogin() {
+        navHostController.navigate(RouteModel.Onboarding) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Login) {
+                inclusive = true
+            }
+        }
+    }
+
+    fun navigateToHomeFromOnboarding() {
+        navHostController.navigate(RouteModel.Home) {
+            launchSingleTop = true
+            popUpTo(RouteModel.Onboarding) {
+                inclusive = true
+            }
+        }
+    }
+
     fun navigateToPlaceDetail(
         placeId: Long,
         startDate: String?,
@@ -98,6 +116,7 @@ class MainNavigator(
                 navHostController.navigate(routeModel)
             }
 
+            RouteModel.Onboarding,
             RouteModel.Home,
             RouteModel.Calendar,
             RouteModel.MyPage,

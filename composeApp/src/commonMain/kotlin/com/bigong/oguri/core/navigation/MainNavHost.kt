@@ -20,6 +20,7 @@ import com.bigong.oguri.feature.calendar.ui.CalendarRoute
 import com.bigong.oguri.feature.home.ui.HomeRoute
 import com.bigong.oguri.feature.login.ui.LoginRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageRoute
+import com.bigong.oguri.feature.onboarding.ui.OnboardingRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
@@ -35,7 +36,6 @@ fun MainNavHost(
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
     onLoggedOut: () -> Unit,
-    onLoginCompleted: () -> Unit,
 ) {
     val homeViewModel =
         remember {
@@ -117,9 +117,17 @@ fun MainNavHost(
             LoginRoute(
                 loginViewModelProvider = appGraph.loginViewModelProvider,
                 snackbarHostState = snackbarHostState,
-                onLoginCompleted = onLoginCompleted,
-                onAppleLoginClick = onLoginCompleted,
-                onGuestBrowseClick = onLoginCompleted,
+                onLoginCompleted = navigator::navigateToOnboardingFromLogin,
+                onAppleLoginClick = navigator::navigateToOnboardingFromLogin,
+                onGuestBrowseClick = navigator::navigateToOnboardingFromLogin,
+            )
+        }
+        composable<RouteModel.Onboarding> {
+            OnboardingRoute(
+                onboardingViewModelProvider = appGraph.onboardingViewModelProvider,
+                onBackClick = navigator::navigateToLogin,
+                onHomeClick = navigator::navigateToHomeFromOnboarding,
+                onOpenWebDocument = navigator::navigateToWebDocument,
             )
         }
         composable<RouteModel.Home> {
