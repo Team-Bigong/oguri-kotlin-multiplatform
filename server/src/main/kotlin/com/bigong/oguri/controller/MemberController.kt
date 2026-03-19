@@ -88,4 +88,12 @@ class MemberController(
     ) {
         destinationService.deleteDestination(id, request.resolveMemberId())
     }
+
+    @Operation(summary = "회원 탈퇴", description = "현재 로그인한 회원의 계정과 저장 데이터를 삭제합니다.")
+    @DeleteMapping("/me")
+    fun withdraw(
+        request: HttpServletRequest
+    ) {
+        memberService.withdraw(request.resolveMemberId())
+    }
 }

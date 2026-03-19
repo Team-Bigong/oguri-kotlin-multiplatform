@@ -9,4 +9,5 @@ interface SavedDestinationRepository : JpaRepository<SavedDestination, Int> {
     fun findByMemberIdAndDestinationId(memberId: String, destinationId: Int): SavedDestination?
     fun deleteByMemberIdAndDestinationId(memberId: String, destinationId: Int)
     fun findAllByMemberId(memberId: String): List<SavedDestination>
+    fun deleteAllByMemberId(memberId: String)
 }

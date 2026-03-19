@@ -171,6 +171,15 @@ class MemberService(
         memberRepository.save(member)
     }
 
+    fun withdraw(memberId: String) {
+        if (!memberRepository.existsById(memberId)) {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.")
+        }
+        savedRecommendationRepository.deleteAllByMemberId(memberId)
+        savedDestinationRepository.deleteAllByMemberId(memberId)
+        memberRepository.deleteById(memberId)
+    }
+
     @Transactional(readOnly = true)
     fun getDayOffInfo(memberId: String): MemberDayOffResponse {
         val member = memberRepository.findById(memberId).orElseGet { Member(id = memberId) }
