@@ -38,8 +38,7 @@ class HomeService(
         // 휴가 일수에 따른 비행시간 타겟 기준
         const val MID_TRIP_THRESHOLD = 5     // 5일 이상이면 중거리(동남아 등) 선호
         const val LONG_TRIP_THRESHOLD = 7    // 7일 이상이면 장거리(유럽, 미국 등) 선호
-        
-        private val NUMBER_ONLY_REGEX = Regex("[^0-9]") // 비행시간 숫자 추출용 정규식
+
         private const val HOME_RECOMMENDATION_MONTH_RANGE = 12
         private const val HOME_PERIOD_LIMIT_PER_MONTH = 6
         private const val HOME_TOP_RECOMMENDATION_LIMIT = 3
@@ -142,7 +141,7 @@ class HomeService(
         if (candidates.isEmpty()) return emptyList()
 
         // 2단계: 정규화를 위한 최소/최대 지표 파악
-        val flightTimes = candidates.map { parseFlightTime(it.flightTime) }
+        val flightTimes = candidates.map { parseFlightTime(it.flightTimeMinutes) }
         val bigMacIndices = candidates.map { it.country?.bigMacIndex?.toDouble() ?: 5.0 }
         val minFlight = flightTimes.minOrNull() ?: 0.0
         val maxFlight = flightTimes.maxOrNull() ?: 1.0
@@ -158,7 +157,7 @@ class HomeService(
 
         // 4단계: 개별 장소별 점수 산산 및 정규화
         return candidates.map { dest ->
-            val flightVal = parseFlightTime(dest.flightTime)
+            val flightVal = parseFlightTime(dest.flightTimeMinutes)
             val bigMacVal = dest.country?.bigMacIndex?.toDouble() ?: 5.0
             val normalizedFlight = if (maxFlight != minFlight) (flightVal - minFlight) / (maxFlight - minFlight) else 0.0
             
@@ -196,12 +195,8 @@ class HomeService(
         return if (start <= end) month in start..end else (month >= start || month <= end)
     }
 
-    /**
-     * 비행시간 문자열에서 숫자 추출
-     */
-    private fun parseFlightTime(flightTime: String?): Double {
-        if (flightTime == null) return 0.0
-        return flightTime.replace(NUMBER_ONLY_REGEX, "").toDoubleOrNull() ?: 0.0
+    private fun parseFlightTime(flightTimeMinutes: Int?): Double {
+        return flightTimeMinutes?.toDouble() ?: 0.0
     }
 
     private fun selectNonOverlappingTopPeriods(

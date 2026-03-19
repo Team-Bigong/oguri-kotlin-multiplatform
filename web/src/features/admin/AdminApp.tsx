@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native"
 import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
 import { resizeAndCompressImage } from "../../lib/imageProcessing"
-import { uploadImageToFirebaseStorage } from "../../lib/firebase"
+import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
 import {
   AdminLoginResponse,
   Country,
@@ -21,6 +21,8 @@ type AdminTab = "destinations" | "members" | "holidays"
 type DestinationFormState = {
   selectedId: number | null
   countryId: string
+  storageCountrySlug: string
+  storageCitySlug: string
   name: string
   summary: string
   description: string
@@ -30,6 +32,7 @@ type DestinationFormState = {
   recommendEndMonth2: string
   flightTime: string
   images: DestinationImageRequest[]
+  existingImageUrls: string[]
 }
 
 type MemberFormState = {
@@ -51,6 +54,8 @@ type HolidayFormState = {
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
   countryId: "",
+  storageCountrySlug: "",
+  storageCitySlug: "",
   name: "",
   summary: "",
   description: "",
@@ -59,7 +64,8 @@ const createInitialDestinationFormState = (): DestinationFormState => ({
   recommendStartMonth2: "",
   recommendEndMonth2: "",
   flightTime: "",
-  images: []
+  images: [],
+  existingImageUrls: []
 })
 
 const createInitialMemberFormState = (): MemberFormState => ({
@@ -86,6 +92,134 @@ const toStoragePathSegment = (value: string): string => {
     .replace(/[^a-z0-9-_]/g, "")
 }
 
+const parseFlightTimeMinutes = (value: string): string => {
+  return value.replace(/[^0-9]/g, "")
+}
+
+type StorageCountryOption = {
+  label: string
+  slug: string
+  cityOptions: Array<{ label: string; slug: string }>
+}
+
+const storageCountryOptions: StorageCountryOption[] = [
+  {
+    label: "일본",
+    slug: "japan",
+    cityOptions: [
+      { label: "도쿄", slug: "tokyo" },
+      { label: "오사카", slug: "osaka" },
+      { label: "후쿠오카", slug: "fukuoka" },
+      { label: "삿포로", slug: "sapporo" }
+    ]
+  },
+  {
+    label: "호주",
+    slug: "australia",
+    cityOptions: [
+      { label: "브리즈번", slug: "brisbane" },
+      { label: "시드니", slug: "sydney" },
+      { label: "멜버른", slug: "melbourne" }
+    ]
+  },
+  {
+    label: "미국",
+    slug: "united-states",
+    cityOptions: [
+      { label: "뉴욕", slug: "new-york" },
+      { label: "샌프란시스코", slug: "san-francisco" },
+      { label: "LA", slug: "los-angeles" }
+    ]
+  },
+  {
+    label: "중국",
+    slug: "china",
+    cityOptions: [
+      { label: "상하이", slug: "shanghai" },
+      { label: "베이징", slug: "beijing" },
+      { label: "칭다오", slug: "qingdao" }
+    ]
+  },
+  {
+    label: "필리핀",
+    slug: "philippines",
+    cityOptions: [
+      { label: "세부", slug: "cebu" },
+      { label: "보라카이", slug: "boracay" },
+      { label: "보홀", slug: "bohol" }
+    ]
+  },
+  {
+    label: "프랑스",
+    slug: "france",
+    cityOptions: [
+      { label: "파리", slug: "paris" },
+      { label: "니스", slug: "nice" }
+    ]
+  },
+  {
+    label: "스페인",
+    slug: "spain",
+    cityOptions: [
+      { label: "바르셀로나", slug: "barcelona" },
+      { label: "마드리드", slug: "madrid" }
+    ]
+  },
+  {
+    label: "베트남",
+    slug: "vietnam",
+    cityOptions: [
+      { label: "다낭", slug: "danang" },
+      { label: "호치민", slug: "ho-chi-minh" }
+    ]
+  },
+  {
+    label: "대한민국",
+    slug: "south-korea",
+    cityOptions: [
+      { label: "서울", slug: "seoul" },
+      { label: "부산", slug: "busan" },
+      { label: "제주도", slug: "jeju" }
+    ]
+  }
+]
+
+const parseStorageSlugsFromImageUrl = (imageUrl: string): { countrySlug: string; citySlug: string } => {
+  try {
+    const parsedUrl = new URL(imageUrl)
+    const objectPathEncoded = parsedUrl.pathname.split("/o/")[1] ?? ""
+    const objectPath = decodeURIComponent(objectPathEncoded)
+    const pathSegments = objectPath.split("/")
+    if (pathSegments.length >= 4 && pathSegments[0] === "places") {
+      return {
+        countrySlug: pathSegments[1],
+        citySlug: pathSegments[2]
+      }
+    }
+  } catch (error) {
+    return { countrySlug: "", citySlug: "" }
+  }
+
+  return { countrySlug: "", citySlug: "" }
+}
+
+const parseImageSequenceNumberFromImageUrl = (imageUrl: string): number | null => {
+  try {
+    const parsedUrl = new URL(imageUrl)
+    const objectPathEncoded = parsedUrl.pathname.split("/o/")[1] ?? ""
+    const objectPath = decodeURIComponent(objectPathEncoded)
+    const fileName = objectPath.split("/").pop() ?? ""
+    const sequenceText = fileName.replace(/\.jpg$/i, "")
+    const parsedSequence = Number(sequenceText)
+    if (Number.isInteger(parsedSequence) && parsedSequence > 0) {
+      return parsedSequence
+    }
+  } catch (error) {
+    return null
+  }
+  return null
+}
+
 export const AdminApp = (): React.JSX.Element => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
   const [loginUsername, setLoginUsername] = useState<string>("")
@@ -107,6 +241,9 @@ export const AdminApp = (): React.JSX.Element => {
   const [holidayFormState, setHolidayFormState] = useState<HolidayFormState>(createInitialHolidayFormState)
 
   const [uploadingImages, setUploadingImages] = useState<boolean>(false)
+  const selectedStorageCountryOption = storageCountryOptions.find(
+    (countryOption) => countryOption.slug === destinationFormState.storageCountrySlug
+  )
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -196,6 +333,8 @@ export const AdminApp = (): React.JSX.Element => {
       return Number.isNaN(parsedValue) ? null : parsedValue
     }
 
+    const flightTimeMinutes = parseFlightTimeMinutes(state.flightTime)
+
     return {
       countryId: Number(state.countryId),
       name: state.name,
@@ -205,9 +344,21 @@ export const AdminApp = (): React.JSX.Element => {
       recommendEndMonth1: parseMonth(state.recommendEndMonth1),
       recommendStartMonth2: parseMonth(state.recommendStartMonth2),
       recommendEndMonth2: parseMonth(state.recommendEndMonth2),
-      flightTime: state.flightTime.trim().length > 0 ? state.flightTime : null,
+      flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
       images: state.images
     }
+  }, [])
+
+  const deleteImagesInFirebaseStorage = useCallback(async (imageUrls: string[]): Promise<number> => {
+    if (imageUrls.length === 0) {
+      return 0
+    }
+
+    const deleteResults = await Promise.allSettled(
+      imageUrls.map((imageUrl) => deleteImageFromFirebaseStorageByUrl(imageUrl))
+    )
+
+    return deleteResults.filter((result) => result.status === "rejected").length
   }, [])
 
   const submitDestination = useCallback(async () => {
@@ -216,32 +367,47 @@ export const AdminApp = (): React.JSX.Element => {
 
     try {
       const payload = createDestinationPayload(destinationFormState)
+      const removedExistingImageUrls = destinationFormState.existingImageUrls.filter(
+        (imageUrl) => !destinationFormState.images.some((image) => image.imageUrl === imageUrl)
+      )
+
       if (destinationFormState.selectedId == null) {
         await adminApiClient.post<Destination>("/api/admin/v1/destinations", payload)
         setNoticeMessage("장소가 생성되었습니다.")
       } else {
         await adminApiClient.put<Destination>(`/api/admin/v1/destinations/${destinationFormState.selectedId}`, payload)
-        setNoticeMessage("장소가 수정되었습니다.")
+        const failedDeleteCount = await deleteImagesInFirebaseStorage(removedExistingImageUrls)
+        if (failedDeleteCount > 0) {
+          setNoticeMessage(`장소가 수정되었습니다. 삭제된 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
+        } else {
+          setNoticeMessage("장소가 수정되었습니다.")
+        }
       }
       setDestinationFormState(createInitialDestinationFormState())
       await loadAll()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "장소 저장에 실패했습니다.")
     }
-  }, [createDestinationPayload, destinationFormState, loadAll])
+  }, [createDestinationPayload, deleteImagesInFirebaseStorage, destinationFormState, loadAll])
 
   const deleteDestination = useCallback(async (destinationId: number) => {
     setErrorMessage("")
     setNoticeMessage("")
 
     try {
+      const targetDestination = destinations.find((destination) => destination.id === destinationId)
       await adminApiClient.delete<void>(`/api/admin/v1/destinations/${destinationId}`)
-      setNoticeMessage("장소가 삭제되었습니다.")
+      const failedDeleteCount = await deleteImagesInFirebaseStorage(targetDestination?.images.map((image) => image.imageUrl) ?? [])
+      if (failedDeleteCount > 0) {
+        setNoticeMessage(`장소가 삭제되었습니다. 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
+      } else {
+        setNoticeMessage("장소가 삭제되었습니다.")
+      }
       await loadAll()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "장소 삭제에 실패했습니다.")
     }
-  }, [loadAll])
+  }, [deleteImagesInFirebaseStorage, destinations, loadAll])
 
   const submitMember = useCallback(async () => {
     setErrorMessage("")
@@ -339,25 +505,26 @@ export const AdminApp = (): React.JSX.Element => {
     setNoticeMessage("")
 
     try {
-      const selectedCountry = countries.find((country) => String(country.id) === destinationFormState.countryId)
-      if (selectedCountry == null) {
-        throw new Error("이미지 업로드 전에 국가를 먼저 선택해주세요.")
-      }
-      if (destinationFormState.name.trim().length === 0) {
-        throw new Error("이미지 업로드 전에 도시명을 먼저 입력해주세요.")
-      }
-
-      const countryPathSegment = toStoragePathSegment(selectedCountry.name)
-      const cityPathSegment = toStoragePathSegment(destinationFormState.name)
+      const countryPathSegment = toStoragePathSegment(destinationFormState.storageCountrySlug)
+      const cityPathSegment = toStoragePathSegment(destinationFormState.storageCitySlug)
       if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
-        throw new Error("국가/도시명에서 Firebase 경로를 생성할 수 없습니다. 영문/숫자 기반 이름을 확인해주세요.")
+        throw new Error("Storage 국가/도시 경로를 먼저 입력하거나 메뉴에서 선택해주세요.")
       }
 
       const selectedFiles = Array.from(fileList)
+      const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
+        (maximumSequenceNumber, image) => {
+          const parsedSequenceNumber = parseImageSequenceNumberFromImageUrl(image.imageUrl)
+          return parsedSequenceNumber == null
+            ? maximumSequenceNumber
+            : Math.max(maximumSequenceNumber, parsedSequenceNumber)
+        },
+        0
+      )
       const uploadedImages = await Promise.all(
         selectedFiles.map(async (file, index) => {
           const compressedBinary = await resizeAndCompressImage(file)
-          const imageSequenceNumber = destinationFormState.images.length + index + 1
+          const imageSequenceNumber = currentMaximumImageSequenceNumber + index + 1
           const objectPath = `places/${countryPathSegment}/${cityPathSegment}/${imageSequenceNumber}.jpg`
           const imageUrl = await uploadImageToFirebaseStorage(compressedBinary, objectPath)
 
@@ -380,7 +547,7 @@ export const AdminApp = (): React.JSX.Element => {
       setUploadingImages(false)
       event.target.value = ""
     }
-  }, [countries, destinationFormState.countryId, destinationFormState.images.length, destinationFormState.name])
+  }, [destinationFormState.images.length, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
 
   const activeTitle = useMemo(() => {
     if (activeTab === "destinations") return "장소 DB 관리"
@@ -454,18 +621,74 @@ export const AdminApp = (): React.JSX.Element => {
                 </select>
               </View>
 
+              <View style={styles.row}>
+                <Text style={styles.fieldLabel}>Storage 국가 경로</Text>
+                <select
+                  value={destinationFormState.storageCountrySlug}
+                  onChange={(event) => {
+                    const selectedSlug = event.target.value
+                    const countryOption = storageCountryOptions.find((item) => item.slug === selectedSlug)
+                    setDestinationFormState((previousState) => ({
+                      ...previousState,
+                      storageCountrySlug: selectedSlug,
+                      storageCitySlug: countryOption?.cityOptions[0]?.slug ?? ""
+                    }))
+                  }}
+                  style={htmlFieldStyle}
+                >
+                  <option value="">경로 국가 선택</option>
+                  {storageCountryOptions.map((countryOption) => (
+                    <option value={countryOption.slug} key={countryOption.slug}>
+                      {countryOption.label} ({countryOption.slug})
+                    </option>
+                  ))}
+                </select>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.fieldLabel}>Storage 도시 경로</Text>
+                <select
+                  value={destinationFormState.storageCitySlug}
+                  onChange={(event) => {
+                    setDestinationFormState((previousState) => ({
+                      ...previousState,
+                      storageCitySlug: event.target.value
+                    }))
+                  }}
+                  style={htmlFieldStyle}
+                >
+                  <option value="">경로 도시 선택</option>
+                  {(selectedStorageCountryOption?.cityOptions ?? []).map((cityOption) => (
+                    <option value={cityOption.slug} key={cityOption.slug}>
+                      {cityOption.label} ({cityOption.slug})
+                    </option>
+                  ))}
+                </select>
+              </View>
+
+              <LabelInput
+                label="Storage 국가 경로 직접입력"
+                value={destinationFormState.storageCountrySlug}
+                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, storageCountrySlug: value }))}
+              />
+              <LabelInput
+                label="Storage 도시 경로 직접입력"
+                value={destinationFormState.storageCitySlug}
+                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, storageCitySlug: value }))}
+              />
+
               <LabelInput
                 label="도시명"
                 value={destinationFormState.name}
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, name: value }))}
               />
               <LabelInput
-                label="요약"
+                label="요약 (25자 내외)"
                 value={destinationFormState.summary}
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, summary: value }))}
               />
               <LabelInput
-                label="설명"
+                label="설명 (150자 내외)"
                 value={destinationFormState.description}
                 multiline
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, description: value }))}
@@ -502,13 +725,14 @@ export const AdminApp = (): React.JSX.Element => {
               </View>
 
               <LabelInput
-                label="비행 시간"
+                label="비행 시간(분)"
                 value={destinationFormState.flightTime}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightTime: value }))}
+                keyboardType="numeric"
+                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightTime: parseFlightTimeMinutes(value) }))}
               />
 
               <View style={styles.uploadRow}>
-                <Text style={styles.fieldLabel}>사진 업로드 (가로 1280px / 800KB 이하로 자동 압축 후 Firebase 업로드)</Text>
+                <Text style={styles.fieldLabel}>사진 업로드</Text>
                 <input type="file" accept="image/*" multiple onChange={handleImageFileSelection} />
                 {uploadingImages && <Text style={styles.helperText}>이미지를 처리 중입니다...</Text>}
               </View>
@@ -535,12 +759,27 @@ export const AdminApp = (): React.JSX.Element => {
                         </Pressable>
                         <Pressable
                           onPress={() => {
-                            setDestinationFormState((previousState) => ({
-                              ...previousState,
-                              images: previousState.images
-                                .filter((_, targetIndex) => targetIndex !== index)
-                                .map((targetImage, sequence) => ({ ...targetImage, sortOrder: sequence + 1 }))
-                            }))
+                            void (async () => {
+                              const targetImage = destinationFormState.images[index]
+                              const shouldDeleteImmediately = targetImage != null &&
+                                !destinationFormState.existingImageUrls.includes(targetImage.imageUrl)
+
+                              if (shouldDeleteImmediately) {
+                                try {
+                                  await deleteImageFromFirebaseStorageByUrl(targetImage.imageUrl)
+                                } catch (error) {
+                                  setErrorMessage("이미지 삭제 중 오류가 발생했습니다. 다시 시도해주세요.")
+                                  return
+                                }
+                              }
+
+                              setDestinationFormState((previousState) => ({
+                                ...previousState,
+                                images: previousState.images
+                                  .filter((_, targetIndex) => targetIndex !== index)
+                                  .map((targetImageInList, sequence) => ({ ...targetImageInList, sortOrder: sequence + 1 }))
+                              }))
+                            })()
                           }}
                           style={styles.badgeDanger}
                         >
@@ -575,6 +814,8 @@ export const AdminApp = (): React.JSX.Element => {
                         setDestinationFormState({
                           selectedId: destination.id,
                           countryId: destination.countryId == null ? "" : String(destination.countryId),
+                          storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
+                          storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
                           name: destination.name,
                           summary: destination.summary ?? "",
                           description: destination.description ?? "",
@@ -582,12 +823,13 @@ export const AdminApp = (): React.JSX.Element => {
                           recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
                           recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
                           recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
-                          flightTime: destination.flightTime ?? "",
+                          flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
                           images: destination.images.map((image) => ({
                             imageUrl: image.imageUrl,
                             isThumbnail: image.isThumbnail,
                             sortOrder: image.sortOrder
-                          }))
+                          })),
+                          existingImageUrls: destination.images.map((image) => image.imageUrl)
                         })
                       }}
                     />

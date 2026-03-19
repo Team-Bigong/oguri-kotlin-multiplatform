@@ -1,8 +1,10 @@
 const TARGET_MAX_WIDTH_PX = 1280
 const TARGET_MAX_BYTES = 800 * 1024
-const MINIMUM_IMAGE_QUALITY = 0.4
-const IMAGE_QUALITY_DECREMENT = 0.07
+const MINIMUM_IMAGE_QUALITY = 0.45
+const MAXIMUM_IMAGE_QUALITY = 0.92
+const IMAGE_QUALITY_SEARCH_ITERATION_COUNT = 7
 const IMAGE_WIDTH_DECREMENT_RATIO = 0.9
+const MINIMUM_IMAGE_WIDTH_PX = 480
 
 const loadImageElement = async (file: File): Promise<HTMLImageElement> => {
   const objectUrl = URL.createObjectURL(file)
@@ -32,51 +34,75 @@ const toBlob = async (canvas: HTMLCanvasElement, quality: number): Promise<Blob>
   })
 }
 
-export const resizeAndCompressImage = async (file: File): Promise<Blob> => {
-  const imageElement = await loadImageElement(file)
-
-  const sourceWidth = imageElement.width
-  const sourceHeight = imageElement.height
-  const scaledWidth = Math.min(sourceWidth, TARGET_MAX_WIDTH_PX)
-  const scaledHeight = Math.round((sourceHeight * scaledWidth) / sourceWidth)
-
+const createResizedCanvas = (
+  sourceImageElement: HTMLImageElement,
+  targetWidth: number,
+  targetHeight: number
+): HTMLCanvasElement => {
   const canvasElement = document.createElement("canvas")
-  canvasElement.width = scaledWidth
-  canvasElement.height = scaledHeight
+  canvasElement.width = targetWidth
+  canvasElement.height = targetHeight
 
   const canvasContext = canvasElement.getContext("2d")
   if (canvasContext == null) {
     throw new Error("브라우저 canvas 컨텍스트를 가져올 수 없습니다.")
   }
 
-  canvasContext.drawImage(imageElement, 0, 0, scaledWidth, scaledHeight)
+  canvasContext.imageSmoothingEnabled = true
+  canvasContext.imageSmoothingQuality = "high"
+  canvasContext.drawImage(sourceImageElement, 0, 0, targetWidth, targetHeight)
+  return canvasElement
+}
 
-  let imageQuality = 0.92
-  let compressedBinary = await toBlob(canvasElement, imageQuality)
-
-  while (compressedBinary.size > TARGET_MAX_BYTES && imageQuality > MINIMUM_IMAGE_QUALITY) {
-    imageQuality -= IMAGE_QUALITY_DECREMENT
-    compressedBinary = await toBlob(canvasElement, imageQuality)
+const compressByTargetSize = async (canvasElement: HTMLCanvasElement): Promise<Blob> => {
+  const bestQualityBlob = await toBlob(canvasElement, MAXIMUM_IMAGE_QUALITY)
+  if (bestQualityBlob.size <= TARGET_MAX_BYTES) {
+    return bestQualityBlob
   }
 
-  while (compressedBinary.size > TARGET_MAX_BYTES && canvasElement.width > 320) {
-    const reducedWidth = Math.round(canvasElement.width * IMAGE_WIDTH_DECREMENT_RATIO)
-    const reducedHeight = Math.round((canvasElement.height * reducedWidth) / canvasElement.width)
+  const minimumQualityBlob = await toBlob(canvasElement, MINIMUM_IMAGE_QUALITY)
+  if (minimumQualityBlob.size > TARGET_MAX_BYTES) {
+    return minimumQualityBlob
+  }
 
-    const nextCanvasElement = document.createElement("canvas")
-    nextCanvasElement.width = reducedWidth
-    nextCanvasElement.height = reducedHeight
+  let minimumQuality = MINIMUM_IMAGE_QUALITY
+  let maximumQuality = MAXIMUM_IMAGE_QUALITY
+  let selectedBlob = minimumQualityBlob
 
-    const nextCanvasContext = nextCanvasElement.getContext("2d")
-    if (nextCanvasContext == null) {
-      throw new Error("브라우저 canvas 컨텍스트를 가져올 수 없습니다.")
+  for (let iteration = 0; iteration < IMAGE_QUALITY_SEARCH_ITERATION_COUNT; iteration += 1) {
+    const quality = (minimumQuality + maximumQuality) / 2
+    const binary = await toBlob(canvasElement, quality)
+
+    if (binary.size > TARGET_MAX_BYTES) {
+      maximumQuality = quality
+    } else {
+      minimumQuality = quality
+      selectedBlob = binary
     }
+  }
 
-    nextCanvasContext.drawImage(canvasElement, 0, 0, reducedWidth, reducedHeight)
-    canvasElement.width = reducedWidth
-    canvasElement.height = reducedHeight
-    canvasContext.drawImage(nextCanvasElement, 0, 0, reducedWidth, reducedHeight)
-    compressedBinary = await toBlob(canvasElement, imageQuality)
+  return selectedBlob
+}
+
+export const resizeAndCompressImage = async (file: File): Promise<Blob> => {
+  const imageElement = await loadImageElement(file)
+
+  const sourceWidth = imageElement.width
+  const sourceHeight = imageElement.height
+  const sourceAspectRatio = sourceHeight / sourceWidth
+
+  let targetWidth = Math.min(sourceWidth, TARGET_MAX_WIDTH_PX)
+  let targetHeight = Math.round(targetWidth * sourceAspectRatio)
+  let compressedBinary = await compressByTargetSize(
+    createResizedCanvas(imageElement, targetWidth, targetHeight)
+  )
+
+  while (compressedBinary.size > TARGET_MAX_BYTES && targetWidth > MINIMUM_IMAGE_WIDTH_PX) {
+    targetWidth = Math.max(MINIMUM_IMAGE_WIDTH_PX, Math.round(targetWidth * IMAGE_WIDTH_DECREMENT_RATIO))
+    targetHeight = Math.round(targetWidth * sourceAspectRatio)
+    compressedBinary = await compressByTargetSize(
+      createResizedCanvas(imageElement, targetWidth, targetHeight)
+    )
   }
 
   return compressedBinary

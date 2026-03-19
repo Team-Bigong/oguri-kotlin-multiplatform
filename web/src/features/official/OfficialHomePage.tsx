@@ -15,7 +15,7 @@ export const OfficialHomePage = (): React.JSX.Element => {
         <Pressable
           accessibilityRole="link"
           onPress={() => {
-            window.location.href = "/admin"
+            window.location.hash = "/admin"
           }}
           style={styles.primaryButton}
         >
