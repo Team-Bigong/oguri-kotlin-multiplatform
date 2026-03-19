@@ -47,26 +47,74 @@ class MainNavigator(
         }
     }
 
-    fun navigateToPlaceDetail(placeId: Long) {
-        navHostController.navigate(RouteModel.PlaceDetail(placeId = placeId))
+    fun navigateToPlaceDetail(
+        placeId: Long,
+        startDate: String?,
+        endDate: String?,
+    ) {
+        navHostController.navigate(
+            RouteModel.PlaceDetail(
+                placeId = placeId,
+                startDate = startDate,
+                endDate = endDate,
+            ),
+        )
     }
 
-    fun navigateToPeriodDetail(periodId: Long) {
-        navHostController.navigate(RouteModel.PeriodDetail(periodId = periodId))
+    fun navigateToPeriodDetail(
+        startDate: String,
+        endDate: String,
+    ) {
+        navHostController.navigate(
+            RouteModel.PeriodDetail(
+                startDate = startDate,
+                endDate = endDate,
+            ),
+        )
     }
 
     fun navigateToWebDocument(documentType: WebDocumentType) {
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
-    fun popBackStack(): Boolean {
-        return navHostController.popBackStack()
+    fun navigateToRouteModel(routeModel: RouteModel) {
+        when (routeModel) {
+            is RouteModel.PlaceDetail -> {
+                navigateToPlaceDetail(
+                    placeId = routeModel.placeId,
+                    startDate = routeModel.startDate,
+                    endDate = routeModel.endDate,
+                )
+            }
+
+            is RouteModel.PeriodDetail -> {
+                navigateToPeriodDetail(
+                    startDate = routeModel.startDate,
+                    endDate = routeModel.endDate,
+                )
+            }
+
+            is RouteModel.WebDocument -> {
+                navHostController.navigate(routeModel)
+            }
+
+            RouteModel.Home,
+            RouteModel.Calendar,
+            RouteModel.MyPage,
+            RouteModel.Login,
+            RouteModel.Splash,
+            -> {
+                navHostController.navigate(routeModel)
+            }
+        }
     }
+
+    fun popBackStack(): Boolean = navHostController.popBackStack()
 }
 
 @Composable
 fun rememberMainNavigator(): MainNavigator {
-    val navHostController: NavHostController = rememberNavController()
+    val navHostController = rememberNavController()
     return remember(navHostController) {
         MainNavigator(navHostController = navHostController)
     }

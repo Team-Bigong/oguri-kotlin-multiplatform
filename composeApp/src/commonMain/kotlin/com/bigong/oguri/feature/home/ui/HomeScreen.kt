@@ -15,19 +15,16 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
+import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
-import com.bigong.oguri.domain.model.Advertisement
-import com.bigong.oguri.domain.model.RecommendPeriod
-import com.bigong.oguri.feature.home.ui.component.HomeErrorContent
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
-import com.bigong.oguri.feature.home.ui.component.HomeLoadingContent
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader
 import com.bigong.oguri.feature.home.ui.component.HomeMoreRecommendationButton
+import com.bigong.oguri.feature.home.ui.component.HomeSkeletonContent
 import com.bigong.oguri.feature.home.ui.component.HomeStrategyCard
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.home_cta_more_recommend
-import oguri.composeapp.generated.resources.home_error_retry
 import oguri.composeapp.generated.resources.home_greeting_name
 import oguri.composeapp.generated.resources.home_greeting_question
 import oguri.composeapp.generated.resources.home_guide_match_places
@@ -36,7 +33,6 @@ import oguri.composeapp.generated.resources.home_guide_trip_products
 import oguri.composeapp.generated.resources.home_guide_trip_products_highlight
 import oguri.composeapp.generated.resources.home_hint_place_cards
 import oguri.composeapp.generated.resources.home_hint_trip_products
-import oguri.composeapp.generated.resources.home_loading
 import oguri.composeapp.generated.resources.home_more_recommendation_subtitle
 import oguri.composeapp.generated.resources.home_tab_rank_one
 import oguri.composeapp.generated.resources.home_tab_rank_three
@@ -52,25 +48,22 @@ fun HomeScreen(
     onSavedChanged: (Boolean) -> Unit,
     onRetryClick: () -> Unit,
     onAdvertisementClick: (String) -> Unit,
-    onPlaceClick: (Long) -> Unit,
+    onPlaceClick: (Long, String?, String?) -> Unit,
+    onPeriodClick: (String, String) -> Unit,
+    onMoveToCalendarClick: () -> Unit,
 ) {
     if (homeUiState.isLoading) {
-        HomeLoadingContent(message = stringResource(Res.string.home_loading))
+        HomeSkeletonContent()
         return
     }
 
     if (homeUiState.isError || homeUiState.recommendPeriods.isEmpty()) {
-        val errorText = stringResource(Res.string.home_error_retry)
-        HomeErrorContent(
-            message = errorText,
-            retryText = errorText,
-            onRetryClick = onRetryClick,
-        )
+        NetworkErrorRetryContent(onRetryClick = onRetryClick)
         return
     }
 
     val currentPeriod =
-        homeUiState.recommendPeriods.firstOrNull { recommendPeriod: RecommendPeriod ->
+        homeUiState.recommendPeriods.firstOrNull { recommendPeriod ->
             recommendPeriod.rank == homeUiState.selectedRank
         } ?: homeUiState.recommendPeriods.first()
 
@@ -112,6 +105,12 @@ fun HomeScreen(
                     currentPeriod = currentPeriod,
                     onRankSelected = onRankSelected,
                     onSavedChanged = onSavedChanged,
+                    onClick = {
+                        onPeriodClick(
+                            currentPeriod.startDate.toString(),
+                            currentPeriod.endDate.toString(),
+                        )
+                    },
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
@@ -130,7 +129,13 @@ fun HomeScreen(
                 key(homeUiState.selectedRank) {
                     PlaceHorizontalCarousel(
                         places = currentPeriod.places,
-                        onPlaceClick = { place -> onPlaceClick(place.id) },
+                        onPlaceClick = { place ->
+                            onPlaceClick(
+                                place.id,
+                                currentPeriod.startDate.toString(),
+                                currentPeriod.endDate.toString(),
+                            )
+                        },
                     )
                 }
             }
@@ -146,11 +151,11 @@ fun HomeScreen(
             }
             items(
                 count = currentPeriod.advertisements.size,
-                key = { index: Int ->
-                    val advertisement: Advertisement = currentPeriod.advertisements[index]
-                    "${advertisement.platform.name}:${advertisement.url}"
+                key = { index ->
+                    val advertisement = currentPeriod.advertisements[index]
+                    "${advertisement.platform.name}:${advertisement.url}:$index"
                 },
-            ) { index: Int ->
+            ) { index ->
                 val advertisement = currentPeriod.advertisements[index]
                 Spacer(modifier = Modifier.height(18.dp))
                 AdvertisementCard(
@@ -164,6 +169,7 @@ fun HomeScreen(
                 HomeMoreRecommendationButton(
                     subtitleText = stringResource(Res.string.home_more_recommendation_subtitle),
                     text = stringResource(Res.string.home_cta_more_recommend),
+                    onClick = onMoveToCalendarClick,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
                 Spacer(modifier = Modifier.height(height = 24.dp))

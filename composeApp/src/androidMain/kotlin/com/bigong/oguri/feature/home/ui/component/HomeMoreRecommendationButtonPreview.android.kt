@@ -11,6 +11,7 @@ private fun HomeMoreRecommendationButtonPreview() {
         HomeMoreRecommendationButton(
             subtitleText = "딱 맞는 연휴가 없었나요?",
             text = "다른 추천 보기",
+            onClick = {},
         )
     }
 }

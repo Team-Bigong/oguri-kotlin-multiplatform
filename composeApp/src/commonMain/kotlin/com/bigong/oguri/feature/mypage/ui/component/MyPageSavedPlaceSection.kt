@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -24,6 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MyPageSavedPlaceSection(
     savedPlaces: List<Place>,
+    onSavedPlaceClick: (Long) -> Unit,
     onDeleteClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -50,9 +51,13 @@ fun MyPageSavedPlaceSection(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            items(items = savedPlaces, key = { place: Place -> place.id }) { place: Place ->
+            itemsIndexed(
+                items = savedPlaces,
+                key = { _, place -> place.id },
+            ) { _, place ->
                 MyPageSavedPlaceCard(
                     place = place,
+                    onClick = onSavedPlaceClick,
                     onDeleteClick = onDeleteClick,
                 )
             }

@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -29,6 +29,7 @@ import kotlin.time.Clock
 fun MyPageSelectedPeriodSection(
     selectedPeriods: List<MyPageSelectedPeriod>,
     onDeleteClick: (Long) -> Unit,
+    onPeriodClick: (String, String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
@@ -60,11 +61,20 @@ fun MyPageSelectedPeriodSection(
             contentPadding = PaddingValues(horizontal = 20.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(items = selectedPeriods, key = { period: MyPageSelectedPeriod -> period.id }) { period: MyPageSelectedPeriod ->
+            itemsIndexed(
+                items = selectedPeriods,
+                key = { _, period -> period.id },
+            ) { _, period ->
                 MyPageSelectedPeriodCard(
                     period = period,
                     isCurrentYear = period.startDate.year == currentYear,
                     onDeleteClick = onDeleteClick,
+                    onClick = {
+                        onPeriodClick(
+                            period.startDate.toString(),
+                            period.endDate.toString(),
+                        )
+                    },
                 )
             }
         }

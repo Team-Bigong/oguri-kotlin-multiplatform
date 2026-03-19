@@ -8,19 +8,16 @@ import dev.zacsweers.metro.Inject
 class GetCalendarRecommendationUseCase(
     private val calendarRepository: CalendarRepository,
 ) {
-    suspend fun getPreferredDayOffCount(): Int {
-        return calendarRepository.getPreferredDayOffCount()
-    }
+    suspend fun getPreferredDayOffCount(): Int = calendarRepository.getPreferredDayOffCount()
 
     suspend operator fun invoke(
         year: Int,
         month: Int,
         dayOffCount: Int,
-    ): CalendarRecommendation {
-        return calendarRepository.getCalendarRecommendation(
+    ): CalendarRecommendation =
+        calendarRepository.getCalendarRecommendation(
             year = year,
             month = month,
             dayOffCount = dayOffCount,
         )
-    }
 }

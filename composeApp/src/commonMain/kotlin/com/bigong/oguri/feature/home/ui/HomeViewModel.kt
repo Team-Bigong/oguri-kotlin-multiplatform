@@ -1,23 +1,23 @@
 package com.bigong.oguri.feature.home.ui
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import com.bigong.oguri.domain.model.RecommendPeriod
+import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetRecommendPeriodListUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
+import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import dev.zacsweers.metro.Inject
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val DEFAULT_HOME_USER_COUNTRY: String = "대한민국"
+private const val DEFAULT_HOME_USER_COUNTRY = "대한민국"
 
 @Inject
 class HomeViewModel(
@@ -25,62 +25,100 @@ class HomeViewModel(
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
 ) : ViewModel() {
-    private val viewModelScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
-    var homeUiState: HomeUiState by mutableStateOf(HomeUiState())
-        private set
+    private val _uiState = MutableStateFlow(HomeUiState())
+    val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<HomeSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
     init {
         loadRecommendPeriods()
     }
 
     fun loadRecommendPeriods() {
+        fetchRecommendPeriods(showLoading = uiState.value.recommendPeriods.isEmpty())
+    }
+
+    fun refreshRecommendPeriods() {
+        fetchRecommendPeriods(showLoading = false)
+    }
+
+    private fun fetchRecommendPeriods(showLoading: Boolean) {
         viewModelScope.launch {
-            homeUiState = homeUiState.copy(isLoading = true, isError = false)
+            if (showLoading) {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isLoading = true, isError = false)
+                }
+            } else {
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isError = false)
+                }
+            }
 
             runCatching {
                 withContext(Dispatchers.Default) {
                     getRecommendPeriodsUseCase(userCountry = DEFAULT_HOME_USER_COUNTRY)
                 }
             }.onSuccess { recommendPeriods ->
-                val selectedRank = recommendPeriods.firstOrNull()?.rank ?: 1
+                val currentSelectedRank = uiState.value.selectedRank
+                val selectedRank =
+                    recommendPeriods
+                        .firstOrNull { period ->
+                            period.rank == currentSelectedRank
+                        }?.rank ?: recommendPeriods.firstOrNull()?.rank ?: 1
                 val savedRanks = recommendPeriods.filter { period -> period.isSaved }.map { period -> period.rank }.toSet()
-                homeUiState = homeUiState.copy(
-                    isLoading = false,
-                    isError = false,
-                    selectedRank = selectedRank,
-                    savedRankSet = savedRanks,
-                    recommendPeriods = recommendPeriods,
-                )
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(
+                        isLoading = false,
+                        isError = false,
+                        selectedRank = selectedRank,
+                        savedRankSet = savedRanks,
+                        recommendPeriods = recommendPeriods,
+                    )
+                }
             }.onFailure {
-                homeUiState = homeUiState.copy(
-                    isLoading = false,
-                    isError = true,
-                    recommendPeriods = emptyList(),
-                )
+                _uiState.update { currentUiState ->
+                    val hasExistingData = currentUiState.recommendPeriods.isNotEmpty()
+                    if (hasExistingData) {
+                        currentUiState.copy(
+                            isLoading = false,
+                            isError = false,
+                        )
+                    } else {
+                        currentUiState.copy(
+                            isLoading = false,
+                            isError = true,
+                            recommendPeriods = emptyList(),
+                        )
+                    }
+                }
             }
         }
     }
 
     fun selectRank(rank: Int) {
-        homeUiState = homeUiState.copy(selectedRank = rank)
+        _uiState.update { currentUiState ->
+            currentUiState.copy(selectedRank = rank)
+        }
     }
 
     fun toggleSaved(isChecked: Boolean) {
-        val selectedRank = homeUiState.selectedRank
-        val previousSavedRankSet = homeUiState.savedRankSet
+        val selectedRank = uiState.value.selectedRank
+        val previousSavedRankSet = uiState.value.savedRankSet
         val wasSaved = selectedRank in previousSavedRankSet
         val selectedPeriod =
-            homeUiState.recommendPeriods.firstOrNull { period: RecommendPeriod ->
+            uiState.value.recommendPeriods.firstOrNull { period ->
                 period.rank == selectedRank
             } ?: return
 
-        val optimisticSavedRankSet = if (isChecked) {
-            previousSavedRankSet + selectedRank
-        } else {
-            previousSavedRankSet - selectedRank
+        val optimisticSavedRankSet =
+            if (isChecked) {
+                previousSavedRankSet + selectedRank
+            } else {
+                previousSavedRankSet - selectedRank
+            }
+        _uiState.update { currentUiState ->
+            currentUiState.copy(savedRankSet = optimisticSavedRankSet)
         }
-        homeUiState = homeUiState.copy(savedRankSet = optimisticSavedRankSet)
 
         viewModelScope.launch {
             runCatching {
@@ -90,28 +128,36 @@ class HomeViewModel(
                             startDate = selectedPeriod.startDate,
                             endDate = selectedPeriod.endDate,
                             dayOffCount = selectedPeriod.dayOffCount,
+                            totalTripCount = selectedPeriod.totalTripCount,
                         )
                     } else {
                         deleteRecommendationUseCase(
                             startDate = selectedPeriod.startDate,
                             endDate = selectedPeriod.endDate,
                             dayOffCount = selectedPeriod.dayOffCount,
+                            totalTripCount = selectedPeriod.totalTripCount,
                         )
                     }
                 }
+            }.onSuccess {
+                _sideEffect.tryEmit(
+                    if (isChecked) {
+                        HomeSideEffect.RecommendationSaved
+                    } else {
+                        HomeSideEffect.RecommendationDeleted
+                    },
+                )
             }.onFailure {
-                val restoredSavedRankSet = if (wasSaved) {
-                    homeUiState.savedRankSet + selectedRank
-                } else {
-                    homeUiState.savedRankSet - selectedRank
+                val restoredSavedRankSet =
+                    if (wasSaved) {
+                        uiState.value.savedRankSet + selectedRank
+                    } else {
+                        uiState.value.savedRankSet - selectedRank
+                    }
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(savedRankSet = restoredSavedRankSet)
                 }
-                homeUiState = homeUiState.copy(savedRankSet = restoredSavedRankSet)
             }
         }
-    }
-
-    override fun onCleared() {
-        viewModelScope.cancel()
-        super.onCleared()
     }
 }

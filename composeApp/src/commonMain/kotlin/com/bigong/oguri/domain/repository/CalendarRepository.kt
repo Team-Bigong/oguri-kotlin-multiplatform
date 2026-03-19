@@ -1,5 +1,6 @@
 package com.bigong.oguri.domain.repository
 
+import com.bigong.oguri.domain.model.CalendarPeriodDetail
 import com.bigong.oguri.domain.model.CalendarRecommendation
 
 interface CalendarRepository {
@@ -10,4 +11,10 @@ interface CalendarRepository {
         month: Int,
         dayOffCount: Int,
     ): CalendarRecommendation
+
+    suspend fun getCalendarPeriodDetail(
+        startDate: String,
+        endDate: String,
+        userCountry: String,
+    ): CalendarPeriodDetail
 }

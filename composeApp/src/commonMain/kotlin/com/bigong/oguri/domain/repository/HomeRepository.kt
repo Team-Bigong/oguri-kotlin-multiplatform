@@ -1,7 +1,7 @@
 package com.bigong.oguri.domain.repository
 
-import kotlinx.datetime.LocalDate
 import com.bigong.oguri.domain.model.RecommendPeriod
+import kotlinx.datetime.LocalDate
 
 interface HomeRepository {
     suspend fun getRecommendPeriods(userCountry: String): List<RecommendPeriod>
@@ -10,11 +10,13 @@ interface HomeRepository {
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     )
 
     suspend fun deleteRecommendation(
         startDate: LocalDate,
         endDate: LocalDate,
         dayOffCount: Int,
+        totalTripCount: Int,
     )
 }

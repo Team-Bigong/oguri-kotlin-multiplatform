@@ -19,11 +19,15 @@ import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.perform
 
 @Composable
 fun HomeMoreRecommendationButton(
     subtitleText: String,
     text: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column {
@@ -39,6 +43,12 @@ fun HomeMoreRecommendationButton(
             modifier =
                 modifier
                     .fillMaxWidth()
+                    .noRippleClickable(
+                        onClick = {
+                            HapticType.Selection.perform()
+                            onClick()
+                        },
+                    )
                     .background(color = Mint5, shape = RoundedCornerShape(size = 8.dp))
                     .border(width = 1.dp, color = Mint70, shape = RoundedCornerShape(size = 8.dp))
                     .padding(vertical = 12.dp),

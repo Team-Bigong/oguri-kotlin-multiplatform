@@ -18,15 +18,13 @@ import kotlinx.datetime.LocalDate
 class DefaultMyPageRepository(
     private val myPageRemoteDataSource: MyPageRemoteDataSource,
 ) : MyPageRepository {
-    override suspend fun getMyPageInfo(): MyPageInfo {
-        return myPageRemoteDataSource.getMyPageResponse().toDomain()
-    }
+    override suspend fun getMyPageInfo(): MyPageInfo = myPageRemoteDataSource.getMyPageResponse().toDomain()
 
     override suspend fun updateLeaveDays(
         remainingLeaveDays: Int,
         preferredLeaveDays: Int,
-    ): MyPageInfo {
-        return myPageRemoteDataSource
+    ): MyPageInfo =
+        myPageRemoteDataSource
             .updateLeaveDays(
                 request =
                     UpdateMyPageLeaveDaysRequest(
@@ -34,49 +32,44 @@ class DefaultMyPageRepository(
                         preferredLeaveDays = preferredLeaveDays,
                     ),
             ).toDomain()
-    }
 
-    override suspend fun deleteSelectedPeriod(periodId: Long): MyPageInfo {
-        return myPageRemoteDataSource
+    override suspend fun deleteSelectedPeriod(periodId: Long): MyPageInfo =
+        myPageRemoteDataSource
             .deleteSelectedPeriod(
                 request = DeleteMyPageSelectedPeriodRequest(periodId = periodId),
             ).toDomain()
-    }
 
-    override suspend fun deleteSavedPlace(placeId: Long): MyPageInfo {
-        return myPageRemoteDataSource
+    override suspend fun deleteSavedPlace(placeId: Long): MyPageInfo =
+        myPageRemoteDataSource
             .deleteSavedPlace(
                 request = DeleteMyPageSavedPlaceRequest(placeId = placeId),
             ).toDomain()
-    }
 }
 
-private fun MyPageResponse.toDomain(): MyPageInfo {
-    return MyPageInfo(
+private fun MyPageResponse.toDomain(): MyPageInfo =
+    MyPageInfo(
         nickname = nickname,
         remainingLeaveDays = remainingLeaveDays,
         preferredLeaveDays = preferredLeaveDays,
-        selectedPeriods = selectedPeriods.map { selectedPeriodResponse: MyPageSelectedPeriodResponse -> selectedPeriodResponse.toDomain() },
-        savedPlaces = savedPlaces.map { placeResponse: PlaceResponse -> placeResponse.toDomain() },
+        selectedPeriods = selectedPeriods.map { selectedPeriodResponse -> selectedPeriodResponse.toDomain() },
+        savedPlaces = savedPlaces.map { placeResponse -> placeResponse.toDomain() },
     )
-}
 
-private fun MyPageSelectedPeriodResponse.toDomain(): MyPageSelectedPeriod {
-    return MyPageSelectedPeriod(
+private fun MyPageSelectedPeriodResponse.toDomain(): MyPageSelectedPeriod =
+    MyPageSelectedPeriod(
         id = id,
         startDate = LocalDate.parse(startDate),
         endDate = LocalDate.parse(endDate),
         totalTripCount = totalTripCount,
         dayOffCount = dayOffCount,
     )
-}
 
-private fun PlaceResponse.toDomain(): Place {
-    return Place(
+private fun PlaceResponse.toDomain(): Place =
+    Place(
         id = id,
         country = country,
         city = city,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
+        isSaved = saved,
     )
-}

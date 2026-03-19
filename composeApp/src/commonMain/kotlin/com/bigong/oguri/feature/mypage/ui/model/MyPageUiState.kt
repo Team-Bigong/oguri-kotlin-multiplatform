@@ -10,4 +10,7 @@ data class MyPageUiState(
     val pendingDeleteScheduleId: Long? = null,
     val pendingDeletePlaceId: Long? = null,
     val isLogoutDialogVisible: Boolean = false,
+    val isWithdrawDialogVisible: Boolean = false,
+    val withdrawInputText: String = "",
+    val isWithdrawConfirmEnabled: Boolean = false,
 )

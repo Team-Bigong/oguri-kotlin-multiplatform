@@ -13,16 +13,33 @@
 - UI 모델이 아닌 도메인 모델을 `domain/model`에 둔다.
 - CRUD(수정/삭제) 요청도 서버 호출 형태를 유지하고 실패 시 로컬 더미 상태를 갱신해 화면 흐름을 보장한다.
 - 스웨거 명세가 확정된 엔드포인트(`home`, `calendar`, `member`)는 더미 fallback 없이 실제 API 응답만 사용한다.
+- 인증 토큰은 공용 스토어에서 관리하고, 네트워크 계층에서 `Authorization` 헤더를 주입한다.
+- 헤더 주입 정책(`Authorization`/`X-USER-ID`)은 UI 레이어가 아닌 Ktor `ClientPlugin`에서 전역으로 관리한다.
+- 토큰이 없으면 모든 API 요청에 `X-USER-ID: GUEST`를 자동 주입한다.
+- `401` 또는 `403` 응답이 발생하면 토큰 재발급 후 요청을 1회 재시도한다.
+- 재발급 동시성은 `Mutex`로 보호해 중복 재발급을 방지한다.
+
+## 로그인
+- 카카오 로그인 키는 `local.properties`의 `kakao.key`를 사용한다.
+- Android는 Kakao SDK 기반 네이티브 로그인(`loginWithKakaoTalk` 우선, 실패 시 `loginWithKakaoAccount`)을 사용한다.
+- Android Manifest에 `AuthCodeHandlerActivity` 리다이렉트 스킴(`kakao{NATIVE_APP_KEY}://oauth`)을 등록한다.
+- 카카오 SDK 액세스 토큰으로 서버 `POST /api/v1/auth/login/kakao`를 호출해 서비스 토큰(`accessToken`, `refreshToken`)을 발급받는다.
+- 서비스 토큰 재발급은 `POST /api/v1/auth/refresh`를 사용한다.
+- 로그아웃 시 저장된 서비스 토큰(메모리/영속 저장소)을 모두 삭제한다.
 
 ## DI
 - DI는 Metro를 사용한다.
 - 루트에서 UseCase를 직접 실행하지 않는다.
 - ViewModel 생성자에 UseCase를 주입한다.
 - `core.di`를 중심으로 그래프를 구성한다.
+- ViewModel 코루틴 스코프는 직접 생성하지 않고 `androidx.lifecycle.viewModelScope`를 사용한다.
 
 ## 내비게이션
 - 타입 세이프 라우팅(`@Serializable`)을 사용한다.
 - `app.navigation` 역할은 `core.navigation`에 둔다.
+- 외부 공유 진입은 앱 딥링크(`oguri://open/...`)로 처리하고, 딥링크 파싱은 `core.deeplink`에서 단일 책임으로 관리한다.
+- 딥링크 저장소는 `object`가 아닌 DI로 제공되는 싱글톤 인스턴스를 사용한다.
+- 딥링크 진입은 로그인 여부와 무관하게 허용한다. 토큰이 없으면 `GUEST`로 API를 호출한다.
 - 외부 문서(건의하기/약관/개인정보)는 `WebDocument` 라우트로 진입해 인앱 WebView로 표시한다.
 - 메인 탭 이동 시 백스택은 초기화한다.
 - 메인 탭에서는 뒤로가기/스와이프 백 제스처를 무시하고, 2회 뒤로가기로 종료한다.
@@ -32,6 +49,7 @@
 - Screen 파일은 상태 분기와 레이아웃 조합만 담당한다.
 - 카드/섹션/토글/버튼 등 반복 가능한 UI는 `ui/component`로 분리한다.
 - Screen과 각 컴포넌트는 프리뷰를 반드시 제공한다.
+- 로딩은 화면별 스켈레톤으로 처리하고, 공용 Shimmer 컴포넌트(`SkeletonBox`)를 재사용한다.
 
 ## 광고 정책
 - 홈/상세/캘린더에 하단 배너 1개만 노출한다.

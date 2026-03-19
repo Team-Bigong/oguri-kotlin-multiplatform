@@ -25,7 +25,6 @@ import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
-import com.bigong.oguri.core.ui.component.NetworkImage
 import com.bigong.oguri.core.util.extension.getStyledText
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.Advertisement
@@ -48,8 +47,6 @@ import oguri.composeapp.generated.resources.url_plane_2
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private val ADVERTISEMENT_CARD_CORNER_RADIUS = 8.dp
-
 @Composable
 fun AdvertisementCard(
     advertisement: Advertisement,
@@ -70,11 +67,11 @@ fun AdvertisementCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .clip(shape = RoundedCornerShape(size = ADVERTISEMENT_CARD_CORNER_RADIUS))
+                .clip(shape = RoundedCornerShape(size = 8.dp))
                 .noRippleClickable(onClick = { onClick(advertisement.url) })
                 .background(
                     color = Mint10,
-                    shape = RoundedCornerShape(size = ADVERTISEMENT_CARD_CORNER_RADIUS),
+                    shape = RoundedCornerShape(size = 8.dp),
                 ),
     ) {
         Box(
@@ -90,8 +87,8 @@ fun AdvertisementCard(
                         .fillMaxSize()
                         .clip(
                             RoundedCornerShape(
-                                topStart = ADVERTISEMENT_CARD_CORNER_RADIUS,
-                                topEnd = ADVERTISEMENT_CARD_CORNER_RADIUS,
+                                topStart = 8.dp,
+                                topEnd = 8.dp,
                             ),
                         ),
             )

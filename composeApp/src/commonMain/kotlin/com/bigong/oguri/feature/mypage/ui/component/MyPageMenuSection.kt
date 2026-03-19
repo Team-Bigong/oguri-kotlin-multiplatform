@@ -28,7 +28,7 @@ fun MyPageMenuSection(
 ) {
     Column(modifier = modifier) {
         HorizontalDivider(color = Neutral20)
-        menuItems.forEach { menuItem: MyPageMenuItem ->
+        menuItems.forEach { menuItem ->
             Row(
                 modifier =
                     Modifier

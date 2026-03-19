@@ -11,10 +11,11 @@ import com.bigong.oguri.domain.model.AdvertisementPlatform
 private fun AdvertisementCardPreview() {
     OguriTheme {
         AdvertisementCard(
-            advertisement = Advertisement(
-                platform = AdvertisementPlatform.AGODA,
-                url = "https://www.agoda.com/",
-            ),
+            advertisement =
+                Advertisement(
+                    platform = AdvertisementPlatform.AGODA,
+                    url = "https://www.agoda.com/",
+                ),
         )
     }
 }

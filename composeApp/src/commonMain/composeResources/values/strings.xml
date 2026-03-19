@@ -4,6 +4,8 @@
     <string name="bottom_navigation_my">My</string>
 
     <string name="navigation_back_press_exit_message">Press back again to exit</string>
+    <string name="common_network_error_message">Unable to load information.</string>
+    <string name="common_retry_button">Try again</string>
 
     <string name="home_greeting_name">This Combination, only Oguri knows this.</string>
     <string name="home_greeting_question">How about resting like this this time?</string>
@@ -54,9 +56,21 @@
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_kakao_with_account">Sign in with Kakao account</string>
     <string name="login_guest_browse">Browse without login</string>
+    <string name="snackbar_login_failed">Login failed. Please try again.</string>
+    <string name="snackbar_home_saved">Vacation period saved.</string>
+    <string name="snackbar_home_deleted">Saved vacation period removed.</string>
+    <string name="snackbar_place_saved">Place saved.</string>
+    <string name="snackbar_place_deleted">Saved place removed.</string>
+    <string name="snackbar_calendar_leave_days_updated">Leave days updated.</string>
+    <string name="snackbar_logout_completed">You have been logged out.</string>
+    <string name="snackbar_mypage_leave_days_updated">Leave settings saved.</string>
+    <string name="snackbar_mypage_selected_period_deleted">Selected vacation period removed.</string>
+    <string name="snackbar_mypage_saved_place_deleted">Saved place removed.</string>
+    <string name="share_place_detail_message">Check %1$s on Oguri.\n\n%2$s</string>
+    <string name="share_period_detail_message">Check this period on Oguri (%1$s - %2$s).\n%3$s</string>
 
     <string name="calendar_header_title">How many leave days can you use?</string>
-    <string name="calendar_header_subtitle">Try changing the days to find other schedules</string>
+    <string name="calendar_header_subtitle">Adjust your leave days to find the best combinations</string>
     <string name="calendar_loading">Loading calendar recommendations...</string>
     <string name="calendar_error_retry">Failed to load calendar recommendations. Tap to retry.</string>
     <string name="calendar_dialog_leave_days_title">Enter leave days</string>
@@ -72,15 +86,22 @@
     <string name="calendar_day_fri">Fri</string>
     <string name="calendar_day_sat">Sat</string>
     <string name="calendar_recommendation_guide_title">These are the best days for your leave</string>
-    <string name="calendar_recommendation_guide_highlight">best days</string>
+    <string name="calendar_recommendation_guide_highlight">best days for your leave</string>
     <string name="calendar_recommendation_guide_subtitle">Tap the arrow to explore travel spots too</string>
     <string name="calendar_period_range">%1$s - %2$s</string>
     <string name="calendar_month_day">%1$d/%2$d</string>
+    <string name="calendar_card_total_days">%1$s (%2$d days)</string>
+    <string name="calendar_card_summary_with_holiday">%1$s · Holiday %2$d days · Leave %3$d days</string>
+    <string name="calendar_card_summary_without_holiday">Holiday %1$d days · Leave %2$d days</string>
+    <string name="calendar_card_detail">See details</string>
+    <string name="calendar_d_day_before">D-%1$d</string>
+    <string name="calendar_d_day_after">D+%1$d</string>
+    <string name="calendar_end_of_list_message">This is the last available schedule for this leave setting 👋</string>
     <string name="calendar_leave_days_sheet_title">Leave Settings</string>
     <string name="calendar_leave_days_sheet_done">Done</string>
-    <string name="period_detail_dummy_back">Back</string>
-    <string name="period_detail_dummy_title">Period Detail Dummy Screen</string>
-    <string name="period_detail_dummy_description">Navigation success with periodId=%1$d</string>
+    <string name="period_detail_title">Period Detail</string>
+    <string name="period_detail_holiday_fallback">holiday</string>
+    <string name="period_detail_empty_places_hint">No recommended places for this period yet.</string>
     <string name="mypage_profile_leave_days">Remaining leave: %1$d days / Preferred leave: %2$d days</string>
     <string name="mypage_section_selected_period">Selected vacation periods</string>
     <string name="mypage_section_saved_place">Saved places</string>
@@ -101,6 +122,10 @@
     <string name="mypage_delete_place_dialog_message">Deleted information cannot be restored.</string>
     <string name="mypage_logout_dialog_title">Log out?</string>
     <string name="mypage_logout_dialog_message">You will need to log in again.</string>
+    <string name="mypage_withdraw_dialog_title">Do you want to delete your account?</string>
+    <string name="mypage_withdraw_dialog_description">Deleted information cannot be restored.</string>
+    <string name="mypage_withdraw_dialog_instruction">To continue, enter the following phrase exactly.</string>
+    <string name="mypage_withdraw_dialog_phrase">I will delete my Oguri account.</string>
     <string name="mypage_loading">Loading my page data...</string>
     <string name="mypage_error_retry">Failed to load my page data. Tap to retry.</string>
     <string name="mypage_leave_days_sheet_title">Leave Settings</string>

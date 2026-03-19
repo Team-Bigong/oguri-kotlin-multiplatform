@@ -14,40 +14,56 @@ import dev.zacsweers.metro.Inject
 class DefaultPlaceDetailRepository(
     private val placeDetailRemoteDataSource: PlaceDetailRemoteDataSource,
 ) : PlaceDetailRepository {
-    override suspend fun getPlaceDetail(placeId: Long): PlaceDetail {
-        return placeDetailRemoteDataSource.getPlaceDetailResponse(placeId = placeId).toDomain()
+    override suspend fun getPlaceDetail(
+        placeId: Long,
+        startDate: String?,
+        endDate: String?,
+        userCountry: String,
+    ): PlaceDetail =
+        placeDetailRemoteDataSource
+            .getPlaceDetailResponse(
+                placeId = placeId,
+                startDate = startDate,
+                endDate = endDate,
+                userCountry = userCountry,
+            ).toDomain()
+
+    override suspend fun saveDestination(placeId: Long) {
+        placeDetailRemoteDataSource.saveDestination(placeId = placeId)
+    }
+
+    override suspend fun deleteSavedDestination(placeId: Long) {
+        placeDetailRemoteDataSource.deleteSavedDestination(placeId = placeId)
     }
 }
 
-private fun PlaceDetailResponse.toDomain(): PlaceDetail {
-    return PlaceDetail(
+private fun PlaceDetailResponse.toDomain(): PlaceDetail =
+    PlaceDetail(
         id = id,
         country = country,
         city = city,
         thumbnailUrls = thumbnailUrls,
         isSaved = isSaved,
         description = description,
-        experiences = experiences.map { experienceResponse: ExperienceResponse -> experienceResponse.toDomain() },
+        experiences = experiences.map { experienceResponse -> experienceResponse.toDomain() },
         flightUrl = flightUrl,
-        relevantPlaces = relevantPlaces.map { placeResponse: PlaceResponse -> placeResponse.toDomain() },
+        relevantPlaces = relevantPlaces.map { placeResponse -> placeResponse.toDomain() },
     )
-}
 
-private fun ExperienceResponse.toDomain(): Experience {
-    return Experience(
+private fun ExperienceResponse.toDomain(): Experience =
+    Experience(
         title = title,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
         advertisementUrl = advertisementUrl,
     )
-}
 
-private fun PlaceResponse.toDomain(): Place {
-    return Place(
+private fun PlaceResponse.toDomain(): Place =
+    Place(
         id = id,
         country = country,
         city = city,
         summary = summary,
         thumbnailUrl = thumbnailUrl,
+        isSaved = saved,
     )
-}

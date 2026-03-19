@@ -25,6 +25,7 @@ import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.core.util.extension.getStyledText
+import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.RecommendPeriod
 import kotlinx.datetime.LocalDate
 import oguri.composeapp.generated.resources.Res
@@ -43,11 +44,13 @@ fun HomeStrategyCard(
     currentPeriod: RecommendPeriod,
     onRankSelected: (Int) -> Unit,
     onSavedChanged: (Boolean) -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
         modifier =
             modifier
+                .noRippleClickable(onClick = onClick)
                 .fillMaxWidth()
                 .background(color = Mint10, shape = RoundedCornerShape(size = 12.dp)),
     ) {
@@ -129,8 +132,8 @@ fun HomeStrategyCard(
 }
 
 private fun formatMonthDay(localDate: LocalDate): String {
-    val dateTokens: List<String> = localDate.toString().split("-")
-    val month: Int = dateTokens[1].toInt()
-    val day: Int = dateTokens[2].toInt()
+    val dateTokens = localDate.toString().split("-")
+    val month = dateTokens[1].toInt()
+    val day = dateTokens[2].toInt()
     return "${month}월 ${day}일"
 }
