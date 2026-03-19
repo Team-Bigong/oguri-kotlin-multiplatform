@@ -24,7 +24,8 @@ class CalendarService(
     private val publicHolidayRepository: PublicHolidayRepository,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val destinationRepository: DestinationRepository,
-    private val homeService: HomeService
+    private val homeService: HomeService,
+    private val vacationRecommendationService: VacationRecommendationService
 ) {
     /**
      * 특정 기간(시작~종료)의 상세 정보 및 추천 장소 조회
@@ -116,19 +117,13 @@ class CalendarService(
             userDayOff = targetDayOff,
             holidayMap = holidayMap,
             monthRangeCount = RECOMMENDATION_MONTH_RANGE,
-            periodLimitPerMonth = PERIOD_LIMIT_PER_MONTH
-        )
-
-        val sortedPeriods = periodCandidates.sortedWith(
-            compareByDescending<VacationCandidate> { it.totalDays }
-                .thenBy { it.usedDayOffCount }
-                .thenByDescending { it.holidayCount }
-                .thenBy { it.start }
+            periodLimitPerMonth = PERIOD_LIMIT_PER_MONTH,
+            startDateCutoff = LocalDate.now()
         )
 
         val offset = normalizedPage * normalizedSize
-        val pagedPeriods = sortedPeriods.drop(offset).take(normalizedSize)
-        val hasNext = offset + pagedPeriods.size < sortedPeriods.size
+        val pagedPeriods = periodCandidates.drop(offset).take(normalizedSize)
+        val hasNext = offset + pagedPeriods.size < periodCandidates.size
 
         return CalendarResponse(
             dayOffCount = targetDayOff,
@@ -143,6 +138,7 @@ class CalendarService(
                     holidayCount = period.holidayCount,
                     dayOffCount = period.usedDayOffCount,
                     holidays = period.holidayNames.ifEmpty { listOf(DEFAULT_HOLIDAY_NAME) },
+                    holidayDateDetails = period.holidayDateDetails,
                     isSaved = savedPeriodKeys.contains(
                         buildPeriodKey(
                             startDate = period.start,
@@ -159,90 +155,18 @@ class CalendarService(
         userDayOff: Int,
         holidayMap: Map<LocalDate, PublicHoliday>,
         monthRangeCount: Int,
-        periodLimitPerMonth: Int
-    ): List<VacationCandidate> {
-        val candidates = mutableListOf<VacationCandidate>()
-        val searchWindow = userDayOff * 2 + 10
-
-        repeat(monthRangeCount) { monthOffset ->
-            val currentYearMonth = startYearMonth.plusMonths(monthOffset.toLong())
-            val startOfMonth = currentYearMonth.atDay(1)
-            val endOfMonth = currentYearMonth.atEndOfMonth()
-            val daysInMonth = ChronoUnit.DAYS.between(startOfMonth, endOfMonth).toInt() + 1
-            val monthlyCandidates = mutableListOf<VacationCandidate>()
-
-            for (dayIndex in 0 until daysInMonth) {
-                val currentStart = startOfMonth.plusDays(dayIndex.toLong())
-                var usedDayOffCount = 0
-                var currentEnd = currentStart
-                var holidayCount = 0
-                val holidayNames = linkedSetOf<String>()
-
-                val maxRange = (dayIndex + searchWindow).coerceAtMost(daysInMonth)
-                for (windowIndex in dayIndex until maxRange) {
-                    val date = startOfMonth.plusDays(windowIndex.toLong())
-                    val matchedHoliday = holidayMap[date]
-                    val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
-                    val isPublicHoliday = matchedHoliday != null
-                    val isHoliday = isWeekend || isPublicHoliday
-
-                    if (isHoliday) {
-                        holidayCount++
-                        if (matchedHoliday?.isActualHoliday == true) {
-                            holidayNames.add(matchedHoliday.name)
-                        }
-                    } else {
-                        if (usedDayOffCount < userDayOff) {
-                            usedDayOffCount++
-                        } else {
-                            break
-                        }
-                    }
-                    currentEnd = date
-                }
-
-                val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
-                if (totalDays > 0) {
-                    monthlyCandidates.add(
-                        VacationCandidate(
-                            start = currentStart,
-                            end = currentEnd,
-                            totalDays = totalDays,
-                            usedDayOffCount = usedDayOffCount,
-                            holidayCount = holidayCount,
-                            holidayNames = holidayNames.toList()
-                        )
-                    )
-                }
-            }
-
-            val selectedMonthlyCandidates = monthlyCandidates
-                .distinctBy { candidate -> buildPeriodKey(candidate.start, candidate.end) }
-                .sortedWith(
-                    compareByDescending<VacationCandidate> { it.totalDays }
-                        .thenBy { it.usedDayOffCount }
-                        .thenByDescending { it.holidayCount }
-                        .thenBy { it.start }
-                ).take(periodLimitPerMonth)
-            candidates.addAll(selectedMonthlyCandidates)
-        }
-        return candidates.distinctBy { candidate -> buildPeriodKey(candidate.start, candidate.end) }
+        periodLimitPerMonth: Int,
+        startDateCutoff: LocalDate
+    ): List<VacationRecommendationService.RecommendationPeriod> {
+        return vacationRecommendationService.findRecommendedPeriods(
+            startYearMonth = startYearMonth,
+            userDayOff = userDayOff,
+            holidayMap = holidayMap,
+            monthRangeCount = monthRangeCount,
+            periodLimitPerMonth = periodLimitPerMonth,
+            startDateCutoff = startDateCutoff
+        )
     }
-
-    private fun isOffDay(date: LocalDate, holidayMap: Map<LocalDate, PublicHoliday>): Boolean {
-        return date.dayOfWeek == DayOfWeek.SATURDAY ||
-               date.dayOfWeek == DayOfWeek.SUNDAY ||
-               holidayMap.containsKey(date)
-    }
-
-    private data class VacationCandidate(
-        val start: LocalDate,
-        val end: LocalDate,
-        val totalDays: Int,
-        val usedDayOffCount: Int,
-        val holidayCount: Int,
-        val holidayNames: List<String>
-    )
 
     private fun buildPeriodKey(startDate: LocalDate, endDate: LocalDate): String = "${startDate}_${endDate}"
 

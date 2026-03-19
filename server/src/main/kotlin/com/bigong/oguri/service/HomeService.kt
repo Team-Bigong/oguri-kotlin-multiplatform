@@ -10,9 +10,8 @@ import com.bigong.oguri.repository.PublicHolidayRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.DayOfWeek
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
+import java.time.YearMonth
 import kotlin.math.abs
 
 /**
@@ -24,7 +23,8 @@ class HomeService(
     private val destinationRepository: DestinationRepository,
     private val publicHolidayRepository: PublicHolidayRepository,
     private val savedRecommendationRepository: SavedRecommendationRepository,
-    private val memberService: MemberService
+    private val memberService: MemberService,
+    private val vacationRecommendationService: VacationRecommendationService
 ) {
     // 공휴일 데이터는 자주 바뀌지 않으므로 서버 메모리에 캐싱하여 성능을 높입니다.
     private var cachedHolidays: Map<LocalDate, PublicHoliday> = emptyMap()
@@ -40,6 +40,10 @@ class HomeService(
         const val LONG_TRIP_THRESHOLD = 7    // 7일 이상이면 장거리(유럽, 미국 등) 선호
         
         private val NUMBER_ONLY_REGEX = Regex("[^0-9]") // 비행시간 숫자 추출용 정규식
+        private const val HOME_RECOMMENDATION_MONTH_RANGE = 12
+        private const val HOME_PERIOD_LIMIT_PER_MONTH = 6
+        private const val HOME_TOP_RECOMMENDATION_LIMIT = 3
+        private const val DEFAULT_HOLIDAY_NAME = "주말"
     }
 
     /**
@@ -55,7 +59,7 @@ class HomeService(
 
     /**
      * 홈 화면 메인 API 로직
-     * 오늘부터 8개월 이내의 최적 연휴 Top 3를 찾고, 각각에 맞는 여행지를 추천합니다.
+     * 오늘 이후의 최적 연휴 Top 3를 찾고, 각각에 맞는 여행지를 추천합니다.
      */
     fun getHomeData(userCountry: String, memberId: String): List<RecommendPeriodResponse> {
         refreshHolidayCacheIfNeeded()
@@ -63,7 +67,7 @@ class HomeService(
         // 1. 사용자 정보 로드 (선호 연차 및 잔여 연차)
         val memberInfo = memberService.getDayOffInfo(memberId)
         val preferredDayOff = memberInfo.preferredDayOff
-        val remainingDayOff = memberInfo.remainingDayOff
+        val today = LocalDate.now()
         
         // 2. 사용자가 저장한 연휴 목록 조회
         val savedPeriods = savedRecommendationRepository.findAllByMemberId(memberId)
@@ -72,7 +76,15 @@ class HomeService(
         val allDestinations = destinationRepository.findAllWithCountryAndImages()
 
         // 4. 최적의 연차 사용 기간 탐색 (선호 연차 기준)
-        val bestPeriods = findTopVacationPeriods(preferredDayOff, holidayMap = cachedHolidays, limit = 3)
+        val bestPeriods = vacationRecommendationService.findRecommendedPeriods(
+            startYearMonth = YearMonth.from(today),
+            userDayOff = preferredDayOff,
+            holidayMap = cachedHolidays,
+            monthRangeCount = HOME_RECOMMENDATION_MONTH_RANGE,
+            periodLimitPerMonth = HOME_PERIOD_LIMIT_PER_MONTH,
+            startDateCutoff = today
+        )
+        val nonOverlappingTopPeriods = selectNonOverlappingTopPeriods(bestPeriods, HOME_TOP_RECOMMENDATION_LIMIT)
 
         // 5. 광고 데이터 구성 (더미)
         val advertisements = listOf(
@@ -82,20 +94,18 @@ class HomeService(
         )
 
         // 6. 각 추천 기간별로 응답 조립
-        return bestPeriods.mapIndexed { index, period ->
+        return nonOverlappingTopPeriods.mapIndexed { index, period ->
             // 해당 기간에 가장 가기 좋은 장소 7개 계산
             val recommendedPlaces = calculateRecommendedPlaces(period.start, allDestinations, userCountry, period.totalDays)
 
             val isSaved = savedPeriods.any { it.startDate == period.start && it.endDate == period.end }
-            val holidayNames = period.holidayObjects.filter { it.isActualHoliday }.map { it.name }.distinct()
-
             RecommendPeriodResponse(
                 rank = index + 1,
                 isSaved = isSaved,
                 startDate = period.start,
                 endDate = period.end,
-                holiday = if (holidayNames.isEmpty() && period.totalDays > 0) listOf("주말") else holidayNames,
-                dayOffCount = remainingDayOff,
+                holiday = period.holidayNames.ifEmpty { listOf(DEFAULT_HOLIDAY_NAME) },
+                dayOffCount = period.usedDayOffCount,
                 totalTripCount = period.totalDays,
                 places = recommendedPlaces,
                 advertisements = advertisements
@@ -194,69 +204,23 @@ class HomeService(
         return flightTime.replace(NUMBER_ONLY_REGEX, "").toDoubleOrNull() ?: 0.0
     }
 
-    /**
-     * 겹치지 않는 최적의 연휴 구간 Top 3 탐색
-     */
-    private fun findTopVacationPeriods(
-        userDayOff: Int,
-        holidayMap: Map<LocalDate, PublicHoliday>,
+    private fun selectNonOverlappingTopPeriods(
+        periods: List<VacationRecommendationService.RecommendationPeriod>,
         limit: Int
-    ): List<VacationPeriod> {
-        val now = LocalDate.now()
-        val endSearchDate = now.plusMonths(8)
-        val daysToSearch = ChronoUnit.DAYS.between(now, endSearchDate).toInt() + 1
-
-        val candidates = mutableListOf<VacationPeriod>()
-        val searchWindow = userDayOff * 2 + 10
-
-        // 슬라이딩 윈도우 방식으로 매일의 최적 휴가 구간 계산
-        for (i in 0 until daysToSearch) {
-            val currentStart = now.plusDays(i.toLong())
-            var usedDayOff = 0
-            var currentEnd = currentStart
-            val holidayIndicesInPeriod = mutableListOf<PublicHoliday>()
-
-            val maxRange = if (i + searchWindow < daysToSearch) i + searchWindow else daysToSearch
-            for (j in i until maxRange) {
-                val date = now.plusDays(j.toLong())
-                if (!isOffDay(date, holidayMap)) {
-                    if (usedDayOff < userDayOff) usedDayOff++ else break
-                } else {
-                    holidayMap[date]?.let { holidayIndicesInPeriod.add(it) }
-                }
-                currentEnd = date
+    ): List<VacationRecommendationService.RecommendationPeriod> {
+        val selectedPeriods = mutableListOf<VacationRecommendationService.RecommendationPeriod>()
+        for (period in periods) {
+            if (selectedPeriods.size >= limit) {
+                break
             }
-            
-            val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
-            if (totalDays > 0) {
-                candidates.add(VacationPeriod(currentStart, currentEnd, totalDays, holidayIndicesInPeriod.toList()))
+            val isOverlapping = selectedPeriods.any { selected ->
+                !selected.end.isBefore(period.start) && !period.end.isBefore(selected.start)
+            }
+            if (!isOverlapping) {
+                selectedPeriods.add(period)
             }
         }
-
-        // 정렬 및 중복 구간 필터링
-        val sortedCandidates = candidates.sortedWith(compareByDescending<VacationPeriod> { it.totalDays }.thenBy { it.start })
-        val selected = mutableListOf<VacationPeriod>()
-        for (candidate in sortedCandidates) {
-            if (selected.size >= limit) break
-            if (selected.none { it.overlapsWith(candidate) }) {
-                selected.add(candidate)
-            }
-        }
-        return selected
+        return selectedPeriods
     }
 
-    private fun isOffDay(date: LocalDate, holidayMap: Map<LocalDate, PublicHoliday>): Boolean {
-        return date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY || holidayMap.containsKey(date)
-    }
-
-    data class VacationPeriod(
-        val start: LocalDate,
-        val end: LocalDate,
-        val totalDays: Int,
-        val holidayObjects: List<PublicHoliday>
-    ) {
-        fun overlapsWith(other: VacationPeriod): Boolean {
-            return !this.end.isBefore(other.start) && !other.end.isBefore(this.start)
-        }
-    }
 }
