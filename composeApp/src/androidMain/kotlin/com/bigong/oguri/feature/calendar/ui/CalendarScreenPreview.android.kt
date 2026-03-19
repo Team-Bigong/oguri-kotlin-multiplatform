@@ -1,32 +1,32 @@
 package com.bigong.oguri.feature.calendar.ui
 
 import androidx.compose.runtime.Composable
+import androidx.paging.PagingData
+import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.compose.ui.tooling.preview.Preview
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.domain.model.CalendarHoliday
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.LocalDate
 
 @Preview(showBackground = true)
 @Composable
 private fun CalendarScreenPreview() {
+    val pagedPeriodCards = flowOf(PagingData.from(previewPeriodCards())).collectAsLazyPagingItems()
     OguriTheme {
         CalendarScreen(
             calendarUiState =
                 CalendarUiState(
-                    isLoading = false,
-                    periodCards = previewPeriodCards(),
                     expandedPeriodId = 1L,
                     selectedDateByPeriodId = mapOf(1L to LocalDate.parse("2026-02-28")),
-                    hasMorePage = false,
                 ),
+            pagedPeriodCards = pagedPeriodCards,
+            savedStateByPeriodKey = emptyMap(),
             onLeaveDaysChanged = {},
             onCardClick = {},
             onSaveToggleClick = {},
             onDetailClick = {},
-            onLoadNextPage = {},
-            onRetryClick = {},
         )
     }
 }
@@ -42,11 +42,6 @@ private fun previewPeriodCards(): List<CalendarPeriodCardUiModel> =
             dayOffCount = 2,
             totalTripCount = 5,
             holidayNames = listOf("삼일절", "대체휴일"),
-            holidays =
-                listOf(
-                    CalendarHoliday(LocalDate.parse("2026-03-01"), "삼일절"),
-                    CalendarHoliday(LocalDate.parse("2026-03-02"), "대체휴일"),
-                ),
         ),
         CalendarPeriodCardUiModel(
             id = 2L,
@@ -57,6 +52,5 @@ private fun previewPeriodCards(): List<CalendarPeriodCardUiModel> =
             dayOffCount = 2,
             totalTripCount = 4,
             holidayNames = listOf("주말"),
-            holidays = listOf(CalendarHoliday(LocalDate.parse("2026-03-08"), "주말")),
         ),
     )

@@ -7,8 +7,12 @@ import kotlinx.serialization.Serializable
 data class CalendarRecommendationResponse(
     @SerialName("dayOffCount")
     val dayOffCount: Int,
-    @SerialName("bestPeriods")
-    val bestPeriods: List<CalendarPeriodResponse>,
-    @SerialName("holidays")
-    val holidays: List<CalendarHolidayResponse>,
+    @SerialName("page")
+    val page: Int,
+    @SerialName("size")
+    val size: Int,
+    @SerialName("hasNext")
+    val hasNext: Boolean,
+    @SerialName("periods")
+    val periods: List<CalendarPeriodResponse>,
 )

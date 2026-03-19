@@ -6,4 +6,9 @@ data class CalendarPeriod(
     val id: Long,
     val startDate: LocalDate,
     val endDate: LocalDate,
+    val totalTripCount: Int,
+    val holidayCount: Int,
+    val dayOffCount: Int,
+    val holidayNames: List<String>,
+    val isSaved: Boolean,
 )

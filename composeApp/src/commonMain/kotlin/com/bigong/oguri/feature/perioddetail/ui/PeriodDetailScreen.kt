@@ -14,8 +14,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material3.Text
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,7 +30,9 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceCard
+import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.core.util.extension.getStyledText
+import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailSkeletonContent
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
@@ -54,6 +57,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun PeriodDetailScreen(
     periodDetailUiState: PeriodDetailUiState,
+    pagedPlaces: LazyPagingItems<Place>,
     onRetryClick: () -> Unit,
     onBackClick: () -> Unit,
     onShareClick: () -> Unit,
@@ -61,6 +65,12 @@ fun PeriodDetailScreen(
     onPlaceClick: (Long) -> Unit,
 ) {
     val periodDetail = periodDetailUiState.periodDetail
+    val isInitialLoading =
+        periodDetail == null &&
+            (periodDetailUiState.isLoading || pagedPlaces.loadState.refresh is LoadState.Loading)
+    val isInitialError =
+        periodDetail == null &&
+            pagedPlaces.loadState.refresh is LoadState.Error
 
     Column(
         modifier =
@@ -78,15 +88,21 @@ fun PeriodDetailScreen(
         )
 
         when {
-            periodDetailUiState.isLoading -> {
+            isInitialLoading -> {
                 PeriodDetailSkeletonContent(
                     modifier = Modifier.weight(weight = 1f),
                 )
             }
 
-            periodDetailUiState.isError || periodDetail == null -> {
+            isInitialError -> {
                 NetworkErrorRetryContent(
                     onRetryClick = onRetryClick,
+                    modifier = Modifier.weight(weight = 1f),
+                )
+            }
+
+            periodDetail == null -> {
+                PeriodDetailSkeletonContent(
                     modifier = Modifier.weight(weight = 1f),
                 )
             }
@@ -175,7 +191,7 @@ fun PeriodDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(18.dp))
                     }
-                    if (periodDetail.places.isEmpty()) {
+                    if (pagedPlaces.itemCount == 0 && pagedPlaces.loadState.append !is LoadState.Loading) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Text(
                                 text = stringResource(Res.string.period_detail_empty_places_hint),
@@ -184,16 +200,29 @@ fun PeriodDetailScreen(
                             )
                         }
                     } else {
-                        itemsIndexed(
-                            items = periodDetail.places,
-                            key = { _, place -> place.id },
-                        ) { _, place ->
-                            PlaceCard(
-                                place = place,
-                                modifier = Modifier.fillMaxWidth(),
-                                onClick = { onPlaceClick(place.id) },
+                        for (index in 0 until pagedPlaces.itemCount) {
+                            val place: Place = pagedPlaces[index] ?: continue
+                            item(
+                                key = place.id,
+                                span = { GridItemSpan(1) },
+                            ) {
+                                PlaceCard(
+                                    place = place,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    onClick = { onPlaceClick(place.id) },
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
+                        }
+                    }
+                    if (pagedPlaces.loadState.append is LoadState.Loading) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            SkeletonBox(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(120.dp),
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
                         }
                     }
                 }

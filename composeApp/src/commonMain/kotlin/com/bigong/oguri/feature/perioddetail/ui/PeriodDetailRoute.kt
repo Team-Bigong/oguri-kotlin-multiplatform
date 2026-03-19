@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.bigong.oguri.core.deeplink.buildPeriodDetailDeepLink
 import com.bigong.oguri.core.platform.shareText
 import dev.zacsweers.metro.Provider
@@ -24,6 +25,7 @@ fun PeriodDetailRoute(
             periodDetailViewModelProvider()
         }
     val periodDetailUiState = periodDetailViewModel.uiState.collectAsStateWithLifecycle().value
+    val pagedPlaces = periodDetailViewModel.pagedPlaces.collectAsLazyPagingItems()
     val sharePeriodDetailMessageTemplate = stringResource(Res.string.share_period_detail_message)
 
     LaunchedEffect(startDate, endDate) {
@@ -35,6 +37,7 @@ fun PeriodDetailRoute(
 
     PeriodDetailScreen(
         periodDetailUiState = periodDetailUiState,
+        pagedPlaces = pagedPlaces,
         onRetryClick = {
             periodDetailViewModel.loadPeriodDetail(
                 startDate = startDate,

@@ -69,6 +69,7 @@ class MyPageViewModel(
                     currentUiState.copy(
                         isLoading = false,
                         isError = false,
+                        isGuestMode = false,
                         myPageInfo = myPageInfo,
                     )
                 }
@@ -78,9 +79,10 @@ class MyPageViewModel(
                         currentUiState.copy(
                             isLoading = false,
                             isError = false,
+                            isGuestMode = true,
+                            myPageInfo = null,
                         )
                     }
-                    _sideEffect.tryEmit(MyPageSideEffect.LoginRequired)
                     return@onFailure
                 }
                 _uiState.update { currentUiState ->
@@ -88,11 +90,13 @@ class MyPageViewModel(
                         currentUiState.copy(
                             isLoading = false,
                             isError = false,
+                            isGuestMode = false,
                         )
                     } else {
                         currentUiState.copy(
                             isLoading = false,
                             isError = true,
+                            isGuestMode = false,
                             myPageInfo = null,
                         )
                     }

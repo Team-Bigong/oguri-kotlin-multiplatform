@@ -64,6 +64,44 @@ private fun MyPageScreenPreview() {
             onDismissWithdrawDialog = {},
             onConfirmWithdraw = {},
             onLogoutClick = {},
+            onGuestLoginClick = {},
+            onDismissLogoutDialog = {},
+            onConfirmLogout = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 780)
+@Composable
+private fun MyPageGuestScreenPreview() {
+    OguriTheme {
+        MyPageScreen(
+            myPageUiState =
+                MyPageUiState(
+                    isLoading = false,
+                    isGuestMode = true,
+                ),
+            onRetryClick = {},
+            onEditLeaveDaysClick = {},
+            onDismissLeaveDaysBottomSheet = {},
+            onSubmitLeaveDays = { _, _ -> },
+            onDeleteScheduleClick = {},
+            onSelectedPeriodClick = { _, _ -> },
+            onDismissDeleteScheduleDialog = {},
+            onConfirmDeleteSchedule = {},
+            onDeleteSavedPlaceClick = {},
+            onSavedPlaceClick = {},
+            onDismissDeleteSavedPlaceDialog = {},
+            onConfirmDeleteSavedPlace = {},
+            onSuggestClick = {},
+            onTermsOfServiceClick = {},
+            onPrivacyPolicyClick = {},
+            onWithdrawClick = {},
+            onWithdrawInputChange = { _, _ -> },
+            onDismissWithdrawDialog = {},
+            onConfirmWithdraw = {},
+            onLogoutClick = {},
+            onGuestLoginClick = {},
             onDismissLogoutDialog = {},
             onConfirmLogout = {},
         )

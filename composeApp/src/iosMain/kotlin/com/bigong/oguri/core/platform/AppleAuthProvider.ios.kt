@@ -1,5 +1,9 @@
 package com.bigong.oguri.core.platform
 
+import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.readBytes
+import kotlinx.cinterop.reinterpret
 import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.AuthenticationServices.ASAuthorization
 import platform.AuthenticationServices.ASAuthorizationAppleIDCredential
@@ -64,6 +68,7 @@ private class AppleAuthorizationDelegate(
 ) : NSObject(),
     ASAuthorizationControllerDelegateProtocol,
     ASAuthorizationControllerPresentationContextProvidingProtocol {
+    @OptIn(ExperimentalForeignApi::class)
     override fun authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithAuthorization: ASAuthorization,
@@ -75,8 +80,16 @@ private class AppleAuthorizationDelegate(
                     return
                 }
         val token =
-            appleCredential.user
-        if (token.isBlank()) {
+            appleCredential.identityToken
+                ?.let { identityTokenData ->
+                    val rawBytePointer = identityTokenData.bytes ?: return@let null
+                    val identityTokenBytes =
+                        rawBytePointer
+                            .reinterpret<ByteVar>()
+                            .readBytes(identityTokenData.length.toInt())
+                    identityTokenBytes.decodeToString()
+                }?.takeIf { identityToken -> identityToken.isNotBlank() }
+        if (token == null) {
             onFailed(IllegalStateException("Apple identity token is empty."))
             return
         }

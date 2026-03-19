@@ -3,7 +3,6 @@ package com.bigong.oguri.data.remote
 import com.bigong.oguri.core.network.DEBUG_BASE_URL
 import com.bigong.oguri.data.remote.model.response.CalendarPeriodDetailResponse
 import com.bigong.oguri.data.remote.model.response.CalendarRecommendationResponse
-import com.bigong.oguri.data.remote.model.response.MemberDayOffResponse
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,21 +14,12 @@ class KtorCalendarRemoteDataSource(
     private val httpClient: HttpClient,
     private val authRequestExecutor: AuthRequestExecutor,
 ) : CalendarRemoteDataSource {
-    override suspend fun getPreferredDayOffCount(): Int {
-        val requestUrl = "$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH"
-        val response =
-            authRequestExecutor.execute {
-                httpClient
-                    .get(requestUrl)
-                    .body<MemberDayOffResponse>()
-            }
-        return response.preferredDayOff
-    }
-
     override suspend fun getCalendarRecommendationResponse(
         year: Int,
         month: Int,
-        dayOffCount: Int,
+        dayOffCount: Int?,
+        page: Int,
+        size: Int,
     ): CalendarRecommendationResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_API_PATH"
         val yearMonth = "${year}-${month.toString().padStart(2, '0')}"
@@ -37,7 +27,11 @@ class KtorCalendarRemoteDataSource(
             httpClient
                 .get(requestUrl) {
                     parameter(CALENDAR_YEAR_MONTH_QUERY_NAME, yearMonth)
-                    parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, dayOffCount)
+                    dayOffCount?.let { resolvedDayOffCount ->
+                        parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, resolvedDayOffCount)
+                    }
+                    parameter(CALENDAR_PAGE_QUERY_NAME, page)
+                    parameter(CALENDAR_SIZE_QUERY_NAME, size)
                 }.body()
         }
     }
@@ -46,6 +40,8 @@ class KtorCalendarRemoteDataSource(
         startDate: String,
         endDate: String,
         userCountry: String,
+        page: Int,
+        size: Int,
     ): CalendarPeriodDetailResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_DETAIL_API_PATH"
         return authRequestExecutor.execute {
@@ -54,6 +50,8 @@ class KtorCalendarRemoteDataSource(
                     parameter(CALENDAR_DETAIL_START_DATE_QUERY_NAME, startDate)
                     parameter(CALENDAR_DETAIL_END_DATE_QUERY_NAME, endDate)
                     parameter(CALENDAR_DETAIL_USER_COUNTRY_QUERY_NAME, userCountry)
+                    parameter(CALENDAR_PAGE_QUERY_NAME, page)
+                    parameter(CALENDAR_SIZE_QUERY_NAME, size)
                 }.body()
         }
     }
@@ -61,9 +59,10 @@ class KtorCalendarRemoteDataSource(
     private companion object {
         private const val CALENDAR_API_PATH = "/api/v1/calendar"
         private const val CALENDAR_DETAIL_API_PATH = "/api/v1/calendar/detail"
-        private const val MEMBER_DAY_OFF_API_PATH = "/api/v1/members/day-off"
         private const val CALENDAR_YEAR_MONTH_QUERY_NAME = "yearMonth"
         private const val CALENDAR_DAY_OFF_COUNT_QUERY_NAME = "dayOffCount"
+        private const val CALENDAR_PAGE_QUERY_NAME = "page"
+        private const val CALENDAR_SIZE_QUERY_NAME = "size"
         private const val CALENDAR_DETAIL_START_DATE_QUERY_NAME = "startDate"
         private const val CALENDAR_DETAIL_END_DATE_QUERY_NAME = "endDate"
         private const val CALENDAR_DETAIL_USER_COUNTRY_QUERY_NAME = "userCountry"
