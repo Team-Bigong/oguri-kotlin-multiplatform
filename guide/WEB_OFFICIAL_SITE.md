@@ -5,14 +5,14 @@
 - 앱 내 UX 라이팅 톤(`...해볼까요?`, `부담 없는 제안형`)을 웹에서도 일관되게 사용한다.
 
 ## 반영된 구조
-- Floating Header: 상단 브랜드 + 스토어 진입 버튼
-- Hero: 강한 메시지 + CTA + 보조 통계 카드 + 레이어드 비주얼
-- Value Cards: 핵심 가치 3개 요약
-- Story Section: Why Oguri 설명 + 이미지
-- Review Section: 사용자 후기 카드
-- FAQ Section: 자주 묻는 질문
-- Final CTA: 설치 유도 재강조
-- Mobile Sticky CTA: 모바일 하단 고정 설치 버튼
+- Top Navigation: 브랜드 + 스토어 CTA
+- Hero: 풀블리드 인트로 + 대형 카피 + CTA
+- Message Band: 핵심 가치 문장 강조
+- Immersive Preview: 3개 화면 프리뷰(중앙 강조형)
+- Experience Timeline: 카드 대신 단계형 스토리 흐름
+- Share Flow: 공유 링크 동작 설명 + 비주얼
+- FAQ: 아코디언
+- Final CTA + Mobile Install Bar
 
 ## UX 라이팅 기준
 - 참고 문자열 리소스:
