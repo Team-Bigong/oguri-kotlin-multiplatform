@@ -53,7 +53,8 @@
     <string name="place_detail_menu_unsave">저장 삭제하기</string>
     <string name="place_detail_experience_detail">제휴 페이지로 이동</string>
 
-    <string name="login_apple_with_account">Apple 계정으로 로그인</string>
+    <string name="login_apple_with_account">애플 계정으로 로그인</string>
+    <string name="login_google_with_account">구글 계정으로 로그인</string>
     <string name="login_kakao_with_account">카카오 계정으로 로그인</string>
     <string name="login_guest_browse">로그인 없이 둘러보기</string>
     <string name="login_required_title">로그인이 필요한 기능이에요</string>

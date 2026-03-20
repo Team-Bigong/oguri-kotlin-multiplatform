@@ -54,6 +54,7 @@
     <string name="place_detail_experience_detail">Go to partner page</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
+    <string name="login_google_with_account">Sign in with Google account</string>
     <string name="login_kakao_with_account">Sign in with Kakao account</string>
     <string name="login_guest_browse">Browse without signing in</string>
     <string name="login_required_title">This feature requires login</string>

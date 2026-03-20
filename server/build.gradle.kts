@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.kotlin.reflect)
     implementation(libs.springdoc.openapi)
     implementation(libs.jjwt.api)
+    implementation(libs.google.api.client)
     runtimeOnly(libs.jjwt.impl)
     runtimeOnly(libs.jjwt.jackson)
     implementation(libs.flyway.core)

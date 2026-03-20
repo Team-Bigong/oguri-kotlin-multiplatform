@@ -21,6 +21,9 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
     @get:Input
     abstract val kakaoNativeAppKey: Property<String>
 
+    @get:Input
+    abstract val googleWebClientId: Property<String>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -35,6 +38,7 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
             const val DEBUG_BASE_URL: String = "${debugBaseUrl.get()}"
             const val RELEASE_BASE_URL: String = "${releaseBaseUrl.get()}"
             const val KAKAO_NATIVE_APP_KEY: String = "${kakaoNativeAppKey.get()}"
+            const val GOOGLE_WEB_CLIENT_ID: String = "${googleWebClientId.get()}"
             """.trimIndent(),
         )
     }
@@ -59,6 +63,7 @@ val releaseBaseUrlValue: String =
         .trim()
         .trimEnd('/')
 val kakaoNativeAppKeyValue: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
+val googleWebClientIdValue: String = localProperties.getProperty("google.web.client.id")?.trim().orEmpty()
 val admobAndroidAppIdValue: String = "ca-app-pub-2833810411143763~1974881745"
 
 val generatedNetworkConfigDirectory =
@@ -74,6 +79,7 @@ val generateNetworkConfigTask =
         debugBaseUrl.set(debugBaseUrlValue)
         releaseBaseUrl.set(releaseBaseUrlValue)
         kakaoNativeAppKey.set(kakaoNativeAppKeyValue)
+        googleWebClientId.set(googleWebClientIdValue)
         outputFile.set(generatedNetworkConfigFile)
     }
 
@@ -112,6 +118,9 @@ kotlin {
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kakao.android.user)
             implementation(libs.kakao.android.share)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.google.android.googleid)
             implementation(libs.google.mobile.ads)
             implementation(libs.ktor.client.okhttp)
         }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.platform.loginWithApple
+import com.bigong.oguri.core.platform.loginWithGoogle
 import com.bigong.oguri.core.platform.loginWithKakao
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -54,6 +55,20 @@ fun LoginRoute(
     }
 
     LoginScreen(
+        onGoogleLoginClick = {
+            if (loginUiState.isLoading) {
+                return@LoginScreen
+            }
+            coroutineScope.launch {
+                val googleLoginResult = loginWithGoogle()
+                val googleIdentityToken = googleLoginResult.getOrNull()?.trim().orEmpty()
+                if (googleIdentityToken.isBlank()) {
+                    loginViewModel.onLoginFailed()
+                    return@launch
+                }
+                loginViewModel.loginWithGoogleIdentityToken(identityToken = googleIdentityToken)
+            }
+        },
         onKakaoLoginClick = {
             if (loginUiState.isLoading) {
                 return@LoginScreen
