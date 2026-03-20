@@ -43,6 +43,16 @@ web/
 - `PUT /api/admin/v1/destinations/{destinationId}`
 - `DELETE /api/admin/v1/destinations/{destinationId}`
 
+#### 장소 요청/응답 스펙(요약)
+- `POST/PUT /api/admin/v1/destinations`의 body에 `experiences`를 포함한다.
+- `experiences` 항목 필드:
+  - `title`: 액티비티 제목
+  - `description`: 액티비티 설명
+  - `thumbnailUrl`: 액티비티 썸네일 URL
+  - `link`: 외부 이동 링크
+  - `sortOrder`: 정렬 순서(1 이상)
+- `GET /api/admin/v1/destinations` 응답에도 `experiences`가 포함된다.
+
 ### 사용자
 - `GET /api/admin/v1/members`
 - `POST /api/admin/v1/members`
