@@ -17,15 +17,15 @@ const privacyPolicyUrl = "https://wealthy-clematis-4a5.notion.site/31d5bca0ac228
 const featureItems = [
   {
     title: "연차 조합 추천",
-    description: "공휴일과 주말 사이, 더 길게 쉬는 조합을 먼저 골라 보여줘요."
+    description: "공휴일과 주말 사이\n더 길게 쉴 수 있는 조합을 먼저 보여줘요"
   },
   {
-    title: "캘린더 탐색",
-    description: "연차 일수를 바꿔보며 내 일정에 맞는 조합을 빠르게 비교할 수 있어요."
+    title: "지금 가기 좋은 여행지",
+    description: "연차를 바꿔보면서\n내 일정에 맞는 조합을 쉽게 비교할 수 있어요"
   },
   {
-    title: "여행지 큐레이션",
-    description: "지금 시기에 보기 좋은 여행지를 연휴 흐름에 맞춰 이어서 추천해요."
+    title: "저장하고 다시 보기",
+    description: "지금 가기 좋은 여행지를\n연휴 흐름에 맞춰 이어서 보여줘요"
   }
 ]
 
@@ -53,8 +53,8 @@ const frequentlyAskedQuestions = [
     answer: "연차와 공휴일 조합, 그리고 시기 맞춤 여행지를 한 흐름으로 추천해주는 앱이에요."
   },
   {
-    question: "공유 링크는 어떻게 열리나요?",
-    answer: "앱이 설치되어 있으면 바로 앱으로 열리고, 설치 전이라면 스토어로 자연스럽게 이어질 수 있어요."
+    question: "어떤 상황에서 오구리를 쓰면 좋아요?",
+    answer: "연차 일수를 정하기 어렵거나, 지금 시기에 맞는 여행지를 빠르게 찾고 싶을 때 가장 유용해요."
   },
   {
     question: "어디서 설치할 수 있나요?",
@@ -88,7 +88,7 @@ export const OfficialHomePage = (): React.JSX.Element => {
         <div className="contentContainer topNavigationRow">
           <p className="brandTitle">
             <img src="/assets/official/app-icon.png" alt="" className="brandIconImage" />
-            <span>오구리</span>
+            <span className="brandTitleText">오구리</span>
           </p>
           <nav className="topNavigationLinks">
             <a href="#features">기능</a>
@@ -111,13 +111,16 @@ export const OfficialHomePage = (): React.JSX.Element => {
               쉬어볼까요?
             </h1>
             <p className="heroDescription">
-              오구리는 연차를 가장 알차게 쓰는 방법부터
-              지금 가기 좋은 여행지까지 부담 없이 이어서 보여줘요.
+              연차를 가장 알차게 쓰는 방법부터
+              <br />
+              지금 가기 좋은 여행지까지,
+              <br />
+              부담 없이 이어서 보여줘요
             </p>
             <div className="heroBulletWrap">
               <span>연차 조합 추천</span>
-              <span>시기 맞춤 여행지</span>
-              <span>저장 및 공유</span>
+              <span>지금 가기 좋은 여행지</span>
+              <span>저장하고 다시 보기</span>
             </div>
             <StoreButtons className="storeButtonsOnDark" />
           </div>
@@ -141,7 +144,11 @@ export const OfficialHomePage = (): React.JSX.Element => {
           <div className="sectionHeader">
             <p className="sectionEyebrow">CORE FLOW</p>
             <h2 className="sectionTitle">복잡하지 않게, 한 흐름으로</h2>
-            <p className="sectionDescription">추천 확인부터 저장까지, 필요한 순서대로 이어져요.</p>
+            <p className="sectionDescription">
+              추천부터 저장까지
+              <br />
+              필요한 순서대로 이어져요
+            </p>
           </div>
           <div className="featureGrid">
             {featureItems.map((featureItem, index) => (
@@ -159,10 +166,11 @@ export const OfficialHomePage = (): React.JSX.Element => {
         <div className="contentContainer previewSectionInner">
           <div className="previewCopyWrap">
             <p className="sectionEyebrow">APP PREVIEW</p>
-            <h2 className="sectionTitle">오구리 화면을 먼저 구경해볼까요?</h2>
+            <h2 className="sectionTitle">오구리 화면을 먼저 살펴보세요</h2>
             <p className="sectionDescription">
-              오구리에서는 연차 조합 확인부터 저장 일정 관리까지
-              한 흐름으로 이어서 사용할 수 있어요.
+              연차 조합 확인부터 저장까지
+              <br />
+              한 흐름으로 이어서 사용할 수 있어요
             </p>
           </div>
           <div className="previewGrid">
@@ -199,8 +207,12 @@ export const OfficialHomePage = (): React.JSX.Element => {
       <section className="callToActionSection" id="download">
         <div className="contentContainer">
           <div className="callToActionPanel">
-            <h2>딱 맞는 휴식 조합, 오구리에서 시작해볼까요?</h2>
-            <p>앱에서 더 자세한 추천과 저장 기능을 바로 확인해보세요.</p>
+            <h2>딱 맞는 휴식 조합, 오구리에서 시작해보세요</h2>
+            <p>
+              앱에서 더 자세한 추천과
+              <br />
+              저장 기능을 바로 확인할 수 있어요
+            </p>
             <StoreButtons className="storeButtonsOnBright" />
           </div>
         </div>
@@ -208,12 +220,12 @@ export const OfficialHomePage = (): React.JSX.Element => {
 
       <footer className="footerSection">
         <div className="contentContainer footerRow">
-          <div>
-            <p className="footerBrandTitle">
-              <img src="/assets/official/app-icon.png" alt="" className="footerBrandIconImage" />
-              <span>오구리</span>
-            </p>
-            <p className="footerBrandSubTitle">연차 조합의 기술</p>
+          <div className="footerBrandWrap">
+            <img src="/assets/official/app-icon.png" alt="" className="footerBrandIconImage" />
+            <div className="footerBrandTextWrap">
+              <p className="footerBrandTitle">오구리</p>
+              <p className="footerBrandSubTitle">연차 조합의 기술</p>
+            </div>
           </div>
           <div className="footerLinkRow">
             <a href={termsOfServiceUrl} target="_blank" rel="noreferrer">서비스 이용약관</a>
