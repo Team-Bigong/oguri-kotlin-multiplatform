@@ -58,6 +58,7 @@ import dev.zacsweers.metro.createGraphFactory
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
+import oguri.composeapp.generated.resources.snackbar_login_success
 import oguri.composeapp.generated.resources.snackbar_logout_completed
 import oguri.composeapp.generated.resources.snackbar_withdraw_completed
 import org.jetbrains.compose.resources.painterResource
@@ -107,6 +108,7 @@ fun NavDisplay(
             }
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage = stringResource(Res.string.navigation_back_press_exit_message)
+        val loginSuccessMessage = stringResource(Res.string.snackbar_login_success)
         val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
         val withdrawCompletedMessage = stringResource(Res.string.snackbar_withdraw_completed)
         val incomingDeepLinkUrl =
@@ -197,6 +199,14 @@ fun NavDisplay(
                         navigator = navigator,
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
+                        onLoginSucceeded = {
+                            coroutineScope.launch {
+                                snackbarHostState.showOguriSnackbar(
+                                    message = loginSuccessMessage,
+                                    type = OguriSnackBarType.SUCCESS,
+                                )
+                            }
+                        },
                         onLoggedOut = {
                             authSessionVersion += 1
                             navigator.navigateToLoginAndClearBackStack()

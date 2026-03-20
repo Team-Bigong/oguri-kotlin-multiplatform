@@ -78,9 +78,10 @@ class DefaultAuthRepository(
                     return refreshedTokenState
                 }
             }
+            AuthTokenStore.clearTokens()
             AutoLoginState(
-                isLoggedIn = true,
-                isOnboardingCompleted = true,
+                isLoggedIn = false,
+                isOnboardingCompleted = false,
             )
         }
     }

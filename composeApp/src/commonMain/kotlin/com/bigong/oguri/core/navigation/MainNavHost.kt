@@ -41,6 +41,7 @@ fun MainNavHost(
     navigator: MainNavigator,
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
+    onLoginSucceeded: () -> Unit,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
 ) {
@@ -116,6 +117,7 @@ fun MainNavHost(
             LoginRoute(
                 loginViewModelProvider = appGraph.loginViewModelProvider,
                 snackbarHostState = snackbarHostState,
+                onLoginSucceeded = onLoginSucceeded,
                 onLoginCompleted = { isOnboardingCompleted ->
                     if (isOnboardingCompleted) {
                         navigator.navigateToHomeFromLogin()
