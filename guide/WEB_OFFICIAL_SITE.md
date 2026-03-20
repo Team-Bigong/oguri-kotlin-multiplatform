@@ -5,14 +5,13 @@
 - 앱 내 UX 라이팅 톤(`...해볼까요?`, `부담 없는 제안형`)을 웹에서도 일관되게 사용한다.
 
 ## 반영된 구조
-- Top Navigation: 브랜드 + 스토어 CTA
-- Hero: 풀블리드 인트로 + 대형 카피 + CTA
-- Message Band: 핵심 가치 문장 강조
-- Immersive Preview: 3개 화면 프리뷰(중앙 강조형)
-- Experience Timeline: 카드 대신 단계형 스토리 흐름
-- Share Flow: 공유 링크 동작 설명 + 비주얼
+- Sticky Navigation: 브랜드 + 섹션 앵커 + 스토어 CTA
+- Dark Hero: 강한 대비의 대형 카피 + 이중 디바이스 비주얼
+- Highlight Band: 핵심 한 줄 메시지 강조
+- Feature Grid: 3단계 핵심 기능
+- Preview Split Section: 설명 + 실제 화면 카드
 - FAQ: 아코디언
-- Final CTA + Mobile Install Bar
+- Final CTA + Footer
 
 ## UX 라이팅 기준
 - 참고 문자열 리소스:
@@ -47,7 +46,9 @@
 - 참고 사이트:
   - `https://www.websoso.kr/`
   - `https://hearit-landing.pages.dev/`
+  - `https://perfect-break-finder.lovable.app`
 - 반영 의도:
   - 첫 화면에서 즉시 CTA가 보이는 구조
-  - 카드 중심 정보 밀도와 섹션 리듬 강화
-  - 스크린샷/리뷰/FAQ를 이용한 신뢰도 보강
+  - Hero/Feature/Preview/CTA/Footer의 명확한 랜딩 흐름
+  - 다크 히어로와 라이트 본문 대비로 임팩트 강화
+  - 문구는 오구리 앱 `strings.xml` 톤(제안형, 부담 없는 문장) 유지

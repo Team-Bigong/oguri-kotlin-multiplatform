@@ -1,497 +1,590 @@
-@import url("https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/static/woff2/SUIT.css");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap");
 
-.officialPage {
-  --ink-strong: #10243f;
-  --ink-default: #294765;
-  --ink-muted: #607b98;
-  --line-soft: #ccdcf5;
-  --primary-a: #1f6ddd;
-  --primary-b: #1fa696;
+.landingPage {
   min-height: 100%;
-  padding: 22px 20px 120px;
-  color: var(--ink-default);
-  font-family: "SUIT Variable", "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  background:
-    radial-gradient(circle at 8% -8%, #d9e9ff 0%, transparent 38%),
-    radial-gradient(circle at 94% 2%, #d7fff2 0%, transparent 30%),
-    linear-gradient(180deg, #e9f2ff 0%, #eaf8f4 100%);
+  background: #f7fbff;
+  color: #162a46;
+  font-family: "Noto Sans KR", sans-serif;
 }
 
-.topNavigationBar,
-.heroSection,
-.messageBandSection,
-.immersivePreviewSection,
-.experienceSection,
-.shareFlowSection,
-.questionSection,
-.finalCallSection {
-  width: min(1140px, 100%);
+.contentContainer {
+  width: min(1180px, calc(100% - 48px));
   margin: 0 auto;
 }
 
 .topNavigationBar {
   position: sticky;
-  top: 12px;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 16px;
-  padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.66);
+  top: 0;
+  z-index: 30;
   backdrop-filter: blur(8px);
+  background: rgba(12, 20, 36, 0.72);
+  border-bottom: 1px solid rgba(191, 213, 242, 0.2);
+}
+
+.topNavigationRow {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
 }
 
 .brandTitle {
   margin: 0;
-  color: #184f9e;
-  font-size: 14px;
-  letter-spacing: 0.12em;
+  color: #f1f7ff;
+  font-size: 16px;
+  letter-spacing: 0.08em;
   font-weight: 800;
 }
 
-.topNavigationActionRow {
+.topNavigationLinks {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+
+.topNavigationLinks a {
+  text-decoration: none;
+  color: #c6d8f3;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.topStoreButtons {
   display: flex;
   gap: 8px;
 }
 
-.topNavigationActionRow a {
+.topStoreButtons a {
   text-decoration: none;
   border-radius: 10px;
-  border: 1px solid #b8ccec;
-  background: #f8fbff;
-  color: #1c4f99;
-  font-size: 13px;
-  font-weight: 700;
   padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid #4f6282;
+  color: #e5f0ff;
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .heroSection {
   position: relative;
-  margin-top: 16px;
-  border-radius: 30px;
+  min-height: calc(100vh - 64px);
+  background: radial-gradient(circle at 75% 15%, rgba(65, 105, 255, 0.32) 0%, rgba(65, 105, 255, 0) 40%),
+    radial-gradient(circle at 20% 85%, rgba(31, 171, 145, 0.24) 0%, rgba(31, 171, 145, 0) 40%),
+    linear-gradient(160deg, #0f1728 0%, #13233b 50%, #102030 100%);
   overflow: hidden;
-  border: 1px solid #c3d8f5;
-  box-shadow: 0 24px 44px rgba(22, 65, 125, 0.14);
-  display: grid;
-  grid-template-columns: 1.02fr 1fr;
-  min-height: 560px;
-  background: linear-gradient(130deg, #f6faff 0%, #e4f4ef 100%);
+  display: flex;
+  align-items: center;
 }
 
-.heroBackdropShape {
+.heroGlowBall {
   position: absolute;
-  right: -160px;
-  top: -80px;
-  width: 480px;
-  height: 480px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(45, 115, 213, 0.22) 0%, rgba(45, 115, 213, 0) 70%);
   pointer-events: none;
 }
 
-.heroTextPanel {
-  padding: 52px 40px 40px;
-  z-index: 1;
+.heroGlowBallLeft {
+  width: 440px;
+  height: 440px;
+  left: -160px;
+  top: -140px;
+  background: radial-gradient(circle, rgba(72, 145, 255, 0.26) 0%, rgba(72, 145, 255, 0) 70%);
 }
 
-.heroLabel {
+.heroGlowBallRight {
+  width: 540px;
+  height: 540px;
+  right: -180px;
+  bottom: -190px;
+  background: radial-gradient(circle, rgba(28, 175, 151, 0.26) 0%, rgba(28, 175, 151, 0) 70%);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 48px 0;
+}
+
+.heroCopyWrap {
+  position: relative;
+  z-index: 2;
+}
+
+.heroEyebrow {
   margin: 0;
-  color: #2f68bd;
-  letter-spacing: 0.08em;
+  color: #9bc2f6;
+  font-size: 14px;
   font-weight: 700;
-  font-size: 13px;
+  letter-spacing: 0.06em;
 }
 
-.heroHeadline {
-  margin: 12px 0 0;
-  color: var(--ink-strong);
-  font-weight: 800;
-  line-height: 1.03;
-  font-size: clamp(44px, 6vw, 82px);
+.heroTitle {
+  margin: 14px 0 0;
+  color: #f5f9ff;
+  font-size: clamp(46px, 6vw, 88px);
+  line-height: 1.04;
+  font-weight: 900;
 }
 
-.heroBodyText {
+.heroDescription {
   margin: 20px 0 0;
-  font-size: 20px;
-  line-height: 1.72;
-  color: var(--ink-muted);
-  max-width: 25ch;
+  color: #bed0ea;
+  font-size: clamp(17px, 1.7vw, 24px);
+  line-height: 1.7;
+  max-width: 32ch;
 }
 
-.heroPrimaryActionRow {
-  margin-top: 28px;
+.heroBulletWrap {
+  margin-top: 20px;
   display: flex;
-  gap: 10px;
   flex-wrap: wrap;
+  gap: 8px;
 }
 
-.actionButtonPrimary,
-.actionButtonGhost {
+.heroBulletWrap span {
+  border-radius: 999px;
+  border: 1px solid rgba(175, 199, 227, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d2e2f7;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.heroActionRow {
+  margin-top: 26px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.solidActionButton,
+.outlineActionButton {
   text-decoration: none;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 800;
   padding: 12px 18px;
-  transition: transform 180ms ease, box-shadow 180ms ease;
+  transition: transform 170ms ease, box-shadow 170ms ease;
 }
 
-.actionButtonPrimary {
+.solidActionButton {
+  background: linear-gradient(140deg, #4d87ff 0%, #27b8a0 100%);
   color: #ffffff;
-  background: linear-gradient(140deg, var(--primary-a) 0%, var(--primary-b) 100%);
-  box-shadow: 0 12px 24px rgba(25, 95, 188, 0.3);
+  box-shadow: 0 14px 26px rgba(60, 131, 246, 0.36);
 }
 
-.actionButtonGhost {
-  color: #1f5cb2;
-  border: 1px solid #b8ccec;
-  background: rgba(255, 255, 255, 0.88);
+.outlineActionButton {
+  border: 1.5px solid rgba(206, 223, 246, 0.8);
+  color: #e8f2ff;
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.actionButtonPrimary:hover,
-.actionButtonGhost:hover {
+.solidActionButton:hover,
+.outlineActionButton:hover {
   transform: translateY(-2px);
 }
 
-.heroVisualPanel {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
+.heroVisualWrap {
+  position: relative;
+  min-height: 540px;
 }
 
-.heroVisualPanel img {
-  width: 100%;
-  max-width: 560px;
-  border-radius: 24px;
-  border: 1px solid #c6daf5;
-  box-shadow: 0 20px 36px rgba(17, 58, 111, 0.16);
+.heroDeviceCard {
+  position: absolute;
+  border-radius: 34px;
+  border: 1px solid #3c4f70;
+  box-shadow: 0 26px 44px rgba(8, 20, 38, 0.55);
+  background: #111a2a;
 }
 
-.messageBandSection {
-  margin-top: 20px;
-  border-radius: 16px;
-  background: linear-gradient(100deg, #1e69ce 0%, #1ea091 100%);
-  box-shadow: 0 14px 24px rgba(23, 81, 159, 0.26);
-  padding: 12px 16px;
+.heroDeviceCardBack {
+  width: 290px;
+  right: 10px;
+  top: 18px;
+  transform: rotate(11deg);
+  opacity: 0.9;
 }
 
-.messageBandSection p {
+.heroDeviceCardFront {
+  width: 310px;
+  left: 24px;
+  top: 96px;
+  transform: rotate(-8deg);
+}
+
+.heroFloatingCard {
+  position: absolute;
+  left: 12px;
+  bottom: 36px;
+  border-radius: 14px;
+  border: 1px solid rgba(203, 222, 246, 0.55);
+  background: rgba(240, 248, 255, 0.95);
+  color: #194275;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.highlightBandSection {
+  background: linear-gradient(95deg, #1f6ede 0%, #1fa794 100%);
+  padding: 14px 0;
+}
+
+.highlightBandSection p {
   margin: 0;
-  color: #f3f9ff;
+  color: #f4faff;
   font-size: 15px;
   font-weight: 700;
+  text-align: center;
 }
 
-.immersivePreviewSection {
-  margin-top: 34px;
-  position: relative;
+.featureSection {
+  padding: 96px 0 84px;
+  background: #f7fbff;
 }
 
-.immersivePreviewTextWrap {
-  max-width: 700px;
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 40px;
 }
 
-.sectionSmallLabel {
+.sectionEyebrow {
   margin: 0;
-  color: #2a63b9;
-  letter-spacing: 0.1em;
-  font-size: 12px;
+  color: #2f6fc4;
+  font-size: 13px;
   font-weight: 700;
+  letter-spacing: 0.08em;
 }
 
-.sectionMainTitle {
-  margin: 10px 0 0;
-  color: var(--ink-strong);
-  font-size: clamp(34px, 4vw, 56px);
-  line-height: 1.16;
-  font-weight: 800;
+.sectionTitle {
+  margin: 12px 0 0;
+  color: #122c4d;
+  font-size: clamp(32px, 4.2vw, 58px);
+  line-height: 1.15;
+  font-weight: 900;
 }
 
-.sectionMainDescription {
+.sectionDescription {
   margin: 14px 0 0;
-  color: var(--ink-muted);
+  color: #5b7899;
   font-size: 17px;
-  line-height: 1.75;
+  line-height: 1.7;
 }
 
-.phoneShowcaseRow {
-  margin-top: 24px;
+.featureGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
-.phoneShowcaseFigure {
-  margin: 0;
-  padding: 16px;
+.featureCard {
   border-radius: 22px;
-  border: 1px solid #cbdbf5;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(241, 247, 255, 0.9) 100%);
-  box-shadow: 0 14px 28px rgba(21, 67, 127, 0.12);
-  transform: translateY(28px);
+  border: 1px solid #d0def2;
+  background: #ffffff;
+  padding: 24px 20px;
+  transition: transform 220ms ease, box-shadow 220ms ease;
 }
 
-.phoneShowcaseFigureCenter {
-  transform: translateY(0);
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 30px rgba(21, 67, 125, 0.14);
 }
 
-.phoneShowcaseFigure img {
-  width: 100%;
-  display: block;
-  border-radius: 18px;
-}
-
-.phoneShowcaseFigure figcaption {
-  margin-top: 10px;
-  color: #265695;
-  font-size: 15px;
-  font-weight: 700;
-}
-
-.experienceSection {
-  margin-top: 76px;
-}
-
-.experienceHeaderWrap {
-  max-width: 760px;
-}
-
-.experienceTimelineList {
-  margin: 22px 0 0;
-  padding: 0;
-  list-style: none;
-  border-top: 1px solid #bcd1f0;
-}
-
-.experienceTimelineList li {
-  display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: 12px;
-  align-items: start;
-  padding: 20px 0;
-  border-bottom: 1px solid #c9dbf5;
-}
-
-.timelineIndex {
+.featureIndex {
   margin: 0;
-  color: #2565bc;
-  font-size: 28px;
-  line-height: 1;
-  font-weight: 800;
+  color: #2b6bc0;
+  font-size: 26px;
+  font-weight: 900;
 }
 
-.experienceTimelineList h3 {
-  margin: 0;
-  color: #173865;
-  font-size: 28px;
+.featureCard h3 {
+  margin: 10px 0 0;
+  color: #1a3e6c;
+  font-size: 22px;
 }
 
-.experienceTimelineList p {
-  margin: 8px 0 0;
-  color: #5e7896;
-  line-height: 1.68;
+.featureCard p {
+  margin: 10px 0 0;
+  color: #5f7999;
+  line-height: 1.65;
 }
 
-.shareFlowSection {
-  margin-top: 56px;
+.previewSection {
+  padding: 90px 0;
+  background: linear-gradient(180deg, #eff7ff 0%, #edf9f5 100%);
+}
+
+.previewSectionInner {
   display: grid;
-  grid-template-columns: 1.05fr 1fr;
+  grid-template-columns: 0.9fr 1.1fr;
   gap: 18px;
   align-items: center;
 }
 
-.shareFlowVisualWrap img {
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.previewCard {
+  border-radius: 20px;
+  border: 1px solid #cadbf3;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 12px 22px rgba(22, 68, 126, 0.12);
+}
+
+.previewCard img {
   width: 100%;
-  border-radius: 20px;
-  border: 1px solid var(--line-soft);
-  box-shadow: 0 16px 30px rgba(19, 62, 118, 0.14);
+  height: 330px;
+  object-fit: cover;
+  display: block;
 }
 
-.shareFlowQuote {
-  margin: 22px 0 0;
-  color: #214d87;
-  font-size: 21px;
-  font-weight: 700;
-  line-height: 1.45;
+.previewMetaWrap {
+  padding: 12px;
 }
 
-.questionSection {
-  margin-top: 56px;
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 22px;
-}
-
-.questionAccordionWrap {
-  border-radius: 20px;
-  border: 1px solid #c7daf4;
-  background: rgba(255, 255, 255, 0.86);
-  box-shadow: 0 14px 28px rgba(22, 66, 126, 0.1);
-  padding: 10px;
-}
-
-.questionAccordionWrap details {
-  border-radius: 12px;
-  border: 1px solid #d3e1f8;
-  background: #f8fbff;
-  padding: 12px 13px;
-}
-
-.questionAccordionWrap details + details {
-  margin-top: 8px;
-}
-
-.questionAccordionWrap summary {
-  list-style: none;
-  cursor: pointer;
-  color: #204d87;
+.previewTitle {
+  margin: 0;
+  color: #1d467f;
   font-size: 16px;
-  font-weight: 700;
-}
-
-.questionAccordionWrap summary::-webkit-details-marker {
-  display: none;
-}
-
-.questionAccordionWrap p {
-  margin: 10px 0 0;
-  color: #617c9a;
-  line-height: 1.65;
-}
-
-.finalCallSection {
-  margin-top: 56px;
-  border-radius: 24px;
-  border: 1px solid #c3d9f5;
-  background: linear-gradient(140deg, #dce9ff 0%, #d7fef3 100%);
-  box-shadow: 0 20px 38px rgba(20, 64, 123, 0.16);
-  padding: 34px 28px;
-}
-
-.finalCallSection h2 {
-  margin: 0;
-  color: #102947;
-  font-size: clamp(34px, 4vw, 58px);
-  line-height: 1.2;
-}
-
-.finalCallSection p {
-  margin: 12px 0 0;
-  color: #3b5f86;
-  font-size: 18px;
-}
-
-.mobileInstallBar {
-  position: fixed;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
-  z-index: 40;
-  display: none;
-  border: 1px solid rgba(185, 207, 236, 0.94);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  padding: 10px 12px;
-  box-shadow: 0 12px 20px rgba(20, 64, 122, 0.2);
-}
-
-.mobileInstallBar p {
-  margin: 0;
-  color: #224f8c;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.mobileInstallBar div {
-  margin-top: 8px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-
-.mobileInstallBar a {
-  text-decoration: none;
-  text-align: center;
-  border-radius: 10px;
-  padding: 9px 10px;
-  background: linear-gradient(140deg, var(--primary-a) 0%, var(--primary-b) 100%);
-  color: #ffffff;
-  font-size: 13px;
   font-weight: 800;
 }
 
-@media (max-width: 1060px) {
-  .heroSection,
-  .shareFlowSection,
-  .questionSection {
+.previewSubtitle {
+  margin: 7px 0 0;
+  color: #627e9d;
+  font-size: 13px;
+}
+
+.questionSection {
+  padding: 90px 0;
+  background: #f7fbff;
+}
+
+.questionSectionInner {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 20px;
+}
+
+.questionListWrap {
+  border-radius: 20px;
+  border: 1px solid #d0def2;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.questionListWrap details {
+  border-radius: 12px;
+  border: 1px solid #d9e5f6;
+  background: #f9fcff;
+  padding: 12px;
+}
+
+.questionListWrap details + details {
+  margin-top: 8px;
+}
+
+.questionListWrap summary {
+  list-style: none;
+  cursor: pointer;
+  color: #234d84;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.questionListWrap summary::-webkit-details-marker {
+  display: none;
+}
+
+.questionListWrap p {
+  margin: 9px 0 0;
+  color: #607b99;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.callToActionSection {
+  padding: 92px 0;
+  background: #f7fbff;
+}
+
+.callToActionPanel {
+  border-radius: 30px;
+  border: 1px solid #c4daf4;
+  background: linear-gradient(135deg, #1f6ede 0%, #1ea795 100%);
+  box-shadow: 0 22px 34px rgba(22, 79, 150, 0.22);
+  color: #ffffff;
+  text-align: center;
+  padding: 48px 22px;
+}
+
+.callToActionPanel h2 {
+  margin: 0;
+  font-size: clamp(34px, 4.4vw, 60px);
+  line-height: 1.2;
+}
+
+.callToActionPanel p {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 18px;
+  line-height: 1.65;
+}
+
+.callToActionPanel .heroActionRow {
+  justify-content: center;
+}
+
+.callToActionPanel .solidActionButton {
+  background: #ffffff;
+  color: #12335d;
+  box-shadow: none;
+}
+
+.callToActionPanel .outlineActionButton {
+  border-color: rgba(255, 255, 255, 0.92);
+}
+
+.footerSection {
+  border-top: 1px solid #d8e4f6;
+  background: #ffffff;
+  padding: 34px 0;
+}
+
+.footerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.footerBrandTitle {
+  margin: 0;
+  color: #173e6f;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.footerBrandSubTitle {
+  margin: 6px 0 0;
+  color: #6a86a6;
+  font-size: 13px;
+}
+
+.footerLinkRow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footerLinkRow a {
+  text-decoration: none;
+  color: #617d9d;
+  font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+  .topNavigationLinks {
+    display: none;
+  }
+
+  .heroGrid,
+  .previewSectionInner,
+  .questionSectionInner {
     grid-template-columns: 1fr;
   }
 
-  .heroSection {
-    min-height: auto;
+  .heroCopyWrap {
+    text-align: center;
   }
 
-  .phoneShowcaseRow {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .heroDescription {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .heroBulletWrap,
+  .heroActionRow {
+    justify-content: center;
+  }
+
+  .heroVisualWrap {
+    min-height: 470px;
+  }
+
+  .heroDeviceCardBack {
+    right: 20%;
+  }
+
+  .heroDeviceCardFront {
+    left: 20%;
+  }
+
+  .featureGrid,
+  .previewGrid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 720px) {
-  .officialPage {
-    padding: 14px 12px 108px;
+  .contentContainer {
+    width: min(1180px, calc(100% - 24px));
   }
 
-  .topNavigationBar {
+  .topNavigationRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .brandTitle {
+    font-size: 14px;
+  }
+
+  .topStoreButtons a {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
+  .heroSection {
+    min-height: auto;
+    padding: 44px 0;
+  }
+
+  .heroVisualWrap {
+    min-height: 340px;
+  }
+
+  .heroDeviceCardBack {
+    width: 220px;
+    right: 8%;
+    top: 6px;
+  }
+
+  .heroDeviceCardFront {
+    width: 240px;
+    left: 6%;
+    top: 84px;
+  }
+
+  .heroFloatingCard {
     position: static;
+    margin-top: 300px;
+    text-align: center;
   }
 
-  .topNavigationActionRow {
-    display: none;
-  }
-
-  .heroTextPanel {
-    padding: 28px 18px 18px;
-  }
-
-  .heroBodyText {
-    font-size: 16px;
-  }
-
-  .heroVisualPanel {
-    padding: 14px;
-  }
-
-  .phoneShowcaseRow {
-    grid-template-columns: 1fr;
-  }
-
-  .phoneShowcaseFigure,
-  .phoneShowcaseFigureCenter {
-    transform: translateY(0);
-  }
-
-  .experienceTimelineList li {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .timelineIndex {
-    font-size: 22px;
-  }
-
-  .experienceTimelineList h3 {
-    font-size: 22px;
-  }
-
-  .sectionMainDescription,
-  .finalCallSection p {
+  .sectionDescription,
+  .callToActionPanel p {
     font-size: 15px;
   }
 
-  .mobileInstallBar {
-    display: block;
+  .footerRow {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
