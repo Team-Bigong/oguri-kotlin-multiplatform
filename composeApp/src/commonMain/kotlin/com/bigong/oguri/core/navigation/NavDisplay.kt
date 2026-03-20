@@ -141,7 +141,7 @@ fun NavDisplay(
                     if (homeViewModelLazy.isInitialized()) {
                         homeViewModelLazy.value.refreshRecommendPeriods()
                     }
-                    if (!hasShownLaunchAppOpenAd) {
+                    if (!isOnboardingRoute(previousRoute) && !hasShownLaunchAppOpenAd) {
                         hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
                     }
                 }
@@ -340,4 +340,12 @@ private fun isMyPageRoute(routeText: String): Boolean {
             .serializer()
             .descriptor.serialName
     return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
+}
+
+private fun isOnboardingRoute(routeText: String): Boolean {
+    val onboardingRouteSerialName =
+        RouteModel.Onboarding
+            .serializer()
+            .descriptor.serialName
+    return routeText == onboardingRouteSerialName || routeText.startsWith(onboardingRouteSerialName)
 }
