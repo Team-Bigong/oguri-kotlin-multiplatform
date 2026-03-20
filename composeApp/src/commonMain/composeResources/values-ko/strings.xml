@@ -102,7 +102,7 @@
     <string name="share_period_description">연차 %1$d일로 %2$d일이나 쉴 수 있어요\n한번 확인해보세요</string>
     <string name="share_button_open_in_app">앱에서 보기</string>
     <string name="share_default_fallback_message">지금 쉬기 좋은 타이밍이에요\n한번 구경해볼까요?</string>
-    <string name="share_default_fallback_url">https://naver.com</string>
+    <string name="share_default_fallback_url">https://www.oguri.com</string>
 
     <string name="calendar_header_title">연차 몇 일 써볼까요?</string>
     <string name="calendar_header_subtitle">연차를 바꿔보면서 가장 알찬 조합을 찾아보세요</string>
