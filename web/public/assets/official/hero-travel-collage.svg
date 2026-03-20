@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-label="오구리 히어로 더미 이미지">
+  <defs>
+    <linearGradient id="heroBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d8e9ff"/>
+      <stop offset="100%" stop-color="#d4f7ef"/>
+    </linearGradient>
+    <linearGradient id="cardA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2c78e8"/>
+      <stop offset="100%" stop-color="#5ea3ff"/>
+    </linearGradient>
+    <linearGradient id="cardB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#18a991"/>
+      <stop offset="100%" stop-color="#4bd2ba"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="760" fill="url(#heroBg)" rx="36"/>
+  <circle cx="190" cy="165" r="92" fill="#ffffff" fill-opacity="0.55"/>
+  <circle cx="1020" cy="580" r="120" fill="#ffffff" fill-opacity="0.35"/>
+  <rect x="90" y="110" width="540" height="270" rx="24" fill="url(#cardA)"/>
+  <rect x="90" y="410" width="350" height="220" rx="24" fill="#ffffff" fill-opacity="0.9"/>
+  <rect x="480" y="410" width="320" height="220" rx="24" fill="url(#cardB)"/>
+  <rect x="670" y="110" width="430" height="520" rx="30" fill="#ffffff" fill-opacity="0.86"/>
+  <text x="130" y="190" font-size="42" font-weight="700" fill="#f2f7ff">이번엔 이렇게 쉬어볼까요?</text>
+  <text x="130" y="248" font-size="26" fill="#e9f3ff">연차 조합과 여행지를 한 번에 추천받아보세요</text>
+  <text x="720" y="190" font-size="28" font-weight="700" fill="#214264">PLACEHOLDER</text>
+  <text x="720" y="235" font-size="22" fill="#4b6786">실제 홍보용 사진으로 교체해 주세요</text>
+</svg>

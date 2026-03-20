@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 680" role="img" aria-label="추천 카드 미리보기 더미 이미지">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#eef5ff"/>
+      <stop offset="100%" stop-color="#e4fdf7"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="680" fill="url(#bg)" rx="30"/>
+  <rect x="70" y="90" width="860" height="120" rx="18" fill="#ffffff"/>
+  <rect x="70" y="240" width="272" height="360" rx="20" fill="#ffffff"/>
+  <rect x="364" y="240" width="272" height="360" rx="20" fill="#ffffff"/>
+  <rect x="658" y="240" width="272" height="360" rx="20" fill="#ffffff"/>
+  <rect x="100" y="120" width="240" height="16" rx="8" fill="#b3cdf3"/>
+  <rect x="100" y="148" width="360" height="16" rx="8" fill="#d1e2fa"/>
+  <rect x="100" y="176" width="180" height="16" rx="8" fill="#d1e2fa"/>
+  <circle cx="205" cy="310" r="62" fill="#d6e8ff"/>
+  <circle cx="499" cy="310" r="62" fill="#d6fff2"/>
+  <circle cx="793" cy="310" r="62" fill="#d6e8ff"/>
+  <text x="120" y="405" font-size="26" font-weight="700" fill="#2e4968">추천 카드 A</text>
+  <text x="414" y="405" font-size="26" font-weight="700" fill="#2e4968">추천 카드 B</text>
+  <text x="708" y="405" font-size="26" font-weight="700" fill="#2e4968">추천 카드 C</text>
+  <text x="118" y="452" font-size="20" fill="#587493">여기에 앱 스크린샷을 넣어주세요</text>
+</svg>
