@@ -491,16 +491,6 @@
   justify-content: center;
 }
 
-.callToActionPanel .solidActionButton {
-  background: #ffffff;
-  color: #12335d;
-  box-shadow: none;
-}
-
-.callToActionPanel .outlineActionButton {
-  border-color: rgba(255, 255, 255, 0.92);
-}
-
 .footerSection {
   border-top: 1px solid #d8e4f6;
   background: #ffffff;

@@ -3,12 +3,13 @@
 공식 웹 홍보 에셋 교체 위치입니다.
 
 ## 파일 교체 대상
-- `hero-travel-collage.svg`: 메인 히어로 비주얼
-- `recommendation-cards-preview.svg`: 추천 카드 소개 섹션 비주얼
-- `share-flow-preview.svg`: 공유하기 플로우 소개 섹션 비주얼
-- `screenshots/home-screen-placeholder.svg`: 홈 화면 스크린샷 교체용
-- `screenshots/calendar-screen-placeholder.svg`: 캘린더 화면 스크린샷 교체용
-- `screenshots/my-page-screen-placeholder.svg`: 마이페이지 화면 스크린샷 교체용
+- `screenshots/hero-back-card.png`: 히어로 뒷면 카드 비주얼
+- `screenshots/home-screen.png`: 홈 화면 카드
+- `screenshots/calendar-screen.png`: 캘린더 화면 카드
+- `screenshots/my-page-screen.png`: 마이페이지 화면 카드
+- `store/play-store-logo.png`: Play Store 버튼 로고
+- `store/app-store-logo.png`: App Store 버튼 로고
+- `app-icon.png`: 상단/하단 브랜드 아이콘
 
 ## 권장 가이드
 - 포맷: WebP 또는 AVIF 우선, 필요 시 PNG
