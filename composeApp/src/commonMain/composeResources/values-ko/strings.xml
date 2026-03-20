@@ -137,6 +137,7 @@
     <string name="period_detail_title">기간 상세</string>
     <string name="period_detail_holiday_fallback">연휴</string>
     <string name="period_detail_empty_places_hint">이 기간에 맞는 추천 여행지가 아직 없어요.</string>
+    <string name="photo_detail_page_title">%1$d / %2$d</string>
     <string name="mypage_profile_leave_days">남은 연차: %1$d일 / 선호하는 연차: %2$d일</string>
     <string name="mypage_guest_name">게스트님</string>
     <string name="mypage_guest_login_message">로그인하고 휴가 일정을 저장해보세요!</string>

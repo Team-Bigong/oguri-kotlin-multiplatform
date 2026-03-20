@@ -72,6 +72,7 @@ fun PlaceDetailScreen(
     onSaveToggleClick: () -> Unit,
     onUrlClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onPhotoClick: (List<String>, Int) -> Unit,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val lazyListState = rememberLazyListState()
@@ -108,7 +109,12 @@ fun PlaceDetailScreen(
                     contentPadding = PaddingValues(bottom = 24.dp),
                 ) {
                     item {
-                        PlaceDetailImagePager(imageUrls = placeDetail.thumbnailUrls)
+                        PlaceDetailImagePager(
+                            imageUrls = placeDetail.thumbnailUrls,
+                            onImageClick = { pageIndex ->
+                                onPhotoClick(placeDetail.thumbnailUrls, pageIndex)
+                            },
+                        )
                     }
                     item(key = PLACE_DETAIL_TITLE_ITEM_KEY) {
                         Row(

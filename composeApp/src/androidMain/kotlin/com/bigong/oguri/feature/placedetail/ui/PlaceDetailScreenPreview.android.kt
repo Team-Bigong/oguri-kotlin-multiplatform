@@ -24,6 +24,7 @@ private fun PlaceDetailScreenPreview() {
             onSaveToggleClick = {},
             onUrlClick = {},
             onPlaceClick = {},
+            onPhotoClick = { _, _ -> },
         )
     }
 }

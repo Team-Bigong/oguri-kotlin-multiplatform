@@ -137,6 +137,7 @@
     <string name="period_detail_title">Period Detail</string>
     <string name="period_detail_holiday_fallback">long weekend</string>
     <string name="period_detail_empty_places_hint">No recommended places for this period yet.</string>
+    <string name="photo_detail_page_title">%1$d / %2$d</string>
     <string name="mypage_profile_leave_days">Remaining leave: %1$d days / Preferred leave: %2$d days</string>
     <string name="mypage_guest_name">Guest</string>
     <string name="mypage_guest_login_message">Log in to save your vacation plans.</string>
