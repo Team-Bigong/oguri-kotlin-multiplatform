@@ -274,19 +274,6 @@
   transform: rotate(-5deg) translateZ(0);
 }
 
-.heroFloatingCard {
-  position: absolute;
-  left: 12px;
-  bottom: 36px;
-  border-radius: 14px;
-  border: 1px solid rgba(203, 222, 246, 0.55);
-  background: rgba(240, 248, 255, 0.95);
-  color: #194275;
-  padding: 12px 14px;
-  font-size: 14px;
-  font-weight: 700;
-}
-
 .highlightBandSection {
   background: linear-gradient(95deg, #1f6ede 0%, #1fa794 100%);
   padding: 14px 0;
@@ -649,12 +636,6 @@
     width: 240px;
     left: 6%;
     top: 84px;
-  }
-
-  .heroFloatingCard {
-    position: static;
-    margin-top: 300px;
-    text-align: center;
   }
 
   .sectionDescription,

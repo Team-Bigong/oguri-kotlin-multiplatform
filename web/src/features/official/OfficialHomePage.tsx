@@ -128,14 +128,17 @@ export const OfficialHomePage = (): React.JSX.Element => {
           <div className="heroVisualWrap">
             <img className="heroDeviceCard heroDeviceCardBack" src="/assets/official/screenshots/hero-back-card.png" alt="오구리 히어로 뒤 카드" />
             <img className="heroDeviceCard heroDeviceCardFront" src="/assets/official/screenshots/home-screen.png" alt="오구리 홈 화면" />
-            <div className="heroFloatingCard">연차 5일로 11일이나 쉴 수 있어요</div>
           </div>
         </div>
       </section>
 
       <section className="highlightBandSection">
         <div className="contentContainer">
-          <p>이 조합, 오구리만 알고 있었어요. 이번 연차, 더 아깝지 않게 쉬어보세요.</p>
+          <p>
+            이 조합, 오구리만 알고 있었어요.
+            <br />
+            이번 연차, 더 아깝지 않게 쉬어보세요.
+          </p>
         </div>
       </section>
 
