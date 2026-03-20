@@ -34,7 +34,8 @@ private const val MINIMUM_SCALE = 1f
 private const val MAXIMUM_SCALE = 4f
 private const val DOUBLE_TAP_SCALE = 2.5f
 private const val SCALE_ACTIVE_THRESHOLD = 0.01f
-private const val OUT_OF_BOUNDS_RESISTANCE = 1.15f
+private const val OUT_OF_BOUNDS_RESISTANCE = 0.62f
+private const val OUT_OF_BOUNDS_CURVE_DISTANCE = 640f
 private const val SETTLE_TRIGGER_DELAY_MILLIS = 80L
 private const val SETTLE_ANIMATION_DURATION_MILLIS = 220
 
@@ -211,15 +212,22 @@ private fun applyResistance(
     value: Float,
     maxOffset: Float,
 ): Float {
+    val absoluteValue = abs(value)
+
     if (maxOffset <= 0f) {
-        return value * OUT_OF_BOUNDS_RESISTANCE
+        val resistedExtra =
+            (absoluteValue * OUT_OF_BOUNDS_RESISTANCE) /
+                (1f + absoluteValue / OUT_OF_BOUNDS_CURVE_DISTANCE)
+        return sign(value) * resistedExtra
     }
 
-    val absoluteValue = abs(value)
     if (absoluteValue <= maxOffset) {
         return value
     }
 
     val extraDistance = absoluteValue - maxOffset
-    return sign(value) * (maxOffset + extraDistance * OUT_OF_BOUNDS_RESISTANCE)
+    val resistedExtra =
+        (extraDistance * OUT_OF_BOUNDS_RESISTANCE) /
+            (1f + extraDistance / OUT_OF_BOUNDS_CURVE_DISTANCE)
+    return sign(value) * (maxOffset + resistedExtra)
 }
