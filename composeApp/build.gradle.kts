@@ -1,10 +1,4 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import java.util.Properties
 
 plugins {
@@ -57,16 +51,15 @@ val localProperties: Properties =
     }
 
 val debugBaseUrlValue: String =
-    (localProperties.getProperty("debug.base.url") ?: "https://oguri-kotlin-multiplatform.onrender.com")
+    (localProperties.getProperty("debug.base.url") ?: "")
         .trim()
         .trimEnd('/')
 val releaseBaseUrlValue: String =
-    (localProperties.getProperty("release.base.url")
-        ?: localProperties.getProperty("debug.base.url")
-        ?: "https://oguri-kotlin-multiplatform.onrender.com")
+    (localProperties.getProperty("release.base.url") ?: "")
         .trim()
         .trimEnd('/')
 val kakaoNativeAppKeyValue: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
+val admobAndroidAppIdValue: String = "ca-app-pub-2833810411143763~1974881745"
 
 val generatedNetworkConfigDirectory =
     layout.buildDirectory
@@ -119,6 +112,7 @@ kotlin {
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kakao.android.user)
             implementation(libs.kakao.android.share)
+            implementation(libs.google.mobile.ads)
             implementation(libs.ktor.client.okhttp)
         }
         iosMain.dependencies {
@@ -172,6 +166,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
+        manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdValue
     }
     packaging {
         resources {

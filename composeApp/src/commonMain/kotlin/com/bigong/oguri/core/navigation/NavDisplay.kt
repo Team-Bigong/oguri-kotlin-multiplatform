@@ -33,6 +33,9 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import com.bigong.oguri.core.ad.initializeAdMob
+import com.bigong.oguri.core.ad.preloadAppOpenAd
+import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -111,6 +114,7 @@ fun NavDisplay(
                 .collectAsState()
                 .value
         var previousRouteText by remember { mutableStateOf<String?>(null) }
+        var hasShownLaunchAppOpenAd by remember { mutableStateOf(false) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation =
             bottomNavigationDestinations.any { destination ->
@@ -125,6 +129,10 @@ fun NavDisplay(
             val targetRoute = parseAppDeepLinkRoute(urlText = deepLinkUrl) ?: return@LaunchedEffect
             navigator.navigateToRouteModel(targetRoute)
         }
+        LaunchedEffect(Unit) {
+            initializeAdMob()
+            preloadAppOpenAd()
+        }
         LaunchedEffect(currentDestination?.route) {
             val currentRouteText = currentDestination?.route
             val previousRoute = previousRouteText
@@ -133,11 +141,18 @@ fun NavDisplay(
                     if (homeViewModelLazy.isInitialized()) {
                         homeViewModelLazy.value.refreshRecommendPeriods()
                     }
+                    if (!hasShownLaunchAppOpenAd) {
+                        hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
+                    }
                 }
                 if (isMyPageRoute(currentRouteText) && !isMyPageRoute(previousRoute)) {
                     if (myPageViewModelLazy.isInitialized()) {
                         myPageViewModelLazy.value.refreshMyPageInfo()
                     }
+                }
+            } else if (currentRouteText != null && previousRoute == null && isHomeRoute(currentRouteText)) {
+                if (!hasShownLaunchAppOpenAd) {
+                    hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
                 }
             }
             previousRouteText = currentRouteText
@@ -312,11 +327,17 @@ private fun isMainTabRootDestination(currentDestination: NavDestination?): Boole
 }
 
 private fun isHomeRoute(routeText: String): Boolean {
-    val homeRouteSerialName = RouteModel.Home.serializer().descriptor.serialName
+    val homeRouteSerialName =
+        RouteModel.Home
+            .serializer()
+            .descriptor.serialName
     return routeText == homeRouteSerialName || routeText.startsWith(homeRouteSerialName)
 }
 
 private fun isMyPageRoute(routeText: String): Boolean {
-    val myPageRouteSerialName = RouteModel.MyPage.serializer().descriptor.serialName
+    val myPageRouteSerialName =
+        RouteModel.MyPage
+            .serializer()
+            .descriptor.serialName
     return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
 }

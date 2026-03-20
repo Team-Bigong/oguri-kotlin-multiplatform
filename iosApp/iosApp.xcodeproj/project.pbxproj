@@ -12,6 +12,7 @@
 		86840E282F66EC09007C5D22 /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 86840E272F66EC09007C5D22 /* KakaoSDKUser */; };
 		86CFAA1C2F6C00910011BF87 /* KakaoSDKShare in Frameworks */ = {isa = PBXBuildFile; productRef = 86CFAA1B2F6C00910011BF87 /* KakaoSDKShare */; };
 		86CFAA1E2F6C00910011BF87 /* KakaoSDKTemplate in Frameworks */ = {isa = PBXBuildFile; productRef = 86CFAA1D2F6C00910011BF87 /* KakaoSDKTemplate */; };
+		86FBCAE12F6D402F00D24773 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 86FBCAE02F6D402F00D24773 /* GoogleMobileAds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +50,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				86FBCAE12F6D402F00D24773 /* GoogleMobileAds in Frameworks */,
 				86CFAA1E2F6C00910011BF87 /* KakaoSDKTemplate in Frameworks */,
 				86840E262F66EC09007C5D22 /* KakaoSDKCommon in Frameworks */,
 				86CFAA1C2F6C00910011BF87 /* KakaoSDKShare in Frameworks */,
@@ -103,6 +105,7 @@
 				86840E272F66EC09007C5D22 /* KakaoSDKUser */,
 				86CFAA1B2F6C00910011BF87 /* KakaoSDKShare */,
 				86CFAA1D2F6C00910011BF87 /* KakaoSDKTemplate */,
+				86FBCAE02F6D402F00D24773 /* GoogleMobileAds */,
 			);
 			productName = iosApp;
 			productReference = 6365899FB01A731641EBD6A2 /* Oguri.app */;
@@ -134,6 +137,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				86840E222F66EC09007C5D22 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C2E806D8A29B0C2428B12786 /* Products */;
@@ -415,6 +419,14 @@
 				minimumVersion = 2.27.2;
 			};
 		};
+		86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -442,6 +454,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 86840E222F66EC09007C5D22 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
 			productName = KakaoSDKTemplate;
+		};
+		86FBCAE02F6D402F00D24773 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
