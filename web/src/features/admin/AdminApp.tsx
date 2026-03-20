@@ -33,6 +33,7 @@ type DestinationFormState = {
   flightTime: string
   images: DestinationImageRequest[]
   existingImageUrls: string[]
+  newlyUploadedImageUrls: string[]
 }
 
 type MemberFormState = {
@@ -65,7 +66,8 @@ const createInitialDestinationFormState = (): DestinationFormState => ({
   recommendEndMonth2: "",
   flightTime: "",
   images: [],
-  existingImageUrls: []
+  existingImageUrls: [],
+  newlyUploadedImageUrls: []
 })
 
 const createInitialMemberFormState = (): MemberFormState => ({
@@ -220,6 +222,17 @@ const parseImageSequenceNumberFromImageUrl = (imageUrl: string): number | null =
   return null
 }
 
+const parseFirebaseObjectPathFromImageUrl = (imageUrl: string): string | null => {
+  try {
+    const parsedUrl = new URL(imageUrl)
+    const objectPathEncoded = parsedUrl.pathname.split("/o/")[1] ?? ""
+    const objectPath = decodeURIComponent(objectPathEncoded)
+    return objectPath.length > 0 ? objectPath : null
+  } catch (error) {
+    return null
+  }
+}
+
 export const AdminApp = (): React.JSX.Element => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
   const [loginUsername, setLoginUsername] = useState<string>("")
@@ -361,15 +374,31 @@ export const AdminApp = (): React.JSX.Element => {
     return deleteResults.filter((result) => result.status === "rejected").length
   }, [])
 
+  const cleanupPendingUploadedImages = useCallback(async (imageUrls: string[]): Promise<void> => {
+    const failedDeleteCount = await deleteImagesInFirebaseStorage(imageUrls)
+    if (failedDeleteCount > 0) {
+      setNoticeMessage(`임시 업로드 이미지 ${failedDeleteCount}건 정리에 실패했습니다.`)
+    }
+  }, [deleteImagesInFirebaseStorage])
+
   const submitDestination = useCallback(async () => {
     setErrorMessage("")
     setNoticeMessage("")
 
     try {
       const payload = createDestinationPayload(destinationFormState)
-      const removedExistingImageUrls = destinationFormState.existingImageUrls.filter(
-        (imageUrl) => !destinationFormState.images.some((image) => image.imageUrl === imageUrl)
+      const currentImageObjectPathSet = new Set(
+        destinationFormState.images
+          .map((image) => parseFirebaseObjectPathFromImageUrl(image.imageUrl))
+          .filter((objectPath): objectPath is string => objectPath != null)
       )
+      const removedExistingImageUrls = destinationFormState.existingImageUrls.filter((imageUrl) => {
+        const objectPath = parseFirebaseObjectPathFromImageUrl(imageUrl)
+        if (objectPath == null) {
+          return !destinationFormState.images.some((image) => image.imageUrl === imageUrl)
+        }
+        return !currentImageObjectPathSet.has(objectPath)
+      })
 
       if (destinationFormState.selectedId == null) {
         await adminApiClient.post<Destination>("/api/admin/v1/destinations", payload)
@@ -538,7 +567,8 @@ export const AdminApp = (): React.JSX.Element => {
 
       setDestinationFormState((previousState) => ({
         ...previousState,
-        images: [...previousState.images, ...uploadedImages]
+        images: [...previousState.images, ...uploadedImages],
+        newlyUploadedImageUrls: [...previousState.newlyUploadedImageUrls, ...uploadedImages.map((image) => image.imageUrl)]
       }))
       setNoticeMessage("이미지 업로드가 완료되었습니다.")
     } catch (error) {
@@ -547,7 +577,7 @@ export const AdminApp = (): React.JSX.Element => {
       setUploadingImages(false)
       event.target.value = ""
     }
-  }, [destinationFormState.images.length, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
+  }, [destinationFormState.images, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
 
   const activeTitle = useMemo(() => {
     if (activeTab === "destinations") return "장소 DB 관리"
@@ -762,7 +792,7 @@ export const AdminApp = (): React.JSX.Element => {
                             void (async () => {
                               const targetImage = destinationFormState.images[index]
                               const shouldDeleteImmediately = targetImage != null &&
-                                !destinationFormState.existingImageUrls.includes(targetImage.imageUrl)
+                                destinationFormState.newlyUploadedImageUrls.includes(targetImage.imageUrl)
 
                               if (shouldDeleteImmediately) {
                                 try {
@@ -777,7 +807,9 @@ export const AdminApp = (): React.JSX.Element => {
                                 ...previousState,
                                 images: previousState.images
                                   .filter((_, targetIndex) => targetIndex !== index)
-                                  .map((targetImageInList, sequence) => ({ ...targetImageInList, sortOrder: sequence + 1 }))
+                                  .map((targetImageInList, sequence) => ({ ...targetImageInList, sortOrder: sequence + 1 })),
+                                newlyUploadedImageUrls: previousState.newlyUploadedImageUrls
+                                  .filter((imageUrl) => imageUrl !== (targetImage?.imageUrl ?? ""))
                               }))
                             })()
                           }}
@@ -796,7 +828,12 @@ export const AdminApp = (): React.JSX.Element => {
                 <ActionButton
                   label="폼 초기화"
                   variant="secondary"
-                  onPress={() => setDestinationFormState(createInitialDestinationFormState())}
+                  onPress={() => {
+                    void (async () => {
+                      await cleanupPendingUploadedImages(destinationFormState.newlyUploadedImageUrls)
+                      setDestinationFormState(createInitialDestinationFormState())
+                    })()
+                  }}
                 />
               </View>
 
@@ -811,26 +848,30 @@ export const AdminApp = (): React.JSX.Element => {
                       label="불러오기"
                       variant="secondary"
                       onPress={() => {
-                        setDestinationFormState({
-                          selectedId: destination.id,
-                          countryId: destination.countryId == null ? "" : String(destination.countryId),
-                          storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
-                          storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
-                          name: destination.name,
-                          summary: destination.summary ?? "",
-                          description: destination.description ?? "",
-                          recommendStartMonth1: destination.recommendStartMonth1 == null ? "" : String(destination.recommendStartMonth1),
-                          recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
-                          recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
-                          recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
-                          flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
-                          images: destination.images.map((image) => ({
-                            imageUrl: image.imageUrl,
-                            isThumbnail: image.isThumbnail,
-                            sortOrder: image.sortOrder
-                          })),
-                          existingImageUrls: destination.images.map((image) => image.imageUrl)
-                        })
+                        void (async () => {
+                          await cleanupPendingUploadedImages(destinationFormState.newlyUploadedImageUrls)
+                          setDestinationFormState({
+                            selectedId: destination.id,
+                            countryId: destination.countryId == null ? "" : String(destination.countryId),
+                            storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
+                            storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
+                            name: destination.name,
+                            summary: destination.summary ?? "",
+                            description: destination.description ?? "",
+                            recommendStartMonth1: destination.recommendStartMonth1 == null ? "" : String(destination.recommendStartMonth1),
+                            recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
+                            recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
+                            recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
+                            flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
+                            images: destination.images.map((image) => ({
+                              imageUrl: image.imageUrl,
+                              isThumbnail: image.isThumbnail,
+                              sortOrder: image.sortOrder
+                            })),
+                            existingImageUrls: destination.images.map((image) => image.imageUrl),
+                            newlyUploadedImageUrls: []
+                          })
+                        })()
                       }}
                     />
                     <ActionButton label="삭제" variant="danger" onPress={() => void deleteDestination(destination.id)} />
