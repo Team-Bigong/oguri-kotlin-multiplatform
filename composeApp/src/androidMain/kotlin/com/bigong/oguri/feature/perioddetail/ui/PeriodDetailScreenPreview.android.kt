@@ -1,9 +1,9 @@
 package com.bigong.oguri.feature.perioddetail.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.compose.ui.tooling.preview.Preview
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.CalendarPeriodDetail
 import com.bigong.oguri.domain.model.Place

@@ -28,8 +28,12 @@ metro = "0.9.4"
 coil = "3.3.0"
 kotlinx-datetime = "0.7.1"
 jjwt = "0.12.6"
+google-api-client = "2.8.1"
 kakao = "2.23.3"
 androidx-paging = "3.4.2"
+google-mobile-ads = "25.1.0"
+androidx-credentials = "1.6.0-rc02"
+googleid = "1.2.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -68,6 +72,10 @@ kakao-android-user = { module = "com.kakao.sdk:v2-user", version.ref = "kakao" }
 kakao-android-share = { module = "com.kakao.sdk:v2-share", version.ref = "kakao" }
 androidx-paging-common = { module = "androidx.paging:paging-common", version.ref = "androidx-paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "androidx-paging" }
+google-mobile-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "google-mobile-ads" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "androidx-credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
+google-android-googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "springBoot" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa", version.ref = "springBoot" }
@@ -80,6 +88,7 @@ springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-u
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
 jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
+google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "google-api-client" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

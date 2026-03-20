@@ -15,6 +15,7 @@ import com.bigong.oguri.repository.NounRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
 import com.bigong.oguri.util.AppleIdentityTokenVerifier
+import com.bigong.oguri.util.GoogleIdentityTokenVerifier
 import com.bigong.oguri.util.JwtTokenProvider
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -37,6 +38,7 @@ class MemberService(
     private val nounRepository: NounRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val appleIdentityTokenVerifier: AppleIdentityTokenVerifier,
+    private val googleIdentityTokenVerifier: GoogleIdentityTokenVerifier,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
     private val destinationRepository: DestinationRepository
@@ -60,6 +62,16 @@ class MemberService(
         val appleSubject = appleIdentityTokenVerifier.extractAppleSubject(identityToken)
         val appleMemberId = "APPLE_$appleSubject"
         val member = findOrCreateMember(appleMemberId)
+        return issueLoginTokens(member)
+    }
+
+    /**
+     * Google 로그인 및 가입
+     */
+    fun loginWithGoogle(identityToken: String): LoginResponse {
+        val googleSubject = googleIdentityTokenVerifier.extractGoogleSubject(identityToken)
+        val googleMemberId = "GOOGLE_$googleSubject"
+        val member = findOrCreateMember(googleMemberId)
         return issueLoginTokens(member)
     }
 

@@ -48,8 +48,7 @@ fun HomeMoreRecommendationButton(
                             HapticType.Selection.perform()
                             onClick()
                         },
-                    )
-                    .background(color = Mint5, shape = RoundedCornerShape(size = 8.dp))
+                    ).background(color = Mint5, shape = RoundedCornerShape(size = 8.dp))
                     .border(width = 1.dp, color = Mint70, shape = RoundedCornerShape(size = 8.dp))
                     .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center,

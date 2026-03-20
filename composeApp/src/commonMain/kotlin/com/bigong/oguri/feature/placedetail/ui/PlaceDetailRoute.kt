@@ -33,6 +33,7 @@ fun PlaceDetailRoute(
     endDate: String?,
     onBackClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onPhotoClick: (List<String>, Int) -> Unit,
 ) {
     val placeDetailViewModel =
         remember {
@@ -111,5 +112,6 @@ fun PlaceDetailRoute(
             uriHandler.openUri(destinationUrl)
         },
         onPlaceClick = onPlaceClick,
+        onPhotoClick = onPhotoClick,
     )
 }

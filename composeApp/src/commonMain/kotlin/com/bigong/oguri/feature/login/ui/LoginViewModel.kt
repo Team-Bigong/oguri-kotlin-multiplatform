@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.login.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.usecase.LoginWithAppleIdentityTokenUseCase
+import com.bigong.oguri.domain.usecase.LoginWithGoogleIdentityTokenUseCase
 import com.bigong.oguri.domain.usecase.LoginWithKakaoAccessTokenUseCase
 import com.bigong.oguri.feature.login.ui.model.LoginSideEffect
 import com.bigong.oguri.feature.login.ui.model.LoginUiState
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 @Inject
 class LoginViewModel(
     private val loginWithKakaoAccessTokenUseCase: LoginWithKakaoAccessTokenUseCase,
+    private val loginWithGoogleIdentityTokenUseCase: LoginWithGoogleIdentityTokenUseCase,
     private val loginWithAppleIdentityTokenUseCase: LoginWithAppleIdentityTokenUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -44,6 +46,18 @@ class LoginViewModel(
         login(
             loginRequest = {
                 loginWithAppleIdentityTokenUseCase(identityToken = identityToken)
+            },
+        )
+    }
+
+    fun loginWithGoogleIdentityToken(identityToken: String) {
+        if (uiState.value.isLoading || identityToken.isBlank()) {
+            return
+        }
+
+        login(
+            loginRequest = {
+                loginWithGoogleIdentityTokenUseCase(identityToken = identityToken)
             },
         )
     }
