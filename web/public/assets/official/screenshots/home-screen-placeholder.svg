@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 1080" role="img" aria-label="오구리 홈 화면 더미">
+  <rect width="540" height="1080" rx="38" fill="#eef5ff"/>
+  <rect x="32" y="40" width="476" height="120" rx="18" fill="#ffffff"/>
+  <rect x="32" y="190" width="476" height="210" rx="20" fill="#ffffff"/>
+  <rect x="32" y="420" width="476" height="210" rx="20" fill="#ffffff"/>
+  <rect x="32" y="650" width="476" height="210" rx="20" fill="#ffffff"/>
+  <text x="54" y="112" font-size="34" font-weight="700" fill="#1d4e95">HOME PLACEHOLDER</text>
+  <text x="54" y="248" font-size="24" fill="#5f7a9a">이번엔 이렇게 쉬어볼까요?</text>
+</svg>

@@ -5,13 +5,14 @@
 - 앱 내 UX 라이팅 톤(`...해볼까요?`, `부담 없는 제안형`)을 웹에서도 일관되게 사용한다.
 
 ## 반영된 구조
-- Hero: 브랜드 핵심 메시지 + Play Store/App Store CTA
-- Highlight Strip: 짧은 가치 문구
-- How Oguri Works: 3단계 소개 카드
-- Trust Signals: 신뢰 포인트 체크리스트
-- Share Section: 공유 링크에서 앱/스토어로 이어지는 흐름 소개
-- Asset Plan: 홍보용 이미지 교체 위치 안내
-- Final CTA: 스토어 이동 버튼 재노출
+- Floating Header: 상단 브랜드 + 스토어 진입 버튼
+- Hero: 강한 메시지 + CTA + 보조 통계 카드 + 레이어드 비주얼
+- Value Cards: 핵심 가치 3개 요약
+- Story Section: Why Oguri 설명 + 이미지
+- Review Section: 사용자 후기 카드
+- FAQ Section: 자주 묻는 질문
+- Final CTA: 설치 유도 재강조
+- Mobile Sticky CTA: 모바일 하단 고정 설치 버튼
 
 ## UX 라이팅 기준
 - 참고 문자열 리소스:
@@ -32,9 +33,21 @@
 - `web/public/assets/official/hero-travel-collage.svg`
 - `web/public/assets/official/recommendation-cards-preview.svg`
 - `web/public/assets/official/share-flow-preview.svg`
+- `web/public/assets/official/screenshots/home-screen-placeholder.svg`
+- `web/public/assets/official/screenshots/calendar-screen-placeholder.svg`
+- `web/public/assets/official/screenshots/my-page-screen-placeholder.svg`
 - 상세 가이드: `web/public/assets/official/README.md`
 
 ## 운영 체크리스트
 - 실제 스토어 상세 페이지 URL로 `VITE_PLAY_STORE_URL`, `VITE_APP_STORE_URL` 설정
 - 더미 SVG를 브랜드 홍보 이미지로 교체
 - 배포 후 모바일/데스크톱에서 CTA 클릭 동작 확인
+
+## 레퍼런스 반영 포인트
+- 참고 사이트:
+  - `https://www.websoso.kr/`
+  - `https://hearit-landing.pages.dev/`
+- 반영 의도:
+  - 첫 화면에서 즉시 CTA가 보이는 구조
+  - 카드 중심 정보 밀도와 섹션 리듬 강화
+  - 스크린샷/리뷰/FAQ를 이용한 신뢰도 보강
