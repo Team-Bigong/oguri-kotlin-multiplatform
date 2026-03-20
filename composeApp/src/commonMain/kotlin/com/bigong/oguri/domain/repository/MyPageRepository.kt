@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface MyPageRepository {
     suspend fun getMyPageInfo(): MyPageInfo
+
     fun observePreferredLeaveDaysChanges(): Flow<PreferredLeaveDaysChange>
 
     suspend fun updateLeaveDays(

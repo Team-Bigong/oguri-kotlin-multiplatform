@@ -2,6 +2,7 @@ package com.bigong.oguri.data.remote
 
 import com.bigong.oguri.core.network.DEBUG_BASE_URL
 import com.bigong.oguri.data.remote.model.request.AppleLoginRequest
+import com.bigong.oguri.data.remote.model.request.GoogleLoginRequest
 import com.bigong.oguri.data.remote.model.request.KakaoLoginRequest
 import com.bigong.oguri.data.remote.model.request.RefreshTokenRequest
 import com.bigong.oguri.data.remote.model.request.UpdateMemberDayOffRequest
@@ -23,6 +24,17 @@ class KtorAuthRemoteDataSource(
 ) : AuthRemoteDataSource {
     override suspend fun loginWithKakao(request: KakaoLoginRequest): AuthLoginResponse {
         val requestUrl = "$DEBUG_BASE_URL$AUTH_LOGIN_KAKAO_API_PATH"
+        return httpClient
+            .post(requestUrl) {
+                headers.remove(HttpHeaders.Authorization)
+                headers.remove(USER_ID_HEADER_NAME)
+                headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
+                setBody(request)
+            }.body()
+    }
+
+    override suspend fun loginWithGoogle(request: GoogleLoginRequest): AuthLoginResponse {
+        val requestUrl = "$DEBUG_BASE_URL$AUTH_LOGIN_GOOGLE_API_PATH"
         return httpClient
             .post(requestUrl) {
                 headers.remove(HttpHeaders.Authorization)
@@ -71,6 +83,7 @@ class KtorAuthRemoteDataSource(
 
     private companion object {
         private const val AUTH_LOGIN_KAKAO_API_PATH = "/api/v1/auth/login/kakao"
+        private const val AUTH_LOGIN_GOOGLE_API_PATH = "/api/v1/auth/login/google"
         private const val AUTH_LOGIN_APPLE_API_PATH = "/api/v1/auth/login/apple"
         private const val AUTH_REFRESH_API_PATH = "/api/v1/auth/refresh"
         private const val MEMBER_ME_API_PATH = "/api/v1/members/me"

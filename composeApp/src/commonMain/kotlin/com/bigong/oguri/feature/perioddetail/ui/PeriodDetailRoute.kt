@@ -70,7 +70,11 @@ fun PeriodDetailRoute(
                     SharePayload(
                         title = shareTitle,
                         description = sharePeriodDescription,
-                        imageUrl = periodDetail.places.firstOrNull()?.thumbnailUrl.orEmpty(),
+                        imageUrl =
+                            periodDetail.places
+                                .firstOrNull()
+                                ?.thumbnailUrl
+                                .orEmpty(),
                         deepLinkUrl = deepLinkUrl,
                         buttonTitle = shareButtonTitle,
                         fallbackMessage = shareFallbackMessage,

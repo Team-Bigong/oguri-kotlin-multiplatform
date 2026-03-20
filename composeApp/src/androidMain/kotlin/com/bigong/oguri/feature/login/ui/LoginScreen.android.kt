@@ -17,16 +17,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.KakaoYellow
+import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.login.ui.component.LoginActionButton
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_app_text
+import oguri.composeapp.generated.resources.ic_google_login
 import oguri.composeapp.generated.resources.ic_kakao_login
 import oguri.composeapp.generated.resources.img_oguri_walking
+import oguri.composeapp.generated.resources.login_google_with_account
 import oguri.composeapp.generated.resources.login_guest_browse
 import oguri.composeapp.generated.resources.login_kakao_with_account
 import org.jetbrains.compose.resources.painterResource
@@ -34,6 +38,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun LoginScreen(
+    onGoogleLoginClick: () -> Unit,
     onKakaoLoginClick: () -> Unit,
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
@@ -61,7 +66,18 @@ actual fun LoginScreen(
         Spacer(modifier = Modifier.height(height = 32.dp))
 
         LoginActionButton(
+            iconResource = Res.drawable.ic_google_login,
+            iconSize = LOGIN_BUTTON_ICON_SIZE,
+            titleText = stringResource(Res.string.login_google_with_account),
+            backgroundColor = Neutral0,
+            contentColor = Neutral90,
+            borderColor = Neutral90,
+            onClick = onGoogleLoginClick,
+        )
+        Spacer(modifier = Modifier.height(height = 18.dp))
+        LoginActionButton(
             iconResource = Res.drawable.ic_kakao_login,
+            iconSize = LOGIN_BUTTON_ICON_SIZE,
             titleText = stringResource(Res.string.login_kakao_with_account),
             backgroundColor = KakaoYellow,
             contentColor = Neutral100,
@@ -83,9 +99,12 @@ actual fun LoginScreen(
 private fun LoginScreenAndroidPreview() {
     OguriTheme {
         LoginScreen(
+            onGoogleLoginClick = {},
             onKakaoLoginClick = {},
             onAppleLoginClick = {},
             onGuestBrowseClick = {},
         )
     }
 }
+
+private val LOGIN_BUTTON_ICON_SIZE = 18.dp

@@ -129,6 +129,18 @@ class MainNavigator(
         )
     }
 
+    fun navigateToPhotoDetail(
+        imageUrls: List<String>,
+        initialPage: Int,
+    ) {
+        navHostController.navigate(
+            RouteModel.PhotoDetail(
+                imageUrls = imageUrls,
+                initialPage = initialPage,
+            ),
+        )
+    }
+
     fun navigateToWebDocument(documentType: WebDocumentType) {
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
@@ -147,6 +159,13 @@ class MainNavigator(
                 navigateToPeriodDetail(
                     startDate = routeModel.startDate,
                     endDate = routeModel.endDate,
+                )
+            }
+
+            is RouteModel.PhotoDetail -> {
+                navigateToPhotoDetail(
+                    imageUrls = routeModel.imageUrls,
+                    initialPage = routeModel.initialPage,
                 )
             }
 

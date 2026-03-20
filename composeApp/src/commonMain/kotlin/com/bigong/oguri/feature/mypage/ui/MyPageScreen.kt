@@ -18,9 +18,9 @@ import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
-import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
 import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestProfileSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestSection
+import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuItem
 import com.bigong.oguri.feature.mypage.ui.component.MyPageMenuSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageProfileSection
@@ -115,7 +115,10 @@ fun MyPageScreen(
                     menuItems =
                         listOf(
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
-                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_terms_of_service), onClick = onTermsOfServiceClick),
+                            MyPageMenuItem(
+                                label = stringResource(Res.string.mypage_menu_terms_of_service),
+                                onClick = onTermsOfServiceClick,
+                            ),
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_privacy_policy), onClick = onPrivacyPolicyClick),
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_withdraw), onClick = onGuestLoginClick),
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onGuestLoginClick),

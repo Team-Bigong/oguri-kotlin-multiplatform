@@ -7,6 +7,7 @@ import kotlinx.datetime.LocalDate
 
 interface HomeRepository {
     suspend fun getRecommendPeriods(userCountry: String): List<RecommendPeriod>
+
     fun observeRecommendationSavedChanges(): Flow<RecommendationSavedChange>
 
     suspend fun saveRecommendation(
