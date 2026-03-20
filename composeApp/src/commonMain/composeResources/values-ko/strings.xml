@@ -99,7 +99,7 @@
     <string name="share_title">이번엔 이렇게 쉬어볼까요?</string>
     <string name="share_place_title">%1$s 어떠세요?</string>
     <string name="share_place_description">지금 가기 좋은 여행지예요\n한번 확인해보세요</string>
-    <string name="share_period_description">연차 %1$d일로 %2$d일이나 쉴 수 있어요\n한번 구경해볼까요?</string>
+    <string name="share_period_description">연차 %1$d일로 %2$d일이나 쉴 수 있어요\n한번 확인해보세요</string>
     <string name="share_button_open_in_app">앱에서 보기</string>
     <string name="share_default_fallback_message">지금 쉬기 좋은 타이밍이에요\n한번 구경해볼까요?</string>
     <string name="share_default_fallback_url">https://naver.com</string>
