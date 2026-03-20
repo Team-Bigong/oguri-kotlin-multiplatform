@@ -121,7 +121,6 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         AppOpenAd.load(
             with: iosAppOpenAdUnitId,
             request: Request(),
-            orientation: UIInterfaceOrientation.portrait,
             completionHandler: { [weak self] ad, _ in
                 guard let self else { return }
                 self.appOpenAd = ad
