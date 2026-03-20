@@ -158,7 +158,7 @@ fun PlaceDetailScreen(
                         Spacer(modifier = Modifier.height(28.dp))
                         GuideHeader(
                             iconResource = Res.drawable.ic_binoculars,
-                            titleText = stringResource(Res.string.place_detail_section_experience),
+                            titleText = stringResource(Res.string.place_detail_section_experience, placeDetail.city),
                             highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
                             subtitleText = null,
                             modifier = Modifier.padding(horizontal = 20.dp),

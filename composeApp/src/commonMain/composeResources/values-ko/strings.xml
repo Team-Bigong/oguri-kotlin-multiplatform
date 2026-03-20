@@ -39,7 +39,7 @@
     <string name="home_error_retry">추천 전략을 불러오지 못했어요. 눌러서 다시 시도해 주세요.</string>
 
     <string name="place_detail_country">%1$s</string>
-    <string name="place_detail_section_experience">보라카이에서 이런 건 어때요?</string>
+    <string name="place_detail_section_experience">%1$s에서 이런 건 어때요?</string>
     <string name="place_detail_section_experience_highlight">이런 건 어때요?</string>
     <string name="place_detail_section_experience_subtitle">마음에 드는 카드를 눌러보세요</string>
     <string name="place_detail_flight_title">항공편, 구경이라도 해볼까요?</string>
