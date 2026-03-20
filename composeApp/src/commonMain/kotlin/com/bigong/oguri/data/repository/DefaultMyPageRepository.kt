@@ -34,13 +34,13 @@ class DefaultMyPageRepository(
     ): MyPageInfo {
         val myPageInfo =
             myPageRemoteDataSource
-            .updateLeaveDays(
-                request =
-                    UpdateMyPageLeaveDaysRequest(
-                        remainingLeaveDays = remainingLeaveDays,
-                        preferredLeaveDays = preferredLeaveDays,
-                    ),
-            ).toDomain()
+                .updateLeaveDays(
+                    request =
+                        UpdateMyPageLeaveDaysRequest(
+                            remainingLeaveDays = remainingLeaveDays,
+                            preferredLeaveDays = preferredLeaveDays,
+                        ),
+                ).toDomain()
         preferredLeaveDaysChangeFlow.tryEmit(
             PreferredLeaveDaysChange(
                 preferredLeaveDays = myPageInfo.preferredLeaveDays,

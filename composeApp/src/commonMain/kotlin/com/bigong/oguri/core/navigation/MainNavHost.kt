@@ -23,8 +23,8 @@ import com.bigong.oguri.feature.login.ui.LoginRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageViewModel
 import com.bigong.oguri.feature.onboarding.ui.OnboardingRoute
-import com.bigong.oguri.feature.photodetail.ui.PhotoDetailRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
+import com.bigong.oguri.feature.photodetail.ui.PhotoDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute

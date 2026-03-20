@@ -132,55 +132,56 @@ fun ZoomablePhotoImage(
         contentDescription = null,
         contentScale = ContentScale.Fit,
         modifier =
-            modifier.onSizeChanged { measuredSize ->
-                containerSize = measuredSize
-            }.graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                translationX = offset.x
-                translationY = offset.y
-            }.pointerInput(imageUrl) {
-                detectTapGestures(
-                    onDoubleTap = { tapOffset ->
-                        settleJob?.cancel()
+            modifier
+                .onSizeChanged { measuredSize ->
+                    containerSize = measuredSize
+                }.graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
+                }.pointerInput(imageUrl) {
+                    detectTapGestures(
+                        onDoubleTap = { tapOffset ->
+                            settleJob?.cancel()
 
-                        if (scale > MINIMUM_SCALE + SCALE_ACTIVE_THRESHOLD) {
-                            scale = MINIMUM_SCALE
-                            offset = Offset.Zero
-                            onZoomActiveChanged(false)
-                            return@detectTapGestures
-                        }
+                            if (scale > MINIMUM_SCALE + SCALE_ACTIVE_THRESHOLD) {
+                                scale = MINIMUM_SCALE
+                                offset = Offset.Zero
+                                onZoomActiveChanged(false)
+                                return@detectTapGestures
+                            }
 
-                        val nextScale = DOUBLE_TAP_SCALE
-                        scale = nextScale
+                            val nextScale = DOUBLE_TAP_SCALE
+                            scale = nextScale
 
-                        val centerOffset =
-                            Offset(
-                                x = containerSize.width / 2f,
-                                y = containerSize.height / 2f,
-                            )
-                        val tapDelta = tapOffset - centerOffset
-                        val imageSize = resolveImageSize()
-                        val bounds =
-                            calculateOffsetBounds(
-                                scale = nextScale,
-                                containerSize = containerSize,
-                                imageSize = imageSize,
-                            )
+                            val centerOffset =
+                                Offset(
+                                    x = containerSize.width / 2f,
+                                    y = containerSize.height / 2f,
+                                )
+                            val tapDelta = tapOffset - centerOffset
+                            val imageSize = resolveImageSize()
+                            val bounds =
+                                calculateOffsetBounds(
+                                    scale = nextScale,
+                                    containerSize = containerSize,
+                                    imageSize = imageSize,
+                                )
 
-                        offset =
-                            Offset(
-                                x = (-tapDelta.x).coerceIn(minimumValue = -bounds.x, maximumValue = bounds.x),
-                                y = (-tapDelta.y).coerceIn(minimumValue = -bounds.y, maximumValue = bounds.y),
-                            )
-                        onZoomActiveChanged(true)
-                    },
-                )
-            }.transformable(
-                state = transformableState,
-                canPan = { scale > MINIMUM_SCALE + SCALE_ACTIVE_THRESHOLD },
-                lockRotationOnZoomPan = true,
-            ),
+                            offset =
+                                Offset(
+                                    x = (-tapDelta.x).coerceIn(minimumValue = -bounds.x, maximumValue = bounds.x),
+                                    y = (-tapDelta.y).coerceIn(minimumValue = -bounds.y, maximumValue = bounds.y),
+                                )
+                            onZoomActiveChanged(true)
+                        },
+                    )
+                }.transformable(
+                    state = transformableState,
+                    canPan = { scale > MINIMUM_SCALE + SCALE_ACTIVE_THRESHOLD },
+                    lockRotationOnZoomPan = true,
+                ),
     )
 }
 

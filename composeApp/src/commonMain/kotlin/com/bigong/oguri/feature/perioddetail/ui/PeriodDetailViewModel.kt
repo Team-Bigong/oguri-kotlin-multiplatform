@@ -45,33 +45,34 @@ class PeriodDetailViewModel(
     private var lastResolvedPeriodDetail: CalendarPeriodDetail? = null
 
     val pagedPlaces: Flow<PagingData<Place>> =
-        queryFlow.flatMapLatest { query: PeriodDetailPagingQuery ->
-            if (query.startDate.isBlank() || query.endDate.isBlank()) {
-                flowOf(PagingData.empty())
-            } else {
-                Pager(
-                    config =
-                        PagingConfig(
-                            pageSize = PERIOD_DETAIL_PAGE_SIZE,
-                            initialLoadSize = PERIOD_DETAIL_PAGE_SIZE,
-                            prefetchDistance = 2,
-                            enablePlaceholders = false,
-                        ),
-                    pagingSourceFactory = {
-                        PeriodDetailPlacePagingSource(
-                            getCalendarPeriodDetailUseCase = getCalendarPeriodDetailUseCase,
-                            startDate = query.startDate,
-                            endDate = query.endDate,
-                            pageSize = PERIOD_DETAIL_PAGE_SIZE,
-                            onFirstPageResolved = { periodDetail: CalendarPeriodDetail ->
-                                lastResolvedPeriodDetail = periodDetail
-                                resolveHeader(periodDetail)
-                            },
-                        )
-                    },
-                ).flow
-            }
-        }.cachedIn(viewModelScope)
+        queryFlow
+            .flatMapLatest { query: PeriodDetailPagingQuery ->
+                if (query.startDate.isBlank() || query.endDate.isBlank()) {
+                    flowOf(PagingData.empty())
+                } else {
+                    Pager(
+                        config =
+                            PagingConfig(
+                                pageSize = PERIOD_DETAIL_PAGE_SIZE,
+                                initialLoadSize = PERIOD_DETAIL_PAGE_SIZE,
+                                prefetchDistance = 2,
+                                enablePlaceholders = false,
+                            ),
+                        pagingSourceFactory = {
+                            PeriodDetailPlacePagingSource(
+                                getCalendarPeriodDetailUseCase = getCalendarPeriodDetailUseCase,
+                                startDate = query.startDate,
+                                endDate = query.endDate,
+                                pageSize = PERIOD_DETAIL_PAGE_SIZE,
+                                onFirstPageResolved = { periodDetail: CalendarPeriodDetail ->
+                                    lastResolvedPeriodDetail = periodDetail
+                                    resolveHeader(periodDetail)
+                                },
+                            )
+                        },
+                    ).flow
+                }
+            }.cachedIn(viewModelScope)
 
     fun loadPeriodDetail(
         startDate: String,

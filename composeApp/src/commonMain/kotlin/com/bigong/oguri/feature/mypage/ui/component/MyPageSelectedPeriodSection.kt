@@ -22,14 +22,14 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.calendar_d_day_after
 import oguri.composeapp.generated.resources.calendar_d_day_before
+import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.ic_diary
 import oguri.composeapp.generated.resources.mypage_empty_selected_period
+import oguri.composeapp.generated.resources.mypage_section_selected_period
 import oguri.composeapp.generated.resources.mypage_selected_period_date_range
 import oguri.composeapp.generated.resources.mypage_selected_period_date_with_year
-import oguri.composeapp.generated.resources.mypage_section_selected_period
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
 
