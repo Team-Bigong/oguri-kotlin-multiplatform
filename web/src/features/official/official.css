@@ -1,0 +1,658 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap");
+
+.landingPage {
+  min-height: 100%;
+  background: #f7fbff;
+  color: #162a46;
+  font-family: "Noto Sans KR", sans-serif;
+}
+
+.contentContainer {
+  width: min(1180px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.topNavigationBar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(8px);
+  background: rgba(12, 20, 36, 0.72);
+  border-bottom: 1px solid rgba(191, 213, 242, 0.2);
+}
+
+.topNavigationRow {
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+.brandTitle {
+  margin: 0;
+  color: #f1f7ff;
+  font-size: 17px;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.1;
+}
+
+.brandIconImage {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.brandTitleText {
+  display: inline-block;
+  transform: translateY(-1px);
+}
+
+.topNavigationLinks {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+
+.topNavigationLinks a {
+  text-decoration: none;
+  color: #c6d8f3;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.storeButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.storeButton {
+  text-decoration: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  border: 1px solid #c7daf3;
+  background: #ffffff;
+  color: #163a66;
+  font-size: 14px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
+}
+
+.storeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(18, 64, 120, 0.2);
+}
+
+.storeButtonIcon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+.storeButtonLabel {
+  line-height: 1;
+}
+
+.storeButtonsCompact .storeButton {
+  padding: 8px 12px;
+  font-size: 12px;
+  border-color: #536683;
+  color: #e8f2ff;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.storeButtonsCompact .storeButtonIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.heroSection {
+  position: relative;
+  min-height: calc(100vh - 64px);
+  background: radial-gradient(circle at 75% 15%, rgba(65, 105, 255, 0.32) 0%, rgba(65, 105, 255, 0) 40%),
+    radial-gradient(circle at 20% 85%, rgba(31, 171, 145, 0.24) 0%, rgba(31, 171, 145, 0) 40%),
+    linear-gradient(160deg, #0f1728 0%, #13233b 50%, #102030 100%);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.heroGlowBall {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.heroGlowBallLeft {
+  width: 440px;
+  height: 440px;
+  left: -160px;
+  top: -140px;
+  background: radial-gradient(circle, rgba(72, 145, 255, 0.26) 0%, rgba(72, 145, 255, 0) 70%);
+}
+
+.heroGlowBallRight {
+  width: 540px;
+  height: 540px;
+  right: -180px;
+  bottom: -190px;
+  background: radial-gradient(circle, rgba(28, 175, 151, 0.26) 0%, rgba(28, 175, 151, 0) 70%);
+}
+
+.heroGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 48px 0;
+}
+
+.heroCopyWrap {
+  position: relative;
+  z-index: 2;
+}
+
+.heroEyebrow {
+  margin: 0;
+  color: #9bc2f6;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.heroTitle {
+  margin: 14px 0 0;
+  color: #f5f9ff;
+  font-size: clamp(44px, 5.4vw, 78px);
+  line-height: 1.04;
+  font-weight: 900;
+}
+
+.heroDescription {
+  margin: 20px 0 0;
+  color: #bed0ea;
+  font-size: clamp(17px, 1.5vw, 21px);
+  line-height: 1.7;
+  max-width: 32ch;
+}
+
+.heroBulletWrap {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.heroBulletWrap span {
+  border-radius: 999px;
+  border: 1px solid rgba(175, 199, 227, 0.4);
+  background: rgba(255, 255, 255, 0.04);
+  color: #d2e2f7;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.storeButtonsOnDark {
+  margin-top: 26px;
+}
+
+.storeButtonsOnDark .storeButton {
+  border-color: rgba(206, 223, 246, 0.85);
+  color: #e8f2ff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.storeButtonsOnDark .storeButton:first-child {
+  border-color: transparent;
+  background: linear-gradient(140deg, #4d87ff 0%, #27b8a0 100%);
+  color: #ffffff;
+  box-shadow: 0 14px 26px rgba(60, 131, 246, 0.36);
+}
+
+.storeButtonsOnBright {
+  margin-top: 24px;
+  justify-content: center;
+}
+
+.storeButtonsOnBright .storeButton:first-child {
+  border-color: rgba(255, 255, 255, 0.96);
+  background: #ffffff;
+  color: #163b67;
+}
+
+.storeButtonsOnBright .storeButton:first-child .storeButtonIcon {
+  filter: brightness(0) saturate(100%);
+}
+
+.storeButtonsOnBright .storeButton:last-child {
+  border-color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+}
+
+.heroVisualWrap {
+  position: relative;
+  min-height: 540px;
+}
+
+.heroDeviceCard {
+  position: absolute;
+  border-radius: 34px;
+  border: 1px solid rgba(197, 216, 244, 0.35);
+  box-shadow: 0 26px 44px rgba(8, 20, 38, 0.55);
+  background: #111a2a;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+  image-rendering: auto;
+}
+
+.heroDeviceCardBack {
+  width: 290px;
+  right: 10px;
+  top: 18px;
+  transform: rotate(7deg) translateZ(0);
+  opacity: 0.9;
+}
+
+.heroDeviceCardFront {
+  width: 310px;
+  left: 24px;
+  top: 96px;
+  transform: rotate(-5deg) translateZ(0);
+}
+
+.highlightBandSection {
+  background: linear-gradient(95deg, #1f6ede 0%, #1fa794 100%);
+  padding: 14px 0;
+}
+
+.highlightBandSection p {
+  margin: 0;
+  color: #f4faff;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.featureSection {
+  padding: 96px 0 84px;
+  background: #f7fbff;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.sectionEyebrow {
+  margin: 0;
+  color: #2f6fc4;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.sectionTitle {
+  margin: 12px 0 0;
+  color: #122c4d;
+  font-size: clamp(32px, 3.8vw, 52px);
+  line-height: 1.15;
+  font-weight: 900;
+}
+
+.sectionDescription {
+  margin: 14px 0 0;
+  color: #5b7899;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.featureCard {
+  border-radius: 22px;
+  border: 1px solid #d0def2;
+  background: #ffffff;
+  padding: 24px 20px;
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 16px 30px rgba(21, 67, 125, 0.14);
+}
+
+.featureIndex {
+  margin: 0;
+  color: #2b6bc0;
+  font-size: 26px;
+  font-weight: 900;
+}
+
+.featureCard h3 {
+  margin: 10px 0 0;
+  color: #1a3e6c;
+  font-size: 21px;
+}
+
+.featureCard p {
+  margin: 10px 0 0;
+  color: #5f7999;
+  font-size: 15px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.previewSection {
+  padding: 90px 0;
+  background: linear-gradient(180deg, #eff7ff 0%, #edf9f5 100%);
+}
+
+.previewSectionInner {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.previewCard {
+  border-radius: 20px;
+  border: 1px solid #cadbf3;
+  background: #ffffff;
+  overflow: hidden;
+  box-shadow: 0 12px 22px rgba(22, 68, 126, 0.12);
+}
+
+.previewCard img {
+  width: 100%;
+  height: 330px;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+
+.previewMetaWrap {
+  padding: 12px;
+}
+
+.previewTitle {
+  margin: 0;
+  color: #1d467f;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.previewSubtitle {
+  margin: 7px 0 0;
+  color: #627e9d;
+  font-size: 13px;
+}
+
+.questionSection {
+  padding: 90px 0;
+  background: #f7fbff;
+}
+
+.questionSectionInner {
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 20px;
+}
+
+.questionListWrap {
+  border-radius: 20px;
+  border: 1px solid #d0def2;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.questionListWrap details {
+  border-radius: 12px;
+  border: 1px solid #d9e5f6;
+  background: #f9fcff;
+  padding: 12px;
+}
+
+.questionListWrap details + details {
+  margin-top: 8px;
+}
+
+.questionListWrap summary {
+  list-style: none;
+  cursor: pointer;
+  color: #234d84;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.questionListWrap summary::-webkit-details-marker {
+  display: none;
+}
+
+.questionListWrap p {
+  margin: 9px 0 0;
+  color: #607b99;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.callToActionSection {
+  padding: 92px 0;
+  background: #f7fbff;
+}
+
+.callToActionPanel {
+  border-radius: 30px;
+  border: 1px solid #c4daf4;
+  background: linear-gradient(135deg, #1f6ede 0%, #1ea795 100%);
+  box-shadow: 0 22px 34px rgba(22, 79, 150, 0.22);
+  color: #ffffff;
+  text-align: center;
+  padding: 48px 22px;
+}
+
+.callToActionPanel h2 {
+  margin: 0;
+  font-size: clamp(34px, 4.4vw, 60px);
+  line-height: 1.2;
+}
+
+.callToActionPanel p {
+  margin: 14px 0 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.callToActionPanel .heroActionRow {
+  justify-content: center;
+}
+
+.footerSection {
+  border-top: 1px solid #d8e4f6;
+  background: #ffffff;
+  padding: 34px 0;
+}
+
+.footerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.footerBrandTitle {
+  margin: 0;
+  color: #173e6f;
+  font-size: 30px;
+  font-weight: 900;
+  line-height: 1.05;
+}
+
+.footerBrandWrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footerBrandTextWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.footerBrandIconImage {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.footerBrandSubTitle {
+  margin: 0;
+  color: #6a86a6;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.footerLinkRow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footerLinkRow a {
+  text-decoration: none;
+  color: #617d9d;
+  font-size: 14px;
+}
+
+@media (max-width: 1100px) {
+  .topNavigationLinks {
+    display: none;
+  }
+
+  .heroGrid,
+  .previewSectionInner,
+  .questionSectionInner {
+    grid-template-columns: 1fr;
+  }
+
+  .heroCopyWrap {
+    text-align: center;
+  }
+
+  .heroDescription {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .heroBulletWrap,
+  .storeButtons {
+    justify-content: center;
+  }
+
+  .heroVisualWrap {
+    min-height: 470px;
+  }
+
+  .heroDeviceCardBack {
+    right: 20%;
+  }
+
+  .heroDeviceCardFront {
+    left: 20%;
+  }
+
+  .featureGrid,
+  .previewGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .contentContainer {
+    width: min(1180px, calc(100% - 24px));
+  }
+
+  .topNavigationRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .brandTitle {
+    font-size: 14px;
+  }
+
+  .brandTitleText {
+    transform: none;
+  }
+
+  .storeButtonsCompact .storeButton {
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
+  .heroSection {
+    min-height: auto;
+    padding: 44px 0;
+  }
+
+  .heroVisualWrap {
+    min-height: 340px;
+  }
+
+  .heroDeviceCardBack {
+    width: 220px;
+    right: 8%;
+    top: 6px;
+  }
+
+  .heroDeviceCardFront {
+    width: 240px;
+    left: 6%;
+    top: 84px;
+  }
+
+  .sectionDescription,
+  .callToActionPanel p {
+    font-size: 15px;
+  }
+
+  .footerRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .footerBrandTitle {
+    font-size: 26px;
+  }
+
+  .footerBrandSubTitle {
+    font-size: 15px;
+  }
+}
