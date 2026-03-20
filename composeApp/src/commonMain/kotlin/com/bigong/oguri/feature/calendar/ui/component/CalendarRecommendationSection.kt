@@ -23,8 +23,8 @@ import oguri.composeapp.generated.resources.calendar_recommendation_guide_title
 import oguri.composeapp.generated.resources.ic_thumb
 import org.jetbrains.compose.resources.stringResource
 
-private const val INITIAL_INLINE_BANNER_AFTER_CARD_INDEX = 1
-private const val INLINE_BANNER_INTERVAL = 6
+private const val INITIAL_INLINE_BANNER_AFTER_CARD_INDEX = 3
+private const val INLINE_BANNER_INTERVAL = 8
 
 @Composable
 fun CalendarRecommendationSection(

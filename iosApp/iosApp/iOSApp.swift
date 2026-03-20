@@ -5,8 +5,14 @@ import ComposeApp
 import KakaoSDKCommon
 import GoogleMobileAds
 
+#if DEBUG
+private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
+private let iosAppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023"
+#else
 private let iosBannerAdUnitId = "ca-app-pub-2833810411143763/4722770918"
 private let iosAppOpenAdUnitId = "ca-app-pub-2833810411143763/4746554741"
+#endif
+private let iosTestDeviceIdentifier = "8ca04675fef46ae5bc7a3764ddea6526"
 
 @main
 struct iOSApp: App {
@@ -42,6 +48,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
     private var isLoadingAppOpenAd = false
     private var isShowingAppOpenAd = false
     private var bannerByContainerId: [ObjectIdentifier: BannerView] = [:]
+    private var bannerLoadRetryCountByContainerId: [ObjectIdentifier: Int] = [:]
 
     private override init() {
         super.init()
@@ -108,6 +115,9 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
     }
 
     private func initializeMobileAdsIfNeeded() {
+        #if DEBUG
+        MobileAds.shared.requestConfiguration.testDeviceIdentifiers = ["SIMULATOR", iosTestDeviceIdentifier]
+        #endif
         MobileAds.shared.start(completionHandler: nil)
         preloadAppOpenAd()
     }
@@ -155,35 +165,74 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
             return
         }
 
-        let adWidth = max(containerView.bounds.width, UIScreen.main.bounds.width - 40)
-        let adSize = currentOrientationAnchoredAdaptiveBanner(width: adWidth)
+        let measuredContainerWidth = max(containerView.bounds.width, UIScreen.main.bounds.width - 40)
+        let adWidth = max(measuredContainerWidth, 320)
+        let adSize = largeAnchoredAdaptiveBanner(width: adWidth)
         let bannerView = BannerView(adSize: adSize)
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         bannerView.adUnitID = resolveBannerAdUnitId(placementKey: placementKey)
-        bannerView.rootViewController = containerView.enclosingViewController()
+        bannerView.delegate = self
 
         containerView.subviews.forEach { $0.removeFromSuperview() }
         containerView.addSubview(bannerView)
         NSLayoutConstraint.activate([
-            bannerView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            bannerView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            bannerView.topAnchor.constraint(equalTo: containerView.topAnchor),
-            bannerView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            bannerView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            bannerView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            bannerView.leadingAnchor.constraint(greaterThanOrEqualTo: containerView.leadingAnchor),
+            bannerView.trailingAnchor.constraint(lessThanOrEqualTo: containerView.trailingAnchor),
+            bannerView.topAnchor.constraint(greaterThanOrEqualTo: containerView.topAnchor),
+            bannerView.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor),
         ])
 
         bannerByContainerId[containerId] = bannerView
-        bannerView.load(Request())
+        bannerLoadRetryCountByContainerId[containerId] = 0
+        loadBannerWhenViewControllerIsReady(containerView: containerView)
     }
 
     private func detachBanner(from containerView: UIView) {
         let containerId = ObjectIdentifier(containerView)
         let bannerView = bannerByContainerId.removeValue(forKey: containerId)
         bannerView?.removeFromSuperview()
+        bannerLoadRetryCountByContainerId.removeValue(forKey: containerId)
     }
 
     private func resolveBannerAdUnitId(placementKey: String) -> String {
-        _ = placementKey
-        return iosBannerAdUnitId
+        switch placementKey {
+        case "CALENDAR_INLINE", "PHOTO_DETAIL_BOTTOM":
+            return iosBannerAdUnitId
+        default:
+            return iosBannerAdUnitId
+        }
+    }
+
+    private func loadBannerWhenViewControllerIsReady(containerView: UIView) {
+        let containerId = ObjectIdentifier(containerView)
+        guard let bannerView = bannerByContainerId[containerId] else {
+            return
+        }
+
+        let rootViewController = containerView.enclosingViewController() ?? UIApplication.shared.topMostViewController()
+        guard let rootViewController else {
+            scheduleBannerLoadRetry(containerView: containerView)
+            return
+        }
+
+        bannerView.rootViewController = rootViewController
+        bannerView.load(Request())
+    }
+
+    private func scheduleBannerLoadRetry(containerView: UIView) {
+        let containerId = ObjectIdentifier(containerView)
+        let currentRetryCount = bannerLoadRetryCountByContainerId[containerId] ?? 0
+        if currentRetryCount >= 20 {
+            return
+        }
+        bannerLoadRetryCountByContainerId[containerId] = currentRetryCount + 1
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self, weak containerView] in
+            guard let self, let containerView else { return }
+            self.loadBannerWhenViewControllerIsReady(containerView: containerView)
+        }
     }
 
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
@@ -200,6 +249,16 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
 
     func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
         isShowingAppOpenAd = true
+    }
+}
+
+extension OguriAdMobBridge: BannerViewDelegate {
+    func bannerViewDidReceiveAd(_ bannerView: BannerView) {
+        print("OguriAdMobBridge: iOS banner did receive ad")
+    }
+
+    func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: any Error) {
+        print("OguriAdMobBridge: iOS banner failed to load: \(error.localizedDescription)")
     }
 }
 
