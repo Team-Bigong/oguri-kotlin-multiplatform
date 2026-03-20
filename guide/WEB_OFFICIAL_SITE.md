@@ -32,15 +32,22 @@
 - `web/public/assets/official/hero-travel-collage.svg`
 - `web/public/assets/official/recommendation-cards-preview.svg`
 - `web/public/assets/official/share-flow-preview.svg`
-- `web/public/assets/official/screenshots/home-screen-placeholder.svg`
-- `web/public/assets/official/screenshots/calendar-screen-placeholder.svg`
-- `web/public/assets/official/screenshots/my-page-screen-placeholder.svg`
+- `web/public/assets/official/screenshots/home-screen.png`
+- `web/public/assets/official/screenshots/calendar-screen.png`
+- `web/public/assets/official/screenshots/my-page-screen.png`
+- `web/public/assets/official/screenshots/hero-back-card.png`
+- `web/public/assets/official/store/play-store-logo.png`
+- `web/public/assets/official/store/app-store-logo.png`
 - 상세 가이드: `web/public/assets/official/README.md`
 
 ## 운영 체크리스트
 - 실제 스토어 상세 페이지 URL로 `VITE_PLAY_STORE_URL`, `VITE_APP_STORE_URL` 설정
 - 더미 SVG를 브랜드 홍보 이미지로 교체
 - 배포 후 모바일/데스크톱에서 CTA 클릭 동작 확인
+- 푸터 외부 링크 확인:
+  - 건의하기(Google Form)
+  - 서비스 이용약관(Notion)
+  - 개인정보 처리방침(Notion)
 
 ## 레퍼런스 반영 포인트
 - 참고 사이트:

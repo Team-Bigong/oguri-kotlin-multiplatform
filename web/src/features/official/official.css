@@ -64,6 +64,15 @@
   border: 1px solid #4f6282;
   color: #e5f0ff;
   background: rgba(255, 255, 255, 0.02);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.storeButtonTop img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
 }
 
 .heroSection {
@@ -168,6 +177,16 @@
   font-weight: 800;
   padding: 12px 18px;
   transition: transform 170ms ease, box-shadow 170ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.solidActionButton img,
+.outlineActionButton img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
 }
 
 .solidActionButton {

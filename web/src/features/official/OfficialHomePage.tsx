@@ -10,6 +10,10 @@ const appStoreUrl = webEnvironment.appStoreUrl.trim().length > 0
   ? webEnvironment.appStoreUrl
   : "https://apps.apple.com"
 
+const suggestionFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdIebTYVf7Gy4XMCJtGaWO26UXMiBImWTDQbCVB2zywYMGV4g/viewform?usp=sharing&ouid=103643341635895040668"
+const termsOfServiceUrl = "https://wealthy-clematis-4a5.notion.site/31d5bca0ac22806aa8c4f6b0374c3a55?source=copy_link"
+const privacyPolicyUrl = "https://wealthy-clematis-4a5.notion.site/31d5bca0ac2280269bbcd799cdc73997?source=copy_link"
+
 const featureItems = [
   {
     title: "연차 조합 추천",
@@ -29,17 +33,17 @@ const previewItems = [
   {
     title: "홈",
     subtitle: "추천 전략을 한눈에",
-    imagePath: "/assets/official/screenshots/home-screen-placeholder.svg"
+    imagePath: "/assets/official/screenshots/home-screen.png"
   },
   {
     title: "캘린더",
     subtitle: "연차별 조합 비교",
-    imagePath: "/assets/official/screenshots/calendar-screen-placeholder.svg"
+    imagePath: "/assets/official/screenshots/calendar-screen.png"
   },
   {
     title: "마이페이지",
     subtitle: "저장 일정 관리",
-    imagePath: "/assets/official/screenshots/my-page-screen-placeholder.svg"
+    imagePath: "/assets/official/screenshots/my-page-screen.png"
   }
 ]
 
@@ -70,8 +74,14 @@ export const OfficialHomePage = (): React.JSX.Element => {
             <a href="#download">다운로드</a>
           </nav>
           <div className="topStoreButtons">
-            <a href={playStoreUrl} target="_blank" rel="noreferrer">Google Play</a>
-            <a href={appStoreUrl} target="_blank" rel="noreferrer">App Store</a>
+            <a href={playStoreUrl} target="_blank" rel="noreferrer" className="storeButtonTop">
+              <img src="/assets/official/store/play-store-logo.png" alt="" />
+              <span>Google Play</span>
+            </a>
+            <a href={appStoreUrl} target="_blank" rel="noreferrer" className="storeButtonTop">
+              <img src="/assets/official/store/app-store-logo.png" alt="" />
+              <span>App Store</span>
+            </a>
           </div>
         </div>
       </header>
@@ -97,14 +107,20 @@ export const OfficialHomePage = (): React.JSX.Element => {
               <span>저장 및 공유</span>
             </div>
             <div className="heroActionRow">
-              <a href={appStoreUrl} target="_blank" rel="noreferrer" className="solidActionButton">App Store</a>
-              <a href={playStoreUrl} target="_blank" rel="noreferrer" className="outlineActionButton">Google Play</a>
+              <a href={playStoreUrl} target="_blank" rel="noreferrer" className="solidActionButton">
+                <img src="/assets/official/store/play-store-logo.png" alt="" />
+                <span>Google Play</span>
+              </a>
+              <a href={appStoreUrl} target="_blank" rel="noreferrer" className="outlineActionButton">
+                <img src="/assets/official/store/app-store-logo.png" alt="" />
+                <span>App Store</span>
+              </a>
             </div>
           </div>
 
           <div className="heroVisualWrap">
-            <img className="heroDeviceCard heroDeviceCardBack" src="/assets/official/screenshots/calendar-screen-placeholder.svg" alt="오구리 캘린더 화면" />
-            <img className="heroDeviceCard heroDeviceCardFront" src="/assets/official/screenshots/home-screen-placeholder.svg" alt="오구리 홈 화면" />
+            <img className="heroDeviceCard heroDeviceCardBack" src="/assets/official/screenshots/hero-back-card.png" alt="오구리 히어로 뒤 카드" />
+            <img className="heroDeviceCard heroDeviceCardFront" src="/assets/official/screenshots/home-screen.png" alt="오구리 홈 화면" />
             <div className="heroFloatingCard">연차 3일로 5일이나 쉴 수 있어요</div>
           </div>
         </div>
@@ -182,8 +198,14 @@ export const OfficialHomePage = (): React.JSX.Element => {
             <h2>딱 맞는 휴식 조합, 오구리에서 시작해볼까요?</h2>
             <p>앱에서 더 자세한 추천과 저장 기능을 바로 확인해보세요.</p>
             <div className="heroActionRow">
-              <a href={appStoreUrl} target="_blank" rel="noreferrer" className="solidActionButton">App Store</a>
-              <a href={playStoreUrl} target="_blank" rel="noreferrer" className="outlineActionButton">Google Play</a>
+              <a href={playStoreUrl} target="_blank" rel="noreferrer" className="solidActionButton">
+                <img src="/assets/official/store/play-store-logo.png" alt="" />
+                <span>Google Play</span>
+              </a>
+              <a href={appStoreUrl} target="_blank" rel="noreferrer" className="outlineActionButton">
+                <img src="/assets/official/store/app-store-logo.png" alt="" />
+                <span>App Store</span>
+              </a>
             </div>
           </div>
         </div>
@@ -196,9 +218,9 @@ export const OfficialHomePage = (): React.JSX.Element => {
             <p className="footerBrandSubTitle">연차 조합의 기술</p>
           </div>
           <div className="footerLinkRow">
-            <a href="#">서비스 이용약관</a>
-            <a href="#">개인정보 처리방침</a>
-            <a href="#">건의하기</a>
+            <a href={termsOfServiceUrl} target="_blank" rel="noreferrer">서비스 이용약관</a>
+            <a href={privacyPolicyUrl} target="_blank" rel="noreferrer">개인정보 처리방침</a>
+            <a href={suggestionFormUrl} target="_blank" rel="noreferrer">건의하기</a>
           </div>
         </div>
       </footer>
