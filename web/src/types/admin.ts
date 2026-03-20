@@ -23,6 +23,16 @@ export type Destination = {
   recommendEndMonth2: number | null
   flightTimeMinutes: number | null
   images: DestinationImage[]
+  experiences: DestinationExperience[]
+}
+
+export type DestinationExperience = {
+  id: number
+  title: string
+  description: string
+  thumbnailUrl: string
+  link: string
+  sortOrder: number
 }
 
 export type DestinationImageRequest = {
@@ -42,6 +52,15 @@ export type DestinationUpsertRequest = {
   recommendEndMonth2: number | null
   flightTimeMinutes: number | null
   images: DestinationImageRequest[]
+  experiences: DestinationExperienceRequest[]
+}
+
+export type DestinationExperienceRequest = {
+  title: string
+  description: string
+  thumbnailUrl: string
+  link: string
+  sortOrder: number
 }
 
 export type Member = {
