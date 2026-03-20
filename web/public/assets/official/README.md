@@ -10,6 +10,7 @@
 - `store/play-store-logo.png`: Play Store 버튼 로고
 - `store/app-store-logo.png`: App Store 버튼 로고
 - `app-icon.png`: 상단/하단 브랜드 아이콘
+- `share-thumbnail.png`: 링크 공유(OG/Twitter) 썸네일
 
 ## 권장 가이드
 - 포맷: WebP 또는 AVIF 우선, 필요 시 PNG
