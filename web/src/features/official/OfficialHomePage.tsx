@@ -166,7 +166,7 @@ export const OfficialHomePage = (): React.JSX.Element => {
         <div className="contentContainer previewSectionInner">
           <div className="previewCopyWrap">
             <p className="sectionEyebrow">APP PREVIEW</p>
-            <h2 className="sectionTitle">오구리 화면을 먼저 살펴보세요</h2>
+            <h2 className="sectionTitle">화면 미리보기</h2>
             <p className="sectionDescription">
               연차 조합 확인부터 저장까지
               <br />

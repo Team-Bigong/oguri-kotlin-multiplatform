@@ -38,7 +38,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .brandIconImage {
@@ -51,7 +51,7 @@
 
 .brandTitleText {
   display: inline-block;
-  transform: translateY(1px);
+  transform: translateY(-1px);
 }
 
 .topNavigationLinks {
