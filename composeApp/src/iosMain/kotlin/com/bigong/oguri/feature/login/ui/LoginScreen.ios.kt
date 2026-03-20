@@ -36,6 +36,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun LoginScreen(
+    onGoogleLoginClick: () -> Unit,
     onKakaoLoginClick: () -> Unit,
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
@@ -64,6 +65,7 @@ actual fun LoginScreen(
 
         LoginActionButton(
             iconResource = Res.drawable.ic_apple_login,
+            iconSize = LOGIN_BUTTON_ICON_SIZE,
             titleText = stringResource(Res.string.login_apple_with_account),
             backgroundColor = Neutral100,
             contentColor = Neutral0,
@@ -72,6 +74,7 @@ actual fun LoginScreen(
         Spacer(modifier = Modifier.height(height = 18.dp))
         LoginActionButton(
             iconResource = Res.drawable.ic_kakao_login,
+            iconSize = LOGIN_BUTTON_ICON_SIZE,
             titleText = stringResource(Res.string.login_kakao_with_account),
             backgroundColor = KakaoYellow,
             contentColor = Neutral100,
@@ -87,3 +90,5 @@ actual fun LoginScreen(
         )
     }
 }
+
+private val LOGIN_BUTTON_ICON_SIZE = 18.dp

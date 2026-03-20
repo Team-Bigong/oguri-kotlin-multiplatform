@@ -28,7 +28,10 @@ fun MyPageGuestProfileSection(
             append(guestName)
             if (guestName.startsWith(prefix = guestNamePrefix)) {
                 addStyle(
-                    style = OguriTheme.typography.cardTitle.copy(color = Mint70).toSpanStyle(),
+                    style =
+                        OguriTheme.typography.cardTitle
+                            .copy(color = Mint70)
+                            .toSpanStyle(),
                     start = 0,
                     end = guestNamePrefix.length,
                 )
@@ -36,7 +39,10 @@ fun MyPageGuestProfileSection(
             if (guestName.endsWith(suffix = guestNameSuffix)) {
                 val suffixStartIndex = guestName.length - guestNameSuffix.length
                 addStyle(
-                    style = OguriTheme.typography.cardTitle.copy(color = Neutral90).toSpanStyle(),
+                    style =
+                        OguriTheme.typography.cardTitle
+                            .copy(color = Neutral90)
+                            .toSpanStyle(),
                     start = suffixStartIndex,
                     end = guestName.length,
                 )

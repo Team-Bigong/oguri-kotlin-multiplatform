@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.login.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
@@ -24,15 +26,22 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun LoginActionButton(
     iconResource: DrawableResource,
+    iconSize: Dp = 18.dp,
     titleText: String,
     backgroundColor: Color,
     contentColor: Color,
+    borderColor: Color = backgroundColor,
     onClick: () -> Unit,
 ) {
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .border(
+                    width = 1.dp,
+                    color = borderColor,
+                    shape = RoundedCornerShape(size = 10.dp),
+                )
                 .background(color = backgroundColor, shape = RoundedCornerShape(size = 10.dp))
                 .noRippleClickable(onClick = onClick)
                 .padding(horizontal = 30.dp, vertical = 16.dp),
@@ -42,7 +51,7 @@ fun LoginActionButton(
         Image(
             painter = painterResource(resource = iconResource),
             contentDescription = null,
-            modifier = Modifier.size(size = 18.dp),
+            modifier = Modifier.size(size = iconSize),
         )
         Spacer(modifier = Modifier.size(size = 12.dp))
         Text(

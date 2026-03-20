@@ -2,10 +2,10 @@ package com.bigong.oguri.feature.onboarding.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,6 @@ import com.bigong.oguri.core.designsystem.Neutral30
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
-import com.bigong.oguri.domain.model.OnboardingLeaveDaysValidationError as LeaveDaysValidationError
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.onboarding_day_off_done
 import oguri.composeapp.generated.resources.onboarding_day_off_error_max_remaining
@@ -44,6 +43,7 @@ import oguri.composeapp.generated.resources.onboarding_day_off_title_welcome_hig
 import oguri.composeapp.generated.resources.onboarding_day_off_title_welcome_subtitle
 import oguri.composeapp.generated.resources.onboarding_day_off_unit
 import org.jetbrains.compose.resources.stringResource
+import com.bigong.oguri.domain.model.OnboardingLeaveDaysValidationError as LeaveDaysValidationError
 
 private const val ONBOARDING_CONTENT_ANIMATION_DURATION_MILLIS = 240
 
@@ -182,12 +182,10 @@ fun OnboardingLeaveDaysContent(
                                             Neutral30
                                         },
                                     shape = RoundedCornerShape(8.dp),
-                                )
-                                .noRippleClickable(
+                                ).noRippleClickable(
                                     onClick = onCompleteClick,
                                     enabled = isCompleteButtonEnabled,
-                                )
-                                .padding(vertical = 14.dp),
+                                ).padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -207,6 +205,9 @@ private fun LeaveDaysValidationError?.toWarningText(): String? =
     when (this) {
         LeaveDaysValidationError.DAY_OFF_MUST_BE_POSITIVE -> stringResource(Res.string.onboarding_day_off_error_positive)
         LeaveDaysValidationError.REMAINING_DAY_OFF_EXCEEDS_MAX -> stringResource(Res.string.onboarding_day_off_error_max_remaining)
-        LeaveDaysValidationError.PREFERRED_DAY_OFF_EXCEEDS_REMAINING -> stringResource(Res.string.onboarding_day_off_error_preferred_exceeds_remaining)
+        LeaveDaysValidationError.PREFERRED_DAY_OFF_EXCEEDS_REMAINING ->
+            stringResource(
+                Res.string.onboarding_day_off_error_preferred_exceeds_remaining,
+            )
         null -> null
     }

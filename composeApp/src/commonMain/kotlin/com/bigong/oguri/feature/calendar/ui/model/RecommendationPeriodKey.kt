@@ -7,7 +7,7 @@ fun createRecommendationPeriodKey(
     endDate: LocalDate,
     dayOffCount: Int,
     totalTripCount: Int,
-): String = "${startDate}_${endDate}_${dayOffCount}_${totalTripCount}"
+): String = "${startDate}_${endDate}_${dayOffCount}_$totalTripCount"
 
 fun CalendarPeriodCardUiModel.toRecommendationPeriodKey(): String =
     createRecommendationPeriodKey(

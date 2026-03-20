@@ -55,58 +55,59 @@ class CalendarViewModel(
     private val periodCardById = MutableStateFlow<Map<Long, CalendarPeriodCardUiModel>>(emptyMap())
 
     val pagedPeriodCards: Flow<PagingData<CalendarPeriodCardUiModel>> =
-        pagingQueryFlow.flatMapLatest { query: CalendarPagingQuery ->
-            if (query.year <= 0 || query.month <= 0) {
-                flowOf(PagingData.empty())
-            } else {
-                Pager(
-                    config =
-                        PagingConfig(
-                            pageSize = CALENDAR_PAGE_SIZE,
-                            initialLoadSize = CALENDAR_PAGE_SIZE,
-                            prefetchDistance = 2,
-                            enablePlaceholders = false,
-                        ),
-                    pagingSourceFactory = {
-                        CalendarRecommendationPagingSource(
-                            getCalendarRecommendationUseCase = getCalendarRecommendationUseCase,
-                            calculateDDayUseCase = calculateDDayUseCase,
-                            selectedYear = query.year,
-                            selectedMonth = query.month,
-                            dayOffCount = query.dayOffCount,
-                            pageSize = CALENDAR_PAGE_SIZE,
-                            onDayOffCountResolved = { resolvedDayOffCount: Int ->
-                                _uiState.update { currentUiState ->
-                                    currentUiState.copy(leaveDays = resolvedDayOffCount)
-                                }
-                            },
-                            onPageLoaded = { loadedCards: List<CalendarPeriodCardUiModel> ->
-                                periodCardById.update { currentMap ->
-                                    currentMap + loadedCards.associateBy { card -> card.id }
-                                }
-                                _uiState.update { currentUiState ->
-                                    val addedSelections =
-                                        loadedCards
-                                            .filterNot { card -> currentUiState.selectedDateByPeriodId.containsKey(card.id) }
-                                            .associate { card -> card.id to card.startDate }
-                                    currentUiState.copy(
-                                        isLeaveDaysRefreshing = false,
-                                        selectedDateByPeriodId =
-                                            currentUiState.selectedDateByPeriodId + addedSelections,
-                                        expandedPeriodId = currentUiState.expandedPeriodId ?: loadedCards.firstOrNull()?.id,
-                                    )
-                                }
-                            },
-                            onRefreshLoadFailed = {
-                                _uiState.update { currentUiState ->
-                                    currentUiState.copy(isLeaveDaysRefreshing = false)
-                                }
-                            },
-                        )
-                    },
-                ).flow
-            }
-        }.cachedIn(viewModelScope)
+        pagingQueryFlow
+            .flatMapLatest { query: CalendarPagingQuery ->
+                if (query.year <= 0 || query.month <= 0) {
+                    flowOf(PagingData.empty())
+                } else {
+                    Pager(
+                        config =
+                            PagingConfig(
+                                pageSize = CALENDAR_PAGE_SIZE,
+                                initialLoadSize = CALENDAR_PAGE_SIZE,
+                                prefetchDistance = 2,
+                                enablePlaceholders = false,
+                            ),
+                        pagingSourceFactory = {
+                            CalendarRecommendationPagingSource(
+                                getCalendarRecommendationUseCase = getCalendarRecommendationUseCase,
+                                calculateDDayUseCase = calculateDDayUseCase,
+                                selectedYear = query.year,
+                                selectedMonth = query.month,
+                                dayOffCount = query.dayOffCount,
+                                pageSize = CALENDAR_PAGE_SIZE,
+                                onDayOffCountResolved = { resolvedDayOffCount: Int ->
+                                    _uiState.update { currentUiState ->
+                                        currentUiState.copy(leaveDays = resolvedDayOffCount)
+                                    }
+                                },
+                                onPageLoaded = { loadedCards: List<CalendarPeriodCardUiModel> ->
+                                    periodCardById.update { currentMap ->
+                                        currentMap + loadedCards.associateBy { card -> card.id }
+                                    }
+                                    _uiState.update { currentUiState ->
+                                        val addedSelections =
+                                            loadedCards
+                                                .filterNot { card -> currentUiState.selectedDateByPeriodId.containsKey(card.id) }
+                                                .associate { card -> card.id to card.startDate }
+                                        currentUiState.copy(
+                                            isLeaveDaysRefreshing = false,
+                                            selectedDateByPeriodId =
+                                                currentUiState.selectedDateByPeriodId + addedSelections,
+                                            expandedPeriodId = currentUiState.expandedPeriodId ?: loadedCards.firstOrNull()?.id,
+                                        )
+                                    }
+                                },
+                                onRefreshLoadFailed = {
+                                    _uiState.update { currentUiState ->
+                                        currentUiState.copy(isLeaveDaysRefreshing = false)
+                                    }
+                                },
+                            )
+                        },
+                    ).flow
+                }
+            }.cachedIn(viewModelScope)
 
     init {
         val today =

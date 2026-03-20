@@ -72,6 +72,7 @@ fun PlaceDetailScreen(
     onSaveToggleClick: () -> Unit,
     onUrlClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onPhotoClick: (List<String>, Int) -> Unit,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val lazyListState = rememberLazyListState()
@@ -108,7 +109,12 @@ fun PlaceDetailScreen(
                     contentPadding = PaddingValues(bottom = 24.dp),
                 ) {
                     item {
-                        PlaceDetailImagePager(imageUrls = placeDetail.thumbnailUrls)
+                        PlaceDetailImagePager(
+                            imageUrls = placeDetail.thumbnailUrls,
+                            onImageClick = { pageIndex ->
+                                onPhotoClick(placeDetail.thumbnailUrls, pageIndex)
+                            },
+                        )
                     }
                     item(key = PLACE_DETAIL_TITLE_ITEM_KEY) {
                         Row(
@@ -158,7 +164,7 @@ fun PlaceDetailScreen(
                         Spacer(modifier = Modifier.height(28.dp))
                         GuideHeader(
                             iconResource = Res.drawable.ic_binoculars,
-                            titleText = stringResource(Res.string.place_detail_section_experience),
+                            titleText = stringResource(Res.string.place_detail_section_experience, placeDetail.city),
                             highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
                             subtitleText = null,
                             modifier = Modifier.padding(horizontal = 20.dp),

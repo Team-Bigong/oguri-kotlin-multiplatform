@@ -22,7 +22,7 @@ class KtorCalendarRemoteDataSource(
         size: Int,
     ): CalendarRecommendationResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_API_PATH"
-        val yearMonth = "${year}-${month.toString().padStart(2, '0')}"
+        val yearMonth = "$year-${month.toString().padStart(2, '0')}"
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {

@@ -3,6 +3,7 @@ package com.bigong.oguri.data.repository
 import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.data.remote.AuthRemoteDataSource
 import com.bigong.oguri.data.remote.model.request.AppleLoginRequest
+import com.bigong.oguri.data.remote.model.request.GoogleLoginRequest
 import com.bigong.oguri.data.remote.model.request.KakaoLoginRequest
 import com.bigong.oguri.data.remote.model.request.RefreshTokenRequest
 import com.bigong.oguri.data.remote.model.request.UpdateMemberDayOffRequest
@@ -23,6 +24,21 @@ class DefaultAuthRepository(
         val loginResponse =
             authRemoteDataSource.loginWithKakao(
                 request = KakaoLoginRequest(accessToken = kakaoAccessToken),
+            )
+        saveTokens(
+            accessToken = loginResponse.accessToken,
+            refreshToken = loginResponse.refreshToken,
+        )
+        return loginResponse.onboardingCompleted
+    }
+
+    override suspend fun loginWithGoogleIdentityToken(identityToken: String): Boolean {
+        require(value = identityToken.isNotBlank()) {
+            "Google identity token is empty."
+        }
+        val loginResponse =
+            authRemoteDataSource.loginWithGoogle(
+                request = GoogleLoginRequest(identityToken = identityToken),
             )
         saveTokens(
             accessToken = loginResponse.accessToken,
@@ -78,9 +94,10 @@ class DefaultAuthRepository(
                     return refreshedTokenState
                 }
             }
+            AuthTokenStore.clearTokens()
             AutoLoginState(
-                isLoggedIn = true,
-                isOnboardingCompleted = true,
+                isLoggedIn = false,
+                isOnboardingCompleted = false,
             )
         }
     }

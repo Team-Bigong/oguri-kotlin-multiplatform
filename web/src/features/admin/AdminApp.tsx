@@ -7,6 +7,7 @@ import {
   AdminLoginResponse,
   Country,
   Destination,
+  DestinationExperienceRequest,
   DestinationImageRequest,
   DestinationUpsertRequest,
   Member,
@@ -32,8 +33,11 @@ type DestinationFormState = {
   recommendEndMonth2: string
   flightTime: string
   images: DestinationImageRequest[]
+  experiences: DestinationExperienceRequest[]
   existingImageUrls: string[]
+  existingExperienceThumbnailUrls: string[]
   newlyUploadedImageUrls: string[]
+  newlyUploadedExperienceThumbnailUrls: string[]
 }
 
 type MemberFormState = {
@@ -66,8 +70,11 @@ const createInitialDestinationFormState = (): DestinationFormState => ({
   recommendEndMonth2: "",
   flightTime: "",
   images: [],
+  experiences: [],
   existingImageUrls: [],
-  newlyUploadedImageUrls: []
+  existingExperienceThumbnailUrls: [],
+  newlyUploadedImageUrls: [],
+  newlyUploadedExperienceThumbnailUrls: []
 })
 
 const createInitialMemberFormState = (): MemberFormState => ({
@@ -222,6 +229,22 @@ const parseImageSequenceNumberFromImageUrl = (imageUrl: string): number | null =
   return null
 }
 
+const parseExperienceSequenceNumberFromThumbnailUrl = (thumbnailUrl: string): number | null => {
+  try {
+    const parsedUrl = new URL(thumbnailUrl)
+    const objectPathEncoded = parsedUrl.pathname.split("/o/")[1] ?? ""
+    const objectPath = decodeURIComponent(objectPathEncoded)
+    const matchedSequence = objectPath.match(/\/experiences\/([0-9]+)\.jpg$/i)
+    if (matchedSequence == null) {
+      return null
+    }
+    const parsedSequence = Number(matchedSequence[1])
+    return Number.isInteger(parsedSequence) && parsedSequence > 0 ? parsedSequence : null
+  } catch (error) {
+    return null
+  }
+}
+
 const parseFirebaseObjectPathFromImageUrl = (imageUrl: string): string | null => {
   try {
     const parsedUrl = new URL(imageUrl)
@@ -358,7 +381,14 @@ export const AdminApp = (): React.JSX.Element => {
       recommendStartMonth2: parseMonth(state.recommendStartMonth2),
       recommendEndMonth2: parseMonth(state.recommendEndMonth2),
       flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
-      images: state.images
+      images: state.images,
+      experiences: state.experiences.map((experience, index) => ({
+        title: experience.title.trim(),
+        description: experience.description.trim(),
+        thumbnailUrl: experience.thumbnailUrl.trim(),
+        link: experience.link.trim(),
+        sortOrder: index + 1
+      }))
     }
   }, [])
 
@@ -374,8 +404,8 @@ export const AdminApp = (): React.JSX.Element => {
     return deleteResults.filter((result) => result.status === "rejected").length
   }, [])
 
-  const cleanupPendingUploadedImages = useCallback(async (imageUrls: string[]): Promise<void> => {
-    const failedDeleteCount = await deleteImagesInFirebaseStorage(imageUrls)
+  const cleanupPendingUploadedImages = useCallback(async (imageUrls: string[], experienceThumbnailUrls: string[]): Promise<void> => {
+    const failedDeleteCount = await deleteImagesInFirebaseStorage([...imageUrls, ...experienceThumbnailUrls])
     if (failedDeleteCount > 0) {
       setNoticeMessage(`임시 업로드 이미지 ${failedDeleteCount}건 정리에 실패했습니다.`)
     }
@@ -399,13 +429,28 @@ export const AdminApp = (): React.JSX.Element => {
         }
         return !currentImageObjectPathSet.has(objectPath)
       })
+      const currentExperienceThumbnailObjectPathSet = new Set(
+        destinationFormState.experiences
+          .map((experience) => parseFirebaseObjectPathFromImageUrl(experience.thumbnailUrl))
+          .filter((objectPath): objectPath is string => objectPath != null)
+      )
+      const removedExistingExperienceThumbnailUrls = destinationFormState.existingExperienceThumbnailUrls.filter((thumbnailUrl) => {
+        const objectPath = parseFirebaseObjectPathFromImageUrl(thumbnailUrl)
+        if (objectPath == null) {
+          return !destinationFormState.experiences.some((experience) => experience.thumbnailUrl === thumbnailUrl)
+        }
+        return !currentExperienceThumbnailObjectPathSet.has(objectPath)
+      })
 
       if (destinationFormState.selectedId == null) {
         await adminApiClient.post<Destination>("/api/admin/v1/destinations", payload)
         setNoticeMessage("장소가 생성되었습니다.")
       } else {
         await adminApiClient.put<Destination>(`/api/admin/v1/destinations/${destinationFormState.selectedId}`, payload)
-        const failedDeleteCount = await deleteImagesInFirebaseStorage(removedExistingImageUrls)
+        const failedDeleteCount = await deleteImagesInFirebaseStorage([
+          ...removedExistingImageUrls,
+          ...removedExistingExperienceThumbnailUrls
+        ])
         if (failedDeleteCount > 0) {
           setNoticeMessage(`장소가 수정되었습니다. 삭제된 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
         } else {
@@ -426,7 +471,10 @@ export const AdminApp = (): React.JSX.Element => {
     try {
       const targetDestination = destinations.find((destination) => destination.id === destinationId)
       await adminApiClient.delete<void>(`/api/admin/v1/destinations/${destinationId}`)
-      const failedDeleteCount = await deleteImagesInFirebaseStorage(targetDestination?.images.map((image) => image.imageUrl) ?? [])
+      const failedDeleteCount = await deleteImagesInFirebaseStorage([
+        ...(targetDestination?.images.map((image) => image.imageUrl) ?? []),
+        ...(targetDestination?.experiences.map((experience) => experience.thumbnailUrl) ?? [])
+      ])
       if (failedDeleteCount > 0) {
         setNoticeMessage(`장소가 삭제되었습니다. 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
       } else {
@@ -578,6 +626,118 @@ export const AdminApp = (): React.JSX.Element => {
       event.target.value = ""
     }
   }, [destinationFormState.images, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
+
+  const addExperienceItem = useCallback(() => {
+    setDestinationFormState((previousState) => ({
+      ...previousState,
+      experiences: [
+        ...previousState.experiences,
+        {
+          title: "",
+          description: "",
+          thumbnailUrl: "",
+          link: "",
+          sortOrder: previousState.experiences.length + 1
+        }
+      ]
+    }))
+  }, [])
+
+  const removeExperienceItem = useCallback((experienceIndex: number) => {
+    void (async () => {
+      const targetExperience = destinationFormState.experiences[experienceIndex]
+      if (targetExperience == null) {
+        return
+      }
+
+      const shouldDeleteImmediately = targetExperience.thumbnailUrl.length > 0 &&
+        destinationFormState.newlyUploadedExperienceThumbnailUrls.includes(targetExperience.thumbnailUrl)
+      if (shouldDeleteImmediately) {
+        try {
+          await deleteImageFromFirebaseStorageByUrl(targetExperience.thumbnailUrl)
+        } catch (error) {
+          setErrorMessage("체험 썸네일 삭제 중 오류가 발생했습니다. 다시 시도해주세요.")
+          return
+        }
+      }
+
+      setDestinationFormState((previousState) => ({
+        ...previousState,
+        experiences: previousState.experiences
+          .filter((_, targetIndex) => targetIndex !== experienceIndex)
+          .map((experience, sequence) => ({ ...experience, sortOrder: sequence + 1 })),
+        newlyUploadedExperienceThumbnailUrls: previousState.newlyUploadedExperienceThumbnailUrls
+          .filter((thumbnailUrl) => thumbnailUrl !== targetExperience.thumbnailUrl)
+      }))
+    })()
+  }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls])
+
+  const handleExperienceThumbnailFileSelection = useCallback(async (
+    experienceIndex: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const selectedFile = event.target.files?.[0]
+    if (selectedFile == null) {
+      return
+    }
+
+    setUploadingImages(true)
+    setErrorMessage("")
+    setNoticeMessage("")
+
+    try {
+      const countryPathSegment = toStoragePathSegment(destinationFormState.storageCountrySlug)
+      const cityPathSegment = toStoragePathSegment(destinationFormState.storageCitySlug)
+      if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
+        throw new Error("Storage 국가/도시 경로를 먼저 입력하거나 메뉴에서 선택해주세요.")
+      }
+
+      const currentMaximumExperienceSequenceNumber = destinationFormState.experiences.reduce(
+        (maximumSequenceNumber, experience) => {
+          const parsedSequenceNumber = parseExperienceSequenceNumberFromThumbnailUrl(experience.thumbnailUrl)
+          return parsedSequenceNumber == null
+            ? maximumSequenceNumber
+            : Math.max(maximumSequenceNumber, parsedSequenceNumber)
+        },
+        0
+      )
+      const currentThumbnailUrl = destinationFormState.experiences[experienceIndex]?.thumbnailUrl ?? ""
+      const compressedBinary = await resizeAndCompressImage(selectedFile)
+      const experienceSequenceNumber = currentMaximumExperienceSequenceNumber + 1
+      const objectPath = `places/${countryPathSegment}/${cityPathSegment}/experiences/${experienceSequenceNumber}.jpg`
+      const uploadedThumbnailUrl = await uploadImageToFirebaseStorage(compressedBinary, objectPath)
+
+      if (currentThumbnailUrl.length > 0 && destinationFormState.newlyUploadedExperienceThumbnailUrls.includes(currentThumbnailUrl)) {
+        await deleteImageFromFirebaseStorageByUrl(currentThumbnailUrl)
+      }
+
+      setDestinationFormState((previousState) => {
+        const nextExperienceItems = previousState.experiences.map((experience, targetIndex) => {
+          if (targetIndex !== experienceIndex) {
+            return experience
+          }
+          return {
+            ...experience,
+            thumbnailUrl: uploadedThumbnailUrl
+          }
+        })
+        return {
+          ...previousState,
+          experiences: nextExperienceItems,
+          newlyUploadedExperienceThumbnailUrls: [
+            ...previousState.newlyUploadedExperienceThumbnailUrls.filter((thumbnailUrl) => thumbnailUrl !== currentThumbnailUrl),
+            uploadedThumbnailUrl
+          ]
+        }
+      })
+      setNoticeMessage("체험 썸네일 업로드가 완료되었습니다.")
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "체험 썸네일 업로드에 실패했습니다.")
+    } finally {
+      setUploadingImages(false)
+      event.target.value = ""
+    }
+  }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
 
   const activeTitle = useMemo(() => {
     if (activeTab === "destinations") return "장소 DB 관리"
@@ -823,6 +983,90 @@ export const AdminApp = (): React.JSX.Element => {
                 </View>
               )}
 
+              <View style={styles.row}>
+                <Text style={styles.sectionTitle}>체험 정보</Text>
+                <Text style={styles.helperText}>각 체험은 제목, 설명, 링크, 썸네일이 모두 필요합니다.</Text>
+                <View style={styles.rowButtonContainer}>
+                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
+                </View>
+              </View>
+
+              {destinationFormState.experiences.length > 0 && (
+                <View style={styles.imageListContainer}>
+                  {destinationFormState.experiences.map((experience, experienceIndex) => (
+                    <View style={styles.imageRow} key={`experience_${experienceIndex}`}>
+                      <Text style={styles.fieldLabel}>체험 {experienceIndex + 1}</Text>
+                      <LabelInput
+                        label="제목"
+                        value={experience.title}
+                        onChangeText={(value) => {
+                          setDestinationFormState((previousState) => ({
+                            ...previousState,
+                            experiences: previousState.experiences.map((targetExperience, targetIndex) => {
+                              if (targetIndex !== experienceIndex) {
+                                return targetExperience
+                              }
+                              return { ...targetExperience, title: value }
+                            })
+                          }))
+                        }}
+                      />
+                      <LabelInput
+                        label="설명"
+                        value={experience.description}
+                        multiline
+                        onChangeText={(value) => {
+                          setDestinationFormState((previousState) => ({
+                            ...previousState,
+                            experiences: previousState.experiences.map((targetExperience, targetIndex) => {
+                              if (targetIndex !== experienceIndex) {
+                                return targetExperience
+                              }
+                              return { ...targetExperience, description: value }
+                            })
+                          }))
+                        }}
+                      />
+                      <LabelInput
+                        label="링크 URL"
+                        value={experience.link}
+                        onChangeText={(value) => {
+                          setDestinationFormState((previousState) => ({
+                            ...previousState,
+                            experiences: previousState.experiences.map((targetExperience, targetIndex) => {
+                              if (targetIndex !== experienceIndex) {
+                                return targetExperience
+                              }
+                              return { ...targetExperience, link: value }
+                            })
+                          }))
+                        }}
+                      />
+                      <View style={styles.uploadRow}>
+                        <Text style={styles.fieldLabel}>썸네일 업로드</Text>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(event) => {
+                            void handleExperienceThumbnailFileSelection(experienceIndex, event)
+                          }}
+                        />
+                        {experience.thumbnailUrl.length > 0 && (
+                          <Text style={styles.imageUrlText}>{experience.thumbnailUrl}</Text>
+                        )}
+                      </View>
+                      <View style={styles.rowButtonContainer}>
+                        <ActionButton
+                          label="체험 삭제"
+                          variant="danger"
+                          onPress={() => removeExperienceItem(experienceIndex)}
+                        />
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
               <View style={styles.rowButtonContainer}>
                 <ActionButton label={destinationFormState.selectedId == null ? "장소 생성" : "장소 수정"} onPress={() => void submitDestination()} />
                 <ActionButton
@@ -830,7 +1074,10 @@ export const AdminApp = (): React.JSX.Element => {
                   variant="secondary"
                   onPress={() => {
                     void (async () => {
-                      await cleanupPendingUploadedImages(destinationFormState.newlyUploadedImageUrls)
+                      await cleanupPendingUploadedImages(
+                        destinationFormState.newlyUploadedImageUrls,
+                        destinationFormState.newlyUploadedExperienceThumbnailUrls
+                      )
                       setDestinationFormState(createInitialDestinationFormState())
                     })()
                   }}
@@ -843,13 +1090,17 @@ export const AdminApp = (): React.JSX.Element => {
                   <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
                   <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
                   <Text style={styles.listItemDescription}>이미지 {destination.images.length}장</Text>
+                  <Text style={styles.listItemDescription}>체험 {destination.experiences.length}건</Text>
                   <View style={styles.rowButtonContainer}>
                     <ActionButton
                       label="불러오기"
                       variant="secondary"
                       onPress={() => {
                         void (async () => {
-                          await cleanupPendingUploadedImages(destinationFormState.newlyUploadedImageUrls)
+                          await cleanupPendingUploadedImages(
+                            destinationFormState.newlyUploadedImageUrls,
+                            destinationFormState.newlyUploadedExperienceThumbnailUrls
+                          )
                           setDestinationFormState({
                             selectedId: destination.id,
                             countryId: destination.countryId == null ? "" : String(destination.countryId),
@@ -868,8 +1119,17 @@ export const AdminApp = (): React.JSX.Element => {
                               isThumbnail: image.isThumbnail,
                               sortOrder: image.sortOrder
                             })),
+                            experiences: destination.experiences.map((experience) => ({
+                              title: experience.title,
+                              description: experience.description,
+                              thumbnailUrl: experience.thumbnailUrl,
+                              link: experience.link,
+                              sortOrder: experience.sortOrder
+                            })),
                             existingImageUrls: destination.images.map((image) => image.imageUrl),
-                            newlyUploadedImageUrls: []
+                            existingExperienceThumbnailUrls: destination.experiences.map((experience) => experience.thumbnailUrl),
+                            newlyUploadedImageUrls: [],
+                            newlyUploadedExperienceThumbnailUrls: []
                           })
                         })()
                       }}
