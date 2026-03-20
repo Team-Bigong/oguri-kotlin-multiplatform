@@ -32,9 +32,19 @@
 .brandTitle {
   margin: 0;
   color: #f1f7ff;
-  font-size: 16px;
+  font-size: 17px;
   letter-spacing: 0.08em;
   font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brandIconImage {
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  object-fit: cover;
 }
 
 .topNavigationLinks {
@@ -50,29 +60,54 @@
   font-weight: 600;
 }
 
-.topStoreButtons {
+.storeButtons {
   display: flex;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.topStoreButtons a {
+.storeButton {
   text-decoration: none;
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  border: 1px solid #4f6282;
-  color: #e5f0ff;
-  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  padding: 11px 16px;
+  border: 1px solid #c7daf3;
+  background: #ffffff;
+  color: #163a66;
+  font-size: 14px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
-.storeButtonTop img {
+.storeButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(18, 64, 120, 0.2);
+}
+
+.storeButtonIcon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+.storeButtonLabel {
+  line-height: 1;
+}
+
+.storeButtonsCompact .storeButton {
+  padding: 8px 12px;
+  font-size: 12px;
+  border-color: #536683;
+  color: #e8f2ff;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.storeButtonsCompact .storeButtonIcon {
   width: 14px;
   height: 14px;
-  object-fit: contain;
 }
 
 .heroSection {
@@ -132,7 +167,7 @@
 .heroTitle {
   margin: 14px 0 0;
   color: #f5f9ff;
-  font-size: clamp(46px, 6vw, 88px);
+  font-size: clamp(44px, 5.4vw, 78px);
   line-height: 1.04;
   font-weight: 900;
 }
@@ -140,7 +175,7 @@
 .heroDescription {
   margin: 20px 0 0;
   color: #bed0ea;
-  font-size: clamp(17px, 1.7vw, 24px);
+  font-size: clamp(17px, 1.5vw, 21px);
   line-height: 1.7;
   max-width: 32ch;
 }
@@ -162,48 +197,38 @@
   font-weight: 600;
 }
 
-.heroActionRow {
+.storeButtonsOnDark {
   margin-top: 26px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
 }
 
-.solidActionButton,
-.outlineActionButton {
-  text-decoration: none;
-  border-radius: 12px;
-  font-size: 14px;
-  font-weight: 800;
-  padding: 12px 18px;
-  transition: transform 170ms ease, box-shadow 170ms ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.storeButtonsOnDark .storeButton {
+  border-color: rgba(206, 223, 246, 0.85);
+  color: #e8f2ff;
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.solidActionButton img,
-.outlineActionButton img {
-  width: 16px;
-  height: 16px;
-  object-fit: contain;
-}
-
-.solidActionButton {
+.storeButtonsOnDark .storeButton:first-child {
+  border-color: transparent;
   background: linear-gradient(140deg, #4d87ff 0%, #27b8a0 100%);
   color: #ffffff;
   box-shadow: 0 14px 26px rgba(60, 131, 246, 0.36);
 }
 
-.outlineActionButton {
-  border: 1.5px solid rgba(206, 223, 246, 0.8);
-  color: #e8f2ff;
-  background: rgba(255, 255, 255, 0.03);
+.storeButtonsOnBright {
+  margin-top: 24px;
+  justify-content: center;
 }
 
-.solidActionButton:hover,
-.outlineActionButton:hover {
-  transform: translateY(-2px);
+.storeButtonsOnBright .storeButton:first-child {
+  border-color: rgba(255, 255, 255, 0.96);
+  background: #ffffff;
+  color: #163b67;
+}
+
+.storeButtonsOnBright .storeButton:last-child {
+  border-color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
 }
 
 .heroVisualWrap {
@@ -214,16 +239,20 @@
 .heroDeviceCard {
   position: absolute;
   border-radius: 34px;
-  border: 1px solid #3c4f70;
+  border: 1px solid rgba(197, 216, 244, 0.35);
   box-shadow: 0 26px 44px rgba(8, 20, 38, 0.55);
   background: #111a2a;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  will-change: transform;
+  image-rendering: auto;
 }
 
 .heroDeviceCardBack {
   width: 290px;
   right: 10px;
   top: 18px;
-  transform: rotate(11deg);
+  transform: rotate(7deg) translateZ(0);
   opacity: 0.9;
 }
 
@@ -231,7 +260,7 @@
   width: 310px;
   left: 24px;
   top: 96px;
-  transform: rotate(-8deg);
+  transform: rotate(-5deg) translateZ(0);
 }
 
 .heroFloatingCard {
@@ -281,7 +310,7 @@
 .sectionTitle {
   margin: 12px 0 0;
   color: #122c4d;
-  font-size: clamp(32px, 4.2vw, 58px);
+  font-size: clamp(32px, 3.8vw, 52px);
   line-height: 1.15;
   font-weight: 900;
 }
@@ -289,7 +318,7 @@
 .sectionDescription {
   margin: 14px 0 0;
   color: #5b7899;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.7;
 }
 
@@ -322,12 +351,13 @@
 .featureCard h3 {
   margin: 10px 0 0;
   color: #1a3e6c;
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .featureCard p {
   margin: 10px 0 0;
   color: #5f7999;
+  font-size: 15px;
   line-height: 1.65;
 }
 
@@ -414,7 +444,7 @@
   list-style: none;
   cursor: pointer;
   color: #234d84;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -453,7 +483,7 @@
 .callToActionPanel p {
   margin: 14px 0 0;
   color: rgba(255, 255, 255, 0.92);
-  font-size: 18px;
+  font-size: 17px;
   line-height: 1.65;
 }
 
@@ -489,6 +519,16 @@
   color: #173e6f;
   font-size: 24px;
   font-weight: 900;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footerBrandIconImage {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .footerBrandSubTitle {
@@ -530,7 +570,7 @@
   }
 
   .heroBulletWrap,
-  .heroActionRow {
+  .storeButtons {
     justify-content: center;
   }
 
@@ -565,7 +605,7 @@
     font-size: 14px;
   }
 
-  .topStoreButtons a {
+  .storeButtonsCompact .storeButton {
     padding: 7px 9px;
     font-size: 11px;
   }

@@ -62,27 +62,40 @@ const frequentlyAskedQuestions = [
   }
 ]
 
+type StoreButtonsProps = {
+  className?: string
+}
+
+const StoreButtons = ({ className }: StoreButtonsProps): React.JSX.Element => {
+  return (
+    <div className={`storeButtons ${className ?? ""}`.trim()}>
+      <a href={playStoreUrl} target="_blank" rel="noreferrer" className="storeButton">
+        <img src="/assets/official/store/play-store-logo.png" alt="" className="storeButtonIcon" />
+        <span className="storeButtonLabel">Google Play</span>
+      </a>
+      <a href={appStoreUrl} target="_blank" rel="noreferrer" className="storeButton">
+        <img src="/assets/official/store/app-store-logo.png" alt="" className="storeButtonIcon" />
+        <span className="storeButtonLabel">App Store</span>
+      </a>
+    </div>
+  )
+}
+
 export const OfficialHomePage = (): React.JSX.Element => {
   return (
     <div className="landingPage">
       <header className="topNavigationBar">
         <div className="contentContainer topNavigationRow">
-          <p className="brandTitle">OGURI</p>
+          <p className="brandTitle">
+            <img src="/assets/official/app-icon.png" alt="" className="brandIconImage" />
+            <span>오구리</span>
+          </p>
           <nav className="topNavigationLinks">
             <a href="#features">기능</a>
             <a href="#preview">미리보기</a>
             <a href="#download">다운로드</a>
           </nav>
-          <div className="topStoreButtons">
-            <a href={playStoreUrl} target="_blank" rel="noreferrer" className="storeButtonTop">
-              <img src="/assets/official/store/play-store-logo.png" alt="" />
-              <span>Google Play</span>
-            </a>
-            <a href={appStoreUrl} target="_blank" rel="noreferrer" className="storeButtonTop">
-              <img src="/assets/official/store/app-store-logo.png" alt="" />
-              <span>App Store</span>
-            </a>
-          </div>
+          <StoreButtons className="storeButtonsCompact" />
         </div>
       </header>
 
@@ -106,22 +119,13 @@ export const OfficialHomePage = (): React.JSX.Element => {
               <span>시기 맞춤 여행지</span>
               <span>저장 및 공유</span>
             </div>
-            <div className="heroActionRow">
-              <a href={playStoreUrl} target="_blank" rel="noreferrer" className="solidActionButton">
-                <img src="/assets/official/store/play-store-logo.png" alt="" />
-                <span>Google Play</span>
-              </a>
-              <a href={appStoreUrl} target="_blank" rel="noreferrer" className="outlineActionButton">
-                <img src="/assets/official/store/app-store-logo.png" alt="" />
-                <span>App Store</span>
-              </a>
-            </div>
+            <StoreButtons className="storeButtonsOnDark" />
           </div>
 
           <div className="heroVisualWrap">
             <img className="heroDeviceCard heroDeviceCardBack" src="/assets/official/screenshots/hero-back-card.png" alt="오구리 히어로 뒤 카드" />
             <img className="heroDeviceCard heroDeviceCardFront" src="/assets/official/screenshots/home-screen.png" alt="오구리 홈 화면" />
-            <div className="heroFloatingCard">연차 3일로 5일이나 쉴 수 있어요</div>
+            <div className="heroFloatingCard">연차 5일로 11일이나 쉴 수 있어요</div>
           </div>
         </div>
       </section>
@@ -157,8 +161,8 @@ export const OfficialHomePage = (): React.JSX.Element => {
             <p className="sectionEyebrow">APP PREVIEW</p>
             <h2 className="sectionTitle">오구리 화면을 먼저 구경해볼까요?</h2>
             <p className="sectionDescription">
-              현재는 더미 이미지가 들어가 있고, 같은 경로에 실제 캡처만 바꾸면
-              바로 소개용 페이지로 사용할 수 있어요.
+              오구리에서는 연차 조합 확인부터 저장 일정 관리까지
+              한 흐름으로 이어서 사용할 수 있어요.
             </p>
           </div>
           <div className="previewGrid">
@@ -197,16 +201,7 @@ export const OfficialHomePage = (): React.JSX.Element => {
           <div className="callToActionPanel">
             <h2>딱 맞는 휴식 조합, 오구리에서 시작해볼까요?</h2>
             <p>앱에서 더 자세한 추천과 저장 기능을 바로 확인해보세요.</p>
-            <div className="heroActionRow">
-              <a href={playStoreUrl} target="_blank" rel="noreferrer" className="solidActionButton">
-                <img src="/assets/official/store/play-store-logo.png" alt="" />
-                <span>Google Play</span>
-              </a>
-              <a href={appStoreUrl} target="_blank" rel="noreferrer" className="outlineActionButton">
-                <img src="/assets/official/store/app-store-logo.png" alt="" />
-                <span>App Store</span>
-              </a>
-            </div>
+            <StoreButtons className="storeButtonsOnBright" />
           </div>
         </div>
       </section>
@@ -214,7 +209,10 @@ export const OfficialHomePage = (): React.JSX.Element => {
       <footer className="footerSection">
         <div className="contentContainer footerRow">
           <div>
-            <p className="footerBrandTitle">오구리</p>
+            <p className="footerBrandTitle">
+              <img src="/assets/official/app-icon.png" alt="" className="footerBrandIconImage" />
+              <span>오구리</span>
+            </p>
             <p className="footerBrandSubTitle">연차 조합의 기술</p>
           </div>
           <div className="footerLinkRow">
