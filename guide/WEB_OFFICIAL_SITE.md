@@ -36,6 +36,7 @@
 - `web/public/assets/official/store/play-store-logo.png`
 - `web/public/assets/official/store/app-store-logo.png`
 - `web/public/assets/official/app-icon.png`
+- `web/public/assets/official/share-thumbnail.png`
 - 상세 가이드: `web/public/assets/official/README.md`
 
 ## 운영 체크리스트
