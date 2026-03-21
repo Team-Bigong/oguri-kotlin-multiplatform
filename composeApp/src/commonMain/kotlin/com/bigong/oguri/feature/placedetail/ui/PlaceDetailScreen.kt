@@ -59,6 +59,7 @@ import oguri.composeapp.generated.resources.place_detail_relevant_places
 import oguri.composeapp.generated.resources.place_detail_relevant_places_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience
 import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
+import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -167,7 +168,7 @@ fun PlaceDetailScreen(
                             iconResource = Res.drawable.ic_binoculars,
                             titleText = stringResource(Res.string.place_detail_section_experience, placeDetail.city),
                             highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
-                            subtitleText = null,
+                            subtitleText = stringResource(Res.string.place_detail_section_experience_subtitle),
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }

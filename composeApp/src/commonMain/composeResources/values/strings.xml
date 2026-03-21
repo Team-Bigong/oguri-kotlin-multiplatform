@@ -41,7 +41,7 @@
     <string name="place_detail_country">%1$s</string>
     <string name="place_detail_section_experience">How about these in %1$s?</string>
     <string name="place_detail_section_experience_highlight">How about these?</string>
-    <string name="place_detail_section_experience_subtitle">Tap a card you like</string>
+    <string name="place_detail_section_experience_subtitle">Tap a card to go to the partner page</string>
     <string name="place_detail_flight_title">Want to at least take a look at flights?</string>
     <string name="place_detail_flight_title_highlight">take a look</string>
     <string name="place_detail_flight_card_title">View flights for %1$s itinerary</string>
@@ -51,7 +51,7 @@
     <string name="place_detail_menu_share">Share</string>
     <string name="place_detail_menu_save">Save</string>
     <string name="place_detail_menu_unsave">Remove from saved</string>
-    <string name="place_detail_experience_detail">Go to partner page</string>
+    <string name="place_detail_experience_detail">See details</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_google_with_account">Sign in with Google account</string>

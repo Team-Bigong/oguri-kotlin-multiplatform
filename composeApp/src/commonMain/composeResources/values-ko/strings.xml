@@ -41,7 +41,7 @@
     <string name="place_detail_country">%1$s</string>
     <string name="place_detail_section_experience">%1$s에서 이런 건 어때요?</string>
     <string name="place_detail_section_experience_highlight">이런 건 어때요?</string>
-    <string name="place_detail_section_experience_subtitle">마음에 드는 카드를 눌러보세요</string>
+    <string name="place_detail_section_experience_subtitle">카드를 누르면 제휴 페이지로 이동해요</string>
     <string name="place_detail_flight_title">항공편, 구경이라도 해볼까요?</string>
     <string name="place_detail_flight_title_highlight">구경이라도</string>
     <string name="place_detail_flight_card_title">%1$s 일정으로 항공편 보기</string>
@@ -51,7 +51,7 @@
     <string name="place_detail_menu_share">공유하기</string>
     <string name="place_detail_menu_save">저장하기</string>
     <string name="place_detail_menu_unsave">저장 삭제하기</string>
-    <string name="place_detail_experience_detail">제휴 페이지로 이동</string>
+    <string name="place_detail_experience_detail">자세히 보기</string>
 
     <string name="login_apple_with_account">애플 계정으로 로그인</string>
     <string name="login_google_with_account">구글 계정으로 로그인</string>
