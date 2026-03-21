@@ -57,6 +57,14 @@ type HolidayFormState = {
   isActualHoliday: boolean
 }
 
+type PublicHolidayApiResponse = {
+  id: number
+  holidayDate: string
+  name: string
+  isActualHoliday?: boolean
+  actualHoliday?: boolean
+}
+
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
   countryId: "",
@@ -94,6 +102,16 @@ const createInitialHolidayFormState = (): HolidayFormState => ({
   name: "",
   isActualHoliday: true
 })
+
+const normalizePublicHoliday = (holiday: PublicHolidayApiResponse): PublicHoliday => {
+  const resolvedActualHoliday = holiday.isActualHoliday ?? holiday.actualHoliday ?? true
+  return {
+    id: holiday.id,
+    holidayDate: holiday.holidayDate,
+    name: holiday.name,
+    isActualHoliday: resolvedActualHoliday
+  }
+}
 
 const parseFlightTimeMinutes = (value: string): string => {
   return value.replace(/[^0-9]/g, "")
@@ -246,13 +264,13 @@ export const AdminApp = (): React.JSX.Element => {
         adminApiClient.get<Country[]>("/api/admin/v1/countries"),
         adminApiClient.get<Destination[]>("/api/admin/v1/destinations"),
         adminApiClient.get<Member[]>("/api/admin/v1/members"),
-        adminApiClient.get<PublicHoliday[]>("/api/admin/v1/public-holidays")
+        adminApiClient.get<PublicHolidayApiResponse[]>("/api/admin/v1/public-holidays")
       ])
 
       setCountries(countryList)
       setDestinations(destinationList)
       setMembers(memberList)
-      setPublicHolidays(holidayList)
+      setPublicHolidays(holidayList.map(normalizePublicHoliday))
     } catch (error) {
       const resolvedMessage = error instanceof Error ? error.message : "데이터를 불러오지 못했습니다."
       if (resolvedMessage.includes("401")) {
@@ -1080,7 +1098,7 @@ export const AdminApp = (): React.JSX.Element => {
                 <View style={[styles.sectionCard, styles.destinationListPanel]}>
                   <Text style={styles.sectionTitle}>장소 목록</Text>
                   <Text style={styles.helperText}>오른쪽 목록에서 선택하면 왼쪽 폼으로 즉시 불러옵니다.</Text>
-                  <View style={styles.destinationListContainer}>
+                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
                     {destinations.map((destination) => (
                       <View style={styles.listItemCard} key={destination.id}>
                         <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
@@ -1135,153 +1153,175 @@ export const AdminApp = (): React.JSX.Element => {
                         </View>
                       </View>
                     ))}
-                  </View>
+                  </ScrollView>
                 </View>
               </View>
             </View>
           )}
 
           {activeTab === "members" && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>사용자 추가/수정</Text>
-              {memberFormState.selectedId == null && (
-                <LabelInput
-                  label="사용자 ID"
-                  value={memberFormState.id}
-                  onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, id: value }))}
-                />
-              )}
-              <LabelInput
-                label="닉네임"
-                value={memberFormState.nickname}
-                onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, nickname: value }))}
-              />
+            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
+              <View style={styles.destinationEditorColumn}>
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>사용자 추가/수정</Text>
+                  {memberFormState.selectedId == null && (
+                    <LabelInput
+                      label="사용자 ID"
+                      value={memberFormState.id}
+                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, id: value }))}
+                    />
+                  )}
+                  <LabelInput
+                    label="닉네임"
+                    value={memberFormState.nickname}
+                    onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, nickname: value }))}
+                  />
 
-              <View style={styles.rowSplitContainer}>
-                <LabelInput
-                  label="선호 연차"
-                  keyboardType="numeric"
-                  value={memberFormState.preferredDayOff}
-                  onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, preferredDayOff: value }))}
-                />
-                <LabelInput
-                  label="남은 연차"
-                  keyboardType="numeric"
-                  value={memberFormState.remainingDayOff}
-                  onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, remainingDayOff: value }))}
-                />
-              </View>
+                  <View style={styles.rowSplitContainer}>
+                    <LabelInput
+                      label="선호 연차"
+                      keyboardType="numeric"
+                      value={memberFormState.preferredDayOff}
+                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, preferredDayOff: value }))}
+                    />
+                    <LabelInput
+                      label="남은 연차"
+                      keyboardType="numeric"
+                      value={memberFormState.remainingDayOff}
+                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, remainingDayOff: value }))}
+                    />
+                  </View>
 
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>온보딩 완료</Text>
-                <input
-                  type="checkbox"
-                  checked={memberFormState.onboardingCompleted}
-                  onChange={(event) => {
-                    setMemberFormState((previousState) => ({ ...previousState, onboardingCompleted: event.target.checked }))
-                  }}
-                />
-              </View>
-
-              <View style={styles.rowButtonContainer}>
-                <ActionButton label={memberFormState.selectedId == null ? "사용자 생성" : "사용자 수정"} onPress={() => void submitMember()} />
-                <ActionButton
-                  label="폼 초기화"
-                  variant="secondary"
-                  onPress={() => setMemberFormState(createInitialMemberFormState())}
-                />
-              </View>
-
-              <Text style={styles.sectionTitle}>사용자 목록</Text>
-              {members.map((member) => (
-                <View style={styles.listItemCard} key={member.id}>
-                  <Text style={styles.listItemTitle}>{member.id}</Text>
-                  <Text style={styles.listItemDescription}>{member.nickname ?? "(닉네임 없음)"}</Text>
-                  <Text style={styles.listItemDescription}>연차 {member.preferredDayOff}/{member.remainingDayOff}</Text>
-                  <View style={styles.rowButtonContainer}>
-                    <ActionButton
-                      label="불러오기"
-                      variant="secondary"
-                      onPress={() => {
-                        setMemberFormState({
-                          selectedId: member.id,
-                          id: member.id,
-                          nickname: member.nickname ?? "",
-                          preferredDayOff: String(member.preferredDayOff),
-                          remainingDayOff: String(member.remainingDayOff),
-                          onboardingCompleted: member.onboardingCompleted
-                        })
+                  <View style={styles.row}>
+                    <Text style={styles.fieldLabel}>온보딩 완료</Text>
+                    <input
+                      type="checkbox"
+                      checked={memberFormState.onboardingCompleted}
+                      onChange={(event) => {
+                        setMemberFormState((previousState) => ({ ...previousState, onboardingCompleted: event.target.checked }))
                       }}
                     />
-                    <ActionButton label="삭제" variant="danger" onPress={() => void deleteMember(member.id)} />
+                  </View>
+
+                  <View style={styles.rowButtonContainer}>
+                    <ActionButton label={memberFormState.selectedId == null ? "사용자 생성" : "사용자 수정"} onPress={() => void submitMember()} />
+                    <ActionButton
+                      label="폼 초기화"
+                      variant="secondary"
+                      onPress={() => setMemberFormState(createInitialMemberFormState())}
+                    />
                   </View>
                 </View>
-              ))}
+              </View>
+
+              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
+                <View style={[styles.sectionCard, styles.destinationListPanel]}>
+                  <Text style={styles.sectionTitle}>사용자 목록</Text>
+                  <Text style={styles.helperText}>오른쪽 목록에서 선택한 회원 정보를 즉시 불러옵니다.</Text>
+                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
+                    {members.map((member) => (
+                      <View style={styles.listItemCard} key={member.id}>
+                        <Text style={styles.listItemTitle}>{member.id}</Text>
+                        <Text style={styles.listItemDescription}>{member.nickname ?? "(닉네임 없음)"}</Text>
+                        <Text style={styles.listItemDescription}>연차 {member.preferredDayOff}/{member.remainingDayOff}</Text>
+                        <View style={styles.rowButtonContainer}>
+                          <ActionButton
+                            label="불러오기"
+                            variant="secondary"
+                            onPress={() => {
+                              setMemberFormState({
+                                selectedId: member.id,
+                                id: member.id,
+                                nickname: member.nickname ?? "",
+                                preferredDayOff: String(member.preferredDayOff),
+                                remainingDayOff: String(member.remainingDayOff),
+                                onboardingCompleted: member.onboardingCompleted
+                              })
+                            }}
+                          />
+                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteMember(member.id)} />
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
             </View>
           )}
 
           {activeTab === "holidays" && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>공휴일 추가/수정</Text>
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>공휴일 날짜 (YYYY-MM-DD)</Text>
-                <input
-                  type="date"
-                  value={holidayFormState.holidayDate}
-                  onChange={(event) => {
-                    setHolidayFormState((previousState) => ({ ...previousState, holidayDate: event.target.value }))
-                  }}
-                  style={htmlFieldStyle}
-                />
-              </View>
-              <LabelInput
-                label="이름"
-                value={holidayFormState.name}
-                onChangeText={(value) => setHolidayFormState((previousState) => ({ ...previousState, name: value }))}
-              />
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>실제 공휴일 여부</Text>
-                <input
-                  type="checkbox"
-                  checked={holidayFormState.isActualHoliday}
-                  onChange={(event) => {
-                    setHolidayFormState((previousState) => ({ ...previousState, isActualHoliday: event.target.checked }))
-                  }}
-                />
-              </View>
-
-              <View style={styles.rowButtonContainer}>
-                <ActionButton label={holidayFormState.selectedId == null ? "공휴일 생성" : "공휴일 수정"} onPress={() => void submitHoliday()} />
-                <ActionButton
-                  label="폼 초기화"
-                  variant="secondary"
-                  onPress={() => setHolidayFormState(createInitialHolidayFormState())}
-                />
-              </View>
-
-              <Text style={styles.sectionTitle}>공휴일 목록</Text>
-              {publicHolidays.map((holiday) => (
-                <View style={styles.listItemCard} key={holiday.id}>
-                  <Text style={styles.listItemTitle}>{holiday.holidayDate}</Text>
-                  <Text style={styles.listItemDescription}>{holiday.name}</Text>
-                  <Text style={styles.listItemDescription}>{holiday.isActualHoliday ? "실제 공휴일" : "참고일"}</Text>
-                  <View style={styles.rowButtonContainer}>
-                    <ActionButton
-                      label="불러오기"
-                      variant="secondary"
-                      onPress={() => {
-                        setHolidayFormState({
-                          selectedId: holiday.id,
-                          holidayDate: holiday.holidayDate,
-                          name: holiday.name,
-                          isActualHoliday: holiday.isActualHoliday
-                        })
+            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
+              <View style={styles.destinationEditorColumn}>
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>공휴일 추가/수정</Text>
+                  <View style={styles.row}>
+                    <Text style={styles.fieldLabel}>공휴일 날짜 (YYYY-MM-DD)</Text>
+                    <input
+                      type="date"
+                      value={holidayFormState.holidayDate}
+                      onChange={(event) => {
+                        setHolidayFormState((previousState) => ({ ...previousState, holidayDate: event.target.value }))
+                      }}
+                      style={htmlFieldStyle}
+                    />
+                  </View>
+                  <LabelInput
+                    label="이름"
+                    value={holidayFormState.name}
+                    onChangeText={(value) => setHolidayFormState((previousState) => ({ ...previousState, name: value }))}
+                  />
+                  <View style={styles.row}>
+                    <Text style={styles.fieldLabel}>실제 공휴일 여부</Text>
+                    <input
+                      type="checkbox"
+                      checked={holidayFormState.isActualHoliday}
+                      onChange={(event) => {
+                        setHolidayFormState((previousState) => ({ ...previousState, isActualHoliday: event.target.checked }))
                       }}
                     />
-                    <ActionButton label="삭제" variant="danger" onPress={() => void deleteHoliday(holiday.id)} />
+                  </View>
+
+                  <View style={styles.rowButtonContainer}>
+                    <ActionButton label={holidayFormState.selectedId == null ? "공휴일 생성" : "공휴일 수정"} onPress={() => void submitHoliday()} />
+                    <ActionButton
+                      label="폼 초기화"
+                      variant="secondary"
+                      onPress={() => setHolidayFormState(createInitialHolidayFormState())}
+                    />
                   </View>
                 </View>
-              ))}
+              </View>
+
+              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
+                <View style={[styles.sectionCard, styles.destinationListPanel]}>
+                  <Text style={styles.sectionTitle}>공휴일 목록</Text>
+                  <Text style={styles.helperText}>오른쪽 목록에서 선택한 공휴일을 즉시 불러옵니다.</Text>
+                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
+                    {publicHolidays.map((holiday) => (
+                      <View style={styles.listItemCard} key={holiday.id}>
+                        <Text style={styles.listItemTitle}>{holiday.holidayDate}</Text>
+                        <Text style={styles.listItemDescription}>{holiday.name}</Text>
+                        <Text style={styles.listItemDescription}>{holiday.isActualHoliday ? "실제 공휴일" : "참고일"}</Text>
+                        <View style={styles.rowButtonContainer}>
+                          <ActionButton
+                            label="불러오기"
+                            variant="secondary"
+                            onPress={() => {
+                              setHolidayFormState({
+                                selectedId: holiday.id,
+                                holidayDate: holiday.holidayDate,
+                                name: holiday.name,
+                                isActualHoliday: Boolean(holiday.isActualHoliday)
+                              })
+                            }}
+                          />
+                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteHoliday(holiday.id)} />
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
             </View>
           )}
             </ScrollView>
@@ -1566,11 +1606,16 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   destinationListPanel: {
-    gap: 10
+    gap: 10,
+    maxHeight: 760,
+    overflow: "hidden"
+  },
+  destinationListScrollArea: {
+    flexGrow: 0
   },
   destinationListContainer: {
     gap: 10,
-    maxHeight: 760
+    paddingBottom: 4
   },
   sectionCard: {
     borderRadius: 18,
