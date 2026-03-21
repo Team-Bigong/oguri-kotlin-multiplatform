@@ -9,6 +9,8 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.firebaseCrashlytics)
 }
 
 abstract class GenerateNetworkConfigTask : DefaultTask() {
@@ -98,6 +100,7 @@ tasks
     }
 
 kotlin {
+    @Suppress("DEPRECATION")
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
@@ -128,6 +131,8 @@ kotlin {
             implementation(libs.androidx.credentials.play.services.auth)
             implementation(libs.google.android.googleid)
             implementation(libs.google.mobile.ads)
+            implementation(libs.firebase.crashlytics.ktx)
+            implementation(libs.firebase.analytics.ktx)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.analytics.android)
             implementation(libs.plugin.session.replay.android)
