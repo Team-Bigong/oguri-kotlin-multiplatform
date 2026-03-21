@@ -199,7 +199,7 @@ const validateStoragePathSegment = (value: string, label: string): string => {
 }
 
 export const AdminApp = (): React.JSX.Element => {
-  const { width: windowWidth } = useWindowDimensions()
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions()
   const isWideDesktopLayout = windowWidth >= 1360
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
   const [loginUsername, setLoginUsername] = useState<string>("")
@@ -735,7 +735,7 @@ export const AdminApp = (): React.JSX.Element => {
 
   if (!isAuthenticated) {
     return (
-      <View style={styles.loginPage}>
+      <View style={[styles.loginPage, { minHeight: windowHeight }]}>
         <View style={styles.loginCard}>
           <Text style={styles.loginTitle}>Oguri Admin Login</Text>
           <Text style={styles.loginDescription}>관리자 계정으로 로그인 후 DB 관리 기능을 사용할 수 있습니다.</Text>
