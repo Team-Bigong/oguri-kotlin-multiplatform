@@ -17,8 +17,8 @@ import com.google.android.gms.ads.FullScreenContentCallback
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.appopen.AppOpenAd
 
-private const val ANDROID_BANNER_AD_UNIT_ID = "ca-app-pub-2833810411143763/1194589445"
-private const val ANDROID_APP_OPEN_AD_UNIT_ID = "ca-app-pub-2833810411143763/1849090361"
+private const val ANDROID_BANNER_AD_UNIT_ID = "ca-app-pub-9643550840413935/9847973658"
+private const val ANDROID_APP_OPEN_AD_UNIT_ID = "ca-app-pub-9643550840413935/2949857964"
 private const val BANNER_MAX_HEIGHT_DP = 50
 
 private object AndroidAdMobManager {
