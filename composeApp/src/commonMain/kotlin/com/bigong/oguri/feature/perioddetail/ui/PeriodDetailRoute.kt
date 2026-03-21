@@ -5,6 +5,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.bigong.oguri.core.analytics.OguriAnalyticsEvent
+import com.bigong.oguri.core.analytics.OguriAnalyticsProperty
+import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.deeplink.buildPeriodDetailDeepLink
 import com.bigong.oguri.core.platform.SharePayload
 import com.bigong.oguri.core.platform.shareContent
@@ -56,6 +59,16 @@ fun PeriodDetailRoute(
         onBackClick = onBackClick,
         onShareClick = {
             val periodDetail = periodDetailUiState.periodDetail ?: return@PeriodDetailScreen
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.SHARE_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.SHARE_TYPE to "period",
+                        OguriAnalyticsProperty.START_DATE to startDate,
+                        OguriAnalyticsProperty.END_DATE to endDate,
+                        OguriAnalyticsProperty.LEAVE_DAYS to periodDetail.dayOffCount.toString(),
+                    ),
+            )
             val deepLinkUrl =
                 buildPeriodDetailDeepLink(
                     startDate = startDate,

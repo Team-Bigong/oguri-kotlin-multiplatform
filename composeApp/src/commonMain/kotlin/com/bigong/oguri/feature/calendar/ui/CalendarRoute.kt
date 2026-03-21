@@ -5,6 +5,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.bigong.oguri.core.analytics.OguriAnalyticsEvent
+import com.bigong.oguri.core.analytics.OguriAnalyticsProperty
+import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.calendar.ui.model.CalendarSideEffect
@@ -36,18 +39,21 @@ fun CalendarRoute(
                         type = OguriSnackBarType.INFO,
                     )
                 }
+
                 CalendarSideEffect.RecommendationSaved -> {
                     snackbarHostState.showOguriSnackbar(
                         message = recommendationSavedMessage,
                         type = OguriSnackBarType.SUCCESS,
                     )
                 }
+
                 CalendarSideEffect.RecommendationDeleted -> {
                     snackbarHostState.showOguriSnackbar(
                         message = recommendationDeletedMessage,
                         type = OguriSnackBarType.INFO,
                     )
                 }
+
                 is CalendarSideEffect.NavigateToPeriodDetail -> {
                     onOpenPeriodDetail(sideEffect.startDate, sideEffect.endDate)
                 }
@@ -59,9 +65,27 @@ fun CalendarRoute(
         calendarUiState = calendarUiState,
         pagedPeriodCards = pagedPeriodCards,
         savedStateByPeriodKey = calendarUiState.savedStateByPeriodKey,
-        onLeaveDaysChanged = calendarViewModel::updateLeaveDays,
+        onLeaveDaysChanged = { leaveDays ->
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.CALENDAR_LEAVE_DAYS_CHANGED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.LEAVE_DAYS to leaveDays.toString(),
+                    ),
+            )
+            calendarViewModel.updateLeaveDays(leaveDays)
+        },
         onCardClick = calendarViewModel::onCardClick,
         onSaveToggleClick = calendarViewModel::toggleSaved,
-        onDetailClick = calendarViewModel::onDetailClick,
+        onDetailClick = { periodId ->
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.CALENDAR_PERIOD_DETAIL_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.PERIOD_ID to periodId.toString(),
+                    ),
+            )
+            calendarViewModel.onDetailClick(periodId)
+        },
     )
 }

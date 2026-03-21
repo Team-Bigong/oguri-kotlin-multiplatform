@@ -46,7 +46,12 @@ render.experimental.xml
 
 # Google Services (e.g. APIs or Firebase)
 google-services.json
+**/google-services.json
+**/google-services-*.json
 GoogleService-Info.plist
+GoogleService-Info-Debug.plist
+GoogleService-Info-Release.plist
+**/GoogleService-Info*.plist
 
 # Android Profiling
 *.hprof

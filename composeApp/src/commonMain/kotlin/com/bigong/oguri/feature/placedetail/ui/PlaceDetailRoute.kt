@@ -6,6 +6,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.analytics.OguriAnalyticsEvent
+import com.bigong.oguri.core.analytics.OguriAnalyticsProperty
+import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.deeplink.buildPlaceDetailDeepLink
 import com.bigong.oguri.core.platform.SharePayload
 import com.bigong.oguri.core.platform.shareContent
@@ -65,6 +68,7 @@ fun PlaceDetailRoute(
                         type = OguriSnackBarType.SUCCESS,
                     )
                 }
+
                 PlaceDetailSideEffect.Deleted -> {
                     snackbarHostState.showOguriSnackbar(
                         message = placeDeletedMessage,
@@ -87,6 +91,17 @@ fun PlaceDetailRoute(
         },
         onShareClick = {
             val placeDetail = placeDetailUiState.placeDetail ?: return@PlaceDetailScreen
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.SHARE_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.SHARE_TYPE to "place",
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail.city,
+                        OguriAnalyticsProperty.START_DATE to startDate.orEmpty(),
+                        OguriAnalyticsProperty.END_DATE to endDate.orEmpty(),
+                    ),
+            )
             val shareTitle = sharePlaceTitleTemplate.replace("%1\$s", placeDetail.city)
             val deepLinkUrl =
                 buildPlaceDetailDeepLink(
@@ -108,10 +123,46 @@ fun PlaceDetailRoute(
             )
         },
         onSaveToggleClick = placeDetailViewModel::toggleSaved,
-        onUrlClick = { destinationUrl ->
+        onExperienceClick = { experienceTitle, destinationUrl ->
+            val placeDetail = placeDetailUiState.placeDetail
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.PLACE_DETAIL_EXPERIENCE_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail?.city.orEmpty(),
+                        OguriAnalyticsProperty.EXPERIENCE_TITLE to experienceTitle,
+                        OguriAnalyticsProperty.AD_URL to destinationUrl,
+                    ),
+            )
+            uriHandler.openUri(destinationUrl)
+        },
+        onFlightClick = { destinationUrl ->
+            val placeDetail = placeDetailUiState.placeDetail
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.PLACE_DETAIL_FLIGHT_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail?.city.orEmpty(),
+                        OguriAnalyticsProperty.FLIGHT_URL to destinationUrl,
+                    ),
+            )
             uriHandler.openUri(destinationUrl)
         },
         onPlaceClick = onPlaceClick,
-        onPhotoClick = onPhotoClick,
+        onPhotoClick = { imageUrls, imageIndex ->
+            val placeDetail = placeDetailUiState.placeDetail
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.PLACE_DETAIL_PHOTO_DETAIL_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail?.city.orEmpty(),
+                        OguriAnalyticsProperty.PHOTO_INDEX to imageIndex.toString(),
+                    ),
+            )
+            onPhotoClick(imageUrls, imageIndex)
+        },
     )
 }
