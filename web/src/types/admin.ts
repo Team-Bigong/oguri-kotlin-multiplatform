@@ -38,7 +38,6 @@ export type DestinationExperience = {
 export type DestinationImageRequest = {
   imageUrl: string
   isThumbnail: boolean
-  thumbnail?: boolean
   sortOrder: number
 }
 

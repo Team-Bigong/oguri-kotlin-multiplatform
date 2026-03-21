@@ -407,8 +407,7 @@ export const AdminApp = (): React.JSX.Element => {
       images: state.images.map((image) => ({
         imageUrl: image.imageUrl,
         sortOrder: image.sortOrder,
-        isThumbnail: image.isThumbnail,
-        thumbnail: image.isThumbnail
+        isThumbnail: image.isThumbnail
       })),
       experiences: state.experiences.map((experience, index) => ({
         title: experience.title.trim(),
