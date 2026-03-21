@@ -4,22 +4,28 @@ import Foundation
 import ComposeApp
 import KakaoSDKCommon
 import GoogleMobileAds
+import FirebaseCore
+import FirebaseCrashlytics
 
 #if DEBUG
 private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
 private let iosAppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023"
+private let firebaseConfigurationPlistName = "GoogleService-Info-Debug"
 #else
 private let iosBannerAdUnitId = "ca-app-pub-2833810411143763/4722770918"
 private let iosAppOpenAdUnitId = "ca-app-pub-2833810411143763/4746554741"
+private let firebaseConfigurationPlistName = "GoogleService-Info-Release"
 #endif
 private let iosTestDeviceIdentifier = "8ca04675fef46ae5bc7a3764ddea6526"
 
 @main
 struct iOSApp: App {
     init() {
+        configureFirebase()
         if let kakaoAppKey = Bundle.main.object(forInfoDictionaryKey: "KEY_KAKAO") as? String, !kakaoAppKey.isEmpty {
             KakaoSDK.initSDK(appKey: kakaoAppKey)
         }
+        AmplitudeBridge.shared.startObserving()
         KakaoShareDispatcher.shared.startObserving()
         OguriAdMobBridge.shared.startObserving()
     }
@@ -36,6 +42,23 @@ struct iOSApp: App {
                     }
                 }
         }
+    }
+
+    private func configureFirebase() {
+        if FirebaseApp.app() != nil {
+            return
+        }
+        guard let filePath = Bundle.main.path(forResource: firebaseConfigurationPlistName, ofType: "plist"),
+              let options = FirebaseOptions(contentsOfFile: filePath) else {
+            assertionFailure("Firebase plist not found: \(firebaseConfigurationPlistName).plist")
+            return
+        }
+        FirebaseApp.configure(options: options)
+        #if DEBUG
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+        #else
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+        #endif
     }
 }
 

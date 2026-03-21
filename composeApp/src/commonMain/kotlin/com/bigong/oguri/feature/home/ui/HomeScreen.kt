@@ -17,6 +17,7 @@ import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
+import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader
 import com.bigong.oguri.feature.home.ui.component.HomeMoreRecommendationButton
@@ -47,7 +48,7 @@ fun HomeScreen(
     onRankSelected: (Int) -> Unit,
     onSavedChanged: (Boolean) -> Unit,
     onRetryClick: () -> Unit,
-    onAdvertisementClick: (String) -> Unit,
+    onAdvertisementClick: (Advertisement, Int) -> Unit,
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
@@ -161,7 +162,9 @@ fun HomeScreen(
                 AdvertisementCard(
                     advertisement = advertisement,
                     modifier = Modifier.padding(horizontal = 20.dp),
-                    onClick = onAdvertisementClick,
+                    onClick = {
+                        onAdvertisementClick(advertisement, index)
+                    },
                 )
             }
             item {

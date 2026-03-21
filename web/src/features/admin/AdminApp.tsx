@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native"
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native"
 import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
 import { resizeAndCompressImage } from "../../lib/imageProcessing"
 import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
@@ -22,6 +22,7 @@ type AdminTab = "destinations" | "members" | "holidays"
 type DestinationFormState = {
   selectedId: number | null
   countryId: string
+  countryName: string
   storageCountrySlug: string
   storageCitySlug: string
   name: string
@@ -56,9 +57,51 @@ type HolidayFormState = {
   isActualHoliday: boolean
 }
 
+type DestinationImageApiResponse = {
+  id: number
+  imageUrl: string
+  sortOrder: number
+  isThumbnail?: boolean
+  thumbnail?: boolean
+}
+
+type DestinationExperienceApiResponse = {
+  id: number
+  title: string
+  description: string
+  thumbnailUrl: string
+  link: string
+  sortOrder: number
+}
+
+type DestinationApiResponse = {
+  id: number
+  countryId: number | null
+  countryName: string
+  name: string
+  summary: string | null
+  description: string | null
+  recommendStartMonth1: number | null
+  recommendEndMonth1: number | null
+  recommendStartMonth2: number | null
+  recommendEndMonth2: number | null
+  flightTimeMinutes: number | null
+  images: DestinationImageApiResponse[]
+  experiences: DestinationExperienceApiResponse[]
+}
+
+type PublicHolidayApiResponse = {
+  id: number
+  holidayDate: string
+  name: string
+  isActualHoliday?: boolean
+  actualHoliday?: boolean
+}
+
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
   countryId: "",
+  countryName: "",
   storageCountrySlug: "",
   storageCitySlug: "",
   name: "",
@@ -93,12 +136,27 @@ const createInitialHolidayFormState = (): HolidayFormState => ({
   isActualHoliday: true
 })
 
-const toStoragePathSegment = (value: string): string => {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-_]/g, "")
+const normalizePublicHoliday = (holiday: PublicHolidayApiResponse): PublicHoliday => {
+  const resolvedActualHoliday = holiday.isActualHoliday ?? holiday.actualHoliday ?? true
+  return {
+    id: holiday.id,
+    holidayDate: holiday.holidayDate,
+    name: holiday.name,
+    isActualHoliday: resolvedActualHoliday
+  }
+}
+
+const normalizeDestination = (destination: DestinationApiResponse): Destination => {
+  return {
+    ...destination,
+    images: destination.images.map((image) => ({
+      id: image.id,
+      imageUrl: image.imageUrl,
+      sortOrder: image.sortOrder,
+      isThumbnail: image.isThumbnail ?? image.thumbnail ?? false
+    })),
+    experiences: destination.experiences
+  }
 }
 
 const parseFlightTimeMinutes = (value: string): string => {
@@ -106,92 +164,11 @@ const parseFlightTimeMinutes = (value: string): string => {
 }
 
 type StorageCountryOption = {
-  label: string
   slug: string
-  cityOptions: Array<{ label: string; slug: string }>
+  citySlugs: string[]
 }
 
-const storageCountryOptions: StorageCountryOption[] = [
-  {
-    label: "일본",
-    slug: "japan",
-    cityOptions: [
-      { label: "도쿄", slug: "tokyo" },
-      { label: "오사카", slug: "osaka" },
-      { label: "후쿠오카", slug: "fukuoka" },
-      { label: "삿포로", slug: "sapporo" }
-    ]
-  },
-  {
-    label: "호주",
-    slug: "australia",
-    cityOptions: [
-      { label: "브리즈번", slug: "brisbane" },
-      { label: "시드니", slug: "sydney" },
-      { label: "멜버른", slug: "melbourne" }
-    ]
-  },
-  {
-    label: "미국",
-    slug: "united-states",
-    cityOptions: [
-      { label: "뉴욕", slug: "new-york" },
-      { label: "샌프란시스코", slug: "san-francisco" },
-      { label: "LA", slug: "los-angeles" }
-    ]
-  },
-  {
-    label: "중국",
-    slug: "china",
-    cityOptions: [
-      { label: "상하이", slug: "shanghai" },
-      { label: "베이징", slug: "beijing" },
-      { label: "칭다오", slug: "qingdao" }
-    ]
-  },
-  {
-    label: "필리핀",
-    slug: "philippines",
-    cityOptions: [
-      { label: "세부", slug: "cebu" },
-      { label: "보라카이", slug: "boracay" },
-      { label: "보홀", slug: "bohol" }
-    ]
-  },
-  {
-    label: "프랑스",
-    slug: "france",
-    cityOptions: [
-      { label: "파리", slug: "paris" },
-      { label: "니스", slug: "nice" }
-    ]
-  },
-  {
-    label: "스페인",
-    slug: "spain",
-    cityOptions: [
-      { label: "바르셀로나", slug: "barcelona" },
-      { label: "마드리드", slug: "madrid" }
-    ]
-  },
-  {
-    label: "베트남",
-    slug: "vietnam",
-    cityOptions: [
-      { label: "다낭", slug: "danang" },
-      { label: "호치민", slug: "ho-chi-minh" }
-    ]
-  },
-  {
-    label: "대한민국",
-    slug: "south-korea",
-    cityOptions: [
-      { label: "서울", slug: "seoul" },
-      { label: "부산", slug: "busan" },
-      { label: "제주도", slug: "jeju" }
-    ]
-  }
-]
+const storagePathSegmentPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 const parseStorageSlugsFromImageUrl = (imageUrl: string): { countrySlug: string; citySlug: string } => {
   try {
@@ -256,7 +233,20 @@ const parseFirebaseObjectPathFromImageUrl = (imageUrl: string): string | null =>
   }
 }
 
+const validateStoragePathSegment = (value: string, label: string): string => {
+  const trimmedValue = value.trim()
+  if (trimmedValue.length === 0) {
+    throw new Error(`${label}를 입력해주세요.`)
+  }
+  if (!storagePathSegmentPattern.test(trimmedValue)) {
+    throw new Error(`${label}는 영문 소문자, 숫자, 하이픈(-)만 사용할 수 있습니다.`)
+  }
+  return trimmedValue
+}
+
 export const AdminApp = (): React.JSX.Element => {
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions()
+  const isWideDesktopLayout = windowWidth >= 1360
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
   const [loginUsername, setLoginUsername] = useState<string>("")
   const [loginPassword, setLoginPassword] = useState<string>("")
@@ -277,9 +267,35 @@ export const AdminApp = (): React.JSX.Element => {
   const [holidayFormState, setHolidayFormState] = useState<HolidayFormState>(createInitialHolidayFormState)
 
   const [uploadingImages, setUploadingImages] = useState<boolean>(false)
-  const selectedStorageCountryOption = storageCountryOptions.find(
-    (countryOption) => countryOption.slug === destinationFormState.storageCountrySlug
-  )
+  const storageCountryOptions = useMemo<StorageCountryOption[]>(() => {
+    const countryCityMap = new Map<string, Set<string>>()
+    destinations.forEach((destination) => {
+      const imageUrls = [
+        ...destination.images.map((image) => image.imageUrl),
+        ...destination.experiences.map((experience) => experience.thumbnailUrl)
+      ]
+      imageUrls.forEach((imageUrl) => {
+        const { countrySlug, citySlug } = parseStorageSlugsFromImageUrl(imageUrl)
+        if (countrySlug.length === 0 || citySlug.length === 0) {
+          return
+        }
+        const existingCitySlugSet = countryCityMap.get(countrySlug) ?? new Set<string>()
+        existingCitySlugSet.add(citySlug)
+        countryCityMap.set(countrySlug, existingCitySlugSet)
+      })
+    })
+    return Array.from(countryCityMap.entries())
+      .sort(([leftSlug], [rightSlug]) => leftSlug.localeCompare(rightSlug))
+      .map(([countrySlug, citySlugSet]) => ({
+        slug: countrySlug,
+        citySlugs: Array.from(citySlugSet).sort((leftSlug, rightSlug) => leftSlug.localeCompare(rightSlug))
+      }))
+  }, [destinations])
+
+  const selectedStorageCountryOption = useMemo(() => {
+    const trimmedStorageCountrySlug = destinationFormState.storageCountrySlug.trim()
+    return storageCountryOptions.find((countryOption) => countryOption.slug === trimmedStorageCountrySlug)
+  }, [destinationFormState.storageCountrySlug, storageCountryOptions])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -292,15 +308,15 @@ export const AdminApp = (): React.JSX.Element => {
     try {
       const [countryList, destinationList, memberList, holidayList] = await Promise.all([
         adminApiClient.get<Country[]>("/api/admin/v1/countries"),
-        adminApiClient.get<Destination[]>("/api/admin/v1/destinations"),
+        adminApiClient.get<DestinationApiResponse[]>("/api/admin/v1/destinations"),
         adminApiClient.get<Member[]>("/api/admin/v1/members"),
-        adminApiClient.get<PublicHoliday[]>("/api/admin/v1/public-holidays")
+        adminApiClient.get<PublicHolidayApiResponse[]>("/api/admin/v1/public-holidays")
       ])
 
       setCountries(countryList)
-      setDestinations(destinationList)
+      setDestinations(destinationList.map(normalizeDestination))
       setMembers(memberList)
-      setPublicHolidays(holidayList)
+      setPublicHolidays(holidayList.map(normalizePublicHoliday))
     } catch (error) {
       const resolvedMessage = error instanceof Error ? error.message : "데이터를 불러오지 못했습니다."
       if (resolvedMessage.includes("401")) {
@@ -370,9 +386,16 @@ export const AdminApp = (): React.JSX.Element => {
     }
 
     const flightTimeMinutes = parseFlightTimeMinutes(state.flightTime)
+    const trimmedCountryName = state.countryName.trim()
+    const matchedCountry = countries.find((country) => country.name === trimmedCountryName)
+    const resolvedCountryId = state.countryId.length > 0 ? Number(state.countryId) : (matchedCountry?.id ?? null)
+
+    if (resolvedCountryId == null || Number.isNaN(resolvedCountryId)) {
+      throw new Error("국가를 정확히 입력해주세요. 목록의 국가명과 일치해야 합니다.")
+    }
 
     return {
-      countryId: Number(state.countryId),
+      countryId: resolvedCountryId,
       name: state.name,
       summary: state.summary.trim().length > 0 ? state.summary : null,
       description: state.description.trim().length > 0 ? state.description : null,
@@ -381,7 +404,11 @@ export const AdminApp = (): React.JSX.Element => {
       recommendStartMonth2: parseMonth(state.recommendStartMonth2),
       recommendEndMonth2: parseMonth(state.recommendEndMonth2),
       flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
-      images: state.images,
+      images: state.images.map((image) => ({
+        imageUrl: image.imageUrl,
+        sortOrder: image.sortOrder,
+        isThumbnail: image.isThumbnail
+      })),
       experiences: state.experiences.map((experience, index) => ({
         title: experience.title.trim(),
         description: experience.description.trim(),
@@ -390,7 +417,7 @@ export const AdminApp = (): React.JSX.Element => {
         sortOrder: index + 1
       }))
     }
-  }, [])
+  }, [countries])
 
   const deleteImagesInFirebaseStorage = useCallback(async (imageUrls: string[]): Promise<number> => {
     if (imageUrls.length === 0) {
@@ -582,11 +609,8 @@ export const AdminApp = (): React.JSX.Element => {
     setNoticeMessage("")
 
     try {
-      const countryPathSegment = toStoragePathSegment(destinationFormState.storageCountrySlug)
-      const cityPathSegment = toStoragePathSegment(destinationFormState.storageCitySlug)
-      if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
-        throw new Error("Storage 국가/도시 경로를 먼저 입력하거나 메뉴에서 선택해주세요.")
-      }
+      const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
+      const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
 
       const selectedFiles = Array.from(fileList)
       const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
@@ -686,11 +710,8 @@ export const AdminApp = (): React.JSX.Element => {
     setNoticeMessage("")
 
     try {
-      const countryPathSegment = toStoragePathSegment(destinationFormState.storageCountrySlug)
-      const cityPathSegment = toStoragePathSegment(destinationFormState.storageCitySlug)
-      if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
-        throw new Error("Storage 국가/도시 경로를 먼저 입력하거나 메뉴에서 선택해주세요.")
-      }
+      const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
+      const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
 
       const currentMaximumExperienceSequenceNumber = destinationFormState.experiences.reduce(
         (maximumSequenceNumber, experience) => {
@@ -745,9 +766,26 @@ export const AdminApp = (): React.JSX.Element => {
     return "공휴일 DB 관리"
   }, [activeTab])
 
+  const dashboardSummaryItems = useMemo(() => {
+    const totalDestinationImageCount = destinations.reduce((totalCount, destination) => {
+      return totalCount + destination.images.length
+    }, 0)
+    const totalDestinationExperienceCount = destinations.reduce((totalCount, destination) => {
+      return totalCount + destination.experiences.length
+    }, 0)
+
+    return [
+      { label: "장소", value: destinations.length, accentColor: "#2865d8" },
+      { label: "체험", value: totalDestinationExperienceCount, accentColor: "#0f9d8f" },
+      { label: "장소 이미지", value: totalDestinationImageCount, accentColor: "#2f7b4a" },
+      { label: "사용자", value: members.length, accentColor: "#5b53d9" },
+      { label: "공휴일", value: publicHolidays.length, accentColor: "#b0671f" }
+    ]
+  }, [destinations, members.length, publicHolidays.length])
+
   if (!isAuthenticated) {
     return (
-      <View style={styles.loginPage}>
+      <View style={[styles.loginPage, { minHeight: windowHeight }]}>
         <View style={styles.loginCard}>
           <Text style={styles.loginTitle}>Oguri Admin Login</Text>
           <Text style={styles.loginDescription}>관리자 계정으로 로그인 후 DB 관리 기능을 사용할 수 있습니다.</Text>
@@ -769,103 +807,123 @@ export const AdminApp = (): React.JSX.Element => {
 
   return (
     <View style={styles.page}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headline}>Oguri Admin</Text>
-        <Text style={styles.subtitle}>{activeTitle}</Text>
-        <View style={styles.headerActionRow}>
-          <ActionButton label="로그아웃" variant="secondary" onPress={submitAdminLogout} />
+      <View style={styles.adminLayout}>
+        <View style={styles.sidebarContainer}>
+          <Text style={styles.sidebarBrandTitle}>오구리 어드민</Text>
+          <Text style={styles.sidebarBrandDescription}>운영 데이터를 한 화면에서 빠르게 관리하세요</Text>
+          <View style={styles.sidebarTabList}>
+            <TabButton label="장소 관리" selected={activeTab === "destinations"} onPress={() => setActiveTab("destinations")} />
+            <TabButton label="사용자 관리" selected={activeTab === "members"} onPress={() => setActiveTab("members")} />
+            <TabButton label="공휴일 관리" selected={activeTab === "holidays"} onPress={() => setActiveTab("holidays")} />
+          </View>
         </View>
-      </View>
 
-      <View style={styles.tabRow}>
-        <TabButton label="장소" selected={activeTab === "destinations"} onPress={() => setActiveTab("destinations")} />
-        <TabButton label="사용자" selected={activeTab === "members"} onPress={() => setActiveTab("members")} />
-        <TabButton label="공휴일" selected={activeTab === "holidays"} onPress={() => setActiveTab("holidays")} />
-      </View>
+        <View style={styles.mainPanel}>
+          <View style={styles.headerContainer}>
+            <View>
+              <Text style={styles.headline}>Oguri Admin Dashboard</Text>
+              <Text style={styles.subtitle}>{activeTitle}</Text>
+            </View>
+            <View style={styles.headerActionRow}>
+              <ActionButton label="새로고침" variant="secondary" onPress={() => void loadAll()} />
+              <ActionButton label="로그아웃" variant="danger" onPress={submitAdminLogout} />
+            </View>
+          </View>
 
-      {noticeMessage.length > 0 && <Text style={styles.noticeText}>{noticeMessage}</Text>}
-      {errorMessage.length > 0 && <Text style={styles.errorText}>{errorMessage}</Text>}
+          <View style={styles.metricCardContainer}>
+            {dashboardSummaryItems.map((summaryItem) => (
+              <View style={styles.metricCard} key={summaryItem.label}>
+                <View style={[styles.metricCardAccent, { backgroundColor: summaryItem.accentColor }]} />
+                <Text style={styles.metricCardLabel}>{summaryItem.label}</Text>
+                <Text style={styles.metricCardValue}>{summaryItem.value}</Text>
+              </View>
+            ))}
+          </View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#1f6b45" />
-        </View>
-      ) : (
-        <ScrollView style={styles.contentContainer} contentContainerStyle={styles.contentInnerContainer}>
+          {noticeMessage.length > 0 && <Text style={styles.noticeText}>{noticeMessage}</Text>}
+          {errorMessage.length > 0 && <Text style={styles.errorText}>{errorMessage}</Text>}
+
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#2a6bd8" />
+            </View>
+          ) : (
+            <ScrollView style={styles.contentContainer} contentContainerStyle={styles.contentInnerContainer}>
           {activeTab === "destinations" && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>장소 추가/수정</Text>
+            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
+              <View style={styles.destinationEditorColumn}>
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>장소 추가/수정</Text>
               <View style={styles.row}>
                 <Text style={styles.fieldLabel}>국가</Text>
-                <select
-                  value={destinationFormState.countryId}
+                <input
+                  list="admin-country-options"
+                  value={destinationFormState.countryName}
                   onChange={(event) => {
-                    setDestinationFormState((previousState) => ({ ...previousState, countryId: event.target.value }))
+                    const typedCountryName = event.target.value
+                    const matchedCountry = countries.find((country) => country.name === typedCountryName.trim())
+                    setDestinationFormState((previousState) => ({
+                      ...previousState,
+                      countryName: typedCountryName,
+                      countryId: matchedCountry == null ? "" : String(matchedCountry.id)
+                    }))
                   }}
                   style={htmlFieldStyle}
-                >
-                  <option value="">국가 선택</option>
+                  placeholder="국가명 입력 또는 선택"
+                />
+                <datalist id="admin-country-options">
                   {countries.map((country) => (
-                    <option value={String(country.id)} key={country.id}>{country.name}</option>
+                    <option value={country.name} key={country.id} />
                   ))}
-                </select>
+                </datalist>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.fieldLabel}>Storage 국가 경로</Text>
-                <select
+                <input
+                  list="admin-storage-country-options"
                   value={destinationFormState.storageCountrySlug}
                   onChange={(event) => {
-                    const selectedSlug = event.target.value
-                    const countryOption = storageCountryOptions.find((item) => item.slug === selectedSlug)
+                    const selectedValue = event.target.value.trim()
+                    const countryOption = storageCountryOptions.find((item) => item.slug === selectedValue)
                     setDestinationFormState((previousState) => ({
                       ...previousState,
-                      storageCountrySlug: selectedSlug,
-                      storageCitySlug: countryOption?.cityOptions[0]?.slug ?? ""
+                      storageCountrySlug: selectedValue,
+                      storageCitySlug: countryOption == null
+                        ? previousState.storageCitySlug
+                        : (countryOption.citySlugs[0] ?? previousState.storageCitySlug)
                     }))
                   }}
                   style={htmlFieldStyle}
-                >
-                  <option value="">경로 국가 선택</option>
+                  placeholder="예: australia"
+                />
+                <datalist id="admin-storage-country-options">
                   {storageCountryOptions.map((countryOption) => (
-                    <option value={countryOption.slug} key={countryOption.slug}>
-                      {countryOption.label} ({countryOption.slug})
-                    </option>
+                    <option value={countryOption.slug} key={countryOption.slug} />
                   ))}
-                </select>
+                </datalist>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.fieldLabel}>Storage 도시 경로</Text>
-                <select
+                <input
+                  list="admin-storage-city-options"
                   value={destinationFormState.storageCitySlug}
                   onChange={(event) => {
                     setDestinationFormState((previousState) => ({
                       ...previousState,
-                      storageCitySlug: event.target.value
+                      storageCitySlug: event.target.value.trim()
                     }))
                   }}
                   style={htmlFieldStyle}
-                >
-                  <option value="">경로 도시 선택</option>
-                  {(selectedStorageCountryOption?.cityOptions ?? []).map((cityOption) => (
-                    <option value={cityOption.slug} key={cityOption.slug}>
-                      {cityOption.label} ({cityOption.slug})
-                    </option>
+                  placeholder="예: brisbane"
+                />
+                <datalist id="admin-storage-city-options">
+                  {(selectedStorageCountryOption?.citySlugs ?? []).map((citySlug) => (
+                    <option value={citySlug} key={citySlug} />
                   ))}
-                </select>
+                </datalist>
               </View>
-
-              <LabelInput
-                label="Storage 국가 경로 직접입력"
-                value={destinationFormState.storageCountrySlug}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, storageCountrySlug: value }))}
-              />
-              <LabelInput
-                label="Storage 도시 경로 직접입력"
-                value={destinationFormState.storageCitySlug}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, storageCitySlug: value }))}
-              />
 
               <LabelInput
                 label="도시명"
@@ -883,6 +941,14 @@ export const AdminApp = (): React.JSX.Element => {
                 multiline
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, description: value }))}
               />
+
+              <View style={styles.row}>
+                <Text style={styles.sectionTitle}>체험 관리 (Experience)</Text>
+                <Text style={styles.helperText}>현재 {destinationFormState.experiences.length}건 · 제목/설명/링크/썸네일을 관리합니다.</Text>
+                <View style={styles.rowButtonContainer}>
+                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
+                </View>
+              </View>
 
               <View style={styles.rowSplitContainer}>
                 <LabelInput
@@ -983,14 +1049,6 @@ export const AdminApp = (): React.JSX.Element => {
                 </View>
               )}
 
-              <View style={styles.row}>
-                <Text style={styles.sectionTitle}>체험 정보</Text>
-                <Text style={styles.helperText}>각 체험은 제목, 설명, 링크, 썸네일이 모두 필요합니다.</Text>
-                <View style={styles.rowButtonContainer}>
-                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
-                </View>
-              </View>
-
               {destinationFormState.experiences.length > 0 && (
                 <View style={styles.imageListContainer}>
                   {destinationFormState.experiences.map((experience, experienceIndex) => (
@@ -1067,33 +1125,10 @@ export const AdminApp = (): React.JSX.Element => {
                 </View>
               )}
 
-              <View style={styles.rowButtonContainer}>
-                <ActionButton label={destinationFormState.selectedId == null ? "장소 생성" : "장소 수정"} onPress={() => void submitDestination()} />
-                <ActionButton
-                  label="폼 초기화"
-                  variant="secondary"
-                  onPress={() => {
-                    void (async () => {
-                      await cleanupPendingUploadedImages(
-                        destinationFormState.newlyUploadedImageUrls,
-                        destinationFormState.newlyUploadedExperienceThumbnailUrls
-                      )
-                      setDestinationFormState(createInitialDestinationFormState())
-                    })()
-                  }}
-                />
-              </View>
-
-              <Text style={styles.sectionTitle}>장소 목록</Text>
-              {destinations.map((destination) => (
-                <View style={styles.listItemCard} key={destination.id}>
-                  <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
-                  <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
-                  <Text style={styles.listItemDescription}>이미지 {destination.images.length}장</Text>
-                  <Text style={styles.listItemDescription}>체험 {destination.experiences.length}건</Text>
                   <View style={styles.rowButtonContainer}>
+                    <ActionButton label={destinationFormState.selectedId == null ? "장소 생성" : "장소 수정"} onPress={() => void submitDestination()} />
                     <ActionButton
-                      label="불러오기"
+                      label="폼 초기화"
                       variant="secondary"
                       onPress={() => {
                         void (async () => {
@@ -1101,191 +1136,248 @@ export const AdminApp = (): React.JSX.Element => {
                             destinationFormState.newlyUploadedImageUrls,
                             destinationFormState.newlyUploadedExperienceThumbnailUrls
                           )
-                          setDestinationFormState({
-                            selectedId: destination.id,
-                            countryId: destination.countryId == null ? "" : String(destination.countryId),
-                            storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
-                            storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
-                            name: destination.name,
-                            summary: destination.summary ?? "",
-                            description: destination.description ?? "",
-                            recommendStartMonth1: destination.recommendStartMonth1 == null ? "" : String(destination.recommendStartMonth1),
-                            recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
-                            recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
-                            recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
-                            flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
-                            images: destination.images.map((image) => ({
-                              imageUrl: image.imageUrl,
-                              isThumbnail: image.isThumbnail,
-                              sortOrder: image.sortOrder
-                            })),
-                            experiences: destination.experiences.map((experience) => ({
-                              title: experience.title,
-                              description: experience.description,
-                              thumbnailUrl: experience.thumbnailUrl,
-                              link: experience.link,
-                              sortOrder: experience.sortOrder
-                            })),
-                            existingImageUrls: destination.images.map((image) => image.imageUrl),
-                            existingExperienceThumbnailUrls: destination.experiences.map((experience) => experience.thumbnailUrl),
-                            newlyUploadedImageUrls: [],
-                            newlyUploadedExperienceThumbnailUrls: []
-                          })
+                          setDestinationFormState(createInitialDestinationFormState())
                         })()
                       }}
                     />
-                    <ActionButton label="삭제" variant="danger" onPress={() => void deleteDestination(destination.id)} />
                   </View>
                 </View>
-              ))}
+              </View>
+
+              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
+                <View style={[styles.sectionCard, styles.destinationListPanel]}>
+                  <Text style={styles.sectionTitle}>장소 목록</Text>
+                  <Text style={styles.helperText}>오른쪽 목록에서 선택하면 왼쪽 폼으로 즉시 불러옵니다.</Text>
+                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
+                    {destinations.map((destination) => (
+                      <View style={styles.listItemCard} key={destination.id}>
+                        <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
+                        <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
+                        <Text style={styles.listItemDescription}>이미지 {destination.images.length}장</Text>
+                        <Text style={styles.listItemDescription}>체험 {destination.experiences.length}건</Text>
+                        <View style={styles.rowButtonContainer}>
+                          <ActionButton
+                            label="불러오기"
+                            variant="secondary"
+                            onPress={() => {
+                              void (async () => {
+                                await cleanupPendingUploadedImages(
+                                  destinationFormState.newlyUploadedImageUrls,
+                                  destinationFormState.newlyUploadedExperienceThumbnailUrls
+                                )
+                                setDestinationFormState({
+                                  selectedId: destination.id,
+                                  countryId: destination.countryId == null ? "" : String(destination.countryId),
+                                  countryName: destination.countryName,
+                                  storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
+                                  storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
+                                  name: destination.name,
+                                  summary: destination.summary ?? "",
+                                  description: destination.description ?? "",
+                                  recommendStartMonth1: destination.recommendStartMonth1 == null ? "" : String(destination.recommendStartMonth1),
+                                  recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
+                                  recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
+                                  recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
+                                  flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
+                                  images: destination.images.map((image) => ({
+                                    imageUrl: image.imageUrl,
+                                    isThumbnail: image.isThumbnail,
+                                    sortOrder: image.sortOrder
+                                  })),
+                                  experiences: destination.experiences.map((experience) => ({
+                                    title: experience.title,
+                                    description: experience.description,
+                                    thumbnailUrl: experience.thumbnailUrl,
+                                    link: experience.link,
+                                    sortOrder: experience.sortOrder
+                                  })),
+                                  existingImageUrls: destination.images.map((image) => image.imageUrl),
+                                  existingExperienceThumbnailUrls: destination.experiences.map((experience) => experience.thumbnailUrl),
+                                  newlyUploadedImageUrls: [],
+                                  newlyUploadedExperienceThumbnailUrls: []
+                                })
+                              })()
+                            }}
+                          />
+                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteDestination(destination.id)} />
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
             </View>
           )}
 
           {activeTab === "members" && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>사용자 추가/수정</Text>
-              {memberFormState.selectedId == null && (
-                <LabelInput
-                  label="사용자 ID"
-                  value={memberFormState.id}
-                  onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, id: value }))}
-                />
-              )}
-              <LabelInput
-                label="닉네임"
-                value={memberFormState.nickname}
-                onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, nickname: value }))}
-              />
+            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
+              <View style={styles.destinationEditorColumn}>
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>사용자 추가/수정</Text>
+                  {memberFormState.selectedId == null && (
+                    <LabelInput
+                      label="사용자 ID"
+                      value={memberFormState.id}
+                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, id: value }))}
+                    />
+                  )}
+                  <LabelInput
+                    label="닉네임"
+                    value={memberFormState.nickname}
+                    onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, nickname: value }))}
+                  />
 
-              <View style={styles.rowSplitContainer}>
-                <LabelInput
-                  label="선호 연차"
-                  keyboardType="numeric"
-                  value={memberFormState.preferredDayOff}
-                  onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, preferredDayOff: value }))}
-                />
-                <LabelInput
-                  label="남은 연차"
-                  keyboardType="numeric"
-                  value={memberFormState.remainingDayOff}
-                  onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, remainingDayOff: value }))}
-                />
-              </View>
+                  <View style={styles.rowSplitContainer}>
+                    <LabelInput
+                      label="선호 연차"
+                      keyboardType="numeric"
+                      value={memberFormState.preferredDayOff}
+                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, preferredDayOff: value }))}
+                    />
+                    <LabelInput
+                      label="남은 연차"
+                      keyboardType="numeric"
+                      value={memberFormState.remainingDayOff}
+                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, remainingDayOff: value }))}
+                    />
+                  </View>
 
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>온보딩 완료</Text>
-                <input
-                  type="checkbox"
-                  checked={memberFormState.onboardingCompleted}
-                  onChange={(event) => {
-                    setMemberFormState((previousState) => ({ ...previousState, onboardingCompleted: event.target.checked }))
-                  }}
-                />
-              </View>
-
-              <View style={styles.rowButtonContainer}>
-                <ActionButton label={memberFormState.selectedId == null ? "사용자 생성" : "사용자 수정"} onPress={() => void submitMember()} />
-                <ActionButton
-                  label="폼 초기화"
-                  variant="secondary"
-                  onPress={() => setMemberFormState(createInitialMemberFormState())}
-                />
-              </View>
-
-              <Text style={styles.sectionTitle}>사용자 목록</Text>
-              {members.map((member) => (
-                <View style={styles.listItemCard} key={member.id}>
-                  <Text style={styles.listItemTitle}>{member.id}</Text>
-                  <Text style={styles.listItemDescription}>{member.nickname ?? "(닉네임 없음)"}</Text>
-                  <Text style={styles.listItemDescription}>연차 {member.preferredDayOff}/{member.remainingDayOff}</Text>
-                  <View style={styles.rowButtonContainer}>
-                    <ActionButton
-                      label="불러오기"
-                      variant="secondary"
-                      onPress={() => {
-                        setMemberFormState({
-                          selectedId: member.id,
-                          id: member.id,
-                          nickname: member.nickname ?? "",
-                          preferredDayOff: String(member.preferredDayOff),
-                          remainingDayOff: String(member.remainingDayOff),
-                          onboardingCompleted: member.onboardingCompleted
-                        })
+                  <View style={styles.row}>
+                    <Text style={styles.fieldLabel}>온보딩 완료</Text>
+                    <input
+                      type="checkbox"
+                      checked={memberFormState.onboardingCompleted}
+                      onChange={(event) => {
+                        setMemberFormState((previousState) => ({ ...previousState, onboardingCompleted: event.target.checked }))
                       }}
                     />
-                    <ActionButton label="삭제" variant="danger" onPress={() => void deleteMember(member.id)} />
+                  </View>
+
+                  <View style={styles.rowButtonContainer}>
+                    <ActionButton label={memberFormState.selectedId == null ? "사용자 생성" : "사용자 수정"} onPress={() => void submitMember()} />
+                    <ActionButton
+                      label="폼 초기화"
+                      variant="secondary"
+                      onPress={() => setMemberFormState(createInitialMemberFormState())}
+                    />
                   </View>
                 </View>
-              ))}
+              </View>
+
+              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
+                <View style={[styles.sectionCard, styles.destinationListPanel]}>
+                  <Text style={styles.sectionTitle}>사용자 목록</Text>
+                  <Text style={styles.helperText}>오른쪽 목록에서 선택한 회원 정보를 즉시 불러옵니다.</Text>
+                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
+                    {members.map((member) => (
+                      <View style={styles.listItemCard} key={member.id}>
+                        <Text style={styles.listItemTitle}>{member.id}</Text>
+                        <Text style={styles.listItemDescription}>{member.nickname ?? "(닉네임 없음)"}</Text>
+                        <Text style={styles.listItemDescription}>연차 {member.preferredDayOff}/{member.remainingDayOff}</Text>
+                        <View style={styles.rowButtonContainer}>
+                          <ActionButton
+                            label="불러오기"
+                            variant="secondary"
+                            onPress={() => {
+                              setMemberFormState({
+                                selectedId: member.id,
+                                id: member.id,
+                                nickname: member.nickname ?? "",
+                                preferredDayOff: String(member.preferredDayOff),
+                                remainingDayOff: String(member.remainingDayOff),
+                                onboardingCompleted: member.onboardingCompleted
+                              })
+                            }}
+                          />
+                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteMember(member.id)} />
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
             </View>
           )}
 
           {activeTab === "holidays" && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>공휴일 추가/수정</Text>
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>공휴일 날짜 (YYYY-MM-DD)</Text>
-                <input
-                  type="date"
-                  value={holidayFormState.holidayDate}
-                  onChange={(event) => {
-                    setHolidayFormState((previousState) => ({ ...previousState, holidayDate: event.target.value }))
-                  }}
-                  style={htmlFieldStyle}
-                />
-              </View>
-              <LabelInput
-                label="이름"
-                value={holidayFormState.name}
-                onChangeText={(value) => setHolidayFormState((previousState) => ({ ...previousState, name: value }))}
-              />
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>실제 공휴일 여부</Text>
-                <input
-                  type="checkbox"
-                  checked={holidayFormState.isActualHoliday}
-                  onChange={(event) => {
-                    setHolidayFormState((previousState) => ({ ...previousState, isActualHoliday: event.target.checked }))
-                  }}
-                />
-              </View>
-
-              <View style={styles.rowButtonContainer}>
-                <ActionButton label={holidayFormState.selectedId == null ? "공휴일 생성" : "공휴일 수정"} onPress={() => void submitHoliday()} />
-                <ActionButton
-                  label="폼 초기화"
-                  variant="secondary"
-                  onPress={() => setHolidayFormState(createInitialHolidayFormState())}
-                />
-              </View>
-
-              <Text style={styles.sectionTitle}>공휴일 목록</Text>
-              {publicHolidays.map((holiday) => (
-                <View style={styles.listItemCard} key={holiday.id}>
-                  <Text style={styles.listItemTitle}>{holiday.holidayDate}</Text>
-                  <Text style={styles.listItemDescription}>{holiday.name}</Text>
-                  <Text style={styles.listItemDescription}>{holiday.isActualHoliday ? "실제 공휴일" : "참고일"}</Text>
-                  <View style={styles.rowButtonContainer}>
-                    <ActionButton
-                      label="불러오기"
-                      variant="secondary"
-                      onPress={() => {
-                        setHolidayFormState({
-                          selectedId: holiday.id,
-                          holidayDate: holiday.holidayDate,
-                          name: holiday.name,
-                          isActualHoliday: holiday.isActualHoliday
-                        })
+            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
+              <View style={styles.destinationEditorColumn}>
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>공휴일 추가/수정</Text>
+                  <View style={styles.row}>
+                    <Text style={styles.fieldLabel}>공휴일 날짜 (YYYY-MM-DD)</Text>
+                    <input
+                      type="date"
+                      value={holidayFormState.holidayDate}
+                      onChange={(event) => {
+                        setHolidayFormState((previousState) => ({ ...previousState, holidayDate: event.target.value }))
+                      }}
+                      style={htmlFieldStyle}
+                    />
+                  </View>
+                  <LabelInput
+                    label="이름"
+                    value={holidayFormState.name}
+                    onChangeText={(value) => setHolidayFormState((previousState) => ({ ...previousState, name: value }))}
+                  />
+                  <View style={styles.row}>
+                    <Text style={styles.fieldLabel}>실제 공휴일 여부</Text>
+                    <input
+                      type="checkbox"
+                      checked={holidayFormState.isActualHoliday}
+                      onChange={(event) => {
+                        setHolidayFormState((previousState) => ({ ...previousState, isActualHoliday: event.target.checked }))
                       }}
                     />
-                    <ActionButton label="삭제" variant="danger" onPress={() => void deleteHoliday(holiday.id)} />
+                  </View>
+
+                  <View style={styles.rowButtonContainer}>
+                    <ActionButton label={holidayFormState.selectedId == null ? "공휴일 생성" : "공휴일 수정"} onPress={() => void submitHoliday()} />
+                    <ActionButton
+                      label="폼 초기화"
+                      variant="secondary"
+                      onPress={() => setHolidayFormState(createInitialHolidayFormState())}
+                    />
                   </View>
                 </View>
-              ))}
+              </View>
+
+              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
+                <View style={[styles.sectionCard, styles.destinationListPanel]}>
+                  <Text style={styles.sectionTitle}>공휴일 목록</Text>
+                  <Text style={styles.helperText}>오른쪽 목록에서 선택한 공휴일을 즉시 불러옵니다.</Text>
+                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
+                    {publicHolidays.map((holiday) => (
+                      <View style={styles.listItemCard} key={holiday.id}>
+                        <Text style={styles.listItemTitle}>{holiday.holidayDate}</Text>
+                        <Text style={styles.listItemDescription}>{holiday.name}</Text>
+                        <Text style={styles.listItemDescription}>{holiday.isActualHoliday ? "실제 공휴일" : "참고일"}</Text>
+                        <View style={styles.rowButtonContainer}>
+                          <ActionButton
+                            label="불러오기"
+                            variant="secondary"
+                            onPress={() => {
+                              setHolidayFormState({
+                                selectedId: holiday.id,
+                                holidayDate: holiday.holidayDate,
+                                name: holiday.name,
+                                isActualHoliday: Boolean(holiday.isActualHoliday)
+                              })
+                            }}
+                          />
+                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteHoliday(holiday.id)} />
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                </View>
+              </View>
             </View>
           )}
-        </ScrollView>
-      )}
+            </ScrollView>
+          )}
+        </View>
+      </View>
     </View>
   )
 }
@@ -1357,7 +1449,7 @@ const LabelInput = ({
 const styles = StyleSheet.create({
   loginPage: {
     minHeight: "100%",
-    backgroundColor: "#f4f7f3",
+    backgroundColor: "#edf4ff",
     padding: 20,
     justifyContent: "center",
     alignItems: "center"
@@ -1383,26 +1475,101 @@ const styles = StyleSheet.create({
   },
   page: {
     minHeight: "100%",
-    backgroundColor: "#f4f7f3",
-    paddingHorizontal: 22,
-    paddingVertical: 20
+    backgroundColor: "#e9f2ff",
+    paddingHorizontal: 18,
+    paddingVertical: 18
+  },
+  adminLayout: {
+    flexDirection: "row",
+    gap: 16,
+    minHeight: "100%"
+  },
+  sidebarContainer: {
+    width: 248,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#b9cff3",
+    backgroundColor: "#10243f",
+    paddingHorizontal: 14,
+    paddingTop: 18,
+    paddingBottom: 16,
+    gap: 14
+  },
+  sidebarBrandTitle: {
+    color: "#f5faff",
+    fontSize: 22,
+    fontWeight: "800"
+  },
+  sidebarBrandDescription: {
+    color: "#b9d0ef",
+    fontSize: 13,
+    lineHeight: 19
+  },
+  sidebarTabList: {
+    gap: 8
+  },
+  mainPanel: {
+    flex: 1,
+    minWidth: 0
   },
   headerContainer: {
-    marginBottom: 14
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#bfcef0",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
   },
   headerActionRow: {
-    marginTop: 10,
-    flexDirection: "row"
+    flexDirection: "row",
+    gap: 8
   },
   headline: {
-    color: "#1d2e21",
-    fontSize: 28,
-    fontWeight: "700"
+    color: "#14356a",
+    fontSize: 26,
+    fontWeight: "800"
   },
   subtitle: {
-    color: "#4f6654",
+    color: "#55739e",
     fontSize: 15,
-    marginTop: 6
+    marginTop: 6,
+    fontWeight: "600"
+  },
+  metricCardContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 12
+  },
+  metricCard: {
+    minWidth: 150,
+    flexGrow: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#c7d8f4",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    gap: 4
+  },
+  metricCardAccent: {
+    width: 34,
+    height: 4,
+    borderRadius: 999
+  },
+  metricCardLabel: {
+    color: "#6683ad",
+    fontSize: 13,
+    fontWeight: "600"
+  },
+  metricCardValue: {
+    color: "#13386b",
+    fontSize: 22,
+    fontWeight: "800"
   },
   tabRow: {
     flexDirection: "row",
@@ -1410,38 +1577,52 @@ const styles = StyleSheet.create({
     marginBottom: 14
   },
   tabButtonDefault: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: "100%",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#b8cbb5",
-    backgroundColor: "#f8fbf6"
+    borderColor: "#2b4669",
+    backgroundColor: "#172f52"
   },
   tabButtonActive: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: "100%",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#2c6a3d",
-    backgroundColor: "#2f6e43"
+    borderColor: "#2c8af7",
+    backgroundColor: "#164f93"
   },
   tabTextDefault: {
-    color: "#38513f",
-    fontWeight: "600",
+    color: "#d1e3fb",
+    fontWeight: "700",
     fontSize: 14
   },
   tabTextActive: {
-    color: "#ffffff",
-    fontWeight: "700",
+    color: "#f7fbff",
+    fontWeight: "800",
     fontSize: 14
   },
   noticeText: {
     color: "#1a6a3e",
-    marginBottom: 10
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#a6d6ba",
+    backgroundColor: "#effaf2",
+    paddingHorizontal: 10,
+    paddingVertical: 8
   },
   errorText: {
     color: "#af2121",
-    marginBottom: 10
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e4b5b5",
+    backgroundColor: "#fff4f4",
+    paddingHorizontal: 10,
+    paddingVertical: 8
   },
   loadingContainer: {
     minHeight: 300,
@@ -1449,23 +1630,55 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   contentContainer: {
-    flex: 1
+    flex: 1,
+    minHeight: 0
   },
   contentInnerContainer: {
     paddingBottom: 120
   },
+  destinationsWorkspace: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12
+  },
+  destinationsWorkspaceStacked: {
+    flexDirection: "column"
+  },
+  destinationEditorColumn: {
+    flex: 1,
+    minWidth: 0
+  },
+  destinationListColumn: {
+    width: 380,
+    flexShrink: 0
+  },
+  destinationListColumnStacked: {
+    width: "100%"
+  },
+  destinationListPanel: {
+    gap: 10,
+    maxHeight: 760,
+    overflow: "hidden"
+  },
+  destinationListScrollArea: {
+    flexGrow: 0
+  },
+  destinationListContainer: {
+    gap: 10,
+    paddingBottom: 4
+  },
   sectionCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#d0ddd0",
+    borderColor: "#c1d1ec",
     backgroundColor: "#ffffff",
-    padding: 16,
+    padding: 18,
     gap: 12
   },
   sectionTitle: {
-    color: "#26352a",
-    fontSize: 18,
-    fontWeight: "700",
+    color: "#163b70",
+    fontSize: 20,
+    fontWeight: "800",
     marginTop: 4
   },
   row: {
@@ -1476,31 +1689,31 @@ const styles = StyleSheet.create({
     gap: 12
   },
   fieldLabel: {
-    color: "#37563f",
+    color: "#305787",
     fontSize: 14,
-    fontWeight: "600"
+    fontWeight: "700"
   },
   textInput: {
     borderWidth: 1,
-    borderColor: "#bbcfbb",
+    borderColor: "#bfd1ef",
     borderRadius: 10,
-    backgroundColor: "#fbfdfb",
+    backgroundColor: "#f8fbff",
     minHeight: 44,
     paddingHorizontal: 10,
     paddingVertical: 8
   },
   textInputMultiline: {
     borderWidth: 1,
-    borderColor: "#bbcfbb",
+    borderColor: "#bfd1ef",
     borderRadius: 10,
-    backgroundColor: "#fbfdfb",
+    backgroundColor: "#f8fbff",
     minHeight: 94,
     paddingHorizontal: 10,
     paddingVertical: 8,
     textAlignVertical: "top"
   },
   helperText: {
-    color: "#4c6c53"
+    color: "#5e7fa7"
   },
   uploadRow: {
     gap: 8
@@ -1510,14 +1723,14 @@ const styles = StyleSheet.create({
   },
   imageRow: {
     borderWidth: 1,
-    borderColor: "#d5e0d4",
+    borderColor: "#cfddf3",
     borderRadius: 10,
     padding: 8,
     gap: 8,
-    backgroundColor: "#f8fbf8"
+    backgroundColor: "#f6faff"
   },
   imageUrlText: {
-    color: "#3f5a46",
+    color: "#48678f",
     fontSize: 12
   },
   imageRowControls: {
@@ -1525,13 +1738,13 @@ const styles = StyleSheet.create({
     gap: 8
   },
   badgePrimary: {
-    backgroundColor: "#2f6e43",
+    backgroundColor: "#1d6bce",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6
   },
   badgeDefault: {
-    backgroundColor: "#9bb59f",
+    backgroundColor: "#6e8db9",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6
@@ -1554,13 +1767,13 @@ const styles = StyleSheet.create({
   },
   actionButtonPrimary: {
     borderRadius: 10,
-    backgroundColor: "#2d6d43",
+    backgroundColor: "#1e6fd6",
     paddingHorizontal: 14,
     paddingVertical: 10
   },
   actionButtonSecondary: {
     borderRadius: 10,
-    backgroundColor: "#6f8673",
+    backgroundColor: "#5f7ca7",
     paddingHorizontal: 14,
     paddingVertical: 10
   },
@@ -1577,28 +1790,28 @@ const styles = StyleSheet.create({
   },
   listItemCard: {
     borderWidth: 1,
-    borderColor: "#d4dfd3",
+    borderColor: "#cedcf2",
     borderRadius: 12,
     padding: 12,
     gap: 6,
-    backgroundColor: "#f9fcf7"
+    backgroundColor: "#f8fbff"
   },
   listItemTitle: {
-    color: "#203324",
+    color: "#173f74",
     fontSize: 15,
-    fontWeight: "700"
+    fontWeight: "800"
   },
   listItemDescription: {
-    color: "#4f6754",
+    color: "#5a7fa7",
     fontSize: 13
   }
 })
 
 const htmlFieldStyle: React.CSSProperties = {
   minHeight: 40,
-  borderColor: "#bbcfbb",
+  borderColor: "#bfd1ef",
   borderRadius: 10,
   borderWidth: 1,
   padding: 8,
-  backgroundColor: "#fbfdfb"
+  backgroundColor: "#f8fbff"
 }

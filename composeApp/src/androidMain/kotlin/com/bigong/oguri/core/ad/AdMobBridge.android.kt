@@ -19,6 +19,7 @@ import com.google.android.gms.ads.appopen.AppOpenAd
 
 private const val ANDROID_BANNER_AD_UNIT_ID = "ca-app-pub-2833810411143763/1194589445"
 private const val ANDROID_APP_OPEN_AD_UNIT_ID = "ca-app-pub-2833810411143763/1849090361"
+private const val BANNER_MAX_HEIGHT_DP = 50
 
 private object AndroidAdMobManager {
     private var isInitialized: Boolean = false
@@ -128,9 +129,9 @@ actual fun AdMobBanner(
             AdView(context).apply {
                 adUnitId = ANDROID_BANNER_AD_UNIT_ID
                 setAdSize(
-                    AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
-                        context,
+                    AdSize.getInlineAdaptiveBannerAdSize(
                         adWidthDp,
+                        BANNER_MAX_HEIGHT_DP,
                     ),
                 )
                 loadAd(AdRequest.Builder().build())

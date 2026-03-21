@@ -70,7 +70,8 @@ fun PlaceDetailScreen(
     onRetryClick: () -> Unit,
     onShareClick: () -> Unit,
     onSaveToggleClick: () -> Unit,
-    onUrlClick: (String) -> Unit,
+    onExperienceClick: (String, String) -> Unit,
+    onFlightClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
 ) {
@@ -188,7 +189,9 @@ fun PlaceDetailScreen(
                                             maxExperienceCardHeightPx = measuredHeightPx
                                         }
                                     },
-                                    onClick = onUrlClick,
+                                    onClick = { destinationUrl ->
+                                        onExperienceClick(experience.title, destinationUrl)
+                                    },
                                 )
                             }
                         }
@@ -213,7 +216,7 @@ fun PlaceDetailScreen(
                             highlightedText = placeDetail.city,
                             highlightedColor = Mint70,
                             modifier = Modifier.padding(horizontal = 20.dp),
-                            onClick = onUrlClick,
+                            onClick = onFlightClick,
                         )
                     }
                     if (placeDetail.relevantPlaces.isNotEmpty()) {
