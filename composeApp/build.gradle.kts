@@ -186,7 +186,7 @@ android {
                 .get()
                 .toInt()
         versionCode = 3
-        versionName = "1.0.1"
+        versionName = "1.0.0"
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
         manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdValue
     }
