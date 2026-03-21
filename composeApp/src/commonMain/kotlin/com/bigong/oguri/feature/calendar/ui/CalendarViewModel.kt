@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -149,6 +148,24 @@ class CalendarViewModel(
         refreshByDayOffCount(dayOffCount = leaveDays)
     }
 
+    fun refreshWithPreferredLeaveDays(preferredLeaveDays: Int) {
+        val normalizedLeaveDays = preferredLeaveDays.coerceAtLeast(1)
+        if (normalizedLeaveDays == uiState.value.leaveDays) {
+            return
+        }
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                leaveDays = normalizedLeaveDays,
+                isLeaveDaysRefreshing = true,
+                expandedPeriodId = null,
+                selectedDateByPeriodId = emptyMap(),
+                savedStateByPeriodKey = emptyMap(),
+            )
+        }
+        periodCardById.value = emptyMap()
+        refreshByDayOffCount(dayOffCount = normalizedLeaveDays)
+    }
+
     fun onCardClick(periodId: Long) {
         _uiState.update { currentUiState ->
             currentUiState.copy(
@@ -265,6 +282,7 @@ class CalendarViewModel(
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
                         leaveDays = preferredLeaveDays,
+                        isLeaveDaysRefreshing = true,
                         expandedPeriodId = null,
                         selectedDateByPeriodId = emptyMap(),
                         savedStateByPeriodKey = emptyMap(),
