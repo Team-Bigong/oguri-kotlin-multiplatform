@@ -18,8 +18,9 @@ import java.util.Base64
 
 actual suspend fun loginWithGoogle(): Result<String> =
     runCatching {
-        val currentActivity = OguriPlatformContextHolder.currentActivity
-            ?: error("Current activity is not available for Google login.")
+        val currentActivity =
+            OguriPlatformContextHolder.currentActivity
+                ?: error("Current activity is not available for Google login.")
         require(value = GOOGLE_WEB_CLIENT_ID.isNotBlank()) {
             "Google Web Client ID is empty."
         }
@@ -104,10 +105,9 @@ private fun extractGoogleIdentityToken(credential: Credential): String {
     error("Unexpected credential type for Google sign-in.")
 }
 
-private fun isGoogleIdTokenCredentialType(credentialType: String): Boolean {
-    return credentialType == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL ||
+private fun isGoogleIdTokenCredentialType(credentialType: String): Boolean =
+    credentialType == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL ||
         credentialType == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_SIWG_CREDENTIAL
-}
 
 private fun generateSecureRandomNonce(byteLength: Int = NONCE_BYTE_LENGTH): String {
     val randomBytes = ByteArray(byteLength)
