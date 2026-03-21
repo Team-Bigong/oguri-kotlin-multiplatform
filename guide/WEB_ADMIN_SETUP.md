@@ -7,6 +7,8 @@
 - Firebase Storage 저장 경로는 `places/{country}/{city}/{index}.jpg` 규칙을 사용한다.
 - 장소 experience 썸네일은 `places/{country}/{city}/experiences/{index}.jpg` 경로로 업로드한다.
 - 어드민 장소 폼의 국가/Storage 경로(`country`, `city`)는 각각 단일 입력칸에서 추천 목록 선택 + 직접 입력을 함께 지원한다.
+- Storage 경로(`country`, `city`)는 영문 소문자 slug만 허용한다. (`a-z`, `0-9`, `-`)
+- Storage 경로 추천 목록은 하드코딩이 아니라 DB에 저장된 장소 이미지/체험 썸네일 URL에서 추출한 실제 경로를 사용한다.
 - 어드민 장소 폼에서 `체험 관리(Experience)` 섹션으로 제목/설명/링크/썸네일을 추가·수정·삭제할 수 있다.
 - 장소 수정 시 폼에서 제거된 기존 이미지는 저장 완료 후 Firebase에서도 함께 삭제한다.
 - 장소 수정 시 폼에서 제거된 기존 experience 썸네일도 저장 완료 후 Firebase에서 함께 삭제한다.
@@ -31,6 +33,14 @@ web/
 ├─ .env.example
 └─ package.json
 ```
+
+## 어드민 UI 레이아웃
+- PC 최적화 대시보드형 UI:
+  - 좌측 사이드바(기능 탭)
+  - 상단 헤더(현재 섹션 + 빠른 액션)
+  - 상단 요약 카드(장소/체험/이미지/사용자/공휴일)
+  - 본문 작업 영역(CRUD 폼 + 목록)
+- 컬러 톤은 오구리 공식 웹과 맞춘 블루/민트 계열로 통일한다.
 
 ## 서버 어드민 API
 - Prefix: `/api/admin/v1`

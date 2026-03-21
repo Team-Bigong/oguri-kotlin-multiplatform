@@ -95,105 +95,16 @@ const createInitialHolidayFormState = (): HolidayFormState => ({
   isActualHoliday: true
 })
 
-const toStoragePathSegment = (value: string): string => {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-_]/g, "")
-}
-
 const parseFlightTimeMinutes = (value: string): string => {
   return value.replace(/[^0-9]/g, "")
 }
 
 type StorageCountryOption = {
-  label: string
   slug: string
-  cityOptions: Array<{ label: string; slug: string }>
+  citySlugs: string[]
 }
 
-const storageCountryOptions: StorageCountryOption[] = [
-  {
-    label: "일본",
-    slug: "japan",
-    cityOptions: [
-      { label: "도쿄", slug: "tokyo" },
-      { label: "오사카", slug: "osaka" },
-      { label: "후쿠오카", slug: "fukuoka" },
-      { label: "삿포로", slug: "sapporo" }
-    ]
-  },
-  {
-    label: "호주",
-    slug: "australia",
-    cityOptions: [
-      { label: "브리즈번", slug: "brisbane" },
-      { label: "시드니", slug: "sydney" },
-      { label: "멜버른", slug: "melbourne" }
-    ]
-  },
-  {
-    label: "미국",
-    slug: "united-states",
-    cityOptions: [
-      { label: "뉴욕", slug: "new-york" },
-      { label: "샌프란시스코", slug: "san-francisco" },
-      { label: "LA", slug: "los-angeles" }
-    ]
-  },
-  {
-    label: "중국",
-    slug: "china",
-    cityOptions: [
-      { label: "상하이", slug: "shanghai" },
-      { label: "베이징", slug: "beijing" },
-      { label: "칭다오", slug: "qingdao" }
-    ]
-  },
-  {
-    label: "필리핀",
-    slug: "philippines",
-    cityOptions: [
-      { label: "세부", slug: "cebu" },
-      { label: "보라카이", slug: "boracay" },
-      { label: "보홀", slug: "bohol" }
-    ]
-  },
-  {
-    label: "프랑스",
-    slug: "france",
-    cityOptions: [
-      { label: "파리", slug: "paris" },
-      { label: "니스", slug: "nice" }
-    ]
-  },
-  {
-    label: "스페인",
-    slug: "spain",
-    cityOptions: [
-      { label: "바르셀로나", slug: "barcelona" },
-      { label: "마드리드", slug: "madrid" }
-    ]
-  },
-  {
-    label: "베트남",
-    slug: "vietnam",
-    cityOptions: [
-      { label: "다낭", slug: "danang" },
-      { label: "호치민", slug: "ho-chi-minh" }
-    ]
-  },
-  {
-    label: "대한민국",
-    slug: "south-korea",
-    cityOptions: [
-      { label: "서울", slug: "seoul" },
-      { label: "부산", slug: "busan" },
-      { label: "제주도", slug: "jeju" }
-    ]
-  }
-]
+const storagePathSegmentPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 const parseStorageSlugsFromImageUrl = (imageUrl: string): { countrySlug: string; citySlug: string } => {
   try {
@@ -258,36 +169,15 @@ const parseFirebaseObjectPathFromImageUrl = (imageUrl: string): string | null =>
   }
 }
 
-const findStorageCountryOptionByInput = (value: string): StorageCountryOption | undefined => {
+const validateStoragePathSegment = (value: string, label: string): string => {
   const trimmedValue = value.trim()
   if (trimmedValue.length === 0) {
-    return undefined
+    throw new Error(`${label}를 입력해주세요.`)
   }
-  return storageCountryOptions.find((countryOption) => {
-    return countryOption.slug === trimmedValue || countryOption.label === trimmedValue
-  })
-}
-
-const resolveStorageCountrySlugFromInput = (value: string): string => {
-  const matchedCountryOption = findStorageCountryOptionByInput(value)
-  if (matchedCountryOption != null) {
-    return matchedCountryOption.slug
+  if (!storagePathSegmentPattern.test(trimmedValue)) {
+    throw new Error(`${label}는 영문 소문자, 숫자, 하이픈(-)만 사용할 수 있습니다.`)
   }
-  return toStoragePathSegment(value)
-}
-
-const resolveStorageCitySlugFromInput = (countryInput: string, cityInput: string): string => {
-  const matchedCountryOption = findStorageCountryOptionByInput(countryInput)
-  const trimmedCityInput = cityInput.trim()
-  if (matchedCountryOption != null) {
-    const matchedCityOption = matchedCountryOption.cityOptions.find((cityOption) => {
-      return cityOption.slug === trimmedCityInput || cityOption.label === trimmedCityInput
-    })
-    if (matchedCityOption != null) {
-      return matchedCityOption.slug
-    }
-  }
-  return toStoragePathSegment(cityInput)
+  return trimmedValue
 }
 
 export const AdminApp = (): React.JSX.Element => {
@@ -311,9 +201,35 @@ export const AdminApp = (): React.JSX.Element => {
   const [holidayFormState, setHolidayFormState] = useState<HolidayFormState>(createInitialHolidayFormState)
 
   const [uploadingImages, setUploadingImages] = useState<boolean>(false)
+  const storageCountryOptions = useMemo<StorageCountryOption[]>(() => {
+    const countryCityMap = new Map<string, Set<string>>()
+    destinations.forEach((destination) => {
+      const imageUrls = [
+        ...destination.images.map((image) => image.imageUrl),
+        ...destination.experiences.map((experience) => experience.thumbnailUrl)
+      ]
+      imageUrls.forEach((imageUrl) => {
+        const { countrySlug, citySlug } = parseStorageSlugsFromImageUrl(imageUrl)
+        if (countrySlug.length === 0 || citySlug.length === 0) {
+          return
+        }
+        const existingCitySlugSet = countryCityMap.get(countrySlug) ?? new Set<string>()
+        existingCitySlugSet.add(citySlug)
+        countryCityMap.set(countrySlug, existingCitySlugSet)
+      })
+    })
+    return Array.from(countryCityMap.entries())
+      .sort(([leftSlug], [rightSlug]) => leftSlug.localeCompare(rightSlug))
+      .map(([countrySlug, citySlugSet]) => ({
+        slug: countrySlug,
+        citySlugs: Array.from(citySlugSet).sort((leftSlug, rightSlug) => leftSlug.localeCompare(rightSlug))
+      }))
+  }, [destinations])
+
   const selectedStorageCountryOption = useMemo(() => {
-    return findStorageCountryOptionByInput(destinationFormState.storageCountrySlug)
-  }, [destinationFormState.storageCountrySlug])
+    const trimmedStorageCountrySlug = destinationFormState.storageCountrySlug.trim()
+    return storageCountryOptions.find((countryOption) => countryOption.slug === trimmedStorageCountrySlug)
+  }, [destinationFormState.storageCountrySlug, storageCountryOptions])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -623,14 +539,8 @@ export const AdminApp = (): React.JSX.Element => {
     setNoticeMessage("")
 
     try {
-      const countryPathSegment = resolveStorageCountrySlugFromInput(destinationFormState.storageCountrySlug)
-      const cityPathSegment = resolveStorageCitySlugFromInput(
-        destinationFormState.storageCountrySlug,
-        destinationFormState.storageCitySlug
-      )
-      if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
-        throw new Error("Storage 국가/도시 경로를 먼저 입력해주세요.")
-      }
+      const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
+      const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
 
       const selectedFiles = Array.from(fileList)
       const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
@@ -730,14 +640,8 @@ export const AdminApp = (): React.JSX.Element => {
     setNoticeMessage("")
 
     try {
-      const countryPathSegment = resolveStorageCountrySlugFromInput(destinationFormState.storageCountrySlug)
-      const cityPathSegment = resolveStorageCitySlugFromInput(
-        destinationFormState.storageCountrySlug,
-        destinationFormState.storageCitySlug
-      )
-      if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
-        throw new Error("Storage 국가/도시 경로를 먼저 입력해주세요.")
-      }
+      const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
+      const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
 
       const currentMaximumExperienceSequenceNumber = destinationFormState.experiences.reduce(
         (maximumSequenceNumber, experience) => {
@@ -792,6 +696,23 @@ export const AdminApp = (): React.JSX.Element => {
     return "공휴일 DB 관리"
   }, [activeTab])
 
+  const dashboardSummaryItems = useMemo(() => {
+    const totalDestinationImageCount = destinations.reduce((totalCount, destination) => {
+      return totalCount + destination.images.length
+    }, 0)
+    const totalDestinationExperienceCount = destinations.reduce((totalCount, destination) => {
+      return totalCount + destination.experiences.length
+    }, 0)
+
+    return [
+      { label: "장소", value: destinations.length, accentColor: "#2865d8" },
+      { label: "체험", value: totalDestinationExperienceCount, accentColor: "#0f9d8f" },
+      { label: "장소 이미지", value: totalDestinationImageCount, accentColor: "#2f7b4a" },
+      { label: "사용자", value: members.length, accentColor: "#5b53d9" },
+      { label: "공휴일", value: publicHolidays.length, accentColor: "#b0671f" }
+    ]
+  }, [destinations, members.length, publicHolidays.length])
+
   if (!isAuthenticated) {
     return (
       <View style={styles.loginPage}>
@@ -816,29 +737,48 @@ export const AdminApp = (): React.JSX.Element => {
 
   return (
     <View style={styles.page}>
-      <View style={styles.headerContainer}>
-        <Text style={styles.headline}>Oguri Admin</Text>
-        <Text style={styles.subtitle}>{activeTitle}</Text>
-        <View style={styles.headerActionRow}>
-          <ActionButton label="로그아웃" variant="secondary" onPress={submitAdminLogout} />
+      <View style={styles.adminLayout}>
+        <View style={styles.sidebarContainer}>
+          <Text style={styles.sidebarBrandTitle}>오구리 어드민</Text>
+          <Text style={styles.sidebarBrandDescription}>운영 데이터를 한 화면에서 빠르게 관리하세요</Text>
+          <View style={styles.sidebarTabList}>
+            <TabButton label="장소 관리" selected={activeTab === "destinations"} onPress={() => setActiveTab("destinations")} />
+            <TabButton label="사용자 관리" selected={activeTab === "members"} onPress={() => setActiveTab("members")} />
+            <TabButton label="공휴일 관리" selected={activeTab === "holidays"} onPress={() => setActiveTab("holidays")} />
+          </View>
         </View>
-      </View>
 
-      <View style={styles.tabRow}>
-        <TabButton label="장소" selected={activeTab === "destinations"} onPress={() => setActiveTab("destinations")} />
-        <TabButton label="사용자" selected={activeTab === "members"} onPress={() => setActiveTab("members")} />
-        <TabButton label="공휴일" selected={activeTab === "holidays"} onPress={() => setActiveTab("holidays")} />
-      </View>
+        <View style={styles.mainPanel}>
+          <View style={styles.headerContainer}>
+            <View>
+              <Text style={styles.headline}>Oguri Admin Dashboard</Text>
+              <Text style={styles.subtitle}>{activeTitle}</Text>
+            </View>
+            <View style={styles.headerActionRow}>
+              <ActionButton label="새로고침" variant="secondary" onPress={() => void loadAll()} />
+              <ActionButton label="로그아웃" variant="danger" onPress={submitAdminLogout} />
+            </View>
+          </View>
 
-      {noticeMessage.length > 0 && <Text style={styles.noticeText}>{noticeMessage}</Text>}
-      {errorMessage.length > 0 && <Text style={styles.errorText}>{errorMessage}</Text>}
+          <View style={styles.metricCardContainer}>
+            {dashboardSummaryItems.map((summaryItem) => (
+              <View style={styles.metricCard} key={summaryItem.label}>
+                <View style={[styles.metricCardAccent, { backgroundColor: summaryItem.accentColor }]} />
+                <Text style={styles.metricCardLabel}>{summaryItem.label}</Text>
+                <Text style={styles.metricCardValue}>{summaryItem.value}</Text>
+              </View>
+            ))}
+          </View>
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#1f6b45" />
-        </View>
-      ) : (
-        <ScrollView style={styles.contentContainer} contentContainerStyle={styles.contentInnerContainer}>
+          {noticeMessage.length > 0 && <Text style={styles.noticeText}>{noticeMessage}</Text>}
+          {errorMessage.length > 0 && <Text style={styles.errorText}>{errorMessage}</Text>}
+
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator color="#2a6bd8" />
+            </View>
+          ) : (
+            <ScrollView style={styles.contentContainer} contentContainerStyle={styles.contentInnerContainer}>
           {activeTab === "destinations" && (
             <View style={styles.sectionCard}>
               <Text style={styles.sectionTitle}>장소 추가/수정</Text>
@@ -872,24 +812,23 @@ export const AdminApp = (): React.JSX.Element => {
                   list="admin-storage-country-options"
                   value={destinationFormState.storageCountrySlug}
                   onChange={(event) => {
-                    const selectedValue = event.target.value
-                    const countryOption = findStorageCountryOptionByInput(selectedValue)
+                    const selectedValue = event.target.value.trim()
+                    const countryOption = storageCountryOptions.find((item) => item.slug === selectedValue)
                     setDestinationFormState((previousState) => ({
                       ...previousState,
                       storageCountrySlug: selectedValue,
                       storageCitySlug: countryOption == null
                         ? previousState.storageCitySlug
-                        : (countryOption.cityOptions[0]?.slug ?? previousState.storageCitySlug)
+                        : (countryOption.citySlugs[0] ?? previousState.storageCitySlug)
                     }))
                   }}
                   style={htmlFieldStyle}
-                  placeholder="예: australia 또는 호주"
+                  placeholder="예: australia"
                 />
                 <datalist id="admin-storage-country-options">
-                  {storageCountryOptions.flatMap((countryOption) => ([
-                    <option value={countryOption.slug} key={`${countryOption.slug}_slug`} />,
-                    <option value={countryOption.label} key={`${countryOption.slug}_label`} />
-                  ]))}
+                  {storageCountryOptions.map((countryOption) => (
+                    <option value={countryOption.slug} key={countryOption.slug} />
+                  ))}
                 </datalist>
               </View>
 
@@ -901,17 +840,16 @@ export const AdminApp = (): React.JSX.Element => {
                   onChange={(event) => {
                     setDestinationFormState((previousState) => ({
                       ...previousState,
-                      storageCitySlug: event.target.value
+                      storageCitySlug: event.target.value.trim()
                     }))
                   }}
                   style={htmlFieldStyle}
-                  placeholder="예: brisbane 또는 브리즈번"
+                  placeholder="예: brisbane"
                 />
                 <datalist id="admin-storage-city-options">
-                  {(selectedStorageCountryOption?.cityOptions ?? []).flatMap((cityOption) => ([
-                    <option value={cityOption.slug} key={`${cityOption.slug}_slug`} />,
-                    <option value={cityOption.label} key={`${cityOption.slug}_label`} />
-                  ]))}
+                  {(selectedStorageCountryOption?.citySlugs ?? []).map((citySlug) => (
+                    <option value={citySlug} key={citySlug} />
+                  ))}
                 </datalist>
               </View>
 
@@ -1333,8 +1271,10 @@ export const AdminApp = (): React.JSX.Element => {
               ))}
             </View>
           )}
-        </ScrollView>
-      )}
+            </ScrollView>
+          )}
+        </View>
+      </View>
     </View>
   )
 }
@@ -1406,7 +1346,7 @@ const LabelInput = ({
 const styles = StyleSheet.create({
   loginPage: {
     minHeight: "100%",
-    backgroundColor: "#f4f7f3",
+    backgroundColor: "#edf4ff",
     padding: 20,
     justifyContent: "center",
     alignItems: "center"
@@ -1432,26 +1372,101 @@ const styles = StyleSheet.create({
   },
   page: {
     minHeight: "100%",
-    backgroundColor: "#f4f7f3",
-    paddingHorizontal: 22,
-    paddingVertical: 20
+    backgroundColor: "#e9f2ff",
+    paddingHorizontal: 18,
+    paddingVertical: 18
+  },
+  adminLayout: {
+    flexDirection: "row",
+    gap: 16,
+    minHeight: "100%"
+  },
+  sidebarContainer: {
+    width: 248,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "#b9cff3",
+    backgroundColor: "#10243f",
+    paddingHorizontal: 14,
+    paddingTop: 18,
+    paddingBottom: 16,
+    gap: 14
+  },
+  sidebarBrandTitle: {
+    color: "#f5faff",
+    fontSize: 22,
+    fontWeight: "800"
+  },
+  sidebarBrandDescription: {
+    color: "#b9d0ef",
+    fontSize: 13,
+    lineHeight: 19
+  },
+  sidebarTabList: {
+    gap: 8
+  },
+  mainPanel: {
+    flex: 1,
+    minWidth: 0
   },
   headerContainer: {
-    marginBottom: 14
+    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#bfcef0",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center"
   },
   headerActionRow: {
-    marginTop: 10,
-    flexDirection: "row"
+    flexDirection: "row",
+    gap: 8
   },
   headline: {
-    color: "#1d2e21",
-    fontSize: 28,
-    fontWeight: "700"
+    color: "#14356a",
+    fontSize: 26,
+    fontWeight: "800"
   },
   subtitle: {
-    color: "#4f6654",
+    color: "#55739e",
     fontSize: 15,
-    marginTop: 6
+    marginTop: 6,
+    fontWeight: "600"
+  },
+  metricCardContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 12
+  },
+  metricCard: {
+    minWidth: 150,
+    flexGrow: 1,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "#c7d8f4",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    gap: 4
+  },
+  metricCardAccent: {
+    width: 34,
+    height: 4,
+    borderRadius: 999
+  },
+  metricCardLabel: {
+    color: "#6683ad",
+    fontSize: 13,
+    fontWeight: "600"
+  },
+  metricCardValue: {
+    color: "#13386b",
+    fontSize: 22,
+    fontWeight: "800"
   },
   tabRow: {
     flexDirection: "row",
@@ -1459,38 +1474,52 @@ const styles = StyleSheet.create({
     marginBottom: 14
   },
   tabButtonDefault: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: "100%",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#b8cbb5",
-    backgroundColor: "#f8fbf6"
+    borderColor: "#2b4669",
+    backgroundColor: "#172f52"
   },
   tabButtonActive: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    width: "100%",
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#2c6a3d",
-    backgroundColor: "#2f6e43"
+    borderColor: "#2c8af7",
+    backgroundColor: "#164f93"
   },
   tabTextDefault: {
-    color: "#38513f",
-    fontWeight: "600",
+    color: "#d1e3fb",
+    fontWeight: "700",
     fontSize: 14
   },
   tabTextActive: {
-    color: "#ffffff",
-    fontWeight: "700",
+    color: "#f7fbff",
+    fontWeight: "800",
     fontSize: 14
   },
   noticeText: {
     color: "#1a6a3e",
-    marginBottom: 10
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#a6d6ba",
+    backgroundColor: "#effaf2",
+    paddingHorizontal: 10,
+    paddingVertical: 8
   },
   errorText: {
     color: "#af2121",
-    marginBottom: 10
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#e4b5b5",
+    backgroundColor: "#fff4f4",
+    paddingHorizontal: 10,
+    paddingVertical: 8
   },
   loadingContainer: {
     minHeight: 300,
@@ -1498,23 +1527,24 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   contentContainer: {
-    flex: 1
+    flex: 1,
+    minHeight: 0
   },
   contentInnerContainer: {
     paddingBottom: 120
   },
   sectionCard: {
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#d0ddd0",
+    borderColor: "#c1d1ec",
     backgroundColor: "#ffffff",
-    padding: 16,
+    padding: 18,
     gap: 12
   },
   sectionTitle: {
-    color: "#26352a",
-    fontSize: 18,
-    fontWeight: "700",
+    color: "#163b70",
+    fontSize: 20,
+    fontWeight: "800",
     marginTop: 4
   },
   row: {
@@ -1525,31 +1555,31 @@ const styles = StyleSheet.create({
     gap: 12
   },
   fieldLabel: {
-    color: "#37563f",
+    color: "#305787",
     fontSize: 14,
-    fontWeight: "600"
+    fontWeight: "700"
   },
   textInput: {
     borderWidth: 1,
-    borderColor: "#bbcfbb",
+    borderColor: "#bfd1ef",
     borderRadius: 10,
-    backgroundColor: "#fbfdfb",
+    backgroundColor: "#f8fbff",
     minHeight: 44,
     paddingHorizontal: 10,
     paddingVertical: 8
   },
   textInputMultiline: {
     borderWidth: 1,
-    borderColor: "#bbcfbb",
+    borderColor: "#bfd1ef",
     borderRadius: 10,
-    backgroundColor: "#fbfdfb",
+    backgroundColor: "#f8fbff",
     minHeight: 94,
     paddingHorizontal: 10,
     paddingVertical: 8,
     textAlignVertical: "top"
   },
   helperText: {
-    color: "#4c6c53"
+    color: "#5e7fa7"
   },
   uploadRow: {
     gap: 8
@@ -1559,14 +1589,14 @@ const styles = StyleSheet.create({
   },
   imageRow: {
     borderWidth: 1,
-    borderColor: "#d5e0d4",
+    borderColor: "#cfddf3",
     borderRadius: 10,
     padding: 8,
     gap: 8,
-    backgroundColor: "#f8fbf8"
+    backgroundColor: "#f6faff"
   },
   imageUrlText: {
-    color: "#3f5a46",
+    color: "#48678f",
     fontSize: 12
   },
   imageRowControls: {
@@ -1574,13 +1604,13 @@ const styles = StyleSheet.create({
     gap: 8
   },
   badgePrimary: {
-    backgroundColor: "#2f6e43",
+    backgroundColor: "#1d6bce",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6
   },
   badgeDefault: {
-    backgroundColor: "#9bb59f",
+    backgroundColor: "#6e8db9",
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6
@@ -1603,13 +1633,13 @@ const styles = StyleSheet.create({
   },
   actionButtonPrimary: {
     borderRadius: 10,
-    backgroundColor: "#2d6d43",
+    backgroundColor: "#1e6fd6",
     paddingHorizontal: 14,
     paddingVertical: 10
   },
   actionButtonSecondary: {
     borderRadius: 10,
-    backgroundColor: "#6f8673",
+    backgroundColor: "#5f7ca7",
     paddingHorizontal: 14,
     paddingVertical: 10
   },
@@ -1626,28 +1656,28 @@ const styles = StyleSheet.create({
   },
   listItemCard: {
     borderWidth: 1,
-    borderColor: "#d4dfd3",
+    borderColor: "#cedcf2",
     borderRadius: 12,
     padding: 12,
     gap: 6,
-    backgroundColor: "#f9fcf7"
+    backgroundColor: "#f8fbff"
   },
   listItemTitle: {
-    color: "#203324",
+    color: "#173f74",
     fontSize: 15,
-    fontWeight: "700"
+    fontWeight: "800"
   },
   listItemDescription: {
-    color: "#4f6754",
+    color: "#5a7fa7",
     fontSize: 13
   }
 })
 
 const htmlFieldStyle: React.CSSProperties = {
   minHeight: 40,
-  borderColor: "#bbcfbb",
+  borderColor: "#bfd1ef",
   borderRadius: 10,
   borderWidth: 1,
   padding: 8,
-  backgroundColor: "#fbfdfb"
+  backgroundColor: "#f8fbff"
 }
