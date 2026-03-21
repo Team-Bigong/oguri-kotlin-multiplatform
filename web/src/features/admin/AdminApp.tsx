@@ -22,6 +22,7 @@ type AdminTab = "destinations" | "members" | "holidays"
 type DestinationFormState = {
   selectedId: number | null
   countryId: string
+  countryName: string
   storageCountrySlug: string
   storageCitySlug: string
   name: string
@@ -59,6 +60,7 @@ type HolidayFormState = {
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
   countryId: "",
+  countryName: "",
   storageCountrySlug: "",
   storageCitySlug: "",
   name: "",
@@ -256,6 +258,38 @@ const parseFirebaseObjectPathFromImageUrl = (imageUrl: string): string | null =>
   }
 }
 
+const findStorageCountryOptionByInput = (value: string): StorageCountryOption | undefined => {
+  const trimmedValue = value.trim()
+  if (trimmedValue.length === 0) {
+    return undefined
+  }
+  return storageCountryOptions.find((countryOption) => {
+    return countryOption.slug === trimmedValue || countryOption.label === trimmedValue
+  })
+}
+
+const resolveStorageCountrySlugFromInput = (value: string): string => {
+  const matchedCountryOption = findStorageCountryOptionByInput(value)
+  if (matchedCountryOption != null) {
+    return matchedCountryOption.slug
+  }
+  return toStoragePathSegment(value)
+}
+
+const resolveStorageCitySlugFromInput = (countryInput: string, cityInput: string): string => {
+  const matchedCountryOption = findStorageCountryOptionByInput(countryInput)
+  const trimmedCityInput = cityInput.trim()
+  if (matchedCountryOption != null) {
+    const matchedCityOption = matchedCountryOption.cityOptions.find((cityOption) => {
+      return cityOption.slug === trimmedCityInput || cityOption.label === trimmedCityInput
+    })
+    if (matchedCityOption != null) {
+      return matchedCityOption.slug
+    }
+  }
+  return toStoragePathSegment(cityInput)
+}
+
 export const AdminApp = (): React.JSX.Element => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
   const [loginUsername, setLoginUsername] = useState<string>("")
@@ -277,9 +311,9 @@ export const AdminApp = (): React.JSX.Element => {
   const [holidayFormState, setHolidayFormState] = useState<HolidayFormState>(createInitialHolidayFormState)
 
   const [uploadingImages, setUploadingImages] = useState<boolean>(false)
-  const selectedStorageCountryOption = storageCountryOptions.find(
-    (countryOption) => countryOption.slug === destinationFormState.storageCountrySlug
-  )
+  const selectedStorageCountryOption = useMemo(() => {
+    return findStorageCountryOptionByInput(destinationFormState.storageCountrySlug)
+  }, [destinationFormState.storageCountrySlug])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -370,9 +404,16 @@ export const AdminApp = (): React.JSX.Element => {
     }
 
     const flightTimeMinutes = parseFlightTimeMinutes(state.flightTime)
+    const trimmedCountryName = state.countryName.trim()
+    const matchedCountry = countries.find((country) => country.name === trimmedCountryName)
+    const resolvedCountryId = state.countryId.length > 0 ? Number(state.countryId) : (matchedCountry?.id ?? null)
+
+    if (resolvedCountryId == null || Number.isNaN(resolvedCountryId)) {
+      throw new Error("국가를 정확히 입력해주세요. 목록의 국가명과 일치해야 합니다.")
+    }
 
     return {
-      countryId: Number(state.countryId),
+      countryId: resolvedCountryId,
       name: state.name,
       summary: state.summary.trim().length > 0 ? state.summary : null,
       description: state.description.trim().length > 0 ? state.description : null,
@@ -390,7 +431,7 @@ export const AdminApp = (): React.JSX.Element => {
         sortOrder: index + 1
       }))
     }
-  }, [])
+  }, [countries])
 
   const deleteImagesInFirebaseStorage = useCallback(async (imageUrls: string[]): Promise<number> => {
     if (imageUrls.length === 0) {
@@ -582,10 +623,13 @@ export const AdminApp = (): React.JSX.Element => {
     setNoticeMessage("")
 
     try {
-      const countryPathSegment = toStoragePathSegment(destinationFormState.storageCountrySlug)
-      const cityPathSegment = toStoragePathSegment(destinationFormState.storageCitySlug)
+      const countryPathSegment = resolveStorageCountrySlugFromInput(destinationFormState.storageCountrySlug)
+      const cityPathSegment = resolveStorageCitySlugFromInput(
+        destinationFormState.storageCountrySlug,
+        destinationFormState.storageCitySlug
+      )
       if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
-        throw new Error("Storage 국가/도시 경로를 먼저 입력하거나 메뉴에서 선택해주세요.")
+        throw new Error("Storage 국가/도시 경로를 먼저 입력해주세요.")
       }
 
       const selectedFiles = Array.from(fileList)
@@ -686,10 +730,13 @@ export const AdminApp = (): React.JSX.Element => {
     setNoticeMessage("")
 
     try {
-      const countryPathSegment = toStoragePathSegment(destinationFormState.storageCountrySlug)
-      const cityPathSegment = toStoragePathSegment(destinationFormState.storageCitySlug)
+      const countryPathSegment = resolveStorageCountrySlugFromInput(destinationFormState.storageCountrySlug)
+      const cityPathSegment = resolveStorageCitySlugFromInput(
+        destinationFormState.storageCountrySlug,
+        destinationFormState.storageCitySlug
+      )
       if (countryPathSegment.length === 0 || cityPathSegment.length === 0) {
-        throw new Error("Storage 국가/도시 경로를 먼저 입력하거나 메뉴에서 선택해주세요.")
+        throw new Error("Storage 국가/도시 경로를 먼저 입력해주세요.")
       }
 
       const currentMaximumExperienceSequenceNumber = destinationFormState.experiences.reduce(
@@ -797,47 +844,59 @@ export const AdminApp = (): React.JSX.Element => {
               <Text style={styles.sectionTitle}>장소 추가/수정</Text>
               <View style={styles.row}>
                 <Text style={styles.fieldLabel}>국가</Text>
-                <select
-                  value={destinationFormState.countryId}
+                <input
+                  list="admin-country-options"
+                  value={destinationFormState.countryName}
                   onChange={(event) => {
-                    setDestinationFormState((previousState) => ({ ...previousState, countryId: event.target.value }))
+                    const typedCountryName = event.target.value
+                    const matchedCountry = countries.find((country) => country.name === typedCountryName.trim())
+                    setDestinationFormState((previousState) => ({
+                      ...previousState,
+                      countryName: typedCountryName,
+                      countryId: matchedCountry == null ? "" : String(matchedCountry.id)
+                    }))
                   }}
                   style={htmlFieldStyle}
-                >
-                  <option value="">국가 선택</option>
+                  placeholder="국가명 입력 또는 선택"
+                />
+                <datalist id="admin-country-options">
                   {countries.map((country) => (
-                    <option value={String(country.id)} key={country.id}>{country.name}</option>
+                    <option value={country.name} key={country.id} />
                   ))}
-                </select>
+                </datalist>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.fieldLabel}>Storage 국가 경로</Text>
-                <select
+                <input
+                  list="admin-storage-country-options"
                   value={destinationFormState.storageCountrySlug}
                   onChange={(event) => {
-                    const selectedSlug = event.target.value
-                    const countryOption = storageCountryOptions.find((item) => item.slug === selectedSlug)
+                    const selectedValue = event.target.value
+                    const countryOption = findStorageCountryOptionByInput(selectedValue)
                     setDestinationFormState((previousState) => ({
                       ...previousState,
-                      storageCountrySlug: selectedSlug,
-                      storageCitySlug: countryOption?.cityOptions[0]?.slug ?? ""
+                      storageCountrySlug: selectedValue,
+                      storageCitySlug: countryOption == null
+                        ? previousState.storageCitySlug
+                        : (countryOption.cityOptions[0]?.slug ?? previousState.storageCitySlug)
                     }))
                   }}
                   style={htmlFieldStyle}
-                >
-                  <option value="">경로 국가 선택</option>
-                  {storageCountryOptions.map((countryOption) => (
-                    <option value={countryOption.slug} key={countryOption.slug}>
-                      {countryOption.label} ({countryOption.slug})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="예: australia 또는 호주"
+                />
+                <datalist id="admin-storage-country-options">
+                  {storageCountryOptions.flatMap((countryOption) => ([
+                    <option value={countryOption.slug} key={`${countryOption.slug}_slug`} />,
+                    <option value={countryOption.label} key={`${countryOption.slug}_label`} />
+                  ]))}
+                </datalist>
               </View>
 
               <View style={styles.row}>
                 <Text style={styles.fieldLabel}>Storage 도시 경로</Text>
-                <select
+                <input
+                  list="admin-storage-city-options"
                   value={destinationFormState.storageCitySlug}
                   onChange={(event) => {
                     setDestinationFormState((previousState) => ({
@@ -846,26 +905,15 @@ export const AdminApp = (): React.JSX.Element => {
                     }))
                   }}
                   style={htmlFieldStyle}
-                >
-                  <option value="">경로 도시 선택</option>
-                  {(selectedStorageCountryOption?.cityOptions ?? []).map((cityOption) => (
-                    <option value={cityOption.slug} key={cityOption.slug}>
-                      {cityOption.label} ({cityOption.slug})
-                    </option>
-                  ))}
-                </select>
+                  placeholder="예: brisbane 또는 브리즈번"
+                />
+                <datalist id="admin-storage-city-options">
+                  {(selectedStorageCountryOption?.cityOptions ?? []).flatMap((cityOption) => ([
+                    <option value={cityOption.slug} key={`${cityOption.slug}_slug`} />,
+                    <option value={cityOption.label} key={`${cityOption.slug}_label`} />
+                  ]))}
+                </datalist>
               </View>
-
-              <LabelInput
-                label="Storage 국가 경로 직접입력"
-                value={destinationFormState.storageCountrySlug}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, storageCountrySlug: value }))}
-              />
-              <LabelInput
-                label="Storage 도시 경로 직접입력"
-                value={destinationFormState.storageCitySlug}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, storageCitySlug: value }))}
-              />
 
               <LabelInput
                 label="도시명"
@@ -883,6 +931,14 @@ export const AdminApp = (): React.JSX.Element => {
                 multiline
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, description: value }))}
               />
+
+              <View style={styles.row}>
+                <Text style={styles.sectionTitle}>체험 관리 (Experience)</Text>
+                <Text style={styles.helperText}>현재 {destinationFormState.experiences.length}건 · 제목/설명/링크/썸네일을 관리합니다.</Text>
+                <View style={styles.rowButtonContainer}>
+                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
+                </View>
+              </View>
 
               <View style={styles.rowSplitContainer}>
                 <LabelInput
@@ -982,14 +1038,6 @@ export const AdminApp = (): React.JSX.Element => {
                   ))}
                 </View>
               )}
-
-              <View style={styles.row}>
-                <Text style={styles.sectionTitle}>체험 정보</Text>
-                <Text style={styles.helperText}>각 체험은 제목, 설명, 링크, 썸네일이 모두 필요합니다.</Text>
-                <View style={styles.rowButtonContainer}>
-                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
-                </View>
-              </View>
 
               {destinationFormState.experiences.length > 0 && (
                 <View style={styles.imageListContainer}>
@@ -1104,6 +1152,7 @@ export const AdminApp = (): React.JSX.Element => {
                           setDestinationFormState({
                             selectedId: destination.id,
                             countryId: destination.countryId == null ? "" : String(destination.countryId),
+                            countryName: destination.countryName,
                             storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
                             storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
                             name: destination.name,
