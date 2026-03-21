@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native"
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native"
 import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
 import { resizeAndCompressImage } from "../../lib/imageProcessing"
 import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
@@ -181,6 +181,8 @@ const validateStoragePathSegment = (value: string, label: string): string => {
 }
 
 export const AdminApp = (): React.JSX.Element => {
+  const { width: windowWidth } = useWindowDimensions()
+  const isWideDesktopLayout = windowWidth >= 1360
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
   const [loginUsername, setLoginUsername] = useState<string>("")
   const [loginPassword, setLoginPassword] = useState<string>("")
@@ -780,8 +782,10 @@ export const AdminApp = (): React.JSX.Element => {
           ) : (
             <ScrollView style={styles.contentContainer} contentContainerStyle={styles.contentInnerContainer}>
           {activeTab === "destinations" && (
-            <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>장소 추가/수정</Text>
+            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
+              <View style={styles.destinationEditorColumn}>
+                <View style={styles.sectionCard}>
+                  <Text style={styles.sectionTitle}>장소 추가/수정</Text>
               <View style={styles.row}>
                 <Text style={styles.fieldLabel}>국가</Text>
                 <input
@@ -1053,33 +1057,10 @@ export const AdminApp = (): React.JSX.Element => {
                 </View>
               )}
 
-              <View style={styles.rowButtonContainer}>
-                <ActionButton label={destinationFormState.selectedId == null ? "장소 생성" : "장소 수정"} onPress={() => void submitDestination()} />
-                <ActionButton
-                  label="폼 초기화"
-                  variant="secondary"
-                  onPress={() => {
-                    void (async () => {
-                      await cleanupPendingUploadedImages(
-                        destinationFormState.newlyUploadedImageUrls,
-                        destinationFormState.newlyUploadedExperienceThumbnailUrls
-                      )
-                      setDestinationFormState(createInitialDestinationFormState())
-                    })()
-                  }}
-                />
-              </View>
-
-              <Text style={styles.sectionTitle}>장소 목록</Text>
-              {destinations.map((destination) => (
-                <View style={styles.listItemCard} key={destination.id}>
-                  <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
-                  <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
-                  <Text style={styles.listItemDescription}>이미지 {destination.images.length}장</Text>
-                  <Text style={styles.listItemDescription}>체험 {destination.experiences.length}건</Text>
                   <View style={styles.rowButtonContainer}>
+                    <ActionButton label={destinationFormState.selectedId == null ? "장소 생성" : "장소 수정"} onPress={() => void submitDestination()} />
                     <ActionButton
-                      label="불러오기"
+                      label="폼 초기화"
                       variant="secondary"
                       onPress={() => {
                         void (async () => {
@@ -1087,44 +1068,76 @@ export const AdminApp = (): React.JSX.Element => {
                             destinationFormState.newlyUploadedImageUrls,
                             destinationFormState.newlyUploadedExperienceThumbnailUrls
                           )
-                          setDestinationFormState({
-                            selectedId: destination.id,
-                            countryId: destination.countryId == null ? "" : String(destination.countryId),
-                            countryName: destination.countryName,
-                            storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
-                            storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
-                            name: destination.name,
-                            summary: destination.summary ?? "",
-                            description: destination.description ?? "",
-                            recommendStartMonth1: destination.recommendStartMonth1 == null ? "" : String(destination.recommendStartMonth1),
-                            recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
-                            recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
-                            recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
-                            flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
-                            images: destination.images.map((image) => ({
-                              imageUrl: image.imageUrl,
-                              isThumbnail: image.isThumbnail,
-                              sortOrder: image.sortOrder
-                            })),
-                            experiences: destination.experiences.map((experience) => ({
-                              title: experience.title,
-                              description: experience.description,
-                              thumbnailUrl: experience.thumbnailUrl,
-                              link: experience.link,
-                              sortOrder: experience.sortOrder
-                            })),
-                            existingImageUrls: destination.images.map((image) => image.imageUrl),
-                            existingExperienceThumbnailUrls: destination.experiences.map((experience) => experience.thumbnailUrl),
-                            newlyUploadedImageUrls: [],
-                            newlyUploadedExperienceThumbnailUrls: []
-                          })
+                          setDestinationFormState(createInitialDestinationFormState())
                         })()
                       }}
                     />
-                    <ActionButton label="삭제" variant="danger" onPress={() => void deleteDestination(destination.id)} />
                   </View>
                 </View>
-              ))}
+              </View>
+
+              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
+                <View style={[styles.sectionCard, styles.destinationListPanel]}>
+                  <Text style={styles.sectionTitle}>장소 목록</Text>
+                  <Text style={styles.helperText}>오른쪽 목록에서 선택하면 왼쪽 폼으로 즉시 불러옵니다.</Text>
+                  <View style={styles.destinationListContainer}>
+                    {destinations.map((destination) => (
+                      <View style={styles.listItemCard} key={destination.id}>
+                        <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
+                        <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
+                        <Text style={styles.listItemDescription}>이미지 {destination.images.length}장</Text>
+                        <Text style={styles.listItemDescription}>체험 {destination.experiences.length}건</Text>
+                        <View style={styles.rowButtonContainer}>
+                          <ActionButton
+                            label="불러오기"
+                            variant="secondary"
+                            onPress={() => {
+                              void (async () => {
+                                await cleanupPendingUploadedImages(
+                                  destinationFormState.newlyUploadedImageUrls,
+                                  destinationFormState.newlyUploadedExperienceThumbnailUrls
+                                )
+                                setDestinationFormState({
+                                  selectedId: destination.id,
+                                  countryId: destination.countryId == null ? "" : String(destination.countryId),
+                                  countryName: destination.countryName,
+                                  storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
+                                  storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
+                                  name: destination.name,
+                                  summary: destination.summary ?? "",
+                                  description: destination.description ?? "",
+                                  recommendStartMonth1: destination.recommendStartMonth1 == null ? "" : String(destination.recommendStartMonth1),
+                                  recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
+                                  recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
+                                  recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
+                                  flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
+                                  images: destination.images.map((image) => ({
+                                    imageUrl: image.imageUrl,
+                                    isThumbnail: image.isThumbnail,
+                                    sortOrder: image.sortOrder
+                                  })),
+                                  experiences: destination.experiences.map((experience) => ({
+                                    title: experience.title,
+                                    description: experience.description,
+                                    thumbnailUrl: experience.thumbnailUrl,
+                                    link: experience.link,
+                                    sortOrder: experience.sortOrder
+                                  })),
+                                  existingImageUrls: destination.images.map((image) => image.imageUrl),
+                                  existingExperienceThumbnailUrls: destination.experiences.map((experience) => experience.thumbnailUrl),
+                                  newlyUploadedImageUrls: [],
+                                  newlyUploadedExperienceThumbnailUrls: []
+                                })
+                              })()
+                            }}
+                          />
+                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteDestination(destination.id)} />
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
             </View>
           )}
 
@@ -1532,6 +1545,32 @@ const styles = StyleSheet.create({
   },
   contentInnerContainer: {
     paddingBottom: 120
+  },
+  destinationsWorkspace: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12
+  },
+  destinationsWorkspaceStacked: {
+    flexDirection: "column"
+  },
+  destinationEditorColumn: {
+    flex: 1,
+    minWidth: 0
+  },
+  destinationListColumn: {
+    width: 380,
+    flexShrink: 0
+  },
+  destinationListColumnStacked: {
+    width: "100%"
+  },
+  destinationListPanel: {
+    gap: 10
+  },
+  destinationListContainer: {
+    gap: 10,
+    maxHeight: 760
   },
   sectionCard: {
     borderRadius: 18,
