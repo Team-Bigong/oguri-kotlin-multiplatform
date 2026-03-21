@@ -57,6 +57,39 @@ type HolidayFormState = {
   isActualHoliday: boolean
 }
 
+type DestinationImageApiResponse = {
+  id: number
+  imageUrl: string
+  sortOrder: number
+  isThumbnail?: boolean
+  thumbnail?: boolean
+}
+
+type DestinationExperienceApiResponse = {
+  id: number
+  title: string
+  description: string
+  thumbnailUrl: string
+  link: string
+  sortOrder: number
+}
+
+type DestinationApiResponse = {
+  id: number
+  countryId: number | null
+  countryName: string
+  name: string
+  summary: string | null
+  description: string | null
+  recommendStartMonth1: number | null
+  recommendEndMonth1: number | null
+  recommendStartMonth2: number | null
+  recommendEndMonth2: number | null
+  flightTimeMinutes: number | null
+  images: DestinationImageApiResponse[]
+  experiences: DestinationExperienceApiResponse[]
+}
+
 type PublicHolidayApiResponse = {
   id: number
   holidayDate: string
@@ -110,6 +143,19 @@ const normalizePublicHoliday = (holiday: PublicHolidayApiResponse): PublicHolida
     holidayDate: holiday.holidayDate,
     name: holiday.name,
     isActualHoliday: resolvedActualHoliday
+  }
+}
+
+const normalizeDestination = (destination: DestinationApiResponse): Destination => {
+  return {
+    ...destination,
+    images: destination.images.map((image) => ({
+      id: image.id,
+      imageUrl: image.imageUrl,
+      sortOrder: image.sortOrder,
+      isThumbnail: image.isThumbnail ?? image.thumbnail ?? false
+    })),
+    experiences: destination.experiences
   }
 }
 
@@ -262,13 +308,13 @@ export const AdminApp = (): React.JSX.Element => {
     try {
       const [countryList, destinationList, memberList, holidayList] = await Promise.all([
         adminApiClient.get<Country[]>("/api/admin/v1/countries"),
-        adminApiClient.get<Destination[]>("/api/admin/v1/destinations"),
+        adminApiClient.get<DestinationApiResponse[]>("/api/admin/v1/destinations"),
         adminApiClient.get<Member[]>("/api/admin/v1/members"),
         adminApiClient.get<PublicHolidayApiResponse[]>("/api/admin/v1/public-holidays")
       ])
 
       setCountries(countryList)
-      setDestinations(destinationList)
+      setDestinations(destinationList.map(normalizeDestination))
       setMembers(memberList)
       setPublicHolidays(holidayList.map(normalizePublicHoliday))
     } catch (error) {
@@ -358,7 +404,12 @@ export const AdminApp = (): React.JSX.Element => {
       recommendStartMonth2: parseMonth(state.recommendStartMonth2),
       recommendEndMonth2: parseMonth(state.recommendEndMonth2),
       flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
-      images: state.images,
+      images: state.images.map((image) => ({
+        imageUrl: image.imageUrl,
+        sortOrder: image.sortOrder,
+        isThumbnail: image.isThumbnail,
+        thumbnail: image.isThumbnail
+      })),
       experiences: state.experiences.map((experience, index) => ({
         title: experience.title.trim(),
         description: experience.description.trim(),
