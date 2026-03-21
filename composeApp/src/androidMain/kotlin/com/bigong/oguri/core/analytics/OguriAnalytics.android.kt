@@ -1,8 +1,8 @@
 package com.bigong.oguri.core.analytics
 
 import com.amplitude.android.Amplitude
+import com.amplitude.android.AutocaptureOption
 import com.amplitude.android.Configuration
-import com.amplitude.android.DefaultTrackingOptions
 import com.amplitude.android.plugins.SessionReplayPlugin
 import com.bigong.oguri.core.network.AMPLITUDE_API_KEY
 import com.bigong.oguri.core.platform.OguriPlatformContextHolder
@@ -21,7 +21,7 @@ private object AndroidOguriAnalyticsManager {
                     Configuration(
                         apiKey = AMPLITUDE_API_KEY,
                         context = applicationContext,
-                        defaultTracking = DefaultTrackingOptions.ALL,
+                        autocapture = AutocaptureOption.ALL,
                     ),
             ).also { initializedAmplitude ->
                 initializedAmplitude.add(SessionReplayPlugin())
