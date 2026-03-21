@@ -24,6 +24,9 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
     @get:Input
     abstract val googleWebClientId: Property<String>
 
+    @get:Input
+    abstract val amplitudeApiKey: Property<String>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -39,6 +42,7 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
             const val RELEASE_BASE_URL: String = "${releaseBaseUrl.get()}"
             const val KAKAO_NATIVE_APP_KEY: String = "${kakaoNativeAppKey.get()}"
             const val GOOGLE_WEB_CLIENT_ID: String = "${googleWebClientId.get()}"
+            const val AMPLITUDE_API_KEY: String = "${amplitudeApiKey.get()}"
             """.trimIndent(),
         )
     }
@@ -64,6 +68,7 @@ val releaseBaseUrlValue: String =
         .trimEnd('/')
 val kakaoNativeAppKeyValue: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
 val googleWebClientIdValue: String = localProperties.getProperty("google.web.client.id")?.trim().orEmpty()
+val amplitudeApiKeyValue: String = localProperties.getProperty("amplitude.api.key")?.trim().orEmpty()
 val admobAndroidAppIdValue: String = "ca-app-pub-2833810411143763~1974881745"
 
 val generatedNetworkConfigDirectory =
@@ -80,6 +85,7 @@ val generateNetworkConfigTask =
         releaseBaseUrl.set(releaseBaseUrlValue)
         kakaoNativeAppKey.set(kakaoNativeAppKeyValue)
         googleWebClientId.set(googleWebClientIdValue)
+        amplitudeApiKey.set(amplitudeApiKeyValue)
         outputFile.set(generatedNetworkConfigFile)
     }
 
@@ -123,6 +129,8 @@ kotlin {
             implementation(libs.google.android.googleid)
             implementation(libs.google.mobile.ads)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.analytics.android)
+            implementation(libs.plugin.session.replay.android)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)

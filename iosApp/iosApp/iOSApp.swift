@@ -20,6 +20,7 @@ struct iOSApp: App {
         if let kakaoAppKey = Bundle.main.object(forInfoDictionaryKey: "KEY_KAKAO") as? String, !kakaoAppKey.isEmpty {
             KakaoSDK.initSDK(appKey: kakaoAppKey)
         }
+        AmplitudeBridge.shared.startObserving()
         KakaoShareDispatcher.shared.startObserving()
         OguriAdMobBridge.shared.startObserving()
     }

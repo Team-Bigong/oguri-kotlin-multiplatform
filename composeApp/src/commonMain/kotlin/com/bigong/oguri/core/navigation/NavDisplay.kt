@@ -36,6 +36,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
 import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
+import com.bigong.oguri.core.analytics.initializeOguriAnalytics
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -132,6 +133,7 @@ fun NavDisplay(
             navigator.navigateToRouteModel(targetRoute)
         }
         LaunchedEffect(Unit) {
+            initializeOguriAnalytics()
             initializeAdMob()
             preloadAppOpenAd()
         }
