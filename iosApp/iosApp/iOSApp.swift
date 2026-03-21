@@ -5,6 +5,7 @@ import ComposeApp
 import KakaoSDKCommon
 import GoogleMobileAds
 import FirebaseCore
+import FirebaseCrashlytics
 
 #if DEBUG
 private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
@@ -53,6 +54,11 @@ struct iOSApp: App {
             return
         }
         FirebaseApp.configure(options: options)
+        #if DEBUG
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
+        #else
+        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+        #endif
     }
 }
 

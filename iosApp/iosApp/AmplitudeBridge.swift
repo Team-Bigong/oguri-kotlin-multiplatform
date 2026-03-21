@@ -12,10 +12,16 @@ final class AmplitudeBridge {
 
     private var amplitude: Amplitude?
     private var hasStartedObserving: Bool = false
+    #if DEBUG
+    private let isAmplitudeEnabled: Bool = false
+    #else
+    private let isAmplitudeEnabled: Bool = true
+    #endif
 
     private init() {}
 
     func startObserving() {
+        guard isAmplitudeEnabled else { return }
         guard !hasStartedObserving else { return }
         hasStartedObserving = true
         NotificationCenter.default.addObserver(
@@ -34,6 +40,7 @@ final class AmplitudeBridge {
 
     @objc
     private func handleInitialize(_ notification: Notification) {
+        guard isAmplitudeEnabled else { return }
         guard
             let userInfo = notification.userInfo,
             let apiKey = userInfo[Self.apiKeyKey] as? String,
@@ -49,6 +56,7 @@ final class AmplitudeBridge {
 
     @objc
     private func handleTrack(_ notification: Notification) {
+        guard isAmplitudeEnabled else { return }
         guard
             let userInfo = notification.userInfo,
             let eventName = userInfo[Self.eventNameKey] as? String,

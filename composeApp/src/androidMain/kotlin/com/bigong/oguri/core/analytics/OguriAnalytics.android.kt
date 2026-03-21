@@ -1,5 +1,6 @@
 package com.bigong.oguri.core.analytics
 
+import com.bigong.oguri.BuildConfig
 import com.amplitude.android.Amplitude
 import com.amplitude.android.AutocaptureOption
 import com.amplitude.android.Configuration
@@ -11,6 +12,9 @@ private object AndroidOguriAnalyticsManager {
     private var amplitude: Amplitude? = null
 
     fun initialize() {
+        if (BuildConfig.DEBUG) {
+            return
+        }
         if (amplitude != null || AMPLITUDE_API_KEY.isBlank()) {
             return
         }
@@ -32,6 +36,9 @@ private object AndroidOguriAnalyticsManager {
         eventName: String,
         eventProperties: Map<String, String>,
     ) {
+        if (BuildConfig.DEBUG) {
+            return
+        }
         if (eventName.isBlank()) {
             return
         }
