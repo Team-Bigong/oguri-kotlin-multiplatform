@@ -1,6 +1,6 @@
 package com.bigong.oguri.core.analytics
 
-import com.bigong.oguri.BuildConfig
+import android.content.pm.ApplicationInfo
 import com.amplitude.android.Amplitude
 import com.amplitude.android.AutocaptureOption
 import com.amplitude.android.Configuration
@@ -12,9 +12,7 @@ private object AndroidOguriAnalyticsManager {
     private var amplitude: Amplitude? = null
 
     fun initialize() {
-        if (BuildConfig.DEBUG) {
-            return
-        }
+        if (isDebuggableApp()) return
         if (amplitude != null || AMPLITUDE_API_KEY.isBlank()) {
             return
         }
@@ -36,9 +34,7 @@ private object AndroidOguriAnalyticsManager {
         eventName: String,
         eventProperties: Map<String, String>,
     ) {
-        if (BuildConfig.DEBUG) {
-            return
-        }
+        if (isDebuggableApp()) return
         if (eventName.isBlank()) {
             return
         }
@@ -49,6 +45,11 @@ private object AndroidOguriAnalyticsManager {
             return
         }
         activeAmplitude.track(eventName, eventProperties)
+    }
+
+    private fun isDebuggableApp(): Boolean {
+        val applicationContext = OguriPlatformContextHolder.applicationContext ?: return false
+        return (applicationContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
     }
 }
 
