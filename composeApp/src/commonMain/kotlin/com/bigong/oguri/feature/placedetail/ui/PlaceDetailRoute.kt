@@ -18,6 +18,7 @@ import com.bigong.oguri.core.platform.preloadShareContent
 import com.bigong.oguri.core.platform.shareContent
 import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.PreloadNetworkImages
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
 import dev.zacsweers.metro.Provider
@@ -58,6 +59,7 @@ fun PlaceDetailRoute(
     val shareFallbackUrl = stringResource(Res.string.share_default_fallback_url)
     val uriHandler = LocalUriHandler.current
     var isLoginRequiredDialogVisible by remember { mutableStateOf(false) }
+    val placeImageUrls: List<String> = placeDetailUiState.placeDetail?.thumbnailUrls.orEmpty()
     val sharePayload =
         placeDetailUiState.placeDetail?.let { placeDetail ->
             val shareTitle = sharePlaceTitleTemplate.replace($$"%1$s", placeDetail.city)
@@ -77,6 +79,8 @@ fun PlaceDetailRoute(
                 fallbackUrl = shareFallbackUrl,
             )
         }
+
+    PreloadNetworkImages(imageUrls = placeImageUrls)
 
     LaunchedEffect(placeId, startDate, endDate) {
         placeDetailViewModel.loadPlaceDetail(
