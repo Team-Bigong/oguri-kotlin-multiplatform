@@ -36,6 +36,7 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
 import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
+import com.bigong.oguri.core.analytics.initializeOguriAnalytics
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -132,6 +133,7 @@ fun NavDisplay(
             navigator.navigateToRouteModel(targetRoute)
         }
         LaunchedEffect(Unit) {
+            initializeOguriAnalytics()
             initializeAdMob()
             preloadAppOpenAd()
         }
@@ -150,6 +152,14 @@ fun NavDisplay(
                 if (isMyPageRoute(currentRouteText) && !isMyPageRoute(previousRoute)) {
                     if (myPageViewModelLazy.isInitialized()) {
                         myPageViewModelLazy.value.refreshMyPageInfo()
+                    }
+                }
+                if (isCalendarRoute(currentRouteText) && isMyPageRoute(previousRoute)) {
+                    val preferredLeaveDays =
+                        myPageViewModelLazy.value.uiState.value.myPageInfo
+                            ?.preferredLeaveDays
+                    if (preferredLeaveDays != null) {
+                        calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
                     }
                 }
             } else if (currentRouteText != null && previousRoute == null && isHomeRoute(currentRouteText)) {
@@ -350,6 +360,14 @@ private fun isMyPageRoute(routeText: String): Boolean {
             .serializer()
             .descriptor.serialName
     return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
+}
+
+private fun isCalendarRoute(routeText: String): Boolean {
+    val calendarRouteSerialName =
+        RouteModel.Calendar
+            .serializer()
+            .descriptor.serialName
+    return routeText == calendarRouteSerialName || routeText.startsWith(calendarRouteSerialName)
 }
 
 private fun isOnboardingRoute(routeText: String): Boolean {

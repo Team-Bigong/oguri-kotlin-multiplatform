@@ -24,6 +24,7 @@ data class AdminDestinationUpsertRequest(
     val recommendStartMonth2: Int?,
     val recommendEndMonth2: Int?,
     val flightTimeMinutes: Int?,
+    val flightUrl: String? = null,
     val images: List<AdminDestinationImageUpsertRequest>,
     val experiences: List<AdminDestinationExperienceUpsertRequest> = emptyList()
 )
@@ -56,6 +57,7 @@ data class AdminDestinationResponse(
     val recommendStartMonth2: Int?,
     val recommendEndMonth2: Int?,
     val flightTimeMinutes: Int?,
+    val flightUrl: String?,
     val images: List<AdminDestinationImageResponse>,
     val experiences: List<AdminDestinationExperienceResponse>
 )

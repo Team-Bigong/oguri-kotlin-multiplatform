@@ -38,6 +38,7 @@ fun OnboardingDayOffInputField(
     onInputCommitted: () -> Unit,
     modifier: Modifier = Modifier,
     labelText: String? = null,
+    placeholderText: String = "0",
 ) {
     val focusManager = LocalFocusManager.current
     var hasFocus by remember { mutableStateOf(false) }
@@ -97,6 +98,16 @@ fun OnboardingDayOffInputField(
                         }.align(Alignment.CenterStart)
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 42.dp),
+                decorationBox = { innerTextField ->
+                    if (value.isBlank()) {
+                        Text(
+                            text = placeholderText,
+                            style = OguriTheme.typography.bodyLarge,
+                            color = Neutral50,
+                        )
+                    }
+                    innerTextField()
+                },
             )
 
             Text(

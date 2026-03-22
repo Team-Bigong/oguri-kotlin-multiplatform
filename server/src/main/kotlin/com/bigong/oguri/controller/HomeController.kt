@@ -14,7 +14,10 @@ import org.springframework.web.bind.annotation.*
 class HomeController(
     private val homeService: HomeService
 ) {
-    @Operation(summary = "홈 화면 조회", description = "최적의 연차 사용 기간과 추천 여행지 목록을 반환합니다.")
+    @Operation(
+        summary = "홈 화면 조회",
+        description = "최적의 연차 사용 기간과 추천 여행지 목록을 반환합니다. advertisements는 places 순서에서 처음 발견되는 agoda/klook 액티비티 링크와 skyscanner(flightUrl) 링크만 포함하며, 없는 플랫폼은 제외됩니다."
+    )
     @GetMapping
     fun getHome(
         @RequestParam(defaultValue = "대한민국") userCountry: String,

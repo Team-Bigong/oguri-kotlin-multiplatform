@@ -41,8 +41,7 @@ fun LoginActionButton(
                     width = 1.dp,
                     color = borderColor,
                     shape = RoundedCornerShape(size = 10.dp),
-                )
-                .background(color = backgroundColor, shape = RoundedCornerShape(size = 10.dp))
+                ).background(color = backgroundColor, shape = RoundedCornerShape(size = 10.dp))
                 .noRippleClickable(onClick = onClick)
                 .padding(horizontal = 30.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,

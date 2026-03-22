@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 enum class AdMobBannerPlacement {
     CALENDAR_INLINE,
     PHOTO_DETAIL_BOTTOM,
+    MYPAGE_BOTTOM,
 }
 
 expect fun initializeAdMob()

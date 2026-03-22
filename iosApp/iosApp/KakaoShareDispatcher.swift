@@ -14,8 +14,11 @@ final class KakaoShareDispatcher {
     private static let buttonTitleKey = "buttonTitle"
     private static let fallbackMessageKey = "fallbackMessage"
     private static let fallbackUrlKey = "fallbackUrl"
+    private static let isPreloadKey = "isPreload"
+    private static let executionDeepLinkKey = "deeplink"
 
     private var hasStartedObserving: Bool = false
+    private var cachedSharingUrlByPayloadKey: [String: URL] = [:]
 
     private init() {}
 
@@ -41,11 +44,21 @@ final class KakaoShareDispatcher {
         let buttonTitle = (userInfo[Self.buttonTitleKey] as? String) ?? ""
         let fallbackMessage = (userInfo[Self.fallbackMessageKey] as? String) ?? ""
         let fallbackUrl = (userInfo[Self.fallbackUrlKey] as? String) ?? ""
+        let isPreload = (userInfo[Self.isPreloadKey] as? Bool) ?? false
         let fallbackText = "\(fallbackMessage)\n\n\(fallbackUrl)"
+        let payloadKey = "\(title)|\(description)|\(imageUrlText)|\(deepLinkUrlText)|\(buttonTitle)"
 
         guard
             let topViewController = UIApplication.shared.topMostViewController()
         else {
+            return
+        }
+
+        if let cachedSharingUrl = cachedSharingUrlByPayloadKey[payloadKey] {
+            if isPreload {
+                return
+            }
+            UIApplication.shared.open(cachedSharingUrl, options: [:], completionHandler: nil)
             return
         }
 
@@ -56,11 +69,20 @@ final class KakaoShareDispatcher {
             !title.isEmpty,
             !buttonTitle.isEmpty
         else {
+            if isPreload {
+                return
+            }
             presentFallbackShare(text: fallbackText, from: topViewController)
             return
         }
 
-        let link = Link(webUrl: deepLinkUrl, mobileWebUrl: deepLinkUrl)
+        let executionParams = [Self.executionDeepLinkKey: deepLinkUrlText]
+        let link = Link(
+            webUrl: deepLinkUrl,
+            mobileWebUrl: deepLinkUrl,
+            androidExecutionParams: executionParams,
+            iosExecutionParams: executionParams
+        )
         let template = FeedTemplate(
             content: Content(
                 title: title,
@@ -78,8 +100,15 @@ final class KakaoShareDispatcher {
 
         ShareApi.shared.shareDefault(templatable: template) { sharingResult, error in
             if let sharingUrl = sharingResult?.url, error == nil {
+                self.cachedSharingUrlByPayloadKey[payloadKey] = sharingUrl
+                if isPreload {
+                    return
+                }
                 UIApplication.shared.open(sharingUrl, options: [:], completionHandler: nil)
             } else {
+                if isPreload {
+                    return
+                }
                 self.presentFallbackShare(text: fallbackText, from: topViewController)
             }
         }

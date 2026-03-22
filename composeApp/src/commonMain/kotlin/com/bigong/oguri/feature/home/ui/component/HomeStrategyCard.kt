@@ -34,6 +34,7 @@ import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.home_strategy_day_off_hint
 import oguri.composeapp.generated.resources.home_strategy_holiday_with
+import oguri.composeapp.generated.resources.home_strategy_holiday_with_next_year
 import oguri.composeapp.generated.resources.home_strategy_period
 import oguri.composeapp.generated.resources.img_oguri_teacher
 import org.jetbrains.compose.resources.painterResource
@@ -59,6 +60,21 @@ fun HomeStrategyCard(
     val isOutOfCurrentYear = currentPeriod.startDate.year != currentYear || currentPeriod.endDate.year != currentYear
     val periodTextColor = if (isOutOfCurrentYear) Orange50 else Mint70
     val holidayHighlightColor = if (isOutOfCurrentYear) Orange50 else Mint70
+    val holidayNamesText = currentPeriod.holiday.joinToString(separator = " · ")
+    val holidayHighlightText =
+        if (isOutOfCurrentYear) {
+            stringResource(
+                Res.string.home_strategy_holiday_with_next_year,
+                holidayNamesText,
+            )
+        } else {
+            holidayNamesText
+        }
+    val holidayDescriptionText =
+        stringResource(
+            Res.string.home_strategy_holiday_with,
+            holidayHighlightText,
+        )
 
     Box(
         modifier =
@@ -103,16 +119,13 @@ fun HomeStrategyCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text =
-                        stringResource(
-                            Res.string.home_strategy_holiday_with,
-                            currentPeriod.holiday.joinToString(separator = " · "),
-                        ).getStyledText(
+                        holidayDescriptionText.getStyledText(
                             style =
                                 TextStyle(
                                     color = holidayHighlightColor,
                                     fontWeight = FontWeight.Bold,
                                 ),
-                            currentPeriod.holiday.joinToString(separator = " · "),
+                            holidayHighlightText,
                         ),
                     style = OguriTheme.typography.cardSubtitle,
                     color = Neutral90,

@@ -59,6 +59,7 @@ import oguri.composeapp.generated.resources.place_detail_relevant_places
 import oguri.composeapp.generated.resources.place_detail_relevant_places_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience
 import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
+import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -70,7 +71,8 @@ fun PlaceDetailScreen(
     onRetryClick: () -> Unit,
     onShareClick: () -> Unit,
     onSaveToggleClick: () -> Unit,
-    onUrlClick: (String) -> Unit,
+    onExperienceClick: (String, String) -> Unit,
+    onFlightClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
 ) {
@@ -166,7 +168,7 @@ fun PlaceDetailScreen(
                             iconResource = Res.drawable.ic_binoculars,
                             titleText = stringResource(Res.string.place_detail_section_experience, placeDetail.city),
                             highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
-                            subtitleText = null,
+                            subtitleText = stringResource(Res.string.place_detail_section_experience_subtitle),
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }
@@ -188,7 +190,9 @@ fun PlaceDetailScreen(
                                             maxExperienceCardHeightPx = measuredHeightPx
                                         }
                                     },
-                                    onClick = onUrlClick,
+                                    onClick = { destinationUrl ->
+                                        onExperienceClick(experience.title, destinationUrl)
+                                    },
                                 )
                             }
                         }
@@ -213,7 +217,7 @@ fun PlaceDetailScreen(
                             highlightedText = placeDetail.city,
                             highlightedColor = Mint70,
                             modifier = Modifier.padding(horizontal = 20.dp),
-                            onClick = onUrlClick,
+                            onClick = onFlightClick,
                         )
                     }
                     if (placeDetail.relevantPlaces.isNotEmpty()) {
