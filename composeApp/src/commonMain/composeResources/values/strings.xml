@@ -16,6 +16,7 @@
 
     <string name="home_strategy_period">%1$s - %2$s</string>
     <string name="home_strategy_holiday_with">It lines up perfectly with %1$s</string>
+    <string name="home_strategy_holiday_with_next_year">Next year, %1$s</string>
     <string name="home_strategy_day_off_hint">With %1$d leave days, you can rest for %2$d days</string>
 
     <string name="home_guide_match_places">These are perfect places to visit at that time</string>
