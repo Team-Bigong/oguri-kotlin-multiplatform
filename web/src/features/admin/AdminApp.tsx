@@ -33,6 +33,7 @@ type DestinationFormState = {
   recommendStartMonth2: string
   recommendEndMonth2: string
   flightTime: string
+  flightUrl: string
   images: DestinationImageRequest[]
   experiences: DestinationExperienceRequest[]
   existingImageUrls: string[]
@@ -86,6 +87,7 @@ type DestinationApiResponse = {
   recommendStartMonth2: number | null
   recommendEndMonth2: number | null
   flightTimeMinutes: number | null
+  flightUrl: string | null
   images: DestinationImageApiResponse[]
   experiences: DestinationExperienceApiResponse[]
 }
@@ -112,6 +114,7 @@ const createInitialDestinationFormState = (): DestinationFormState => ({
   recommendStartMonth2: "",
   recommendEndMonth2: "",
   flightTime: "",
+  flightUrl: "",
   images: [],
   experiences: [],
   existingImageUrls: [],
@@ -443,6 +446,7 @@ export const AdminApp = (): React.JSX.Element => {
       recommendStartMonth2: parseMonth(state.recommendStartMonth2),
       recommendEndMonth2: parseMonth(state.recommendEndMonth2),
       flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
+      flightUrl: state.flightUrl.trim().length > 0 ? state.flightUrl.trim() : null,
       images: state.images.map((image) => ({
         imageUrl: image.imageUrl,
         sortOrder: image.sortOrder,
@@ -1039,6 +1043,11 @@ export const AdminApp = (): React.JSX.Element => {
                 keyboardType="numeric"
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightTime: parseFlightTimeMinutes(value) }))}
               />
+              <LabelInput
+                label="항공권 링크(Skyscanner)"
+                value={destinationFormState.flightUrl}
+                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightUrl: value }))}
+              />
 
               <View style={styles.uploadRow}>
                 <Text style={styles.fieldLabel}>사진 업로드</Text>
@@ -1256,6 +1265,7 @@ export const AdminApp = (): React.JSX.Element => {
                                   recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
                                   recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
                                   flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
+                                  flightUrl: destination.flightUrl ?? "",
                                   images: destination.images.map((image) => ({
                                     imageUrl: image.imageUrl,
                                     isThumbnail: image.isThumbnail,
