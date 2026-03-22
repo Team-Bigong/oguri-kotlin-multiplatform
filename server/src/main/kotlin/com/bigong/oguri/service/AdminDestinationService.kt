@@ -64,7 +64,8 @@ class AdminDestinationService(
                 recommendEndMonth1 = request.recommendEndMonth1,
                 recommendStartMonth2 = request.recommendStartMonth2,
                 recommendEndMonth2 = request.recommendEndMonth2,
-                flightTimeMinutes = request.flightTimeMinutes
+                flightTimeMinutes = request.flightTimeMinutes,
+                flightUrl = normalizeNullableText(request.flightUrl)
             )
         )
 
@@ -98,6 +99,7 @@ class AdminDestinationService(
         destination.recommendStartMonth2 = request.recommendStartMonth2
         destination.recommendEndMonth2 = request.recommendEndMonth2
         destination.flightTimeMinutes = request.flightTimeMinutes
+        destination.flightUrl = normalizeNullableText(request.flightUrl)
 
         destinationRepository.save(destination)
         replaceDestinationImages(destination, request)
@@ -242,6 +244,7 @@ class AdminDestinationService(
             recommendStartMonth2 = recommendStartMonth2,
             recommendEndMonth2 = recommendEndMonth2,
             flightTimeMinutes = flightTimeMinutes,
+            flightUrl = flightUrl,
             images = sortedImages.map { image ->
                 AdminDestinationImageResponse(
                     id = image.id,

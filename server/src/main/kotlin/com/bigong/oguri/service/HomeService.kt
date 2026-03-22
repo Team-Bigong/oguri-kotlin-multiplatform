@@ -6,6 +6,7 @@ import com.bigong.oguri.dto.AdvertisementResponse
 import com.bigong.oguri.dto.PlaceResponse
 import com.bigong.oguri.dto.RecommendPeriodResponse
 import com.bigong.oguri.repository.DestinationRepository
+import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.PublicHolidayRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
 import org.springframework.stereotype.Service
@@ -21,6 +22,7 @@ import kotlin.math.abs
 @Transactional(readOnly = true)
 class HomeService(
     private val destinationRepository: DestinationRepository,
+    private val destinationExperienceRepository: DestinationExperienceRepository,
     private val publicHolidayRepository: PublicHolidayRepository,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val memberService: MemberService,
@@ -43,6 +45,10 @@ class HomeService(
         private const val HOME_PERIOD_LIMIT_PER_MONTH = 6
         private const val HOME_TOP_RECOMMENDATION_LIMIT = 3
         private const val DEFAULT_HOLIDAY_NAME = "주말"
+        private const val KLOOK_PLATFORM = "klook"
+        private const val SKYSCANNER_PLATFORM = "skyscanner"
+        private const val AGODA_PLATFORM = "agoda"
+        private val ADVERTISEMENT_PLATFORM_PRIORITY = listOf(AGODA_PLATFORM, SKYSCANNER_PLATFORM, KLOOK_PLATFORM)
     }
 
     /**
@@ -85,17 +91,12 @@ class HomeService(
         )
         val nonOverlappingTopPeriods = selectNonOverlappingTopPeriods(bestPeriods, HOME_TOP_RECOMMENDATION_LIMIT)
 
-        // 5. 광고 데이터 구성 (더미)
-        val advertisements = listOf(
-            AdvertisementResponse(platform = "agoda", url = "https://www.agoda.com"),
-            AdvertisementResponse(platform = "skyscanner", url = "https://www.skyscanner.com/"),
-            AdvertisementResponse(platform = "klook", url = "https://www.klook.com/")
-        )
-
-        // 6. 각 추천 기간별로 응답 조립
+        // 5. 각 추천 기간별로 응답 조립
         return nonOverlappingTopPeriods.mapIndexed { index, period ->
             // 해당 기간에 가장 가기 좋은 장소 7개 계산
             val recommendedPlaces = calculateRecommendedPlaces(period.start, allDestinations, userCountry, period.totalDays)
+            val destinationsById = allDestinations.associateBy { destination -> destination.id }
+            val advertisements = buildAdvertisementsFromPlaces(recommendedPlaces, destinationsById)
 
             val isSaved = savedPeriods.any { it.startDate == period.start && it.endDate == period.end }
             RecommendPeriodResponse(
@@ -216,6 +217,56 @@ class HomeService(
             }
         }
         return selectedPeriods
+    }
+
+    private fun buildAdvertisementsFromPlaces(
+        places: List<PlaceResponse>,
+        destinationsById: Map<Int, Destination>
+    ): List<AdvertisementResponse> {
+        val destinationIdsInOrder = places.map { place -> place.id.toInt() }
+        if (destinationIdsInOrder.isEmpty()) {
+            return emptyList()
+        }
+
+        val experiencesByDestinationId = destinationExperienceRepository
+            .findAllByDestinationIdInOrderByDestinationIdAscSortOrderAscIdAsc(destinationIdsInOrder)
+            .groupBy { experience -> experience.destinationId }
+
+        val firstAdvertisementByPlatform = linkedMapOf<String, String>()
+
+        for (place in places) {
+            val destinationId = place.id.toInt()
+            if (!firstAdvertisementByPlatform.containsKey(SKYSCANNER_PLATFORM)) {
+                val destination = destinationsById[destinationId]
+                val flightUrl = destination?.flightUrl?.trim().orEmpty()
+                if (flightUrl.isNotBlank()) {
+                    firstAdvertisementByPlatform[SKYSCANNER_PLATFORM] = flightUrl
+                }
+            }
+            val experiences = experiencesByDestinationId[destinationId].orEmpty()
+            for (experience in experiences) {
+                val platform = detectPlatform(experience.link) ?: continue
+                if (!firstAdvertisementByPlatform.containsKey(platform)) {
+                    firstAdvertisementByPlatform[platform] = experience.link
+                }
+            }
+        }
+
+        return ADVERTISEMENT_PLATFORM_PRIORITY.mapNotNull { platform ->
+            firstAdvertisementByPlatform[platform]?.let { url ->
+                AdvertisementResponse(platform = platform, url = url)
+            }
+        }
+    }
+
+    private fun detectPlatform(url: String): String? {
+        val normalizedUrl = url.lowercase()
+        return when {
+            normalizedUrl.contains(KLOOK_PLATFORM) -> KLOOK_PLATFORM
+            normalizedUrl.contains(SKYSCANNER_PLATFORM) -> SKYSCANNER_PLATFORM
+            normalizedUrl.contains(AGODA_PLATFORM) -> AGODA_PLATFORM
+            else -> null
+        }
     }
 
 }
