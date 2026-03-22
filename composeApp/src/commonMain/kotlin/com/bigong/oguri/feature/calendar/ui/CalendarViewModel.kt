@@ -94,7 +94,7 @@ class CalendarViewModel(
                                             isLeaveDaysRefreshing = false,
                                             selectedDateByPeriodId =
                                                 currentUiState.selectedDateByPeriodId + addedSelections,
-                                            expandedPeriodId = currentUiState.expandedPeriodId,
+                                            expandedPeriodId = currentUiState.expandedPeriodId ?: loadedCards.firstOrNull()?.id,
                                         )
                                     }
                                 },
