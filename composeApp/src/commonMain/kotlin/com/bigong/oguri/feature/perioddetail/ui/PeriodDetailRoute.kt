@@ -14,6 +14,7 @@ import com.bigong.oguri.core.analytics.OguriAnalyticsProperty
 import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.deeplink.buildPeriodDetailDeepLink
 import com.bigong.oguri.core.platform.SharePayload
+import com.bigong.oguri.core.platform.preloadShareContent
 import com.bigong.oguri.core.platform.shareContent
 import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
@@ -55,6 +56,31 @@ fun PeriodDetailRoute(
     val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
     val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)
     var isLoginRequiredDialogVisible by remember { mutableStateOf(false) }
+    val sharePayload =
+        periodDetailUiState.periodDetail?.let { periodDetail ->
+            val deepLinkUrl =
+                buildPeriodDetailDeepLink(
+                    startDate = startDate,
+                    endDate = endDate,
+                )
+            val sharePeriodDescription =
+                sharePeriodDescriptionTemplate
+                    .replace($$"%1$d", periodDetail.dayOffCount.toString())
+                    .replace($$"%2$d", periodDetail.totalTripCount.toString())
+            SharePayload(
+                title = shareTitle,
+                description = sharePeriodDescription,
+                imageUrl =
+                    periodDetail.places
+                        .firstOrNull()
+                        ?.thumbnailUrl
+                        .orEmpty(),
+                deepLinkUrl = deepLinkUrl,
+                buttonTitle = shareButtonTitle,
+                fallbackMessage = shareFallbackMessage,
+                fallbackUrl = shareFallbackUrl,
+            )
+        }
 
     LaunchedEffect(startDate, endDate) {
         periodDetailViewModel.loadPeriodDetail(
@@ -71,17 +97,23 @@ fun PeriodDetailRoute(
                         type = OguriSnackBarType.SUCCESS,
                     )
                 }
+
                 PeriodDetailSideEffect.RecommendationDeleted -> {
                     snackbarHostState.showOguriSnackbar(
                         message = recommendationDeletedMessage,
                         type = OguriSnackBarType.INFO,
                     )
                 }
+
                 PeriodDetailSideEffect.LoginRequired -> {
                     isLoginRequiredDialogVisible = true
                 }
             }
         }
+    }
+    LaunchedEffect(sharePayload) {
+        val payload: SharePayload = sharePayload ?: return@LaunchedEffect
+        preloadShareContent(payload)
     }
 
     PeriodDetailScreen(
@@ -96,6 +128,7 @@ fun PeriodDetailRoute(
         onBackClick = onBackClick,
         onShareClick = {
             val periodDetail = periodDetailUiState.periodDetail ?: return@PeriodDetailScreen
+            val payload: SharePayload = sharePayload ?: return@PeriodDetailScreen
             trackOguriEvent(
                 eventName = OguriAnalyticsEvent.SHARE_CLICKED,
                 eventProperties =
@@ -106,31 +139,7 @@ fun PeriodDetailRoute(
                         OguriAnalyticsProperty.LEAVE_DAYS to periodDetail.dayOffCount.toString(),
                     ),
             )
-            val deepLinkUrl =
-                buildPeriodDetailDeepLink(
-                    startDate = startDate,
-                    endDate = endDate,
-                )
-            val sharePeriodDescription =
-                sharePeriodDescriptionTemplate
-                    .replace("%1\$d", periodDetail.dayOffCount.toString())
-                    .replace("%2\$d", periodDetail.totalTripCount.toString())
-            shareContent(
-                payload =
-                    SharePayload(
-                        title = shareTitle,
-                        description = sharePeriodDescription,
-                        imageUrl =
-                            periodDetail.places
-                                .firstOrNull()
-                                ?.thumbnailUrl
-                                .orEmpty(),
-                        deepLinkUrl = deepLinkUrl,
-                        buttonTitle = shareButtonTitle,
-                        fallbackMessage = shareFallbackMessage,
-                        fallbackUrl = shareFallbackUrl,
-                    ),
-            )
+            shareContent(payload = payload)
         },
         onSaveToggleClick = periodDetailViewModel::toggleSavedRecommendation,
         onPlaceClick = onPlaceClick,

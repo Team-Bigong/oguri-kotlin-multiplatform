@@ -14,6 +14,7 @@ import com.bigong.oguri.core.analytics.OguriAnalyticsProperty
 import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.deeplink.buildPlaceDetailDeepLink
 import com.bigong.oguri.core.platform.SharePayload
+import com.bigong.oguri.core.platform.preloadShareContent
 import com.bigong.oguri.core.platform.shareContent
 import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
@@ -57,6 +58,25 @@ fun PlaceDetailRoute(
     val shareFallbackUrl = stringResource(Res.string.share_default_fallback_url)
     val uriHandler = LocalUriHandler.current
     var isLoginRequiredDialogVisible by remember { mutableStateOf(false) }
+    val sharePayload =
+        placeDetailUiState.placeDetail?.let { placeDetail ->
+            val shareTitle = sharePlaceTitleTemplate.replace($$"%1$s", placeDetail.city)
+            val deepLinkUrl =
+                buildPlaceDetailDeepLink(
+                    placeId = placeId,
+                    startDate = startDate,
+                    endDate = endDate,
+                )
+            SharePayload(
+                title = shareTitle,
+                description = sharePlaceDescription,
+                imageUrl = placeDetail.thumbnailUrls.firstOrNull().orEmpty(),
+                deepLinkUrl = deepLinkUrl,
+                buttonTitle = shareButtonTitle,
+                fallbackMessage = shareFallbackMessage,
+                fallbackUrl = shareFallbackUrl,
+            )
+        }
 
     LaunchedEffect(placeId, startDate, endDate) {
         placeDetailViewModel.loadPlaceDetail(
@@ -88,6 +108,10 @@ fun PlaceDetailRoute(
             }
         }
     }
+    LaunchedEffect(sharePayload) {
+        val payload: SharePayload = sharePayload ?: return@LaunchedEffect
+        preloadShareContent(payload)
+    }
 
     PlaceDetailScreen(
         placeDetailUiState = placeDetailUiState,
@@ -101,6 +125,7 @@ fun PlaceDetailRoute(
         },
         onShareClick = {
             val placeDetail = placeDetailUiState.placeDetail ?: return@PlaceDetailScreen
+            val payload: SharePayload = sharePayload ?: return@PlaceDetailScreen
             trackOguriEvent(
                 eventName = OguriAnalyticsEvent.SHARE_CLICKED,
                 eventProperties =
@@ -112,25 +137,7 @@ fun PlaceDetailRoute(
                         OguriAnalyticsProperty.END_DATE to endDate.orEmpty(),
                     ),
             )
-            val shareTitle = sharePlaceTitleTemplate.replace("%1\$s", placeDetail.city)
-            val deepLinkUrl =
-                buildPlaceDetailDeepLink(
-                    placeId = placeId,
-                    startDate = startDate,
-                    endDate = endDate,
-                )
-            shareContent(
-                payload =
-                    SharePayload(
-                        title = shareTitle,
-                        description = sharePlaceDescription,
-                        imageUrl = placeDetail.thumbnailUrls.firstOrNull().orEmpty(),
-                        deepLinkUrl = deepLinkUrl,
-                        buttonTitle = shareButtonTitle,
-                        fallbackMessage = shareFallbackMessage,
-                        fallbackUrl = shareFallbackUrl,
-                    ),
-            )
+            shareContent(payload = payload)
         },
         onSaveToggleClick = placeDetailViewModel::toggleSaved,
         onExperienceClick = { experienceTitle, destinationUrl ->

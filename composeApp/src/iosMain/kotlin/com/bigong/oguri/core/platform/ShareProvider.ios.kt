@@ -10,6 +10,25 @@ private const val KAKAO_SHARE_DEEP_LINK_URL_KEY = "deepLinkUrl"
 private const val KAKAO_SHARE_BUTTON_TITLE_KEY = "buttonTitle"
 private const val KAKAO_SHARE_FALLBACK_MESSAGE_KEY = "fallbackMessage"
 private const val KAKAO_SHARE_FALLBACK_URL_KEY = "fallbackUrl"
+private const val KAKAO_SHARE_IS_PRELOAD_KEY = "isPreload"
+
+actual fun preloadShareContent(payload: SharePayload) {
+    NSNotificationCenter.defaultCenter.postNotificationName(
+        aName = KAKAO_SHARE_REQUEST_NOTIFICATION_NAME,
+        `object` = null,
+        userInfo =
+            mapOf(
+                KAKAO_SHARE_TITLE_KEY to payload.title,
+                KAKAO_SHARE_DESCRIPTION_KEY to payload.description,
+                KAKAO_SHARE_IMAGE_URL_KEY to payload.imageUrl,
+                KAKAO_SHARE_DEEP_LINK_URL_KEY to payload.deepLinkUrl,
+                KAKAO_SHARE_BUTTON_TITLE_KEY to payload.buttonTitle,
+                KAKAO_SHARE_FALLBACK_MESSAGE_KEY to payload.fallbackMessage,
+                KAKAO_SHARE_FALLBACK_URL_KEY to payload.fallbackUrl,
+                KAKAO_SHARE_IS_PRELOAD_KEY to true,
+            ),
+    )
+}
 
 actual fun shareContent(payload: SharePayload) {
     NSNotificationCenter.defaultCenter.postNotificationName(
@@ -24,6 +43,7 @@ actual fun shareContent(payload: SharePayload) {
                 KAKAO_SHARE_BUTTON_TITLE_KEY to payload.buttonTitle,
                 KAKAO_SHARE_FALLBACK_MESSAGE_KEY to payload.fallbackMessage,
                 KAKAO_SHARE_FALLBACK_URL_KEY to payload.fallbackUrl,
+                KAKAO_SHARE_IS_PRELOAD_KEY to false,
             ),
     )
 }
