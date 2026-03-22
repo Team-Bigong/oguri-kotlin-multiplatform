@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.platform.PlatformBackHandler
-import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.onboarding.ui.component.OnboardingLeaveDaysContent
 import com.bigong.oguri.feature.onboarding.ui.component.OnboardingTermsContent
@@ -63,8 +62,7 @@ fun OnboardingScreen(
             Modifier
                 .fillMaxSize()
                 .background(Neutral5)
-                .statusBarsPadding()
-                .dismissKeyboardOnOutsideTouch(),
+                .statusBarsPadding(),
     ) {
         Box(
             modifier =
