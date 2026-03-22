@@ -7,7 +7,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.bigong.oguri.app.OguriApp
+import com.bigong.oguri.core.ad.setCurrentAdMobActivity
 import com.bigong.oguri.core.deeplink.handleIncomingAppUrl
+import com.bigong.oguri.core.platform.OguriPlatformContextHolder
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,6 +32,20 @@ class MainActivity : ComponentActivity() {
         intent.dataString?.let { urlText ->
             handleIncomingAppUrl(urlText = urlText)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        OguriPlatformContextHolder.currentActivity = this
+        setCurrentAdMobActivity(this)
+    }
+
+    override fun onStop() {
+        setCurrentAdMobActivity(null)
+        if (OguriPlatformContextHolder.currentActivity === this) {
+            OguriPlatformContextHolder.currentActivity = null
+        }
+        super.onStop()
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarRecommendationUseCase
 import com.bigong.oguri.domain.usecase.ObservePreferredLeaveDaysChangesUseCase
@@ -24,7 +25,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.update
@@ -55,58 +55,59 @@ class CalendarViewModel(
     private val periodCardById = MutableStateFlow<Map<Long, CalendarPeriodCardUiModel>>(emptyMap())
 
     val pagedPeriodCards: Flow<PagingData<CalendarPeriodCardUiModel>> =
-        pagingQueryFlow.flatMapLatest { query: CalendarPagingQuery ->
-            if (query.year <= 0 || query.month <= 0) {
-                flowOf(PagingData.empty())
-            } else {
-                Pager(
-                    config =
-                        PagingConfig(
-                            pageSize = CALENDAR_PAGE_SIZE,
-                            initialLoadSize = CALENDAR_PAGE_SIZE,
-                            prefetchDistance = 2,
-                            enablePlaceholders = false,
-                        ),
-                    pagingSourceFactory = {
-                        CalendarRecommendationPagingSource(
-                            getCalendarRecommendationUseCase = getCalendarRecommendationUseCase,
-                            calculateDDayUseCase = calculateDDayUseCase,
-                            selectedYear = query.year,
-                            selectedMonth = query.month,
-                            dayOffCount = query.dayOffCount,
-                            pageSize = CALENDAR_PAGE_SIZE,
-                            onDayOffCountResolved = { resolvedDayOffCount: Int ->
-                                _uiState.update { currentUiState ->
-                                    currentUiState.copy(leaveDays = resolvedDayOffCount)
-                                }
-                            },
-                            onPageLoaded = { loadedCards: List<CalendarPeriodCardUiModel> ->
-                                periodCardById.update { currentMap ->
-                                    currentMap + loadedCards.associateBy { card -> card.id }
-                                }
-                                _uiState.update { currentUiState ->
-                                    val addedSelections =
-                                        loadedCards
-                                            .filterNot { card -> currentUiState.selectedDateByPeriodId.containsKey(card.id) }
-                                            .associate { card -> card.id to card.startDate }
-                                    currentUiState.copy(
-                                        isLeaveDaysRefreshing = false,
-                                        selectedDateByPeriodId =
-                                            currentUiState.selectedDateByPeriodId + addedSelections,
-                                        expandedPeriodId = currentUiState.expandedPeriodId ?: loadedCards.firstOrNull()?.id,
-                                    )
-                                }
-                            },
-                            onRefreshLoadFailed = {
-                                _uiState.update { currentUiState ->
-                                    currentUiState.copy(isLeaveDaysRefreshing = false)
-                                }
-                            },
-                        )
-                    },
-                ).flow
-            }
-        }.cachedIn(viewModelScope)
+        pagingQueryFlow
+            .flatMapLatest { query: CalendarPagingQuery ->
+                if (query.year <= 0 || query.month <= 0) {
+                    flowOf(PagingData.empty())
+                } else {
+                    Pager(
+                        config =
+                            PagingConfig(
+                                pageSize = CALENDAR_PAGE_SIZE,
+                                initialLoadSize = CALENDAR_PAGE_SIZE,
+                                prefetchDistance = 2,
+                                enablePlaceholders = false,
+                            ),
+                        pagingSourceFactory = {
+                            CalendarRecommendationPagingSource(
+                                getCalendarRecommendationUseCase = getCalendarRecommendationUseCase,
+                                calculateDDayUseCase = calculateDDayUseCase,
+                                selectedYear = query.year,
+                                selectedMonth = query.month,
+                                dayOffCount = query.dayOffCount,
+                                pageSize = CALENDAR_PAGE_SIZE,
+                                onDayOffCountResolved = { resolvedDayOffCount: Int ->
+                                    _uiState.update { currentUiState ->
+                                        currentUiState.copy(leaveDays = resolvedDayOffCount)
+                                    }
+                                },
+                                onPageLoaded = { loadedCards: List<CalendarPeriodCardUiModel> ->
+                                    periodCardById.update { currentMap ->
+                                        currentMap + loadedCards.associateBy { card -> card.id }
+                                    }
+                                    _uiState.update { currentUiState ->
+                                        val addedSelections =
+                                            loadedCards
+                                                .filterNot { card -> currentUiState.selectedDateByPeriodId.containsKey(card.id) }
+                                                .associate { card -> card.id to card.startDate }
+                                        currentUiState.copy(
+                                            isLeaveDaysRefreshing = false,
+                                            selectedDateByPeriodId =
+                                                currentUiState.selectedDateByPeriodId + addedSelections,
+                                            expandedPeriodId = currentUiState.expandedPeriodId ?: loadedCards.firstOrNull()?.id,
+                                        )
+                                    }
+                                },
+                                onRefreshLoadFailed = {
+                                    _uiState.update { currentUiState ->
+                                        currentUiState.copy(isLeaveDaysRefreshing = false)
+                                    }
+                                },
+                            )
+                        },
+                    ).flow
+                }
+            }.cachedIn(viewModelScope)
 
     init {
         val today =
@@ -146,6 +147,24 @@ class CalendarViewModel(
         periodCardById.value = emptyMap()
         _sideEffect.tryEmit(CalendarSideEffect.LeaveDaysUpdated)
         refreshByDayOffCount(dayOffCount = leaveDays)
+    }
+
+    fun refreshWithPreferredLeaveDays(preferredLeaveDays: Int) {
+        val normalizedLeaveDays = preferredLeaveDays.coerceAtLeast(1)
+        if (normalizedLeaveDays == uiState.value.leaveDays) {
+            return
+        }
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                leaveDays = normalizedLeaveDays,
+                isLeaveDaysRefreshing = true,
+                expandedPeriodId = null,
+                selectedDateByPeriodId = emptyMap(),
+                savedStateByPeriodKey = emptyMap(),
+            )
+        }
+        periodCardById.value = emptyMap()
+        refreshByDayOffCount(dayOffCount = normalizedLeaveDays)
     }
 
     fun onCardClick(periodId: Long) {
@@ -233,6 +252,9 @@ class CalendarViewModel(
                             currentUiState.savedStateByPeriodKey + (periodKey to previousSavedState),
                     )
                 }
+                if (it.isUnauthorized()) {
+                    _sideEffect.tryEmit(CalendarSideEffect.LoginRequired)
+                }
             }
         }
     }
@@ -264,6 +286,7 @@ class CalendarViewModel(
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
                         leaveDays = preferredLeaveDays,
+                        isLeaveDaysRefreshing = true,
                         expandedPeriodId = null,
                         selectedDateByPeriodId = emptyMap(),
                         savedStateByPeriodKey = emptyMap(),

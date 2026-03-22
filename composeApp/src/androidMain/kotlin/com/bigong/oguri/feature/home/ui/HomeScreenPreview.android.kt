@@ -76,7 +76,7 @@ private fun HomeScreenPreview() {
             onRankSelected = {},
             onSavedChanged = {},
             onRetryClick = {},
-            onAdvertisementClick = {},
+            onAdvertisementClick = { _, _ -> },
             onPlaceClick = { _, _, _ -> },
             onPeriodClick = { _, _ -> },
             onMoveToCalendarClick = {},

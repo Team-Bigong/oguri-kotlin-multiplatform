@@ -7,11 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		86565C8F2F6E7FA800AC6E1C /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 86565C8E2F6E7FA800AC6E1C /* FirebaseAnalytics */; };
+		86565C912F6E7FA800AC6E1C /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 86565C902F6E7FA800AC6E1C /* FirebaseCrashlytics */; };
 		86840E242F66EC09007C5D22 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 86840E232F66EC09007C5D22 /* KakaoSDKAuth */; };
 		86840E262F66EC09007C5D22 /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 86840E252F66EC09007C5D22 /* KakaoSDKCommon */; };
 		86840E282F66EC09007C5D22 /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 86840E272F66EC09007C5D22 /* KakaoSDKUser */; };
 		86CFAA1C2F6C00910011BF87 /* KakaoSDKShare in Frameworks */ = {isa = PBXBuildFile; productRef = 86CFAA1B2F6C00910011BF87 /* KakaoSDKShare */; };
 		86CFAA1E2F6C00910011BF87 /* KakaoSDKTemplate in Frameworks */ = {isa = PBXBuildFile; productRef = 86CFAA1D2F6C00910011BF87 /* KakaoSDKTemplate */; };
+		86FBCAE12F6D402F00D24773 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 86FBCAE02F6D402F00D24773 /* GoogleMobileAds */; };
+		A1B2C3D42F70000100AAA111 /* AmplitudeUnified in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D52F70000100AAA111 /* AmplitudeUnified */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,9 +53,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1B2C3D42F70000100AAA111 /* AmplitudeUnified in Frameworks */,
+				86FBCAE12F6D402F00D24773 /* GoogleMobileAds in Frameworks */,
+				86565C8F2F6E7FA800AC6E1C /* FirebaseAnalytics in Frameworks */,
 				86CFAA1E2F6C00910011BF87 /* KakaoSDKTemplate in Frameworks */,
 				86840E262F66EC09007C5D22 /* KakaoSDKCommon in Frameworks */,
 				86CFAA1C2F6C00910011BF87 /* KakaoSDKShare in Frameworks */,
+				86565C912F6E7FA800AC6E1C /* FirebaseCrashlytics in Frameworks */,
 				86840E242F66EC09007C5D22 /* KakaoSDKAuth in Frameworks */,
 				86840E282F66EC09007C5D22 /* KakaoSDKUser in Frameworks */,
 			);
@@ -98,11 +106,15 @@
 			);
 			name = iosApp;
 			packageProductDependencies = (
+				A1B2C3D52F70000100AAA111 /* AmplitudeUnified */,
 				86840E232F66EC09007C5D22 /* KakaoSDKAuth */,
 				86840E252F66EC09007C5D22 /* KakaoSDKCommon */,
 				86840E272F66EC09007C5D22 /* KakaoSDKUser */,
 				86CFAA1B2F6C00910011BF87 /* KakaoSDKShare */,
 				86CFAA1D2F6C00910011BF87 /* KakaoSDKTemplate */,
+				86FBCAE02F6D402F00D24773 /* GoogleMobileAds */,
+				86565C8E2F6E7FA800AC6E1C /* FirebaseAnalytics */,
+				86565C902F6E7FA800AC6E1C /* FirebaseCrashlytics */,
 			);
 			productName = iosApp;
 			productReference = 6365899FB01A731641EBD6A2 /* Oguri.app */;
@@ -124,16 +136,20 @@
 				};
 			};
 			buildConfigurationList = 45B8C6168FE6F28A19A514E1 /* Build configuration list for PBXProject "iosApp" */;
-			developmentRegion = en;
+			developmentRegion = ko;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 				Base,
+				ko,
 			);
 			mainGroup = 498123707EE9EF62D42083EE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */,
 				86840E222F66EC09007C5D22 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C2E806D8A29B0C2428B12786 /* Products */;
@@ -258,6 +274,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
@@ -269,13 +286,16 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -293,6 +313,7 @@
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
@@ -304,13 +325,16 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "$(BUNDLE_IDENTIFIER)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -407,6 +431,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.11.0;
+			};
+		};
 		86840E222F66EC09007C5D22 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
@@ -415,9 +447,35 @@
 				minimumVersion = 2.27.2;
 			};
 		};
+		86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 13.1.0;
+			};
+		};
+		A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/amplitude/AmplitudeUnified-Swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		86565C8E2F6E7FA800AC6E1C /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		86565C902F6E7FA800AC6E1C /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
 		86840E232F66EC09007C5D22 /* KakaoSDKAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 86840E222F66EC09007C5D22 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
@@ -442,6 +500,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 86840E222F66EC09007C5D22 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
 			productName = KakaoSDKTemplate;
+		};
+		86FBCAE02F6D402F00D24773 /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		A1B2C3D52F70000100AAA111 /* AmplitudeUnified */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */;
+			productName = AmplitudeUnified;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

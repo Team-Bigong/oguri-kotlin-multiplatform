@@ -12,6 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Oguri">
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAndroidAppId}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -44,6 +48,17 @@
                     android:host="oguri-kotlin-multiplatform-wezq.onrender.com"
                     android:pathPrefix="/open"
                     android:scheme="https" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="kakaolink"
+                    android:scheme="kakao${kakaoNativeAppKey}" />
             </intent-filter>
         </activity>
 

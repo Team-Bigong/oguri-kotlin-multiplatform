@@ -1,10 +1,4 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.TaskAction
 import java.util.Properties
 
 plugins {
@@ -15,6 +9,8 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.metro)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.googleServices)
+    alias(libs.plugins.firebaseCrashlytics)
 }
 
 abstract class GenerateNetworkConfigTask : DefaultTask() {
@@ -26,6 +22,12 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
 
     @get:Input
     abstract val kakaoNativeAppKey: Property<String>
+
+    @get:Input
+    abstract val googleWebClientId: Property<String>
+
+    @get:Input
+    abstract val amplitudeApiKey: Property<String>
 
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
@@ -41,6 +43,8 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
             const val DEBUG_BASE_URL: String = "${debugBaseUrl.get()}"
             const val RELEASE_BASE_URL: String = "${releaseBaseUrl.get()}"
             const val KAKAO_NATIVE_APP_KEY: String = "${kakaoNativeAppKey.get()}"
+            const val GOOGLE_WEB_CLIENT_ID: String = "${googleWebClientId.get()}"
+            const val AMPLITUDE_API_KEY: String = "${amplitudeApiKey.get()}"
             """.trimIndent(),
         )
     }
@@ -57,16 +61,17 @@ val localProperties: Properties =
     }
 
 val debugBaseUrlValue: String =
-    (localProperties.getProperty("debug.base.url") ?: "https://oguri-kotlin-multiplatform.onrender.com")
+    (localProperties.getProperty("debug.base.url") ?: "")
         .trim()
         .trimEnd('/')
 val releaseBaseUrlValue: String =
-    (localProperties.getProperty("release.base.url")
-        ?: localProperties.getProperty("debug.base.url")
-        ?: "https://oguri-kotlin-multiplatform.onrender.com")
+    (localProperties.getProperty("release.base.url") ?: "")
         .trim()
         .trimEnd('/')
 val kakaoNativeAppKeyValue: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
+val googleWebClientIdValue: String = localProperties.getProperty("google.web.client.id")?.trim().orEmpty()
+val amplitudeApiKeyValue: String = localProperties.getProperty("amplitude.api.key")?.trim().orEmpty()
+val admobAndroidAppIdValue: String = "ca-app-pub-9643550840413935~4120437007"
 
 val generatedNetworkConfigDirectory =
     layout.buildDirectory
@@ -81,6 +86,8 @@ val generateNetworkConfigTask =
         debugBaseUrl.set(debugBaseUrlValue)
         releaseBaseUrl.set(releaseBaseUrlValue)
         kakaoNativeAppKey.set(kakaoNativeAppKeyValue)
+        googleWebClientId.set(googleWebClientIdValue)
+        amplitudeApiKey.set(amplitudeApiKeyValue)
         outputFile.set(generatedNetworkConfigFile)
     }
 
@@ -93,6 +100,7 @@ tasks
     }
 
 kotlin {
+    @Suppress("DEPRECATION")
     androidTarget {
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_11)
@@ -119,7 +127,15 @@ kotlin {
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kakao.android.user)
             implementation(libs.kakao.android.share)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.google.android.googleid)
+            implementation(libs.google.mobile.ads)
+            implementation(libs.firebase.crashlytics.ktx)
+            implementation(libs.firebase.analytics.ktx)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.analytics.android)
+            implementation(libs.plugin.session.replay.android)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -169,9 +185,10 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.0.0"
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
+        manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdValue
     }
     packaging {
         resources {
@@ -179,8 +196,16 @@ android {
         }
     }
     buildTypes {
+        getByName("debug") {
+            applicationIdSuffix = ".debug"
+        }
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
     compileOptions {

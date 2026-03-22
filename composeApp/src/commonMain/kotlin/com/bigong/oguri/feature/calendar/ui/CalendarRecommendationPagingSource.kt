@@ -63,9 +63,7 @@ internal class CalendarRecommendationPagingSource(
     }
 }
 
-private fun CalendarRecommendation.toPeriodCards(
-    calculateDDayUseCase: CalculateDDayUseCase,
-): List<CalendarPeriodCardUiModel> =
+private fun CalendarRecommendation.toPeriodCards(calculateDDayUseCase: CalculateDDayUseCase): List<CalendarPeriodCardUiModel> =
     periods.map { period: CalendarPeriod ->
         val todayDate =
             Clock.System

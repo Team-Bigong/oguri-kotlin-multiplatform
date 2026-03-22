@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.mypage.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.usecase.DeleteMyPageSavedPlaceUseCase
 import com.bigong.oguri.domain.usecase.DeleteMyPageSelectedPeriodUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
@@ -11,8 +12,6 @@ import com.bigong.oguri.domain.usecase.WithdrawUseCase
 import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import dev.zacsweers.metro.Inject
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -305,13 +304,5 @@ class MyPageViewModel(
                 }
             }
         }
-    }
-
-    private fun Throwable.isUnauthorized(): Boolean {
-        if (this !is ClientRequestException) {
-            return false
-        }
-        val statusCode = response.status
-        return statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
     }
 }

@@ -50,7 +50,17 @@ const request = async <TResponse>(
     return undefined as TResponse
   }
 
-  return response.json() as Promise<TResponse>
+  const responseBody = await response.text()
+  if (responseBody.trim().length === 0) {
+    return undefined as TResponse
+  }
+
+  const contentType = response.headers.get(CONTENT_TYPE_HEADER_NAME) ?? ""
+  if (!contentType.toLowerCase().includes("application/json")) {
+    return responseBody as TResponse
+  }
+
+  return JSON.parse(responseBody) as TResponse
 }
 
 export const adminApiClient = {

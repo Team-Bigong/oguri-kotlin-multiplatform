@@ -10,4 +10,6 @@ data class SharePayload(
     val fallbackUrl: String,
 )
 
+expect fun preloadShareContent(payload: SharePayload)
+
 expect fun shareContent(payload: SharePayload)

@@ -7,6 +7,5 @@ import dev.zacsweers.metro.Inject
 class LoginWithAppleIdentityTokenUseCase(
     private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(identityToken: String): Boolean =
-        authRepository.loginWithAppleIdentityToken(identityToken = identityToken)
+    suspend operator fun invoke(identityToken: String): Boolean = authRepository.loginWithAppleIdentityToken(identityToken = identityToken)
 }

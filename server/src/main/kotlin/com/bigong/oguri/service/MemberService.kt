@@ -15,6 +15,7 @@ import com.bigong.oguri.repository.NounRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
 import com.bigong.oguri.util.AppleIdentityTokenVerifier
+import com.bigong.oguri.util.GoogleIdentityTokenVerifier
 import com.bigong.oguri.util.JwtTokenProvider
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -24,6 +25,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.server.ResponseStatusException
+import org.slf4j.LoggerFactory
+import java.util.Locale
 import kotlin.random.Random
 
 /**
@@ -37,30 +40,49 @@ class MemberService(
     private val nounRepository: NounRepository,
     private val jwtTokenProvider: JwtTokenProvider,
     private val appleIdentityTokenVerifier: AppleIdentityTokenVerifier,
+    private val googleIdentityTokenVerifier: GoogleIdentityTokenVerifier,
+    private val authRestTemplate: RestTemplate,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
     private val destinationRepository: DestinationRepository
 ) {
-    private val restTemplate = RestTemplate()
-
     /**
      * 카카오 로그인 및 가입
      */
     fun loginWithKakao(accessToken: String): LoginResponse {
+        val startedAt = System.currentTimeMillis()
         val kakaoUserInfo = getKakaoUserInfo(accessToken)
         val kakaoId = "KAKAO_${kakaoUserInfo.id}"
         val member = findOrCreateMember(kakaoId)
-        return issueLoginTokens(member)
+        val response = issueLoginTokens(member)
+        logger.info("Kakao login completed. memberId={}, elapsedMs={}", kakaoId, System.currentTimeMillis() - startedAt)
+        return response
     }
 
     /**
      * Apple 로그인 및 가입
      */
     fun loginWithApple(identityToken: String): LoginResponse {
+        val startedAt = System.currentTimeMillis()
         val appleSubject = appleIdentityTokenVerifier.extractAppleSubject(identityToken)
         val appleMemberId = "APPLE_$appleSubject"
         val member = findOrCreateMember(appleMemberId)
-        return issueLoginTokens(member)
+        val response = issueLoginTokens(member)
+        logger.info("Apple login completed. memberId={}, elapsedMs={}", appleMemberId, System.currentTimeMillis() - startedAt)
+        return response
+    }
+
+    /**
+     * Google 로그인 및 가입
+     */
+    fun loginWithGoogle(identityToken: String): LoginResponse {
+        val startedAt = System.currentTimeMillis()
+        val googleSubject = googleIdentityTokenVerifier.extractGoogleSubject(identityToken)
+        val googleMemberId = "GOOGLE_$googleSubject"
+        val member = findOrCreateMember(googleMemberId)
+        val response = issueLoginTokens(member)
+        logger.info("Google login completed. memberId={}, elapsedMs={}", googleMemberId, System.currentTimeMillis() - startedAt)
+        return response
     }
 
     /**
@@ -128,8 +150,11 @@ class MemberService(
             set("Authorization", "Bearer $accessToken")
             set("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
         }
-        return restTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), KakaoUserInfoResponse::class.java).body
+        val startedAt = System.currentTimeMillis()
+        val kakaoResponse = authRestTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), KakaoUserInfoResponse::class.java).body
             ?: throw RuntimeException("카카오 통신 실패")
+        logger.info("Kakao user info fetched. elapsedMs={}", System.currentTimeMillis() - startedAt)
+        return kakaoResponse
     }
 
     private fun findOrCreateMember(memberId: String): Member {
@@ -216,14 +241,14 @@ class MemberService(
 
         // 단어가 하나도 없을 경우 대비 (안전장치)
         if (adjectives.isEmpty() || nouns.isEmpty()) {
-            return "여행자_" + String.format("%05d", Random.nextInt(100000))
+            return "여행자_" + String.format(Locale.ROOT, "%05d", Random.nextInt(100000))
         }
 
         var nickname: String
         do {
             val adj = adjectives.random().word
             val noun = nouns.random().word
-            val number = String.format("%05d", Random.nextInt(100000))
+            val number = String.format(Locale.ROOT, "%05d", Random.nextInt(100000))
             nickname = "$adj ${noun}_$number" // 최종 형식 적용: 형용사[공백]명사_숫자
         } while (memberRepository.existsByNickname(nickname))
 
@@ -233,5 +258,6 @@ class MemberService(
     private companion object {
         private const val MINIMUM_DAY_OFF: Int = 0
         private const val MAXIMUM_REMAINING_DAY_OFF: Int = 40
+        private val logger = LoggerFactory.getLogger(MemberService::class.java)
     }
 }

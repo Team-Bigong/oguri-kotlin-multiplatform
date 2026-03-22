@@ -22,8 +22,10 @@ private fun PlaceDetailScreenPreview() {
             onRetryClick = {},
             onShareClick = {},
             onSaveToggleClick = {},
-            onUrlClick = {},
+            onExperienceClick = { _, _ -> },
+            onFlightClick = {},
             onPlaceClick = {},
+            onPhotoClick = { _, _ -> },
         )
     }
 }

@@ -49,8 +49,12 @@ fun MyPageGuestSection(
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 18.dp)
-                    .background(color = Mint70, shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                    .noRippleClickable(onClick = onLoginClick)
+                    .background(
+                        color = Mint70,
+                        shape =
+                            androidx.compose.foundation.shape
+                                .RoundedCornerShape(8.dp),
+                    ).noRippleClickable(onClick = onLoginClick)
                     .padding(vertical = 14.dp),
             contentAlignment = Alignment.Center,
         ) {

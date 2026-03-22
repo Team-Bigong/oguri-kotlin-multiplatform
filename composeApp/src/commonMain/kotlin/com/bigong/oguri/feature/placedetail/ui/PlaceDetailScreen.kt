@@ -59,6 +59,7 @@ import oguri.composeapp.generated.resources.place_detail_relevant_places
 import oguri.composeapp.generated.resources.place_detail_relevant_places_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience
 import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
+import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -70,8 +71,10 @@ fun PlaceDetailScreen(
     onRetryClick: () -> Unit,
     onShareClick: () -> Unit,
     onSaveToggleClick: () -> Unit,
-    onUrlClick: (String) -> Unit,
+    onExperienceClick: (String, String) -> Unit,
+    onFlightClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onPhotoClick: (List<String>, Int) -> Unit,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val lazyListState = rememberLazyListState()
@@ -108,7 +111,12 @@ fun PlaceDetailScreen(
                     contentPadding = PaddingValues(bottom = 24.dp),
                 ) {
                     item {
-                        PlaceDetailImagePager(imageUrls = placeDetail.thumbnailUrls)
+                        PlaceDetailImagePager(
+                            imageUrls = placeDetail.thumbnailUrls,
+                            onImageClick = { pageIndex ->
+                                onPhotoClick(placeDetail.thumbnailUrls, pageIndex)
+                            },
+                        )
                     }
                     item(key = PLACE_DETAIL_TITLE_ITEM_KEY) {
                         Row(
@@ -158,9 +166,9 @@ fun PlaceDetailScreen(
                         Spacer(modifier = Modifier.height(28.dp))
                         GuideHeader(
                             iconResource = Res.drawable.ic_binoculars,
-                            titleText = stringResource(Res.string.place_detail_section_experience),
+                            titleText = stringResource(Res.string.place_detail_section_experience, placeDetail.city),
                             highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
-                            subtitleText = null,
+                            subtitleText = stringResource(Res.string.place_detail_section_experience_subtitle),
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }
@@ -182,7 +190,9 @@ fun PlaceDetailScreen(
                                             maxExperienceCardHeightPx = measuredHeightPx
                                         }
                                     },
-                                    onClick = onUrlClick,
+                                    onClick = { destinationUrl ->
+                                        onExperienceClick(experience.title, destinationUrl)
+                                    },
                                 )
                             }
                         }
@@ -207,7 +217,7 @@ fun PlaceDetailScreen(
                             highlightedText = placeDetail.city,
                             highlightedColor = Mint70,
                             modifier = Modifier.padding(horizontal = 20.dp),
-                            onClick = onUrlClick,
+                            onClick = onFlightClick,
                         )
                     }
                     if (placeDetail.relevantPlaces.isNotEmpty()) {

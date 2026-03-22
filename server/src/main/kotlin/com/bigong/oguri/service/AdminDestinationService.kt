@@ -1,11 +1,14 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.Destination
+import com.bigong.oguri.domain.DestinationExperience
 import com.bigong.oguri.domain.DestinationImage
 import com.bigong.oguri.dto.AdminCountryResponse
 import com.bigong.oguri.dto.AdminDestinationResponse
 import com.bigong.oguri.dto.AdminDestinationUpsertRequest
+import com.bigong.oguri.dto.AdminDestinationExperienceResponse
 import com.bigong.oguri.dto.AdminDestinationImageResponse
+import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.CountryRepository
 import com.bigong.oguri.repository.DestinationImageRepository
 import com.bigong.oguri.repository.DestinationRepository
@@ -19,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException
 class AdminDestinationService(
     private val destinationRepository: DestinationRepository,
     private val destinationImageRepository: DestinationImageRepository,
+    private val destinationExperienceRepository: DestinationExperienceRepository,
     private val countryRepository: CountryRepository
 ) {
     @Transactional(readOnly = true)
@@ -33,8 +37,13 @@ class AdminDestinationService(
 
     @Transactional(readOnly = true)
     fun getDestinationList(): List<AdminDestinationResponse> {
+        val experiencesByDestinationId = destinationExperienceRepository
+            .findAllByOrderByDestinationIdAscSortOrderAscIdAsc()
+            .groupBy { experience -> experience.destinationId }
         return destinationRepository.findAllWithCountryAndImages().map { destination ->
-            destination.toAdminResponse()
+            destination.toAdminResponse(
+                experiences = experiencesByDestinationId[destination.id].orEmpty()
+            )
         }
     }
 
@@ -55,14 +64,18 @@ class AdminDestinationService(
                 recommendEndMonth1 = request.recommendEndMonth1,
                 recommendStartMonth2 = request.recommendStartMonth2,
                 recommendEndMonth2 = request.recommendEndMonth2,
-                flightTime = normalizeNullableText(request.flightTime)
+                flightTimeMinutes = request.flightTimeMinutes,
+                flightUrl = normalizeNullableText(request.flightUrl)
             )
         )
 
         replaceDestinationImages(destination, request)
+        replaceDestinationExperiences(destination.id, request)
 
         return destinationRepository.findByIdWithCountryAndImages(destination.id)
-            ?.toAdminResponse()
+            ?.toAdminResponse(
+                experiences = destinationExperienceRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id)
+            )
             ?: throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "여행지 생성 후 조회에 실패했습니다.")
     }
 
@@ -85,13 +98,17 @@ class AdminDestinationService(
         destination.recommendEndMonth1 = request.recommendEndMonth1
         destination.recommendStartMonth2 = request.recommendStartMonth2
         destination.recommendEndMonth2 = request.recommendEndMonth2
-        destination.flightTime = normalizeNullableText(request.flightTime)
+        destination.flightTimeMinutes = request.flightTimeMinutes
+        destination.flightUrl = normalizeNullableText(request.flightUrl)
 
         destinationRepository.save(destination)
         replaceDestinationImages(destination, request)
+        replaceDestinationExperiences(destination.id, request)
 
         return destinationRepository.findByIdWithCountryAndImages(destination.id)
-            ?.toAdminResponse()
+            ?.toAdminResponse(
+                experiences = destinationExperienceRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id)
+            )
             ?: throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "여행지 수정 후 조회에 실패했습니다.")
     }
 
@@ -114,6 +131,25 @@ class AdminDestinationService(
                         imageUrl = image.imageUrl.trim(),
                         isThumbnail = image.isThumbnail,
                         sortOrder = image.sortOrder
+                    )
+                )
+            }
+    }
+
+    private fun replaceDestinationExperiences(destinationId: Int, request: AdminDestinationUpsertRequest) {
+        destinationExperienceRepository.deleteAllByDestinationId(destinationId)
+
+        request.experiences
+            .sortedBy { experience -> experience.sortOrder }
+            .forEach { experience ->
+                destinationExperienceRepository.save(
+                    DestinationExperience(
+                        destinationId = destinationId,
+                        title = experience.title.trim(),
+                        description = experience.description.trim(),
+                        thumbnailUrl = experience.thumbnailUrl.trim(),
+                        link = experience.link.trim(),
+                        sortOrder = experience.sortOrder
                     )
                 )
             }
@@ -147,6 +183,30 @@ class AdminDestinationService(
         if (request.images.any { image -> image.sortOrder < MINIMUM_IMAGE_SORT_ORDER }) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "이미지 정렬 순서는 1 이상이어야 합니다.")
         }
+
+        if (request.flightTimeMinutes != null && request.flightTimeMinutes < MINIMUM_FLIGHT_TIME_MINUTES) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "비행 시간(분)은 0 이상이어야 합니다.")
+        }
+
+        if (request.experiences.any { experience -> experience.title.isBlank() }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "액티비티 제목은 비어 있을 수 없습니다.")
+        }
+
+        if (request.experiences.any { experience -> experience.description.isBlank() }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "액티비티 설명은 비어 있을 수 없습니다.")
+        }
+
+        if (request.experiences.any { experience -> experience.thumbnailUrl.isBlank() }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "액티비티 썸네일 URL은 비어 있을 수 없습니다.")
+        }
+
+        if (request.experiences.any { experience -> experience.link.isBlank() }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "액티비티 링크는 비어 있을 수 없습니다.")
+        }
+
+        if (request.experiences.any { experience -> experience.sortOrder < MINIMUM_EXPERIENCE_SORT_ORDER }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "액티비티 정렬 순서는 1 이상이어야 합니다.")
+        }
     }
 
     private fun validateMonthRange(startMonth: Int?, endMonth: Int?, label: String) {
@@ -168,7 +228,9 @@ class AdminDestinationService(
         return if (trimmedValue.isBlank()) null else trimmedValue
     }
 
-    private fun Destination.toAdminResponse(): AdminDestinationResponse {
+    private fun Destination.toAdminResponse(
+        experiences: List<DestinationExperience>
+    ): AdminDestinationResponse {
         val sortedImages = images.sortedBy { image -> image.sortOrder }
         return AdminDestinationResponse(
             id = id,
@@ -181,13 +243,24 @@ class AdminDestinationService(
             recommendEndMonth1 = recommendEndMonth1,
             recommendStartMonth2 = recommendStartMonth2,
             recommendEndMonth2 = recommendEndMonth2,
-            flightTime = flightTime,
+            flightTimeMinutes = flightTimeMinutes,
+            flightUrl = flightUrl,
             images = sortedImages.map { image ->
                 AdminDestinationImageResponse(
                     id = image.id,
                     imageUrl = image.imageUrl,
                     isThumbnail = image.isThumbnail,
                     sortOrder = image.sortOrder
+                )
+            },
+            experiences = experiences.map { experience ->
+                AdminDestinationExperienceResponse(
+                    id = experience.id,
+                    title = experience.title,
+                    description = experience.description,
+                    thumbnailUrl = experience.thumbnailUrl,
+                    link = experience.link,
+                    sortOrder = experience.sortOrder
                 )
             }
         )
@@ -198,5 +271,7 @@ class AdminDestinationService(
         private const val MAXIMUM_MONTH = 12
         private const val EXACT_THUMBNAIL_COUNT = 1
         private const val MINIMUM_IMAGE_SORT_ORDER = 1
+        private const val MINIMUM_EXPERIENCE_SORT_ORDER = 1
+        private const val MINIMUM_FLIGHT_TIME_MINUTES = 0
     }
 }

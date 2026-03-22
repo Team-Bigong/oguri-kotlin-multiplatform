@@ -5,11 +5,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.paging.compose.LazyPagingItems
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.paging.compose.LazyPagingItems
+import com.bigong.oguri.core.ad.AdMobBanner
+import com.bigong.oguri.core.ad.AdMobBannerPlacement
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
@@ -20,6 +22,9 @@ import oguri.composeapp.generated.resources.calendar_recommendation_guide_highli
 import oguri.composeapp.generated.resources.calendar_recommendation_guide_title
 import oguri.composeapp.generated.resources.ic_thumb
 import org.jetbrains.compose.resources.stringResource
+
+private const val INITIAL_INLINE_BANNER_AFTER_CARD_INDEX = 3
+private const val INLINE_BANNER_INTERVAL = 8
 
 @Composable
 fun CalendarRecommendationSection(
@@ -69,6 +74,16 @@ fun CalendarRecommendationSection(
                         onRequestScrollBy = onRequestScrollBy,
                     )
                 }
+
+                if (shouldShowInlineBanner(afterCardIndex = index)) {
+                    AdMobBanner(
+                        placement = AdMobBannerPlacement.CALENDAR_INLINE,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(60.dp),
+                    )
+                }
             }
         }
 
@@ -93,4 +108,14 @@ fun CalendarRecommendationSection(
             )
         }
     }
+}
+
+private fun shouldShowInlineBanner(afterCardIndex: Int): Boolean {
+    if (afterCardIndex < INITIAL_INLINE_BANNER_AFTER_CARD_INDEX) {
+        return false
+    }
+    if (afterCardIndex == INITIAL_INLINE_BANNER_AFTER_CARD_INDEX) {
+        return true
+    }
+    return (afterCardIndex - INITIAL_INLINE_BANNER_AFTER_CARD_INDEX) % INLINE_BANNER_INTERVAL == 0
 }

@@ -52,6 +52,12 @@ sealed interface RouteModel {
     ) : RouteModel
 
     @Serializable
+    data class PhotoDetail(
+        val imageUrls: List<String>,
+        val initialPage: Int,
+    ) : RouteModel
+
+    @Serializable
     data class WebDocument(
         val documentType: String,
     ) : RouteModel
