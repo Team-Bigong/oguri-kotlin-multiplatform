@@ -3,7 +3,10 @@ package com.bigong.oguri.feature.placedetail.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.analytics.OguriAnalyticsEvent
@@ -12,6 +15,7 @@ import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.deeplink.buildPlaceDetailDeepLink
 import com.bigong.oguri.core.platform.SharePayload
 import com.bigong.oguri.core.platform.shareContent
+import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
@@ -35,6 +39,7 @@ fun PlaceDetailRoute(
     startDate: String?,
     endDate: String?,
     onBackClick: () -> Unit,
+    onLoginRequired: () -> Unit,
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
 ) {
@@ -51,6 +56,7 @@ fun PlaceDetailRoute(
     val shareFallbackMessage = stringResource(Res.string.share_default_fallback_message)
     val shareFallbackUrl = stringResource(Res.string.share_default_fallback_url)
     val uriHandler = LocalUriHandler.current
+    var isLoginRequiredDialogVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(placeId, startDate, endDate) {
         placeDetailViewModel.loadPlaceDetail(
@@ -62,18 +68,22 @@ fun PlaceDetailRoute(
     LaunchedEffect(placeDetailViewModel) {
         placeDetailViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
-                PlaceDetailSideEffect.Saved -> {
+                PlaceDetailSideEffect.PlaceSaved -> {
                     snackbarHostState.showOguriSnackbar(
                         message = placeSavedMessage,
                         type = OguriSnackBarType.SUCCESS,
                     )
                 }
 
-                PlaceDetailSideEffect.Deleted -> {
+                PlaceDetailSideEffect.PlaceDeleted -> {
                     snackbarHostState.showOguriSnackbar(
                         message = placeDeletedMessage,
                         type = OguriSnackBarType.INFO,
                     )
+                }
+
+                PlaceDetailSideEffect.LoginRequired -> {
+                    isLoginRequiredDialogVisible = true
                 }
             }
         }
@@ -165,4 +175,16 @@ fun PlaceDetailRoute(
             onPhotoClick(imageUrls, imageIndex)
         },
     )
+
+    if (isLoginRequiredDialogVisible) {
+        LoginRequiredDialog(
+            onDismissRequest = {
+                isLoginRequiredDialogVisible = false
+            },
+            onLoginClick = {
+                isLoginRequiredDialogVisible = false
+                onLoginRequired()
+            },
+        )
+    }
 }

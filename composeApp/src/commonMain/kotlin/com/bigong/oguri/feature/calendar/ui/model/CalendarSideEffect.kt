@@ -7,6 +7,8 @@ sealed interface CalendarSideEffect {
 
     data object RecommendationDeleted : CalendarSideEffect
 
+    data object LoginRequired : CalendarSideEffect
+
     data class NavigateToPeriodDetail(
         val startDate: String,
         val endDate: String,

@@ -6,6 +6,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarRecommendationUseCase
 import com.bigong.oguri.domain.usecase.ObservePreferredLeaveDaysChangesUseCase
@@ -250,6 +251,9 @@ class CalendarViewModel(
                         savedStateByPeriodKey =
                             currentUiState.savedStateByPeriodKey + (periodKey to previousSavedState),
                     )
+                }
+                if (it.isUnauthorized()) {
+                    _sideEffect.tryEmit(CalendarSideEffect.LoginRequired)
                 }
             }
         }

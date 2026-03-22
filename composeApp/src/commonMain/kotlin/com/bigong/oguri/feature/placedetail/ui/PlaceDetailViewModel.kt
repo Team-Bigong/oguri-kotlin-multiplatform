@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.placedetail.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.usecase.DeleteSavedDestinationUseCase
 import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
 import com.bigong.oguri.domain.usecase.SaveDestinationUseCase
@@ -87,14 +88,17 @@ class PlaceDetailViewModel(
             }.onSuccess {
                 _sideEffect.tryEmit(
                     if (nextSavedState) {
-                        PlaceDetailSideEffect.Saved
+                        PlaceDetailSideEffect.PlaceSaved
                     } else {
-                        PlaceDetailSideEffect.Deleted
+                        PlaceDetailSideEffect.PlaceDeleted
                     },
                 )
             }.onFailure {
                 _uiState.update { currentUiState ->
                     currentUiState.copy(isSaved = previousSavedState)
+                }
+                if (it.isUnauthorized()) {
+                    _sideEffect.tryEmit(PlaceDetailSideEffect.LoginRequired)
                 }
             }
         }
