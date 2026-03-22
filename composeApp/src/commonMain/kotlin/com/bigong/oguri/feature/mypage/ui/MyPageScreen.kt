@@ -13,6 +13,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.ad.AdMobBanner
+import com.bigong.oguri.core.ad.AdMobBannerPlacement
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
@@ -85,47 +87,58 @@ fun MyPageScreen(
     }
 
     if (myPageUiState.isGuestMode) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().background(Neutral5),
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Neutral5),
         ) {
-            item {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .background(Mint10)
-                            .statusBarsPadding()
-                            .padding(vertical = 18.dp),
-                ) {
-                    MyPageGuestProfileSection(
-                        guestName = stringResource(Res.string.mypage_guest_name),
-                        modifier = Modifier.padding(horizontal = 20.dp),
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+            ) {
+                item {
+                    Column(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .background(Mint10)
+                                .statusBarsPadding()
+                                .padding(vertical = 18.dp),
+                    ) {
+                        MyPageGuestProfileSection(
+                            guestName = stringResource(Res.string.mypage_guest_name),
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                        )
+                    }
+                    HorizontalDivider(color = Neutral20)
+                }
+                item {
+                    MyPageGuestSection(
+                        onLoginClick = onGuestLoginClick,
                     )
                 }
-                HorizontalDivider(color = Neutral20)
-            }
-            item {
-                MyPageGuestSection(
-                    onLoginClick = onGuestLoginClick,
-                )
-            }
-            item {
-                HorizontalDivider(color = Neutral20)
-                MyPageMenuSection(
-                    menuItems =
-                        listOf(
-                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
-                            MyPageMenuItem(
-                                label = stringResource(Res.string.mypage_menu_terms_of_service),
-                                onClick = onTermsOfServiceClick,
+                item {
+                    HorizontalDivider(color = Neutral20)
+                    MyPageMenuSection(
+                        menuItems =
+                            listOf(
+                                MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
+                                MyPageMenuItem(
+                                    label = stringResource(Res.string.mypage_menu_terms_of_service),
+                                    onClick = onTermsOfServiceClick,
+                                ),
+                                MyPageMenuItem(
+                                    label = stringResource(Res.string.mypage_menu_privacy_policy),
+                                    onClick = onPrivacyPolicyClick,
+                                ),
+                                MyPageMenuItem(label = stringResource(Res.string.mypage_menu_withdraw), onClick = onGuestLoginClick),
+                                MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onGuestLoginClick),
                             ),
-                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_privacy_policy), onClick = onPrivacyPolicyClick),
-                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_withdraw), onClick = onGuestLoginClick),
-                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onGuestLoginClick),
-                        ),
-                )
-                Spacer(modifier = Modifier.height(24.dp))
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                }
             }
+            MyPageBottomBanner()
         }
         return
     }
@@ -137,58 +150,69 @@ fun MyPageScreen(
     }
     val withdrawTargetPhrase = stringResource(Res.string.mypage_withdraw_dialog_phrase)
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().background(Neutral5),
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Neutral5),
     ) {
-        item {
-            Column(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .background(Mint10)
-                        .statusBarsPadding()
-                        .padding(vertical = 18.dp),
-            ) {
-                MyPageProfileSection(
-                    nickname = myPageInfo.nickname,
-                    remainingLeaveDays = myPageInfo.remainingLeaveDays,
-                    preferredLeaveDays = myPageInfo.preferredLeaveDays,
-                    onEditLeaveDaysClick = onEditLeaveDaysClick,
-                    modifier = Modifier.padding(horizontal = 20.dp),
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+        ) {
+            item {
+                Column(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(Mint10)
+                            .statusBarsPadding()
+                            .padding(vertical = 18.dp),
+                ) {
+                    MyPageProfileSection(
+                        nickname = myPageInfo.nickname,
+                        remainingLeaveDays = myPageInfo.remainingLeaveDays,
+                        preferredLeaveDays = myPageInfo.preferredLeaveDays,
+                        onEditLeaveDaysClick = onEditLeaveDaysClick,
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                    )
+                }
+                HorizontalDivider(color = Neutral20)
+            }
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                MyPageSelectedPeriodSection(
+                    selectedPeriods = myPageInfo.selectedPeriods,
+                    onDeleteClick = onDeleteScheduleClick,
+                    onPeriodClick = onSelectedPeriodClick,
                 )
             }
-            HorizontalDivider(color = Neutral20)
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                MyPageSavedPlaceSection(
+                    savedPlaces = myPageInfo.savedPlaces,
+                    onSavedPlaceClick = onSavedPlaceClick,
+                    onDeleteClick = onDeleteSavedPlaceClick,
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+            item {
+                MyPageMenuSection(
+                    menuItems =
+                        listOf(
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
+                            MyPageMenuItem(
+                                label = stringResource(Res.string.mypage_menu_terms_of_service),
+                                onClick = onTermsOfServiceClick,
+                            ),
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_privacy_policy), onClick = onPrivacyPolicyClick),
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_withdraw), onClick = onWithdrawClick),
+                            MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onLogoutClick),
+                        ),
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            MyPageSelectedPeriodSection(
-                selectedPeriods = myPageInfo.selectedPeriods,
-                onDeleteClick = onDeleteScheduleClick,
-                onPeriodClick = onSelectedPeriodClick,
-            )
-        }
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            MyPageSavedPlaceSection(
-                savedPlaces = myPageInfo.savedPlaces,
-                onSavedPlaceClick = onSavedPlaceClick,
-                onDeleteClick = onDeleteSavedPlaceClick,
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-        item {
-            MyPageMenuSection(
-                menuItems =
-                    listOf(
-                        MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
-                        MyPageMenuItem(label = stringResource(Res.string.mypage_menu_terms_of_service), onClick = onTermsOfServiceClick),
-                        MyPageMenuItem(label = stringResource(Res.string.mypage_menu_privacy_policy), onClick = onPrivacyPolicyClick),
-                        MyPageMenuItem(label = stringResource(Res.string.mypage_menu_withdraw), onClick = onWithdrawClick),
-                        MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onLogoutClick),
-                    ),
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-        }
+        MyPageBottomBanner()
     }
 
     if (myPageUiState.isEditLeaveDaysBottomSheetVisible) {
@@ -251,4 +275,15 @@ fun MyPageScreen(
             onConfirmClick = onConfirmWithdraw,
         )
     }
+}
+
+@Composable
+private fun MyPageBottomBanner() {
+    AdMobBanner(
+        placement = AdMobBannerPlacement.MYPAGE_BOTTOM,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+    )
 }
