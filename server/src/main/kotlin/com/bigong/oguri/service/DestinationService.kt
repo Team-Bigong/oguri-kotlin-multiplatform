@@ -85,7 +85,7 @@ class DestinationService(
         } else emptyList()
 
         // 6. 스카이스캐너 검색 링크 생성
-        val flightUrl = "https://www.skyscanner.co.kr/transport/flights/sel/${target.name}"
+        val flightUrl = target.flightUrl ?: "https://www.skyscanner.co.kr/transport/flights/sel/${target.name}"
 
         return PlaceDetailResponse(
             id = target.id.toLong(),
