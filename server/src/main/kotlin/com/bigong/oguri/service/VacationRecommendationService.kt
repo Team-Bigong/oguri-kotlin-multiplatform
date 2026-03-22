@@ -72,7 +72,7 @@ class VacationRecommendationService {
                 }
 
                 val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
-                if (totalDays > 0) {
+                if (totalDays >= MINIMUM_RECOMMENDATION_TOTAL_DAYS) {
                     monthlyCandidates.add(
                         RecommendationPeriod(
                             start = currentStart,
@@ -132,6 +132,7 @@ class VacationRecommendationService {
 
     private companion object {
         private const val DEFAULT_HOLIDAY_NAME = "주말"
+        private const val MINIMUM_RECOMMENDATION_TOTAL_DAYS = 3
         private const val CURRENT_YEAR_WEIGHT = 1.0
         private const val NON_CURRENT_YEAR_WEIGHT = 0.85
     }

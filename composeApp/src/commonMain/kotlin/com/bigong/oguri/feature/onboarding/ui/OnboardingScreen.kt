@@ -25,6 +25,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
+import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.onboarding.ui.component.OnboardingLeaveDaysContent
@@ -52,6 +53,11 @@ fun OnboardingScreen(
     onPreferredDayOffCommit: () -> Unit,
     onCompleteClick: () -> Unit,
 ) {
+    PlatformBackHandler(
+        enabled = onboardingUiState.step == OnboardingStep.LEAVE_DAYS,
+        onBack = onBackClick,
+    )
+
     Column(
         modifier =
             Modifier

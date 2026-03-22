@@ -104,7 +104,7 @@ fun MyPageRoute(
         onConfirmWithdraw = myPageViewModel::confirmWithdraw,
         onLogoutClick = myPageViewModel::showLogoutDialog,
         onGuestLoginClick = {
-            isLoginRequiredDialogVisible = true
+            onLoginRequired()
         },
         onDismissLogoutDialog = myPageViewModel::hideLogoutDialog,
         onConfirmLogout = myPageViewModel::confirmLogout,

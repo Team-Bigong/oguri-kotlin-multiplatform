@@ -157,6 +157,7 @@ fun MainNavHost(
             CalendarRoute(
                 calendarViewModel = calendarViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                onLoginRequired = navigator::navigateToLogin,
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
@@ -189,6 +190,7 @@ fun MainNavHost(
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
+                onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { targetPlaceId ->
                     navigator.navigateToPlaceDetail(
                         placeId = targetPlaceId,
@@ -216,9 +218,11 @@ fun MainNavHost(
             val route = navBackStackEntry.toRoute<RouteModel.PeriodDetail>()
             PeriodDetailRoute(
                 periodDetailViewModelProvider = appGraph.periodDetailViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
+                onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { placeId ->
                     navigator.navigateToPlaceDetail(
                         placeId = placeId,
