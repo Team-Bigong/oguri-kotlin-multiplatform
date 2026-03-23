@@ -251,16 +251,21 @@ class MyPageViewModel(
                 isWithdrawDialogVisible = true,
                 withdrawInputText = "",
                 isWithdrawConfirmEnabled = false,
+                isWithdrawSubmitting = false,
             )
         }
     }
 
     fun hideWithdrawDialog() {
+        if (uiState.value.isWithdrawSubmitting) {
+            return
+        }
         _uiState.update { currentUiState ->
             currentUiState.copy(
                 isWithdrawDialogVisible = false,
                 withdrawInputText = "",
                 isWithdrawConfirmEnabled = false,
+                isWithdrawSubmitting = false,
             )
         }
     }
@@ -278,10 +283,13 @@ class MyPageViewModel(
     }
 
     fun confirmWithdraw() {
-        if (!uiState.value.isWithdrawConfirmEnabled) {
+        if (!uiState.value.isWithdrawConfirmEnabled || uiState.value.isWithdrawSubmitting) {
             return
         }
         viewModelScope.launch {
+            _uiState.update { currentUiState ->
+                currentUiState.copy(isWithdrawSubmitting = true)
+            }
             runCatching {
                 withContext(Dispatchers.Default) {
                     withdrawUseCase()
@@ -293,10 +301,14 @@ class MyPageViewModel(
                         isWithdrawDialogVisible = false,
                         withdrawInputText = "",
                         isWithdrawConfirmEnabled = false,
+                        isWithdrawSubmitting = false,
                     )
                 }
                 _sideEffect.tryEmit(MyPageSideEffect.WithdrawCompleted)
             }.onFailure { throwable ->
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isWithdrawSubmitting = false)
+                }
                 if (throwable.isUnauthorized()) {
                     _sideEffect.tryEmit(MyPageSideEffect.LoginRequired)
                 } else {
