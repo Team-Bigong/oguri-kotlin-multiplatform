@@ -63,7 +63,7 @@ fun OnboardingScreen(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(Neutral5)
+                .background(Neutral5),
     ) {
         Column(
             modifier =
