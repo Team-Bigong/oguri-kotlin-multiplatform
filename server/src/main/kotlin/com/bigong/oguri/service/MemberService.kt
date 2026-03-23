@@ -131,10 +131,25 @@ class MemberService(
      * 토큰 재발급
      */
     fun refreshAccessToken(refreshToken: String): TokenRefreshResponse {
-        if (!jwtTokenProvider.validateToken(refreshToken)) throw RuntimeException("토큰 만료")
-        val memberId = jwtTokenProvider.getMemberId(refreshToken)
-        val member = memberRepository.findById(memberId).orElseThrow { RuntimeException("유저 없음") }
-        if (member.refreshToken != refreshToken) throw RuntimeException("토큰 불일치")
+        if (refreshToken.isBlank()) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "리프레시 토큰이 비어 있습니다.")
+        }
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 리프레시 토큰입니다.")
+        }
+
+        val memberId = runCatching {
+            jwtTokenProvider.getMemberId(refreshToken)
+        }.getOrElse {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다.")
+        }
+
+        val member = memberRepository.findById(memberId).orElseThrow {
+            ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다.")
+        }
+        if (member.refreshToken != refreshToken) {
+            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 일치하지 않습니다.")
+        }
 
         val newAccess = jwtTokenProvider.createAccessToken(member.id)
         val newRefresh = jwtTokenProvider.createRefreshToken(member.id)
