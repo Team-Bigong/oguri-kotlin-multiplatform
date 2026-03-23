@@ -457,8 +457,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/amplitude/AmplitudeUnified-Swift";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
+				branch = main;
+				kind = branch;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
