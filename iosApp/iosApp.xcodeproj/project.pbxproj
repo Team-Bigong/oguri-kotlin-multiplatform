@@ -278,6 +278,7 @@
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				GAD_APPLICATION_ID = "ca-app-pub-3940256099942544~1458002511";
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "오구리 Debug";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
@@ -316,6 +317,7 @@
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				GAD_APPLICATION_ID = "ca-app-pub-9643550840413935~5158186501";
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "오구리";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
