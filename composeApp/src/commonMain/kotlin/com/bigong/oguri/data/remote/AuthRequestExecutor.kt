@@ -21,23 +21,36 @@ class AuthRequestExecutor(
             }
 
             val staleAccessToken = AuthTokenStore.getAccessToken()
+            var isRefreshTokenAuthenticationFailed = false
             val refreshedTokenPair =
                 AuthTokenStore.refreshTokens(staleAccessToken = staleAccessToken) {
                     val storedRefreshToken = AuthTokenStore.getRefreshToken() ?: return@refreshTokens null
-                    runCatching {
-                        authRemoteDataSource.refreshToken(
-                            request = RefreshTokenRequest(refreshToken = storedRefreshToken),
-                        )
-                    }.getOrNull()?.let { refreshTokenResponse ->
+                    try {
+                        val refreshTokenResponse =
+                            authRemoteDataSource.refreshToken(
+                                request = RefreshTokenRequest(refreshToken = storedRefreshToken),
+                            )
                         AuthTokenStore.TokenPair(
                             accessToken = refreshTokenResponse.accessToken,
                             refreshToken = refreshTokenResponse.refreshToken,
                         )
+                    } catch (refreshRequestException: ClientRequestException) {
+                        val refreshStatusCode = refreshRequestException.response.status
+                        val isRefreshAuthError =
+                            refreshStatusCode == HttpStatusCode.Unauthorized ||
+                                refreshStatusCode == HttpStatusCode.Forbidden
+                        if (isRefreshAuthError) {
+                            isRefreshTokenAuthenticationFailed = true
+                            return@refreshTokens null
+                        }
+                        throw refreshRequestException
                     }
                 }
 
             if (refreshedTokenPair == null) {
-                AuthTokenStore.clearTokens()
+                if (isRefreshTokenAuthenticationFailed) {
+                    AuthTokenStore.clearTokens()
+                }
                 throw clientRequestException
             }
 

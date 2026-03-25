@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 
 @Composable
 expect fun LoginScreen(
+    isLoading: Boolean,
     onGoogleLoginClick: () -> Unit,
     onKakaoLoginClick: () -> Unit,
     onAppleLoginClick: () -> Unit,
