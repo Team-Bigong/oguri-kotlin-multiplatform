@@ -1,4 +1,4 @@
-[![Oguri Banner](https://github.com/user-attachments/assets/c84746e0-9c4b-44a0-9ea8-40509d906efe)](https://oguri-server-release.onrender.com)
+[![Oguri Banner](https://github.com/user-attachments/assets/c84746e0-9c4b-44a0-9ea8-40509d906efe)](https://oguri-kotlin-multiplatform-19hx.onrender.com)
 
 <div align="center">
   <h1><img src="https://github.com/user-attachments/assets/dc0dadb0-ca63-4bdf-9f74-7dfa777238d1" alt="Oguri Title Icon" height="32" style="vertical-align: middle; position: relative; top: 2px;" /> 오구리</h1>
