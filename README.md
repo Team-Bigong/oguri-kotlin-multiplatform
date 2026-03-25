@@ -1,11 +1,10 @@
-![Oguri Banner](https://github.com/user-attachments/assets/c84746e0-9c4b-44a0-9ea8-40509d906efe)
-
 <div align="center">
-  <img src="./web/public/assets/official/app-icon.png" alt="Oguri App Icon" width="88" />
   <h1>Oguri</h1>
-  <p><strong>연차 전략 추천 앱</strong></p>
+  <p><strong>연차를 가장 효율적으로 쓰는 방법을 제안하는 서비스</strong></p>
   <p>이번엔 이렇게 쉬어볼까요?</p>
 </div>
+
+![Oguri Banner](https://github.com/user-attachments/assets/c84746e0-9c4b-44a0-9ea8-40509d906efe)
 
 ## 오구리
 오구리는 연차를 가장 효율적으로 쓰는 휴가 전략을 제안하는 서비스입니다.
@@ -60,4 +59,4 @@ flowchart LR
 | [공백(최준서)](https://github.com/junseo511) | [비비(장민정)](https://github.com/rosemin928) |
 
 ## Support Oguri
-프로젝트가 마음에 드셨다면 이 저장소에 Star를 눌러주세요. 큰 힘이 됩니다.
+프로젝트가 마음에 드셨다면 이 저장소에 Star(⭐️)를 눌러주세요. 큰 힘이 됩니다.
