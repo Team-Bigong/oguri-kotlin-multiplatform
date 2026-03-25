@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 @Inject
 class SplashViewModel(
@@ -21,15 +22,25 @@ class SplashViewModel(
             return
         }
         viewModelScope.launch {
-            val autoLoginState = getAutoLoginStateUseCase()
+            val autoLoginState =
+                runCatching {
+                    withTimeoutOrNull(AUTO_LOGIN_TIMEOUT_MILLISECONDS) {
+                        getAutoLoginStateUseCase()
+                    }
+                }.getOrNull()
             _destinationState.update {
                 when {
+                    autoLoginState == null -> SplashDestination.Login
                     !autoLoginState.isLoggedIn -> SplashDestination.Login
                     autoLoginState.isOnboardingCompleted -> SplashDestination.Home
                     else -> SplashDestination.Onboarding
                 }
             }
         }
+    }
+
+    private companion object {
+        private const val AUTO_LOGIN_TIMEOUT_MILLISECONDS = 5000L
     }
 }
 

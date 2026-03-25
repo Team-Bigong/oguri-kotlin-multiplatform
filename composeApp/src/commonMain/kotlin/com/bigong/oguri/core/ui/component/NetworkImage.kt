@@ -45,7 +45,8 @@ private fun ContentScale.toScale(): Scale =
         ContentScale.Crop,
         ContentScale.FillBounds,
         ContentScale.FillHeight,
-        ContentScale.FillWidth -> Scale.FILL
+        ContentScale.FillWidth,
+        -> Scale.FILL
 
         else -> Scale.FIT
     }
