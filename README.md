@@ -1,7 +1,7 @@
 [![Oguri Banner](https://github.com/user-attachments/assets/c84746e0-9c4b-44a0-9ea8-40509d906efe)](https://oguri-server-release.onrender.com)
 
 <div align="center">
-  <h1>Oguri</h1>
+  <h1><img src="https://github.com/user-attachments/assets/dc0dadb0-ca63-4bdf-9f74-7dfa777238d1" alt="Oguri Title Icon" height="32" style="vertical-align: middle;" /> 오구리</h1>
   <p><strong>연차를 가장 효율적으로 쓰는 방법을 제안하는 서비스</strong></p>
   <p>이번엔 이렇게 쉬어볼까요?</p>
 </div>
