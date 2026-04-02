@@ -1,6 +1,6 @@
 package com.bigong.oguri.data.remote
 
-import com.bigong.oguri.core.network.DEBUG_BASE_URL
+import com.bigong.oguri.core.network.BASE_URL
 import com.bigong.oguri.data.remote.model.response.CalendarPeriodDetailResponse
 import com.bigong.oguri.data.remote.model.response.CalendarRecommendationResponse
 import dev.zacsweers.metro.Inject
@@ -21,7 +21,7 @@ class KtorCalendarRemoteDataSource(
         page: Int,
         size: Int,
     ): CalendarRecommendationResponse {
-        val requestUrl = "$DEBUG_BASE_URL$CALENDAR_API_PATH"
+        val requestUrl = "$BASE_URL$CALENDAR_API_PATH"
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
@@ -45,7 +45,7 @@ class KtorCalendarRemoteDataSource(
         page: Int,
         size: Int,
     ): CalendarPeriodDetailResponse {
-        val requestUrl = "$DEBUG_BASE_URL$CALENDAR_DETAIL_API_PATH"
+        val requestUrl = "$BASE_URL$CALENDAR_DETAIL_API_PATH"
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {

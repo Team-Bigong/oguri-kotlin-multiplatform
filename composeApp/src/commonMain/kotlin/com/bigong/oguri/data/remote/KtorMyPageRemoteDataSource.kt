@@ -1,6 +1,6 @@
 package com.bigong.oguri.data.remote
 
-import com.bigong.oguri.core.network.DEBUG_BASE_URL
+import com.bigong.oguri.core.network.BASE_URL
 import com.bigong.oguri.data.remote.model.request.DeleteMyPageSavedPlaceRequest
 import com.bigong.oguri.data.remote.model.request.DeleteMyPageSelectedPeriodRequest
 import com.bigong.oguri.data.remote.model.request.ManageSavedRecommendationRequest
@@ -31,7 +31,7 @@ class KtorMyPageRemoteDataSource(
         val memberMeResponse =
             authRequestExecutor.execute {
                 httpClient
-                    .get("$DEBUG_BASE_URL$MEMBER_ME_API_PATH") {
+                    .get("$BASE_URL$MEMBER_ME_API_PATH") {
                     }.body<MemberMeResponse>()
             }
 
@@ -40,7 +40,7 @@ class KtorMyPageRemoteDataSource(
 
     override suspend fun updateLeaveDays(request: UpdateMyPageLeaveDaysRequest): MyPageResponse {
         authRequestExecutor.execute {
-            httpClient.post("$DEBUG_BASE_URL$MEMBER_DAY_OFF_API_PATH") {
+            httpClient.post("$BASE_URL$MEMBER_DAY_OFF_API_PATH") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(
                     UpdateMemberDayOffRequest(
@@ -70,7 +70,7 @@ class KtorMyPageRemoteDataSource(
             } ?: return currentMyPageResponse
 
         authRequestExecutor.execute {
-            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH") {
+            httpClient.delete("$BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH") {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
                 setBody(
                     ManageSavedRecommendationRequest(
@@ -94,7 +94,7 @@ class KtorMyPageRemoteDataSource(
 
     override suspend fun deleteSavedPlace(request: DeleteMyPageSavedPlaceRequest): MyPageResponse {
         authRequestExecutor.execute {
-            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/${request.placeId}")
+            httpClient.delete("$BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/${request.placeId}")
         }
 
         val currentMyPageResponse = cachedMyPageResponse ?: getMyPageResponse()
@@ -108,7 +108,7 @@ class KtorMyPageRemoteDataSource(
 
     override suspend fun withdraw() {
         authRequestExecutor.execute {
-            httpClient.delete("$DEBUG_BASE_URL$MEMBER_ME_API_PATH")
+            httpClient.delete("$BASE_URL$MEMBER_ME_API_PATH")
         }
         cachedMyPageResponse = null
     }

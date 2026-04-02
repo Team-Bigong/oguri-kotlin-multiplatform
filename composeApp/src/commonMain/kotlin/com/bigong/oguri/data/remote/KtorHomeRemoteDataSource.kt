@@ -1,6 +1,6 @@
 package com.bigong.oguri.data.remote
 
-import com.bigong.oguri.core.network.DEBUG_BASE_URL
+import com.bigong.oguri.core.network.BASE_URL
 import com.bigong.oguri.data.remote.model.request.ManageSavedRecommendationRequest
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
 import dev.zacsweers.metro.Inject
@@ -21,7 +21,7 @@ class KtorHomeRemoteDataSource(
     private val authRequestExecutor: AuthRequestExecutor,
 ) : HomeRemoteDataSource {
     override suspend fun getRecommendPeriodResponses(userCountry: String): List<RecommendPeriodResponse> {
-        val requestUrl = "$DEBUG_BASE_URL$HOME_API_PATH"
+        val requestUrl = "$BASE_URL$HOME_API_PATH"
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
@@ -31,7 +31,7 @@ class KtorHomeRemoteDataSource(
     }
 
     override suspend fun saveRecommendation(request: ManageSavedRecommendationRequest) {
-        val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
+        val requestUrl = "$BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         authRequestExecutor.execute {
             httpClient.post(requestUrl) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
@@ -41,7 +41,7 @@ class KtorHomeRemoteDataSource(
     }
 
     override suspend fun deleteRecommendation(request: ManageSavedRecommendationRequest) {
-        val requestUrl = "$DEBUG_BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
+        val requestUrl = "$BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         authRequestExecutor.execute {
             httpClient.delete(requestUrl) {
                 header(HttpHeaders.ContentType, ContentType.Application.Json.toString())
