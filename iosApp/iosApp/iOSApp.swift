@@ -10,10 +10,13 @@ import FirebaseCrashlytics
 #if DEBUG
 private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
 private let iosAppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023"
+#else
+private let iosBannerAdUnitId = "ca-app-pub-9643550840413935/1095385664"
+private let iosAppOpenAdUnitId = "ca-app-pub-9643550840413935/1058191792"
+#endif
+#if DEBUG
 private let firebaseConfigurationPlistName = "GoogleService-Info-Debug"
 #else
-private let iosBannerAdUnitId = "ca-app-pub-2833810411143763/4722770918"
-private let iosAppOpenAdUnitId = "ca-app-pub-2833810411143763/4746554741"
 private let firebaseConfigurationPlistName = "GoogleService-Info-Release"
 #endif
 private let iosTestDeviceIdentifier = "8ca04675fef46ae5bc7a3764ddea6526"
@@ -67,6 +70,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
     static let shared = OguriAdMobBridge()
 
     private let notificationCenter = NotificationCenter.default
+    private var isMobileAdsInitialized = false
     private var appOpenAd: AppOpenAd?
     private var isLoadingAppOpenAd = false
     private var isShowingAppOpenAd = false
@@ -108,6 +112,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
             name: Notification.Name("OguriAdMobDetachBanner"),
             object: nil,
         )
+        initializeMobileAdsIfNeeded()
     }
 
     @objc private func handleInitializeNotification() {
@@ -138,6 +143,10 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
     }
 
     private func initializeMobileAdsIfNeeded() {
+        if isMobileAdsInitialized {
+            return
+        }
+        isMobileAdsInitialized = true
         #if DEBUG
         MobileAds.shared.requestConfiguration.testDeviceIdentifiers = ["SIMULATOR", iosTestDeviceIdentifier]
         #endif
@@ -154,8 +163,11 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         AppOpenAd.load(
             with: iosAppOpenAdUnitId,
             request: Request(),
-            completionHandler: { [weak self] ad, _ in
+            completionHandler: { [weak self] ad, error in
                 guard let self else { return }
+                if let error {
+                    print("OguriAdMobBridge: iOS app open failed to load: \(error.localizedDescription)")
+                }
                 self.appOpenAd = ad
                 self.appOpenAd?.fullScreenContentDelegate = self
                 self.isLoadingAppOpenAd = false
@@ -190,7 +202,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
 
         let measuredContainerWidth = max(containerView.bounds.width, UIScreen.main.bounds.width - 40)
         let adWidth = max(measuredContainerWidth, 320)
-        let adSize = largeAnchoredAdaptiveBanner(width: adWidth)
+        let adSize = currentOrientationAnchoredAdaptiveBanner(width: adWidth)
         let bannerView = BannerView(adSize: adSize)
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         bannerView.adUnitID = resolveBannerAdUnitId(placementKey: placementKey)
@@ -241,6 +253,10 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         }
 
         bannerView.rootViewController = rootViewController
+        if bannerView.adUnitID?.isEmpty != false {
+            print("OguriAdMobBridge: iOS banner adUnitID is empty")
+            return
+        }
         bannerView.load(Request())
     }
 

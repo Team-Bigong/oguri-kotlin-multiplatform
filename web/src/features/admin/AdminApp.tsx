@@ -33,6 +33,7 @@ type DestinationFormState = {
   recommendStartMonth2: string
   recommendEndMonth2: string
   flightTime: string
+  flightUrl: string
   images: DestinationImageRequest[]
   experiences: DestinationExperienceRequest[]
   existingImageUrls: string[]
@@ -86,6 +87,7 @@ type DestinationApiResponse = {
   recommendStartMonth2: number | null
   recommendEndMonth2: number | null
   flightTimeMinutes: number | null
+  flightUrl: string | null
   images: DestinationImageApiResponse[]
   experiences: DestinationExperienceApiResponse[]
 }
@@ -112,6 +114,7 @@ const createInitialDestinationFormState = (): DestinationFormState => ({
   recommendStartMonth2: "",
   recommendEndMonth2: "",
   flightTime: "",
+  flightUrl: "",
   images: [],
   experiences: [],
   existingImageUrls: [],
@@ -261,6 +264,9 @@ export const AdminApp = (): React.JSX.Element => {
   const [destinations, setDestinations] = useState<Destination[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [publicHolidays, setPublicHolidays] = useState<PublicHoliday[]>([])
+  const [destinationListSearchKeyword, setDestinationListSearchKeyword] = useState<string>("")
+  const [memberListSearchKeyword, setMemberListSearchKeyword] = useState<string>("")
+  const [holidayListSearchKeyword, setHolidayListSearchKeyword] = useState<string>("")
 
   const [destinationFormState, setDestinationFormState] = useState<DestinationFormState>(createInitialDestinationFormState)
   const [memberFormState, setMemberFormState] = useState<MemberFormState>(createInitialMemberFormState)
@@ -296,6 +302,42 @@ export const AdminApp = (): React.JSX.Element => {
     const trimmedStorageCountrySlug = destinationFormState.storageCountrySlug.trim()
     return storageCountryOptions.find((countryOption) => countryOption.slug === trimmedStorageCountrySlug)
   }, [destinationFormState.storageCountrySlug, storageCountryOptions])
+
+  const filteredDestinations = useMemo<Destination[]>(() => {
+    const normalizedKeyword = destinationListSearchKeyword.trim().toLowerCase()
+    if (normalizedKeyword.length === 0) {
+      return destinations
+    }
+    return destinations.filter((destination) => {
+      const normalizedTitle = `${destination.countryName} ${destination.name}`.toLowerCase()
+      const normalizedSummary = (destination.summary ?? "").toLowerCase()
+      return normalizedTitle.includes(normalizedKeyword) || normalizedSummary.includes(normalizedKeyword)
+    })
+  }, [destinationListSearchKeyword, destinations])
+
+  const filteredMembers = useMemo<Member[]>(() => {
+    const normalizedKeyword = memberListSearchKeyword.trim().toLowerCase()
+    if (normalizedKeyword.length === 0) {
+      return members
+    }
+    return members.filter((member) => {
+      const normalizedMemberId = member.id.toLowerCase()
+      const normalizedNickname = (member.nickname ?? "").toLowerCase()
+      return normalizedMemberId.includes(normalizedKeyword) || normalizedNickname.includes(normalizedKeyword)
+    })
+  }, [memberListSearchKeyword, members])
+
+  const filteredPublicHolidays = useMemo<PublicHoliday[]>(() => {
+    const normalizedKeyword = holidayListSearchKeyword.trim().toLowerCase()
+    if (normalizedKeyword.length === 0) {
+      return publicHolidays
+    }
+    return publicHolidays.filter((holiday) => {
+      const normalizedName = holiday.name.toLowerCase()
+      const normalizedDate = holiday.holidayDate.toLowerCase()
+      return normalizedName.includes(normalizedKeyword) || normalizedDate.includes(normalizedKeyword)
+    })
+  }, [holidayListSearchKeyword, publicHolidays])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -404,6 +446,7 @@ export const AdminApp = (): React.JSX.Element => {
       recommendStartMonth2: parseMonth(state.recommendStartMonth2),
       recommendEndMonth2: parseMonth(state.recommendEndMonth2),
       flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
+      flightUrl: state.flightUrl.trim().length > 0 ? state.flightUrl.trim() : null,
       images: state.images.map((image) => ({
         imageUrl: image.imageUrl,
         sortOrder: image.sortOrder,
@@ -665,6 +708,28 @@ export const AdminApp = (): React.JSX.Element => {
         }
       ]
     }))
+  }, [])
+
+  const moveExperienceItem = useCallback((experienceIndex: number, direction: "up" | "down") => {
+    setDestinationFormState((previousState) => {
+      const targetIndex = direction === "up" ? experienceIndex - 1 : experienceIndex + 1
+      if (targetIndex < 0 || targetIndex >= previousState.experiences.length) {
+        return previousState
+      }
+
+      const nextExperienceItems = [...previousState.experiences]
+      const temporaryExperience = nextExperienceItems[experienceIndex]
+      nextExperienceItems[experienceIndex] = nextExperienceItems[targetIndex]
+      nextExperienceItems[targetIndex] = temporaryExperience
+
+      return {
+        ...previousState,
+        experiences: nextExperienceItems.map((experience, sequence) => ({
+          ...experience,
+          sortOrder: sequence + 1
+        }))
+      }
+    })
   }, [])
 
   const removeExperienceItem = useCallback((experienceIndex: number) => {
@@ -942,14 +1007,6 @@ export const AdminApp = (): React.JSX.Element => {
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, description: value }))}
               />
 
-              <View style={styles.row}>
-                <Text style={styles.sectionTitle}>체험 관리 (Experience)</Text>
-                <Text style={styles.helperText}>현재 {destinationFormState.experiences.length}건 · 제목/설명/링크/썸네일을 관리합니다.</Text>
-                <View style={styles.rowButtonContainer}>
-                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
-                </View>
-              </View>
-
               <View style={styles.rowSplitContainer}>
                 <LabelInput
                   label="추천 시작 월 1"
@@ -985,6 +1042,11 @@ export const AdminApp = (): React.JSX.Element => {
                 value={destinationFormState.flightTime}
                 keyboardType="numeric"
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightTime: parseFlightTimeMinutes(value) }))}
+              />
+              <LabelInput
+                label="항공권 링크(Skyscanner)"
+                value={destinationFormState.flightUrl}
+                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightUrl: value }))}
               />
 
               <View style={styles.uploadRow}>
@@ -1048,6 +1110,14 @@ export const AdminApp = (): React.JSX.Element => {
                   ))}
                 </View>
               )}
+
+              <View style={styles.row}>
+                <Text style={styles.sectionTitle}>체험 관리 (Experience)</Text>
+                <Text style={styles.helperText}>현재 {destinationFormState.experiences.length}건 · 순서 변경/제목/설명/링크/썸네일을 관리합니다.</Text>
+                <View style={styles.rowButtonContainer}>
+                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
+                </View>
+              </View>
 
               {destinationFormState.experiences.length > 0 && (
                 <View style={styles.imageListContainer}>
@@ -1115,6 +1185,16 @@ export const AdminApp = (): React.JSX.Element => {
                       </View>
                       <View style={styles.rowButtonContainer}>
                         <ActionButton
+                          label="위로"
+                          variant="secondary"
+                          onPress={() => moveExperienceItem(experienceIndex, "up")}
+                        />
+                        <ActionButton
+                          label="아래로"
+                          variant="secondary"
+                          onPress={() => moveExperienceItem(experienceIndex, "down")}
+                        />
+                        <ActionButton
                           label="체험 삭제"
                           variant="danger"
                           onPress={() => removeExperienceItem(experienceIndex)}
@@ -1148,8 +1228,14 @@ export const AdminApp = (): React.JSX.Element => {
                 <View style={[styles.sectionCard, styles.destinationListPanel]}>
                   <Text style={styles.sectionTitle}>장소 목록</Text>
                   <Text style={styles.helperText}>오른쪽 목록에서 선택하면 왼쪽 폼으로 즉시 불러옵니다.</Text>
+                  <input
+                    value={destinationListSearchKeyword}
+                    onChange={(event) => setDestinationListSearchKeyword(event.target.value)}
+                    style={htmlFieldStyle}
+                    placeholder="국가/도시/요약 검색"
+                  />
                   <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
-                    {destinations.map((destination) => (
+                    {filteredDestinations.map((destination) => (
                       <View style={styles.listItemCard} key={destination.id}>
                         <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
                         <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
@@ -1179,6 +1265,7 @@ export const AdminApp = (): React.JSX.Element => {
                                   recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
                                   recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
                                   flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
+                                  flightUrl: destination.flightUrl ?? "",
                                   images: destination.images.map((image) => ({
                                     imageUrl: image.imageUrl,
                                     isThumbnail: image.isThumbnail,
@@ -1203,6 +1290,9 @@ export const AdminApp = (): React.JSX.Element => {
                         </View>
                       </View>
                     ))}
+                    {filteredDestinations.length === 0 && (
+                      <Text style={styles.helperText}>검색 결과가 없습니다.</Text>
+                    )}
                   </ScrollView>
                 </View>
               </View>
@@ -1268,8 +1358,14 @@ export const AdminApp = (): React.JSX.Element => {
                 <View style={[styles.sectionCard, styles.destinationListPanel]}>
                   <Text style={styles.sectionTitle}>사용자 목록</Text>
                   <Text style={styles.helperText}>오른쪽 목록에서 선택한 회원 정보를 즉시 불러옵니다.</Text>
+                  <input
+                    value={memberListSearchKeyword}
+                    onChange={(event) => setMemberListSearchKeyword(event.target.value)}
+                    style={htmlFieldStyle}
+                    placeholder="ID/닉네임 검색"
+                  />
                   <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
-                    {members.map((member) => (
+                    {filteredMembers.map((member) => (
                       <View style={styles.listItemCard} key={member.id}>
                         <Text style={styles.listItemTitle}>{member.id}</Text>
                         <Text style={styles.listItemDescription}>{member.nickname ?? "(닉네임 없음)"}</Text>
@@ -1293,6 +1389,9 @@ export const AdminApp = (): React.JSX.Element => {
                         </View>
                       </View>
                     ))}
+                    {filteredMembers.length === 0 && (
+                      <Text style={styles.helperText}>검색 결과가 없습니다.</Text>
+                    )}
                   </ScrollView>
                 </View>
               </View>
@@ -1346,8 +1445,14 @@ export const AdminApp = (): React.JSX.Element => {
                 <View style={[styles.sectionCard, styles.destinationListPanel]}>
                   <Text style={styles.sectionTitle}>공휴일 목록</Text>
                   <Text style={styles.helperText}>오른쪽 목록에서 선택한 공휴일을 즉시 불러옵니다.</Text>
+                  <input
+                    value={holidayListSearchKeyword}
+                    onChange={(event) => setHolidayListSearchKeyword(event.target.value)}
+                    style={htmlFieldStyle}
+                    placeholder="날짜/이름 검색"
+                  />
                   <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
-                    {publicHolidays.map((holiday) => (
+                    {filteredPublicHolidays.map((holiday) => (
                       <View style={styles.listItemCard} key={holiday.id}>
                         <Text style={styles.listItemTitle}>{holiday.holidayDate}</Text>
                         <Text style={styles.listItemDescription}>{holiday.name}</Text>
@@ -1369,6 +1474,9 @@ export const AdminApp = (): React.JSX.Element => {
                         </View>
                       </View>
                     ))}
+                    {filteredPublicHolidays.length === 0 && (
+                      <Text style={styles.helperText}>검색 결과가 없습니다.</Text>
+                    )}
                   </ScrollView>
                 </View>
               </View>

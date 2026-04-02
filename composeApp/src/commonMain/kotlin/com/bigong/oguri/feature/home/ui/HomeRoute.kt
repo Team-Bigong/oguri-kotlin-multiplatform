@@ -14,6 +14,7 @@ import com.bigong.oguri.core.analytics.OguriAnalyticsProperty
 import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.PreloadNetworkImages
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
 import kotlinx.coroutines.flow.collectLatest
@@ -36,6 +37,16 @@ fun HomeRoute(
     val recommendationDeletedMessage = stringResource(Res.string.snackbar_home_deleted)
     val uriHandler = LocalUriHandler.current
     var isLoginRequiredDialogVisible by remember { mutableStateOf(false) }
+    val currentPeriodPlacesImageUrls =
+        homeUiState.recommendPeriods
+            .firstOrNull { recommendPeriod ->
+                recommendPeriod.rank == homeUiState.selectedRank
+            }?.places
+            ?.map { place ->
+                place.thumbnailUrl
+            }.orEmpty()
+
+    PreloadNetworkImages(imageUrls = currentPeriodPlacesImageUrls)
 
     LaunchedEffect(homeViewModel) {
         homeViewModel.sideEffect.collectLatest { sideEffect ->

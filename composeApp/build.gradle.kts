@@ -71,7 +71,8 @@ val releaseBaseUrlValue: String =
 val kakaoNativeAppKeyValue: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
 val googleWebClientIdValue: String = localProperties.getProperty("google.web.client.id")?.trim().orEmpty()
 val amplitudeApiKeyValue: String = localProperties.getProperty("amplitude.api.key")?.trim().orEmpty()
-val admobAndroidAppIdValue: String = "ca-app-pub-2833810411143763~1974881745"
+val admobAndroidAppIdDebugValue: String = "ca-app-pub-3940256099942544~3347511713"
+val admobAndroidAppIdReleaseValue: String = "ca-app-pub-9643550840413935~4120437007"
 
 val generatedNetworkConfigDirectory =
     layout.buildDirectory
@@ -185,10 +186,9 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "1.0.0"
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
-        manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdValue
     }
     packaging {
         resources {
@@ -198,9 +198,16 @@ android {
     buildTypes {
         getByName("debug") {
             applicationIdSuffix = ".debug"
+            manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdDebugValue
         }
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdReleaseValue
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
     compileOptions {

@@ -14,4 +14,5 @@ data class MyPageUiState(
     val isWithdrawDialogVisible: Boolean = false,
     val withdrawInputText: String = "",
     val isWithdrawConfirmEnabled: Boolean = false,
+    val isWithdrawSubmitting: Boolean = false,
 )

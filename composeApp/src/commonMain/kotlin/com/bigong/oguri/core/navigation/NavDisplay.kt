@@ -154,6 +154,14 @@ fun NavDisplay(
                         myPageViewModelLazy.value.refreshMyPageInfo()
                     }
                 }
+                if (isCalendarRoute(currentRouteText) && isMyPageRoute(previousRoute)) {
+                    val preferredLeaveDays =
+                        myPageViewModelLazy.value.uiState.value.myPageInfo
+                            ?.preferredLeaveDays
+                    if (preferredLeaveDays != null) {
+                        calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
+                    }
+                }
             } else if (currentRouteText != null && previousRoute == null && isHomeRoute(currentRouteText)) {
                 if (!hasShownLaunchAppOpenAd) {
                     hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
@@ -352,6 +360,14 @@ private fun isMyPageRoute(routeText: String): Boolean {
             .serializer()
             .descriptor.serialName
     return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
+}
+
+private fun isCalendarRoute(routeText: String): Boolean {
+    val calendarRouteSerialName =
+        RouteModel.Calendar
+            .serializer()
+            .descriptor.serialName
+    return routeText == calendarRouteSerialName || routeText.startsWith(calendarRouteSerialName)
 }
 
 private fun isOnboardingRoute(routeText: String): Boolean {
