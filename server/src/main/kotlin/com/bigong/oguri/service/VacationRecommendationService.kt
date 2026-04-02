@@ -45,14 +45,16 @@ class VacationRecommendationService {
                 for (windowIndex in dayIndex until maxRange) {
                     val date = startOfMonth.plusDays(windowIndex.toLong())
                     val matchedHoliday = holidayMap[date]
+                    val actualHoliday = matchedHoliday?.takeIf { holiday: PublicHoliday -> holiday.isActualHoliday }
                     val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
                     val isPublicHoliday = matchedHoliday != null
+                    val isActualPublicHoliday = actualHoliday != null
                     val isHoliday = isWeekend || isPublicHoliday
 
                     if (isHoliday) {
                         holidayCount++
-                        if (isPublicHoliday) {
-                            matchedHoliday.name
+                        if (isActualPublicHoliday) {
+                            actualHoliday.name
                                 .takeIf { holidayName: String -> holidayName.isNotBlank() }
                                 ?.let { holidayName: String ->
                                     holidayNames.add(holidayName)
