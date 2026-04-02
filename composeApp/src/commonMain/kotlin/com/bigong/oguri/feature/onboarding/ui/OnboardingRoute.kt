@@ -1,9 +1,9 @@
 package com.bigong.oguri.feature.onboarding.ui
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.navigation.WebDocumentType
 import com.bigong.oguri.core.ui.component.OguriSnackBarType

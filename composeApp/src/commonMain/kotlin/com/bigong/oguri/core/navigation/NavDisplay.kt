@@ -33,6 +33,10 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import com.bigong.oguri.core.ad.initializeAdMob
+import com.bigong.oguri.core.ad.preloadAppOpenAd
+import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
+import com.bigong.oguri.core.analytics.initializeOguriAnalytics
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -55,6 +59,7 @@ import dev.zacsweers.metro.createGraphFactory
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
+import oguri.composeapp.generated.resources.snackbar_login_success
 import oguri.composeapp.generated.resources.snackbar_logout_completed
 import oguri.composeapp.generated.resources.snackbar_withdraw_completed
 import org.jetbrains.compose.resources.painterResource
@@ -104,6 +109,7 @@ fun NavDisplay(
             }
         val coroutineScope = rememberCoroutineScope()
         val exitSnackbarMessage = stringResource(Res.string.navigation_back_press_exit_message)
+        val loginSuccessMessage = stringResource(Res.string.snackbar_login_success)
         val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
         val withdrawCompletedMessage = stringResource(Res.string.snackbar_withdraw_completed)
         val incomingDeepLinkUrl =
@@ -111,6 +117,7 @@ fun NavDisplay(
                 .collectAsState()
                 .value
         var previousRouteText by remember { mutableStateOf<String?>(null) }
+        var hasShownLaunchAppOpenAd by remember { mutableStateOf(false) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         val shouldShowBottomNavigation =
             bottomNavigationDestinations.any { destination ->
@@ -125,6 +132,11 @@ fun NavDisplay(
             val targetRoute = parseAppDeepLinkRoute(urlText = deepLinkUrl) ?: return@LaunchedEffect
             navigator.navigateToRouteModel(targetRoute)
         }
+        LaunchedEffect(Unit) {
+            initializeOguriAnalytics()
+            initializeAdMob()
+            preloadAppOpenAd()
+        }
         LaunchedEffect(currentDestination?.route) {
             val currentRouteText = currentDestination?.route
             val previousRoute = previousRouteText
@@ -133,11 +145,26 @@ fun NavDisplay(
                     if (homeViewModelLazy.isInitialized()) {
                         homeViewModelLazy.value.refreshRecommendPeriods()
                     }
+                    if (!isOnboardingRoute(previousRoute) && !hasShownLaunchAppOpenAd) {
+                        hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
+                    }
                 }
                 if (isMyPageRoute(currentRouteText) && !isMyPageRoute(previousRoute)) {
                     if (myPageViewModelLazy.isInitialized()) {
                         myPageViewModelLazy.value.refreshMyPageInfo()
                     }
+                }
+                if (isCalendarRoute(currentRouteText) && isMyPageRoute(previousRoute)) {
+                    val preferredLeaveDays =
+                        myPageViewModelLazy.value.uiState.value.myPageInfo
+                            ?.preferredLeaveDays
+                    if (preferredLeaveDays != null) {
+                        calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
+                    }
+                }
+            } else if (currentRouteText != null && previousRoute == null && isHomeRoute(currentRouteText)) {
+                if (!hasShownLaunchAppOpenAd) {
+                    hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
                 }
             }
             previousRouteText = currentRouteText
@@ -182,6 +209,14 @@ fun NavDisplay(
                         navigator = navigator,
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
+                        onLoginSucceeded = {
+                            coroutineScope.launch {
+                                snackbarHostState.showOguriSnackbar(
+                                    message = loginSuccessMessage,
+                                    type = OguriSnackBarType.SUCCESS,
+                                )
+                            }
+                        },
                         onLoggedOut = {
                             authSessionVersion += 1
                             navigator.navigateToLoginAndClearBackStack()
@@ -312,11 +347,33 @@ private fun isMainTabRootDestination(currentDestination: NavDestination?): Boole
 }
 
 private fun isHomeRoute(routeText: String): Boolean {
-    val homeRouteSerialName = RouteModel.Home.serializer().descriptor.serialName
+    val homeRouteSerialName =
+        RouteModel.Home
+            .serializer()
+            .descriptor.serialName
     return routeText == homeRouteSerialName || routeText.startsWith(homeRouteSerialName)
 }
 
 private fun isMyPageRoute(routeText: String): Boolean {
-    val myPageRouteSerialName = RouteModel.MyPage.serializer().descriptor.serialName
+    val myPageRouteSerialName =
+        RouteModel.MyPage
+            .serializer()
+            .descriptor.serialName
     return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
+}
+
+private fun isCalendarRoute(routeText: String): Boolean {
+    val calendarRouteSerialName =
+        RouteModel.Calendar
+            .serializer()
+            .descriptor.serialName
+    return routeText == calendarRouteSerialName || routeText.startsWith(calendarRouteSerialName)
+}
+
+private fun isOnboardingRoute(routeText: String): Boolean {
+    val onboardingRouteSerialName =
+        RouteModel.Onboarding
+            .serializer()
+            .descriptor.serialName
+    return routeText == onboardingRouteSerialName || routeText.startsWith(onboardingRouteSerialName)
 }

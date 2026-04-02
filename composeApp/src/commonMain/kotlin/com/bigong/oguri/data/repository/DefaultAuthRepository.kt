@@ -3,6 +3,7 @@ package com.bigong.oguri.data.repository
 import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.data.remote.AuthRemoteDataSource
 import com.bigong.oguri.data.remote.model.request.AppleLoginRequest
+import com.bigong.oguri.data.remote.model.request.GoogleLoginRequest
 import com.bigong.oguri.data.remote.model.request.KakaoLoginRequest
 import com.bigong.oguri.data.remote.model.request.RefreshTokenRequest
 import com.bigong.oguri.data.remote.model.request.UpdateMemberDayOffRequest
@@ -23,6 +24,21 @@ class DefaultAuthRepository(
         val loginResponse =
             authRemoteDataSource.loginWithKakao(
                 request = KakaoLoginRequest(accessToken = kakaoAccessToken),
+            )
+        saveTokens(
+            accessToken = loginResponse.accessToken,
+            refreshToken = loginResponse.refreshToken,
+        )
+        return loginResponse.onboardingCompleted
+    }
+
+    override suspend fun loginWithGoogleIdentityToken(identityToken: String): Boolean {
+        require(value = identityToken.isNotBlank()) {
+            "Google identity token is empty."
+        }
+        val loginResponse =
+            authRemoteDataSource.loginWithGoogle(
+                request = GoogleLoginRequest(identityToken = identityToken),
             )
         saveTokens(
             accessToken = loginResponse.accessToken,
@@ -67,20 +83,31 @@ class DefaultAuthRepository(
                 val statusCode = throwable.response.status
                 val isUnauthorized = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
                 if (isUnauthorized) {
-                    val refreshedTokenState = refreshTokensFromRefreshToken()
-                    if (refreshedTokenState == null) {
-                        AuthTokenStore.clearTokens()
-                        return AutoLoginState(
-                            isLoggedIn = false,
-                            isOnboardingCompleted = false,
-                        )
+                    return when (val refreshTokenResult = refreshTokensFromRefreshToken()) {
+                        is RefreshTokenResult.Success -> {
+                            refreshTokenResult.state
+                        }
+
+                        RefreshTokenResult.AuthenticationFailed -> {
+                            AuthTokenStore.clearTokens()
+                            AutoLoginState(
+                                isLoggedIn = false,
+                                isOnboardingCompleted = false,
+                            )
+                        }
+
+                        RefreshTokenResult.TemporaryFailure -> {
+                            AutoLoginState(
+                                isLoggedIn = false,
+                                isOnboardingCompleted = false,
+                            )
+                        }
                     }
-                    return refreshedTokenState
                 }
             }
             AutoLoginState(
-                isLoggedIn = true,
-                isOnboardingCompleted = true,
+                isLoggedIn = false,
+                isOnboardingCompleted = false,
             )
         }
     }
@@ -118,29 +145,62 @@ class DefaultAuthRepository(
         )
     }
 
-    private suspend fun refreshTokensFromRefreshToken(): AutoLoginState? {
+    private suspend fun refreshTokensFromRefreshToken(): RefreshTokenResult {
         val storedRefreshToken = AuthTokenStore.getRefreshToken()
         if (storedRefreshToken.isNullOrBlank()) {
-            return null
+            return RefreshTokenResult.AuthenticationFailed
         }
+
         val refreshResponse =
-            runCatching {
+            try {
                 authRemoteDataSource.refreshToken(
                     request = RefreshTokenRequest(refreshToken = storedRefreshToken),
                 )
-            }.getOrNull() ?: return null
+            } catch (clientRequestException: ClientRequestException) {
+                val statusCode = clientRequestException.response.status
+                val isUnauthorized = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
+                if (isUnauthorized) {
+                    return RefreshTokenResult.AuthenticationFailed
+                }
+                return RefreshTokenResult.TemporaryFailure
+            } catch (throwable: Throwable) {
+                return RefreshTokenResult.TemporaryFailure
+            }
+
         saveTokens(
             accessToken = refreshResponse.accessToken,
             refreshToken = refreshResponse.refreshToken,
         )
 
         val refreshedMemberMeResponse =
-            runCatching {
+            try {
                 authRemoteDataSource.getMemberMe()
-            }.getOrNull() ?: return null
-        return AutoLoginState(
-            isLoggedIn = true,
-            isOnboardingCompleted = refreshedMemberMeResponse.onboardingCompleted,
+            } catch (clientRequestException: ClientRequestException) {
+                val statusCode = clientRequestException.response.status
+                val isUnauthorized = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
+                if (isUnauthorized) {
+                    return RefreshTokenResult.AuthenticationFailed
+                }
+                return RefreshTokenResult.TemporaryFailure
+            } catch (throwable: Throwable) {
+                return RefreshTokenResult.TemporaryFailure
+            }
+
+        return RefreshTokenResult.Success(
+            AutoLoginState(
+                isLoggedIn = true,
+                isOnboardingCompleted = refreshedMemberMeResponse.onboardingCompleted,
+            ),
         )
+    }
+
+    private sealed interface RefreshTokenResult {
+        data class Success(
+            val state: AutoLoginState,
+        ) : RefreshTokenResult
+
+        data object AuthenticationFailed : RefreshTokenResult
+
+        data object TemporaryFailure : RefreshTokenResult
     }
 }

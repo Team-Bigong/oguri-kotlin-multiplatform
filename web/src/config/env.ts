@@ -15,5 +15,7 @@ export const webEnvironment = {
   firebaseStorageBucket: readRequiredEnvironment("VITE_FIREBASE_STORAGE_BUCKET"),
   firebaseMessagingSenderId: readRequiredEnvironment("VITE_FIREBASE_MESSAGING_SENDER_ID"),
   firebaseAppId: readRequiredEnvironment("VITE_FIREBASE_APP_ID"),
-  firebaseMeasurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ?? ""
+  firebaseMeasurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID ?? "",
+  playStoreUrl: import.meta.env.VITE_PLAY_STORE_URL ?? "",
+  appStoreUrl: import.meta.env.VITE_APP_STORE_URL ?? ""
 }

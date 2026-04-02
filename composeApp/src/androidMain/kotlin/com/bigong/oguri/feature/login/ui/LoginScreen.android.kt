@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.login.ui
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,16 +18,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.KakaoYellow
+import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.login.ui.component.LoginActionButton
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_app_text
+import oguri.composeapp.generated.resources.ic_google_login
 import oguri.composeapp.generated.resources.ic_kakao_login
 import oguri.composeapp.generated.resources.img_oguri_walking
+import oguri.composeapp.generated.resources.login_google_with_account
 import oguri.composeapp.generated.resources.login_guest_browse
 import oguri.composeapp.generated.resources.login_kakao_with_account
 import org.jetbrains.compose.resources.painterResource
@@ -34,47 +40,70 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 actual fun LoginScreen(
+    isLoading: Boolean,
+    onGoogleLoginClick: () -> Unit,
     onKakaoLoginClick: () -> Unit,
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
 ) {
-    Column(
+    Box(
         modifier =
             Modifier
                 .fillMaxSize()
-                .background(color = Neutral5)
-                .statusBarsPadding()
-                .padding(horizontal = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+                .background(color = Neutral5),
     ) {
-        Image(
-            painter = painterResource(resource = Res.drawable.img_oguri_walking),
-            contentDescription = null,
-            modifier = Modifier.size(size = 180.dp),
-        )
-        Image(
-            painter = painterResource(resource = Res.drawable.ic_app_text),
-            contentDescription = null,
-            modifier = Modifier.size(width = 110.dp, height = 56.dp),
-        )
-        Spacer(modifier = Modifier.height(height = 32.dp))
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(
+                painter = painterResource(resource = Res.drawable.img_oguri_walking),
+                contentDescription = null,
+                modifier = Modifier.size(size = 180.dp),
+            )
+            Image(
+                painter = painterResource(resource = Res.drawable.ic_app_text),
+                contentDescription = null,
+                modifier = Modifier.size(width = 110.dp, height = 56.dp),
+            )
+            Spacer(modifier = Modifier.height(height = 32.dp))
 
-        LoginActionButton(
-            iconResource = Res.drawable.ic_kakao_login,
-            titleText = stringResource(Res.string.login_kakao_with_account),
-            backgroundColor = KakaoYellow,
-            contentColor = Neutral100,
-            onClick = onKakaoLoginClick,
-        )
+            LoginActionButton(
+                iconResource = Res.drawable.ic_google_login,
+                iconSize = LOGIN_BUTTON_ICON_SIZE,
+                titleText = stringResource(Res.string.login_google_with_account),
+                backgroundColor = Neutral0,
+                contentColor = Neutral90,
+                borderColor = Neutral90,
+                onClick = onGoogleLoginClick,
+            )
+            Spacer(modifier = Modifier.height(height = 18.dp))
+            LoginActionButton(
+                iconResource = Res.drawable.ic_kakao_login,
+                iconSize = LOGIN_BUTTON_ICON_SIZE,
+                titleText = stringResource(Res.string.login_kakao_with_account),
+                backgroundColor = KakaoYellow,
+                contentColor = Neutral100,
+                onClick = onKakaoLoginClick,
+            )
 
-        Spacer(modifier = Modifier.height(height = 14.dp))
-        Text(
-            text = stringResource(Res.string.login_guest_browse),
-            style = OguriTheme.typography.bodySmall,
-            color = Neutral50,
-            modifier = Modifier.noRippleClickable(onClick = onGuestBrowseClick),
-        )
+            Spacer(modifier = Modifier.height(height = 14.dp))
+            Text(
+                text = stringResource(Res.string.login_guest_browse),
+                style = OguriTheme.typography.bodySmall,
+                color = Neutral50,
+                modifier = Modifier.noRippleClickable(onClick = onGuestBrowseClick),
+            )
+        }
+
+        if (isLoading) {
+            CenteredLoadingIndicator()
+        }
     }
 }
 
@@ -83,9 +112,13 @@ actual fun LoginScreen(
 private fun LoginScreenAndroidPreview() {
     OguriTheme {
         LoginScreen(
+            isLoading = false,
+            onGoogleLoginClick = {},
             onKakaoLoginClick = {},
             onAppleLoginClick = {},
             onGuestBrowseClick = {},
         )
     }
 }
+
+private val LOGIN_BUTTON_ICON_SIZE = 18.dp

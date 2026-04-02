@@ -22,7 +22,11 @@ import kotlinx.datetime.LocalDate
 class DefaultMyPageRepository(
     private val myPageRemoteDataSource: MyPageRemoteDataSource,
 ) : MyPageRepository {
-    private val preferredLeaveDaysChangeFlow = MutableSharedFlow<PreferredLeaveDaysChange>(extraBufferCapacity = 8)
+    private val preferredLeaveDaysChangeFlow =
+        MutableSharedFlow<PreferredLeaveDaysChange>(
+            replay = 1,
+            extraBufferCapacity = 8,
+        )
 
     override suspend fun getMyPageInfo(): MyPageInfo = myPageRemoteDataSource.getMyPageResponse().toDomain()
 
@@ -34,13 +38,13 @@ class DefaultMyPageRepository(
     ): MyPageInfo {
         val myPageInfo =
             myPageRemoteDataSource
-            .updateLeaveDays(
-                request =
-                    UpdateMyPageLeaveDaysRequest(
-                        remainingLeaveDays = remainingLeaveDays,
-                        preferredLeaveDays = preferredLeaveDays,
-                    ),
-            ).toDomain()
+                .updateLeaveDays(
+                    request =
+                        UpdateMyPageLeaveDaysRequest(
+                            remainingLeaveDays = remainingLeaveDays,
+                            preferredLeaveDays = preferredLeaveDays,
+                        ),
+                ).toDomain()
         preferredLeaveDaysChangeFlow.tryEmit(
             PreferredLeaveDaysChange(
                 preferredLeaveDays = myPageInfo.preferredLeaveDays,

@@ -5,6 +5,7 @@ import com.bigong.oguri.dto.AdminMemberResponse
 import com.bigong.oguri.dto.AdminMemberUpdateRequest
 import com.bigong.oguri.service.AdminMemberService
 import io.swagger.v3.oas.annotations.Hidden
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
 @Hidden
@@ -34,6 +35,7 @@ class AdminMemberController(
     }
 
     @DeleteMapping("/{memberId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteMember(
         @PathVariable memberId: String
     ) {

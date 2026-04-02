@@ -1,30 +1,31 @@
 <resources>
     <string name="bottom_navigation_home">Home</string>
     <string name="bottom_navigation_calendar">Calendar</string>
-    <string name="bottom_navigation_my">My</string>
+    <string name="bottom_navigation_my">My Page</string>
 
     <string name="navigation_back_press_exit_message">Press back again to exit</string>
     <string name="common_network_error_message">Unable to load information.</string>
     <string name="common_retry_button">Try again</string>
 
-    <string name="home_greeting_name">This Combination, only Oguri knows this.</string>
-    <string name="home_greeting_question">How about resting like this this time?</string>
+    <string name="home_greeting_name">Only Oguri knew this combination.</string>
+    <string name="home_greeting_question">How about taking a break like this?</string>
 
     <string name="home_tab_rank_one">1st</string>
     <string name="home_tab_rank_two">2nd</string>
     <string name="home_tab_rank_three">3rd</string>
 
     <string name="home_strategy_period">%1$s - %2$s</string>
-    <string name="home_strategy_holiday_with">Close to %1$s</string>
-    <string name="home_strategy_day_off_hint">Using %1$d leave days can secure %2$d trip days</string>
+    <string name="home_strategy_holiday_with">It lines up perfectly with %1$s</string>
+    <string name="home_strategy_holiday_with_next_year">Next year, %1$s</string>
+    <string name="home_strategy_day_off_hint">With %1$d leave days, you can rest for %2$d days</string>
 
-    <string name="home_guide_match_places">These places match this period</string>
-    <string name="home_guide_match_places_highlight">match this period</string>
-    <string name="home_hint_place_cards">Tap cards if you want</string>
+    <string name="home_guide_match_places">These are perfect places to visit at that time</string>
+    <string name="home_guide_match_places_highlight">perfect places</string>
+    <string name="home_hint_place_cards">Tap a card you like</string>
 
-    <string name="home_guide_trip_products">We also brought useful trip information</string>
-    <string name="home_guide_trip_products_highlight">useful trip information</string>
-    <string name="home_hint_trip_products">Check attractive benefits</string>
+    <string name="home_guide_trip_products">We brought useful info you won’t want to miss</string>
+    <string name="home_guide_trip_products_highlight">useful info</string>
+    <string name="home_hint_trip_products">Check out these great deals</string>
 
     <string name="home_ad_hotel_title">Want to look around pretty hotels on Agoda?</string>
     <string name="home_ad_hotel_title_highlight">pretty hotels</string>
@@ -33,29 +34,30 @@
     <string name="home_ad_activity_title">Shall we find fun activities with Klook?</string>
     <string name="home_ad_activity_title_highlight">fun activities</string>
 
-    <string name="home_more_recommendation_subtitle">Couldn’t find the perfect holiday?</string>
+    <string name="home_more_recommendation_subtitle">Couldn’t find a holiday that fits?</string>
     <string name="home_cta_more_recommend">See more recommendations</string>
-    <string name="home_loading">Loading recommendations...</string>
-    <string name="home_error_retry">Failed to load recommendations. Tap to retry.</string>
+    <string name="home_loading">Loading recommendation strategies...</string>
+    <string name="home_error_retry">Failed to load recommendation strategies. Tap to retry.</string>
 
     <string name="place_detail_country">%1$s</string>
-    <string name="place_detail_section_experience">How about this in Boracay?</string>
-    <string name="place_detail_section_experience_highlight">this</string>
-    <string name="place_detail_section_experience_subtitle">Tap cards to see details</string>
-    <string name="place_detail_flight_title">Want to look around flights?</string>
-    <string name="place_detail_flight_title_highlight">flights</string>
+    <string name="place_detail_section_experience">How about these in %1$s?</string>
+    <string name="place_detail_section_experience_highlight">How about these?</string>
+    <string name="place_detail_section_experience_subtitle">Tap a card to go to the partner page</string>
+    <string name="place_detail_flight_title">Want to at least take a look at flights?</string>
+    <string name="place_detail_flight_title_highlight">take a look</string>
     <string name="place_detail_flight_card_title">View flights for %1$s itinerary</string>
-    <string name="place_detail_relevant_places">There are other places fit this period too</string>
+    <string name="place_detail_relevant_places">There are other places that fit this period too</string>
     <string name="place_detail_relevant_places_highlight">other places</string>
-    <string name="place_detail_relevant_places_subtitle">Swipe and check places</string>
+    <string name="place_detail_relevant_places_subtitle">Swipe left and right to explore</string>
     <string name="place_detail_menu_share">Share</string>
     <string name="place_detail_menu_save">Save</string>
-    <string name="place_detail_menu_unsave">Remove saved</string>
+    <string name="place_detail_menu_unsave">Remove from saved</string>
     <string name="place_detail_experience_detail">See details</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
+    <string name="login_google_with_account">Sign in with Google account</string>
     <string name="login_kakao_with_account">Sign in with Kakao account</string>
-    <string name="login_guest_browse">Browse without login</string>
+    <string name="login_guest_browse">Browse without signing in</string>
     <string name="login_required_title">This feature requires login</string>
     <string name="login_required_title_highlight">login</string>
     <string name="login_required_button">Go to login</string>
@@ -98,11 +100,11 @@
     <string name="snackbar_withdraw_failed">Failed to delete account. Please try again.</string>
     <string name="share_title">How about taking a break like this?</string>
     <string name="share_place_title">How about %1$s?</string>
-    <string name="share_place_description">This is a great travel destination right now.\nWant to take a look?</string>
-    <string name="share_period_description">You can rest for %2$d days using %1$d leave days.\nWant to take a look?</string>
+    <string name="share_place_description">It’s a great destination to visit right now.\nTake a look.</string>
+    <string name="share_period_description">With %1$d leave days, you can rest for %2$d days.\nTake a look.</string>
     <string name="share_button_open_in_app">View in app</string>
     <string name="share_default_fallback_message">This is a great time to take a break.\nWant to take a look?</string>
-    <string name="share_default_fallback_url">https://naver.com</string>
+    <string name="share_default_fallback_url">https://www.oguri.com</string>
 
     <string name="calendar_header_title">How many leave days can you use?</string>
     <string name="calendar_header_subtitle">Adjust your leave days to find the best combinations</string>
@@ -122,7 +124,7 @@
     <string name="calendar_day_sat">Sat</string>
     <string name="calendar_recommendation_guide_title">These are the best days for your leave</string>
     <string name="calendar_recommendation_guide_highlight">best days for your leave</string>
-    <string name="calendar_recommendation_guide_subtitle">Tap the arrow to explore travel spots too</string>
+    <string name="calendar_recommendation_guide_subtitle">Tap the arrow twice to explore travel spots too</string>
     <string name="calendar_period_range">%1$s - %2$s</string>
     <string name="calendar_month_day">%1$d/%2$d</string>
     <string name="calendar_card_total_days">%1$s (%2$d days)</string>
@@ -132,11 +134,19 @@
     <string name="calendar_d_day_before">D-%1$d</string>
     <string name="calendar_d_day_after">D+%1$d</string>
     <string name="calendar_end_of_list_message">This is the last available schedule for this leave setting 👋</string>
+    <string name="calendar_leave_days_chip_text">Leave %1$d days</string>
     <string name="calendar_leave_days_sheet_title">Leave Settings</string>
     <string name="calendar_leave_days_sheet_done">Done</string>
+    <string name="calendar_period_filter_sheet_title">Leave Period</string>
+    <string name="calendar_period_filter_year_label">Year</string>
+    <string name="calendar_period_filter_month_label">Month</string>
+    <string name="calendar_period_filter_all">All</string>
+    <string name="calendar_period_chip_year_all">%1$d All</string>
+    <string name="calendar_period_chip_year_month">%1$d %2$d</string>
     <string name="period_detail_title">Period Detail</string>
-    <string name="period_detail_holiday_fallback">holiday</string>
+    <string name="period_detail_holiday_fallback">long weekend</string>
     <string name="period_detail_empty_places_hint">No recommended places for this period yet.</string>
+    <string name="photo_detail_page_title">%1$d / %2$d</string>
     <string name="mypage_profile_leave_days">Remaining leave: %1$d days / Preferred leave: %2$d days</string>
     <string name="mypage_guest_name">Guest</string>
     <string name="mypage_guest_login_message">Log in to save your vacation plans.</string>
@@ -147,7 +157,7 @@
     <string name="mypage_selected_period_information">Holiday %1$d days · Leave %2$d days</string>
     <string name="mypage_empty_selected_period">No saved vacation period.</string>
     <string name="mypage_empty_saved_place">No saved place.</string>
-    <string name="mypage_menu_suggest">Suggestions</string>
+    <string name="mypage_menu_suggest">Send feedback</string>
     <string name="mypage_menu_terms_of_service">Terms of Service</string>
     <string name="mypage_menu_privacy_policy">Privacy Policy</string>
     <string name="mypage_menu_withdraw">Delete account</string>

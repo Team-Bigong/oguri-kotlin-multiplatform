@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.platform.loginWithApple
+import com.bigong.oguri.core.platform.loginWithGoogle
 import com.bigong.oguri.core.platform.loginWithKakao
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -16,13 +17,13 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.snackbar_login_failed
-import oguri.composeapp.generated.resources.snackbar_login_success
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun LoginRoute(
     loginViewModelProvider: Provider<LoginViewModel>,
     snackbarHostState: SnackbarHostState,
+    onLoginSucceeded: () -> Unit,
     onLoginCompleted: (Boolean) -> Unit,
     onGuestBrowseClick: () -> Unit,
 ) {
@@ -33,16 +34,10 @@ fun LoginRoute(
     val loginUiState = loginViewModel.uiState.collectAsStateWithLifecycle().value
     val coroutineScope = rememberCoroutineScope()
     val loginFailedMessage = stringResource(Res.string.snackbar_login_failed)
-    val loginSuccessMessage = stringResource(Res.string.snackbar_login_success)
 
     LaunchedEffect(loginUiState.isOnboardingCompleted) {
         val isOnboardingCompleted = loginUiState.isOnboardingCompleted ?: return@LaunchedEffect
-        coroutineScope.launch {
-            snackbarHostState.showOguriSnackbar(
-                message = loginSuccessMessage,
-                type = OguriSnackBarType.SUCCESS,
-            )
-        }
+        onLoginSucceeded()
         onLoginCompleted(isOnboardingCompleted)
         loginViewModel.consumeLoginCompleted()
     }
@@ -60,6 +55,21 @@ fun LoginRoute(
     }
 
     LoginScreen(
+        isLoading = loginUiState.isLoading,
+        onGoogleLoginClick = {
+            if (loginUiState.isLoading) {
+                return@LoginScreen
+            }
+            coroutineScope.launch {
+                val googleLoginResult = loginWithGoogle()
+                val googleIdentityToken = googleLoginResult.getOrNull()?.trim().orEmpty()
+                if (googleIdentityToken.isBlank()) {
+                    loginViewModel.onLoginFailed()
+                    return@launch
+                }
+                loginViewModel.loginWithGoogleIdentityToken(identityToken = googleIdentityToken)
+            }
+        },
         onKakaoLoginClick = {
             if (loginUiState.isLoading) {
                 return@LoginScreen

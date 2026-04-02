@@ -15,7 +15,7 @@ internal class CalendarRecommendationPagingSource(
     private val getCalendarRecommendationUseCase: GetCalendarRecommendationUseCase,
     private val calculateDDayUseCase: CalculateDDayUseCase,
     private val selectedYear: Int,
-    private val selectedMonth: Int,
+    private val selectedMonth: Int?,
     private val dayOffCount: Int?,
     private val pageSize: Int,
     private val onDayOffCountResolved: (Int) -> Unit,
@@ -63,9 +63,7 @@ internal class CalendarRecommendationPagingSource(
     }
 }
 
-private fun CalendarRecommendation.toPeriodCards(
-    calculateDDayUseCase: CalculateDDayUseCase,
-): List<CalendarPeriodCardUiModel> =
+private fun CalendarRecommendation.toPeriodCards(calculateDDayUseCase: CalculateDDayUseCase): List<CalendarPeriodCardUiModel> =
     periods.map { period: CalendarPeriod ->
         val todayDate =
             Clock.System

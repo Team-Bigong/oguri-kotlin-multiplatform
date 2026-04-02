@@ -1,77 +1,249 @@
 import React from "react"
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { webEnvironment } from "../../config/env"
+import "./official.css"
 
-const OFFICIAL_WEB_TITLE = "오구리 공식 웹"
+const playStoreUrl = webEnvironment.playStoreUrl.trim().length > 0
+  ? webEnvironment.playStoreUrl
+  : "https://play.google.com/store/apps"
 
-export const OfficialHomePage = (): React.JSX.Element => {
+const appStoreUrl = webEnvironment.appStoreUrl.trim().length > 0
+  ? webEnvironment.appStoreUrl
+  : "https://apps.apple.com"
+
+const suggestionFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdIebTYVf7Gy4XMCJtGaWO26UXMiBImWTDQbCVB2zywYMGV4g/viewform?usp=sharing&ouid=103643341635895040668"
+const termsOfServiceUrl = "https://wealthy-clematis-4a5.notion.site/31d5bca0ac22806aa8c4f6b0374c3a55?source=copy_link"
+const privacyPolicyUrl = "https://wealthy-clematis-4a5.notion.site/31d5bca0ac2280269bbcd799cdc73997?source=copy_link"
+
+const featureItems = [
+  {
+    title: "연차 조합 추천",
+    description: "공휴일과 주말 사이\n더 길게 쉴 수 있는 조합을 먼저 보여줘요"
+  },
+  {
+    title: "지금 가기 좋은 여행지",
+    description: "연차를 바꿔보면서\n내 일정에 맞는 조합을 쉽게 비교할 수 있어요"
+  },
+  {
+    title: "저장하고 다시 보기",
+    description: "지금 가기 좋은 여행지를\n연휴 흐름에 맞춰 이어서 보여줘요"
+  }
+]
+
+const previewItems = [
+  {
+    title: "홈",
+    subtitle: "추천 전략을 한눈에",
+    imagePath: "/assets/official/screenshots/home-screen.png"
+  },
+  {
+    title: "캘린더",
+    subtitle: "연차별 조합 비교",
+    imagePath: "/assets/official/screenshots/calendar-screen.png"
+  },
+  {
+    title: "마이페이지",
+    subtitle: "저장 일정 관리",
+    imagePath: "/assets/official/screenshots/my-page-screen.png"
+  }
+]
+
+const frequentlyAskedQuestions = [
+  {
+    question: "오구리는 어떤 앱인가요?",
+    answer: "연차와 공휴일 조합, 그리고 시기 맞춤 여행지를 한 흐름으로 추천해주는 앱이에요."
+  },
+  {
+    question: "어떤 상황에서 오구리를 쓰면 좋아요?",
+    answer: "연차 일수를 정하기 어렵거나, 지금 시기에 맞는 여행지를 빠르게 찾고 싶을 때 가장 유용해요."
+  },
+  {
+    question: "어디서 설치할 수 있나요?",
+    answer: "아직 출시 전이며, 2026년 4월 이내 출시를 목표로 준비하고 있어요."
+  }
+]
+
+type StoreButtonsProps = {
+  className?: string
+}
+
+const StoreButtons = ({ className }: StoreButtonsProps): React.JSX.Element => {
+  const unreleasedStoreNoticeMessage = "조금만 기다려주세요! 4월 이내 출시 예정이에요."
+
+  const handleStoreButtonClick = (event: React.MouseEvent<HTMLAnchorElement>): void => {
+    event.preventDefault()
+    window.alert(unreleasedStoreNoticeMessage)
+  }
+
   return (
-    <View style={styles.page}>
-      <View style={styles.heroCard}>
-        <Text style={styles.label}>OGURI</Text>
-        <Text style={styles.title}>{OFFICIAL_WEB_TITLE}</Text>
-        <Text style={styles.description}>
-          React Native 기반 공식 웹 시작 지점입니다. 브랜드/콘텐츠 섹션은 여기서 확장하면 됩니다.
-        </Text>
-        <Pressable
-          accessibilityRole="link"
-          onPress={() => {
-            window.location.hash = "/admin"
-          }}
-          style={styles.primaryButton}
-        >
-          <Text style={styles.primaryButtonText}>어드민으로 이동</Text>
-        </Pressable>
-      </View>
-    </View>
+    <div className={`storeButtons ${className ?? ""}`.trim()}>
+      <a href={playStoreUrl} target="_blank" rel="noreferrer" className="storeButton" onClick={handleStoreButtonClick}>
+        <img src="/assets/official/store/play-store-logo.png" alt="" className="storeButtonIcon" />
+        <span className="storeButtonLabel">Google Play</span>
+      </a>
+      <a href={appStoreUrl} target="_blank" rel="noreferrer" className="storeButton" onClick={handleStoreButtonClick}>
+        <img src="/assets/official/store/app-store-logo.png" alt="" className="storeButtonIcon" />
+        <span className="storeButtonLabel">App Store</span>
+      </a>
+    </div>
   )
 }
 
-const styles = StyleSheet.create({
-  page: {
-    minHeight: "100%",
-    backgroundColor: "#f6f7f2",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24
-  },
-  heroCard: {
-    width: "100%",
-    maxWidth: 760,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: "#d9dfd0",
-    backgroundColor: "#ffffff",
-    padding: 32,
-    gap: 12,
-    boxShadow: "0 12px 30px rgba(43, 62, 46, 0.08)"
-  },
-  label: {
-    color: "#395239",
-    fontSize: 13,
-    fontWeight: "700",
-    letterSpacing: 1.2
-  },
-  title: {
-    color: "#1f2f1f",
-    fontSize: 34,
-    fontWeight: "700"
-  },
-  description: {
-    color: "#4b5f4b",
-    fontSize: 16,
-    lineHeight: 24
-  },
-  primaryButton: {
-    marginTop: 10,
-    alignSelf: "flex-start",
-    borderRadius: 12,
-    paddingHorizontal: 18,
-    paddingVertical: 11,
-    backgroundColor: "#2f5d3f"
-  },
-  primaryButtonText: {
-    color: "#ffffff",
-    fontSize: 14,
-    fontWeight: "700"
-  }
-})
+export const OfficialHomePage = (): React.JSX.Element => {
+  return (
+    <div className="landingPage">
+      <header className="topNavigationBar">
+        <div className="contentContainer topNavigationRow">
+          <p className="brandTitle">
+            <img src="/assets/official/app-icon.png" alt="" className="brandIconImage" />
+            <span className="brandTitleText">오구리</span>
+          </p>
+          <nav className="topNavigationLinks">
+            <a href="#features">기능</a>
+            <a href="#preview">미리보기</a>
+            <a href="#download">다운로드</a>
+          </nav>
+          <StoreButtons className="storeButtonsCompact" />
+        </div>
+      </header>
+
+      <section className="heroSection">
+        <div className="heroGlowBall heroGlowBallLeft" />
+        <div className="heroGlowBall heroGlowBallRight" />
+        <div className="contentContainer heroGrid">
+          <div className="heroCopyWrap">
+            <p className="heroEyebrow">연차 조합의 기술</p>
+            <h1 className="heroTitle">
+              이번엔 이렇게
+              <br />
+              쉬어볼까요?
+            </h1>
+            <p className="heroDescription">
+              연차를 가장 알차게 쓰는 방법부터
+              <br />
+              지금 가기 좋은 여행지까지,
+              <br />
+              부담 없이 이어서 보여줘요
+            </p>
+            <div className="heroBulletWrap">
+              <span>연차 조합 추천</span>
+              <span>지금 가기 좋은 여행지</span>
+              <span>저장하고 다시 보기</span>
+            </div>
+            <StoreButtons className="storeButtonsOnDark" />
+          </div>
+
+          <div className="heroVisualWrap">
+            <img className="heroDeviceCard heroDeviceCardBack" src="/assets/official/screenshots/hero-back-card.png" alt="오구리 히어로 뒤 카드" />
+            <img className="heroDeviceCard heroDeviceCardFront" src="/assets/official/screenshots/home-screen.png" alt="오구리 홈 화면" />
+          </div>
+        </div>
+      </section>
+
+      <section className="highlightBandSection">
+        <div className="contentContainer">
+          <p>
+            이 조합, 오구리만 알고 있었어요.
+            <br />
+            이번 연차, 더 아깝지 않게 쉬어보세요.
+          </p>
+        </div>
+      </section>
+
+      <section className="featureSection" id="features">
+        <div className="contentContainer">
+          <div className="sectionHeader">
+            <p className="sectionEyebrow">CORE FLOW</p>
+            <h2 className="sectionTitle">복잡하지 않게, 한 흐름으로</h2>
+            <p className="sectionDescription">
+              추천부터 저장까지
+              <br />
+              필요한 순서대로 이어져요
+            </p>
+          </div>
+          <div className="featureGrid">
+            {featureItems.map((featureItem, index) => (
+              <article className="featureCard" key={featureItem.title}>
+                <p className="featureIndex">0{index + 1}</p>
+                <h3>{featureItem.title}</h3>
+                <p>{featureItem.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="previewSection" id="preview">
+        <div className="contentContainer previewSectionInner">
+          <div className="previewCopyWrap">
+            <p className="sectionEyebrow">APP PREVIEW</p>
+            <h2 className="sectionTitle">화면 미리보기</h2>
+            <p className="sectionDescription">
+              연차 조합 확인부터 저장까지
+              <br />
+              한 흐름으로 이어서 사용할 수 있어요
+            </p>
+          </div>
+          <div className="previewGrid">
+            {previewItems.map((previewItem) => (
+              <article className="previewCard" key={previewItem.title}>
+                <img src={previewItem.imagePath} alt={`${previewItem.title} 화면`} />
+                <div className="previewMetaWrap">
+                  <p className="previewTitle">{previewItem.title}</p>
+                  <p className="previewSubtitle">{previewItem.subtitle}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="questionSection">
+        <div className="contentContainer questionSectionInner">
+          <div className="questionCopyWrap">
+            <p className="sectionEyebrow">FAQ</p>
+            <h2 className="sectionTitle">자주 묻는 질문</h2>
+          </div>
+          <div className="questionListWrap">
+            {frequentlyAskedQuestions.map((frequentlyAskedQuestion) => (
+              <details key={frequentlyAskedQuestion.question}>
+                <summary>{frequentlyAskedQuestion.question}</summary>
+                <p>{frequentlyAskedQuestion.answer}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="callToActionSection" id="download">
+        <div className="contentContainer">
+          <div className="callToActionPanel">
+            <h2>딱 맞는 휴식 조합, 오구리에서 시작해보세요</h2>
+            <p>
+              앱에서 더 자세한 추천과
+              <br />
+              저장 기능을 바로 확인할 수 있어요
+            </p>
+            <StoreButtons className="storeButtonsOnBright" />
+          </div>
+        </div>
+      </section>
+
+      <footer className="footerSection">
+        <div className="contentContainer footerRow">
+          <div className="footerBrandWrap">
+            <img src="/assets/official/app-icon.png" alt="" className="footerBrandIconImage" />
+            <div className="footerBrandTextWrap">
+              <p className="footerBrandTitle">오구리</p>
+              <p className="footerBrandSubTitle">연차 조합의 기술</p>
+            </div>
+          </div>
+          <div className="footerLinkRow">
+            <a href={termsOfServiceUrl} target="_blank" rel="noreferrer">서비스 이용약관</a>
+            <a href={privacyPolicyUrl} target="_blank" rel="noreferrer">개인정보 처리방침</a>
+            <a href={suggestionFormUrl} target="_blank" rel="noreferrer">건의하기</a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}

@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.ui.component.NetworkImage
+import com.bigong.oguri.core.util.extension.noRippleClickable
 
 @Composable
 fun PlaceDetailImagePager(
     imageUrls: List<String>,
+    onImageClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { imageUrls.size })
@@ -33,7 +35,11 @@ fun PlaceDetailImagePager(
         ) { page ->
             NetworkImage(
                 imageUrl = imageUrls[page],
-                modifier = Modifier.fillMaxWidth().height(heroHeight),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(heroHeight)
+                        .noRippleClickable(onClick = { onImageClick(page) }),
             )
         }
 

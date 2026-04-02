@@ -1,9 +1,9 @@
 package com.bigong.oguri.feature.calendar.ui.component
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.compose.ui.tooling.preview.Preview
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import kotlinx.coroutines.flow.flowOf

@@ -5,6 +5,7 @@ import com.bigong.oguri.dto.AdminDestinationResponse
 import com.bigong.oguri.dto.AdminDestinationUpsertRequest
 import com.bigong.oguri.service.AdminDestinationService
 import io.swagger.v3.oas.annotations.Hidden
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
 @Hidden
@@ -39,6 +40,7 @@ class AdminDestinationController(
     }
 
     @DeleteMapping("/destinations/{destinationId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteDestination(
         @PathVariable destinationId: Int
     ) {

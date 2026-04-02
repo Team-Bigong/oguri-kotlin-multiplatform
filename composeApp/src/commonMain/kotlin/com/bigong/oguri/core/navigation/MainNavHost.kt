@@ -24,6 +24,7 @@ import com.bigong.oguri.feature.mypage.ui.MyPageRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageViewModel
 import com.bigong.oguri.feature.onboarding.ui.OnboardingRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
+import com.bigong.oguri.feature.photodetail.ui.PhotoDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
@@ -40,6 +41,7 @@ fun MainNavHost(
     navigator: MainNavigator,
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
+    onLoginSucceeded: () -> Unit,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
 ) {
@@ -115,6 +117,7 @@ fun MainNavHost(
             LoginRoute(
                 loginViewModelProvider = appGraph.loginViewModelProvider,
                 snackbarHostState = snackbarHostState,
+                onLoginSucceeded = onLoginSucceeded,
                 onLoginCompleted = { isOnboardingCompleted ->
                     if (isOnboardingCompleted) {
                         navigator.navigateToHomeFromLogin()
@@ -154,6 +157,7 @@ fun MainNavHost(
             CalendarRoute(
                 calendarViewModel = calendarViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                onLoginRequired = navigator::navigateToLogin,
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
@@ -186,6 +190,7 @@ fun MainNavHost(
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
+                onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { targetPlaceId ->
                     navigator.navigateToPlaceDetail(
                         placeId = targetPlaceId,
@@ -193,15 +198,31 @@ fun MainNavHost(
                         endDate = route.endDate,
                     )
                 },
+                onPhotoClick = { imageUrls, initialPage ->
+                    navigator.navigateToPhotoDetail(
+                        imageUrls = imageUrls,
+                        initialPage = initialPage,
+                    )
+                },
+            )
+        }
+        composable<RouteModel.PhotoDetail> { navBackStackEntry ->
+            val route = navBackStackEntry.toRoute<RouteModel.PhotoDetail>()
+            PhotoDetailRoute(
+                imageUrls = route.imageUrls,
+                initialPage = route.initialPage,
+                onBackClick = { navigator.popBackStack() },
             )
         }
         composable<RouteModel.PeriodDetail> { navBackStackEntry ->
             val route = navBackStackEntry.toRoute<RouteModel.PeriodDetail>()
             PeriodDetailRoute(
                 periodDetailViewModelProvider = appGraph.periodDetailViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
+                onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { placeId ->
                     navigator.navigateToPlaceDetail(
                         placeId = placeId,

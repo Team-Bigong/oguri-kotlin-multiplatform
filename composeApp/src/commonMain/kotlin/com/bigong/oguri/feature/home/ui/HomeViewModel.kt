@@ -2,14 +2,14 @@ package com.bigong.oguri.feature.home.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetRecommendPeriodListUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import dev.zacsweers.metro.Inject
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -164,13 +164,5 @@ class HomeViewModel(
                 }
             }
         }
-    }
-
-    private fun Throwable.isUnauthorized(): Boolean {
-        if (this !is ClientRequestException) {
-            return false
-        }
-        val statusCode = response.status
-        return statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
     }
 }

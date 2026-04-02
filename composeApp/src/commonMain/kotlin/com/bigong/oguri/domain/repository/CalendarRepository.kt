@@ -6,7 +6,7 @@ import com.bigong.oguri.domain.model.CalendarRecommendation
 interface CalendarRepository {
     suspend fun getCalendarRecommendation(
         year: Int,
-        month: Int,
+        month: Int?,
         dayOffCount: Int?,
         page: Int,
         size: Int,

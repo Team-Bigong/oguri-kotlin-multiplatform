@@ -14,6 +14,7 @@ private fun PlaceDetailImagePagerPreview() {
                     "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
                     "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/b41acf66-b33b-448c-8144-d9aba0df12c0.jpeg",
                 ),
+            onImageClick = {},
         )
     }
 }

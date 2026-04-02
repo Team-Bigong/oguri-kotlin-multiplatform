@@ -3,13 +3,22 @@ package com.bigong.oguri.feature.placedetail.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.analytics.OguriAnalyticsEvent
+import com.bigong.oguri.core.analytics.OguriAnalyticsProperty
+import com.bigong.oguri.core.analytics.trackOguriEvent
 import com.bigong.oguri.core.deeplink.buildPlaceDetailDeepLink
 import com.bigong.oguri.core.platform.SharePayload
+import com.bigong.oguri.core.platform.preloadShareContent
 import com.bigong.oguri.core.platform.shareContent
+import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.PreloadNetworkImages
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
 import dev.zacsweers.metro.Provider
@@ -32,7 +41,9 @@ fun PlaceDetailRoute(
     startDate: String?,
     endDate: String?,
     onBackClick: () -> Unit,
+    onLoginRequired: () -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onPhotoClick: (List<String>, Int) -> Unit,
 ) {
     val placeDetailViewModel =
         remember {
@@ -47,6 +58,29 @@ fun PlaceDetailRoute(
     val shareFallbackMessage = stringResource(Res.string.share_default_fallback_message)
     val shareFallbackUrl = stringResource(Res.string.share_default_fallback_url)
     val uriHandler = LocalUriHandler.current
+    var isLoginRequiredDialogVisible by remember { mutableStateOf(false) }
+    val placeImageUrls: List<String> = placeDetailUiState.placeDetail?.thumbnailUrls.orEmpty()
+    val sharePayload =
+        placeDetailUiState.placeDetail?.let { placeDetail ->
+            val shareTitle = sharePlaceTitleTemplate.replace($$"%1$s", placeDetail.city)
+            val deepLinkUrl =
+                buildPlaceDetailDeepLink(
+                    placeId = placeId,
+                    startDate = startDate,
+                    endDate = endDate,
+                )
+            SharePayload(
+                title = shareTitle,
+                description = sharePlaceDescription,
+                imageUrl = placeDetail.thumbnailUrls.firstOrNull().orEmpty(),
+                deepLinkUrl = deepLinkUrl,
+                buttonTitle = shareButtonTitle,
+                fallbackMessage = shareFallbackMessage,
+                fallbackUrl = shareFallbackUrl,
+            )
+        }
+
+    PreloadNetworkImages(imageUrls = placeImageUrls)
 
     LaunchedEffect(placeId, startDate, endDate) {
         placeDetailViewModel.loadPlaceDetail(
@@ -58,20 +92,29 @@ fun PlaceDetailRoute(
     LaunchedEffect(placeDetailViewModel) {
         placeDetailViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
-                PlaceDetailSideEffect.Saved -> {
+                PlaceDetailSideEffect.PlaceSaved -> {
                     snackbarHostState.showOguriSnackbar(
                         message = placeSavedMessage,
                         type = OguriSnackBarType.SUCCESS,
                     )
                 }
-                PlaceDetailSideEffect.Deleted -> {
+
+                PlaceDetailSideEffect.PlaceDeleted -> {
                     snackbarHostState.showOguriSnackbar(
                         message = placeDeletedMessage,
                         type = OguriSnackBarType.INFO,
                     )
                 }
+
+                PlaceDetailSideEffect.LoginRequired -> {
+                    isLoginRequiredDialogVisible = true
+                }
             }
         }
+    }
+    LaunchedEffect(sharePayload) {
+        val payload: SharePayload = sharePayload ?: return@LaunchedEffect
+        preloadShareContent(payload)
     }
 
     PlaceDetailScreen(
@@ -86,30 +129,73 @@ fun PlaceDetailRoute(
         },
         onShareClick = {
             val placeDetail = placeDetailUiState.placeDetail ?: return@PlaceDetailScreen
-            val shareTitle = sharePlaceTitleTemplate.replace("%1\$s", placeDetail.city)
-            val deepLinkUrl =
-                buildPlaceDetailDeepLink(
-                    placeId = placeId,
-                    startDate = startDate,
-                    endDate = endDate,
-                )
-            shareContent(
-                payload =
-                    SharePayload(
-                        title = shareTitle,
-                        description = sharePlaceDescription,
-                        imageUrl = placeDetail.thumbnailUrls.firstOrNull().orEmpty(),
-                        deepLinkUrl = deepLinkUrl,
-                        buttonTitle = shareButtonTitle,
-                        fallbackMessage = shareFallbackMessage,
-                        fallbackUrl = shareFallbackUrl,
+            val payload: SharePayload = sharePayload ?: return@PlaceDetailScreen
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.SHARE_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.SHARE_TYPE to "place",
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail.city,
+                        OguriAnalyticsProperty.START_DATE to startDate.orEmpty(),
+                        OguriAnalyticsProperty.END_DATE to endDate.orEmpty(),
                     ),
             )
+            shareContent(payload = payload)
         },
         onSaveToggleClick = placeDetailViewModel::toggleSaved,
-        onUrlClick = { destinationUrl ->
+        onExperienceClick = { experienceTitle, destinationUrl ->
+            val placeDetail = placeDetailUiState.placeDetail
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.PLACE_DETAIL_EXPERIENCE_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail?.city.orEmpty(),
+                        OguriAnalyticsProperty.EXPERIENCE_TITLE to experienceTitle,
+                        OguriAnalyticsProperty.AD_URL to destinationUrl,
+                    ),
+            )
+            uriHandler.openUri(destinationUrl)
+        },
+        onFlightClick = { destinationUrl ->
+            val placeDetail = placeDetailUiState.placeDetail
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.PLACE_DETAIL_FLIGHT_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail?.city.orEmpty(),
+                        OguriAnalyticsProperty.FLIGHT_URL to destinationUrl,
+                    ),
+            )
             uriHandler.openUri(destinationUrl)
         },
         onPlaceClick = onPlaceClick,
+        onPhotoClick = { imageUrls, imageIndex ->
+            val placeDetail = placeDetailUiState.placeDetail
+            trackOguriEvent(
+                eventName = OguriAnalyticsEvent.PLACE_DETAIL_PHOTO_DETAIL_CLICKED,
+                eventProperties =
+                    mapOf(
+                        OguriAnalyticsProperty.PLACE_ID to placeId.toString(),
+                        OguriAnalyticsProperty.PLACE_CITY to placeDetail?.city.orEmpty(),
+                        OguriAnalyticsProperty.PHOTO_INDEX to imageIndex.toString(),
+                    ),
+            )
+            onPhotoClick(imageUrls, imageIndex)
+        },
     )
+
+    if (isLoginRequiredDialogVisible) {
+        LoginRequiredDialog(
+            onDismissRequest = {
+                isLoginRequiredDialogVisible = false
+            },
+            onLoginClick = {
+                isLoginRequiredDialogVisible = false
+                onLoginRequired()
+            },
+        )
+    }
 }

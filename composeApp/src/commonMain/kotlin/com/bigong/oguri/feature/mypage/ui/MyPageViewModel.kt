@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.mypage.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.usecase.DeleteMyPageSavedPlaceUseCase
 import com.bigong.oguri.domain.usecase.DeleteMyPageSelectedPeriodUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
@@ -11,8 +12,6 @@ import com.bigong.oguri.domain.usecase.WithdrawUseCase
 import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
 import com.bigong.oguri.feature.mypage.ui.model.MyPageUiState
 import dev.zacsweers.metro.Inject
-import io.ktor.client.plugins.ClientRequestException
-import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -252,16 +251,21 @@ class MyPageViewModel(
                 isWithdrawDialogVisible = true,
                 withdrawInputText = "",
                 isWithdrawConfirmEnabled = false,
+                isWithdrawSubmitting = false,
             )
         }
     }
 
     fun hideWithdrawDialog() {
+        if (uiState.value.isWithdrawSubmitting) {
+            return
+        }
         _uiState.update { currentUiState ->
             currentUiState.copy(
                 isWithdrawDialogVisible = false,
                 withdrawInputText = "",
                 isWithdrawConfirmEnabled = false,
+                isWithdrawSubmitting = false,
             )
         }
     }
@@ -279,10 +283,13 @@ class MyPageViewModel(
     }
 
     fun confirmWithdraw() {
-        if (!uiState.value.isWithdrawConfirmEnabled) {
+        if (!uiState.value.isWithdrawConfirmEnabled || uiState.value.isWithdrawSubmitting) {
             return
         }
         viewModelScope.launch {
+            _uiState.update { currentUiState ->
+                currentUiState.copy(isWithdrawSubmitting = true)
+            }
             runCatching {
                 withContext(Dispatchers.Default) {
                     withdrawUseCase()
@@ -294,10 +301,14 @@ class MyPageViewModel(
                         isWithdrawDialogVisible = false,
                         withdrawInputText = "",
                         isWithdrawConfirmEnabled = false,
+                        isWithdrawSubmitting = false,
                     )
                 }
                 _sideEffect.tryEmit(MyPageSideEffect.WithdrawCompleted)
             }.onFailure { throwable ->
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(isWithdrawSubmitting = false)
+                }
                 if (throwable.isUnauthorized()) {
                     _sideEffect.tryEmit(MyPageSideEffect.LoginRequired)
                 } else {
@@ -305,13 +316,5 @@ class MyPageViewModel(
                 }
             }
         }
-    }
-
-    private fun Throwable.isUnauthorized(): Boolean {
-        if (this !is ClientRequestException) {
-            return false
-        }
-        val statusCode = response.status
-        return statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
     }
 }
