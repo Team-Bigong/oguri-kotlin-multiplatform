@@ -16,7 +16,7 @@ class VacationRecommendationService {
         holidayMap: Map<LocalDate, PublicHoliday>,
         monthRangeCount: Int,
         periodLimitPerMonth: Int,
-        startDateCutoff: LocalDate? = null
+        startDateCutoff: LocalDate? = null,
     ): List<RecommendationPeriod> {
         val normalizedDayOff = userDayOff.coerceAtLeast(1)
         val candidates = mutableListOf<RecommendationPeriod>()
@@ -51,15 +51,19 @@ class VacationRecommendationService {
 
                     if (isHoliday) {
                         holidayCount++
-                        if (matchedHoliday?.isActualHoliday == true) {
-                            holidayNames.add(matchedHoliday.name)
+                        if (isPublicHoliday) {
+                            matchedHoliday.name
+                                .takeIf { holidayName: String -> holidayName.isNotBlank() }
+                                ?.let { holidayName: String ->
+                                    holidayNames.add(holidayName)
+                                }
                         }
                         holidayDateDetails[date] =
                             CalendarHolidayDateResponse(
                                 date = date,
                                 label = matchedHoliday?.name ?: DEFAULT_HOLIDAY_NAME,
                                 weekend = isWeekend,
-                                publicHoliday = isPublicHoliday
+                                publicHoliday = isPublicHoliday,
                             )
                     } else {
                         if (usedDayOffCount < normalizedDayOff) {
@@ -81,16 +85,17 @@ class VacationRecommendationService {
                             usedDayOffCount = usedDayOffCount,
                             holidayCount = holidayCount,
                             holidayNames = holidayNames.toList(),
-                            holidayDateDetails = holidayDateDetails.values.toList()
-                        )
+                            holidayDateDetails = holidayDateDetails.values.toList(),
+                        ),
                     )
                 }
             }
 
-            val selectedMonthlyCandidates = monthlyCandidates
-                .distinctBy { period -> buildPeriodKey(period.start, period.end) }
-                .sortedWith(buildRecommendationComparator())
-                .take(periodLimitPerMonth)
+            val selectedMonthlyCandidates =
+                monthlyCandidates
+                    .distinctBy { period -> buildPeriodKey(period.start, period.end) }
+                    .sortedWith(buildRecommendationComparator())
+                    .take(periodLimitPerMonth)
             candidates.addAll(selectedMonthlyCandidates)
         }
 
@@ -106,27 +111,33 @@ class VacationRecommendationService {
         val usedDayOffCount: Int,
         val holidayCount: Int,
         val holidayNames: List<String>,
-        val holidayDateDetails: List<CalendarHolidayDateResponse>
+        val holidayDateDetails: List<CalendarHolidayDateResponse>,
     )
 
-    private fun buildPeriodKey(startDate: LocalDate, endDate: LocalDate): String = "${startDate}_${endDate}"
+    private fun buildPeriodKey(
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): String = "${startDate}_$endDate"
 
     private fun buildRecommendationComparator(): Comparator<RecommendationPeriod> {
         val currentYear = LocalDate.now().year
         return compareByDescending<RecommendationPeriod> { period ->
             weightedTotalTripCount(period, currentYear)
-        }
-            .thenBy { it.usedDayOffCount }
+        }.thenBy { it.usedDayOffCount }
             .thenByDescending { it.holidayCount }
             .thenBy { it.start }
     }
 
-    private fun weightedTotalTripCount(period: RecommendationPeriod, currentYear: Int): Double {
-        val yearWeight = if (period.start.year == currentYear) {
-            CURRENT_YEAR_WEIGHT
-        } else {
-            NON_CURRENT_YEAR_WEIGHT
-        }
+    private fun weightedTotalTripCount(
+        period: RecommendationPeriod,
+        currentYear: Int,
+    ): Double {
+        val yearWeight =
+            if (period.start.year == currentYear) {
+                CURRENT_YEAR_WEIGHT
+            } else {
+                NON_CURRENT_YEAR_WEIGHT
+            }
         return period.totalDays * yearWeight
     }
 
