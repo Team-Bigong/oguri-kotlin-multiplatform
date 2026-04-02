@@ -118,21 +118,19 @@ actual fun preloadAppOpenAd() {
 
 actual fun showAppOpenAdIfAvailable(): Boolean = AndroidAdMobManager.showAppOpenAdIfAvailable()
 
-private fun getAndroidBannerAdUnitId(): String {
-    return if (isDebuggableApplication()) {
+private fun getAndroidBannerAdUnitId(): String =
+    if (isDebuggableApplication()) {
         ANDROID_BANNER_AD_UNIT_ID_DEBUG
     } else {
         ANDROID_BANNER_AD_UNIT_ID_RELEASE
     }
-}
 
-private fun getAndroidAppOpenAdUnitId(): String {
-    return if (isDebuggableApplication()) {
+private fun getAndroidAppOpenAdUnitId(): String =
+    if (isDebuggableApplication()) {
         ANDROID_APP_OPEN_AD_UNIT_ID_DEBUG
     } else {
         ANDROID_APP_OPEN_AD_UNIT_ID_RELEASE
     }
-}
 
 private fun isDebuggableApplication(): Boolean {
     val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return false

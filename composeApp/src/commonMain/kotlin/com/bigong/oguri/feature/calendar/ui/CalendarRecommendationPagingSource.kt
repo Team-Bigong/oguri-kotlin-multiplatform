@@ -15,7 +15,7 @@ internal class CalendarRecommendationPagingSource(
     private val getCalendarRecommendationUseCase: GetCalendarRecommendationUseCase,
     private val calculateDDayUseCase: CalculateDDayUseCase,
     private val selectedYear: Int,
-    private val selectedMonth: Int,
+    private val selectedMonth: Int?,
     private val dayOffCount: Int?,
     private val pageSize: Int,
     private val onDayOffCountResolved: (Int) -> Unit,

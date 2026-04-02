@@ -85,6 +85,12 @@ fun CalendarRoute(
             )
             calendarViewModel.updateLeaveDays(leaveDays)
         },
+        onPeriodFilterChanged = { year: Int, month: Int? ->
+            calendarViewModel.updatePeriodFilter(
+                year = year,
+                month = month,
+            )
+        },
         onCardClick = calendarViewModel::onCardClick,
         onSaveToggleClick = calendarViewModel::toggleSaved,
         onDetailClick = { periodId ->

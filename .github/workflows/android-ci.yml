@@ -1,0 +1,80 @@
+name: android-ci
+
+on:
+  push:
+    branches:
+      - release-android
+    paths:
+      - "composeApp/**"
+      - "shared/**"
+      - "gradle/**"
+      - "gradlew"
+      - "gradlew.bat"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - ".github/workflows/android-ci.yml"
+  pull_request:
+    branches:
+      - release-android
+    paths:
+      - "composeApp/**"
+      - "shared/**"
+      - "gradle/**"
+      - "gradlew"
+      - "gradlew.bat"
+      - "build.gradle.kts"
+      - "settings.gradle.kts"
+      - ".github/workflows/android-ci.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x ./gradlew
+
+      - name: Inject local.properties for Android build
+        env:
+          ANDROID_DEBUG_BASE_URL: ${{ secrets.ANDROID_DEBUG_BASE_URL }}
+          ANDROID_RELEASE_BASE_URL: ${{ secrets.ANDROID_RELEASE_BASE_URL }}
+          ANDROID_KAKAO_NATIVE_APP_KEY: ${{ secrets.ANDROID_KAKAO_NATIVE_APP_KEY }}
+          ANDROID_GOOGLE_WEB_CLIENT_ID: ${{ secrets.ANDROID_GOOGLE_WEB_CLIENT_ID }}
+          ANDROID_AMPLITUDE_API_KEY: ${{ secrets.ANDROID_AMPLITUDE_API_KEY }}
+        run: |
+          if [ -z "${ANDROID_DEBUG_BASE_URL}" ] || [ -z "${ANDROID_RELEASE_BASE_URL}" ] || [ -z "${ANDROID_KAKAO_NATIVE_APP_KEY}" ] || [ -z "${ANDROID_GOOGLE_WEB_CLIENT_ID}" ] || [ -z "${ANDROID_AMPLITUDE_API_KEY}" ]; then
+            echo "Android local.properties secrets are not fully set"
+            exit 1
+          fi
+
+          cat > local.properties <<EOF
+          debug.base.url=${ANDROID_DEBUG_BASE_URL}
+          release.base.url=${ANDROID_RELEASE_BASE_URL}
+          kakao.key=${ANDROID_KAKAO_NATIVE_APP_KEY}
+          google.web.client.id=${ANDROID_GOOGLE_WEB_CLIENT_ID}
+          amplitude.api.key=${ANDROID_AMPLITUDE_API_KEY}
+          EOF
+
+      - name: Inject debug google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_DEBUG: ${{ secrets.GOOGLE_SERVICES_JSON_DEBUG }}
+        run: |
+          if [ -z "${GOOGLE_SERVICES_JSON_DEBUG}" ]; then
+            echo "GOOGLE_SERVICES_JSON_DEBUG is not set"
+            exit 1
+          fi
+
+          mkdir -p composeApp/src/debug
+          printf '%s' "${GOOGLE_SERVICES_JSON_DEBUG}" > composeApp/src/debug/google-services.json
+
+      - name: Build debug app for verification
+        run: ./gradlew :composeApp:assembleDebug --stacktrace

@@ -10,7 +10,7 @@ class GetCalendarRecommendationUseCase(
 ) {
     suspend operator fun invoke(
         year: Int,
-        month: Int,
+        month: Int?,
         dayOffCount: Int?,
         page: Int,
         size: Int,
