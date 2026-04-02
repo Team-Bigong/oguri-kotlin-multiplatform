@@ -87,7 +87,9 @@ class CalendarService(
         var curr = start
         while (!curr.isAfter(end)) {
             // 평일(월~금)이면서 공휴일이 아닌 날만 연차 소진으로 계산
-            if (curr.dayOfWeek != DayOfWeek.SATURDAY && curr.dayOfWeek != DayOfWeek.SUNDAY && !holidayMap.containsKey(curr)) {
+            val isWeekend = curr.dayOfWeek == DayOfWeek.SATURDAY || curr.dayOfWeek == DayOfWeek.SUNDAY
+            val isPublicHoliday = holidayMap.containsKey(curr)
+            if (!isWeekend && !isPublicHoliday) {
                 count++
             }
             curr = curr.plusDays(1)
