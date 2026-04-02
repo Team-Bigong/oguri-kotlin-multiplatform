@@ -134,8 +134,15 @@
     <string name="calendar_d_day_before">D-%1$d</string>
     <string name="calendar_d_day_after">D+%1$d</string>
     <string name="calendar_end_of_list_message">This is the last available schedule for this leave setting 👋</string>
+    <string name="calendar_leave_days_chip_text">Leave %1$d days</string>
     <string name="calendar_leave_days_sheet_title">Leave Settings</string>
     <string name="calendar_leave_days_sheet_done">Done</string>
+    <string name="calendar_period_filter_sheet_title">Leave Period</string>
+    <string name="calendar_period_filter_year_label">Year</string>
+    <string name="calendar_period_filter_month_label">Month</string>
+    <string name="calendar_period_filter_all">All</string>
+    <string name="calendar_period_chip_year_all">%1$d All</string>
+    <string name="calendar_period_chip_year_month">%1$d %2$d</string>
     <string name="period_detail_title">Period Detail</string>
     <string name="period_detail_holiday_fallback">long weekend</string>
     <string name="period_detail_empty_places_hint">No recommended places for this period yet.</string>

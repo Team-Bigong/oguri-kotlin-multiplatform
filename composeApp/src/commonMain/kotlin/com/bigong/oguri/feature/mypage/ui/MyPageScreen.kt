@@ -292,25 +292,3 @@ private fun MyPageBottomBanner() {
                 .height(60.dp),
     )
 }
-
-@Composable
-private fun MyPageBottomBanner() {
-    AdMobBanner(
-        placement = AdMobBannerPlacement.MYPAGE_BOTTOM,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-    )
-}
-
-@Composable
-private fun MyPageBottomBanner() {
-    AdMobBanner(
-        placement = AdMobBannerPlacement.MYPAGE_BOTTOM,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(60.dp),
-    )
-}
