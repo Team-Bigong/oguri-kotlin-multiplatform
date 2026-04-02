@@ -138,7 +138,7 @@
     <string name="calendar_leave_days_sheet_title">연차 사용 일수</string>
     <string name="calendar_leave_days_sheet_done">완료</string>
     <string name="calendar_period_filter_sheet_title">연차 사용 기간</string>
-    <string name="calendar_period_filter_year_label">연</string>
+    <string name="calendar_period_filter_year_label">연도</string>
     <string name="calendar_period_filter_month_label">월</string>
     <string name="calendar_period_filter_all">전체</string>
     <string name="calendar_period_chip_year_all">%1$d년 전체</string>

@@ -63,7 +63,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 private const val PICKER_VISIBLE_ITEM_COUNT = 3
-private const val MAXIMUM_YEAR_RANGE = 4
+private const val MAXIMUM_YEAR_RANGE = 1
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,24 +74,46 @@ fun CalendarPeriodBottomSheet(
     modifier: Modifier = Modifier,
 ) {
     val currentYear = rememberCurrentYear()
+    val currentMonth = rememberCurrentMonth()
     val yearOptions = remember(currentYear) { (currentYear..(currentYear + MAXIMUM_YEAR_RANGE)).toList() }
-    val monthOptions = remember { listOf<Int?>(null) + (1..12).toList() }
+    val selectedYearInRange = selectedYear.coerceIn(yearOptions.first(), yearOptions.last())
+    var pickerYear by rememberSaveable(selectedYear) { mutableIntStateOf(selectedYearInRange) }
+    val monthOptions =
+        remember(pickerYear, currentYear, currentMonth) {
+            buildMonthOptions(
+                selectedYear = pickerYear,
+                currentYear = currentYear,
+                currentMonth = currentMonth,
+            )
+        }
     var isBottomSheetVisible by rememberSaveable { mutableStateOf(false) }
-    var pickerYear by rememberSaveable(selectedYear) { mutableIntStateOf(selectedYear.coerceIn(yearOptions.first(), yearOptions.last())) }
-    var pickerMonth by rememberSaveable(selectedMonth) { mutableStateOf(selectedMonth.takeIf { it in 1..12 }) }
+    var pickerMonth by rememberSaveable(selectedYear, selectedMonth) {
+        mutableStateOf(selectedMonth?.takeIf { month: Int -> month in monthOptions.filterNotNull() })
+    }
+    LaunchedEffect(monthOptions) {
+        if (pickerMonth !in monthOptions) {
+            pickerMonth = null
+        }
+    }
 
     val chipText =
         if (selectedMonth == null) {
-            stringResource(Res.string.calendar_period_chip_year_all, selectedYear)
+            stringResource(Res.string.calendar_period_chip_year_all, selectedYearInRange)
         } else {
-            stringResource(Res.string.calendar_period_chip_year_month, selectedYear, selectedMonth)
+            stringResource(Res.string.calendar_period_chip_year_month, selectedYearInRange, selectedMonth)
         }
 
     CalendarFilterChip(
         text = chipText,
         onClick = {
-            pickerYear = selectedYear.coerceIn(yearOptions.first(), yearOptions.last())
-            pickerMonth = selectedMonth.takeIf { it in 1..12 }
+            pickerYear = selectedYearInRange
+            val openMonthOptions =
+                buildMonthOptions(
+                    selectedYear = selectedYearInRange,
+                    currentYear = currentYear,
+                    currentMonth = currentMonth,
+                )
+            pickerMonth = selectedMonth?.takeIf { month: Int -> month in openMonthOptions.filterNotNull() }
             isBottomSheetVisible = true
         },
         modifier = modifier,
@@ -341,4 +363,28 @@ private fun rememberCurrentYear(): Int {
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
     return today.year
+}
+
+@Composable
+private fun rememberCurrentMonth(): Int {
+    val today =
+        kotlin.time.Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+    return today.month.ordinal + 1
+}
+
+private fun buildMonthOptions(
+    selectedYear: Int,
+    currentYear: Int,
+    currentMonth: Int,
+): List<Int?> {
+    val visibleMonths: IntRange =
+        if (selectedYear == currentYear) {
+            currentMonth..12
+        } else {
+            1..12
+        }
+    return listOf(null) + visibleMonths.toList()
 }
