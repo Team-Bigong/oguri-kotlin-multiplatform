@@ -16,17 +16,19 @@ class KtorCalendarRemoteDataSource(
 ) : CalendarRemoteDataSource {
     override suspend fun getCalendarRecommendationResponse(
         year: Int,
-        month: Int,
+        month: Int?,
         dayOffCount: Int?,
         page: Int,
         size: Int,
     ): CalendarRecommendationResponse {
         val requestUrl = "$DEBUG_BASE_URL$CALENDAR_API_PATH"
-        val yearMonth = "$year-${month.toString().padStart(2, '0')}"
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
-                    parameter(CALENDAR_YEAR_MONTH_QUERY_NAME, yearMonth)
+                    parameter(CALENDAR_YEAR_QUERY_NAME, year)
+                    month?.let { resolvedMonth: Int ->
+                        parameter(CALENDAR_MONTH_QUERY_NAME, resolvedMonth)
+                    }
                     dayOffCount?.let { resolvedDayOffCount ->
                         parameter(CALENDAR_DAY_OFF_COUNT_QUERY_NAME, resolvedDayOffCount)
                     }
@@ -59,7 +61,8 @@ class KtorCalendarRemoteDataSource(
     private companion object {
         private const val CALENDAR_API_PATH = "/api/v1/calendar"
         private const val CALENDAR_DETAIL_API_PATH = "/api/v1/calendar/detail"
-        private const val CALENDAR_YEAR_MONTH_QUERY_NAME = "yearMonth"
+        private const val CALENDAR_YEAR_QUERY_NAME = "year"
+        private const val CALENDAR_MONTH_QUERY_NAME = "month"
         private const val CALENDAR_DAY_OFF_COUNT_QUERY_NAME = "dayOffCount"
         private const val CALENDAR_PAGE_QUERY_NAME = "page"
         private const val CALENDAR_SIZE_QUERY_NAME = "size"

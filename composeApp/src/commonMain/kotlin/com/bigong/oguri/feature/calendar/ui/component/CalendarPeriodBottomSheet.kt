@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -47,32 +48,50 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_exit
-import oguri.composeapp.generated.resources.calendar_leave_days_chip_text
 import oguri.composeapp.generated.resources.calendar_leave_days_sheet_done
-import oguri.composeapp.generated.resources.calendar_leave_days_sheet_title
+import oguri.composeapp.generated.resources.calendar_period_chip_year_all
+import oguri.composeapp.generated.resources.calendar_period_chip_year_month
+import oguri.composeapp.generated.resources.calendar_period_filter_all
+import oguri.composeapp.generated.resources.calendar_period_filter_month_label
+import oguri.composeapp.generated.resources.calendar_period_filter_sheet_title
+import oguri.composeapp.generated.resources.calendar_period_filter_year_label
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-private const val MIN_LEAVE_DAYS = 1
-private const val MAX_LEAVE_DAYS = 30
 private const val PICKER_VISIBLE_ITEM_COUNT = 3
+private const val MAXIMUM_YEAR_RANGE = 4
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CalendarLeaveDaysBottomSheet(
-    leaveDays: Int,
-    onLeaveDaysChanged: (Int) -> Unit,
+fun CalendarPeriodBottomSheet(
+    selectedYear: Int,
+    selectedMonth: Int?,
+    onPeriodFilterChanged: (Int, Int?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val currentYear = rememberCurrentYear()
+    val yearOptions = remember(currentYear) { (currentYear..(currentYear + MAXIMUM_YEAR_RANGE)).toList() }
+    val monthOptions = remember { listOf<Int?>(null) + (1..12).toList() }
     var isBottomSheetVisible by rememberSaveable { mutableStateOf(false) }
-    var selectedLeaveDays by rememberSaveable(leaveDays) { mutableIntStateOf(leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)) }
+    var pickerYear by rememberSaveable(selectedYear) { mutableIntStateOf(selectedYear.coerceIn(yearOptions.first(), yearOptions.last())) }
+    var pickerMonth by rememberSaveable(selectedMonth) { mutableStateOf(selectedMonth.takeIf { it in 1..12 }) }
+
+    val chipText =
+        if (selectedMonth == null) {
+            stringResource(Res.string.calendar_period_chip_year_all, selectedYear)
+        } else {
+            stringResource(Res.string.calendar_period_chip_year_month, selectedYear, selectedMonth)
+        }
 
     CalendarFilterChip(
-        text = stringResource(Res.string.calendar_leave_days_chip_text, leaveDays),
+        text = chipText,
         onClick = {
-            selectedLeaveDays = leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
+            pickerYear = selectedYear.coerceIn(yearOptions.first(), yearOptions.last())
+            pickerMonth = selectedMonth.takeIf { it in 1..12 }
             isBottomSheetVisible = true
         },
         modifier = modifier,
@@ -80,7 +99,6 @@ fun CalendarLeaveDaysBottomSheet(
 
     if (isBottomSheetVisible) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
         ModalBottomSheet(
             onDismissRequest = { isBottomSheetVisible = false },
             sheetState = sheetState,
@@ -108,7 +126,7 @@ fun CalendarLeaveDaysBottomSheet(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        text = stringResource(Res.string.calendar_leave_days_sheet_title),
+                        text = stringResource(Res.string.calendar_period_filter_sheet_title),
                         style = OguriTheme.typography.cardTitle,
                         color = Neutral90,
                     )
@@ -121,10 +139,17 @@ fun CalendarLeaveDaysBottomSheet(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LeaveDaysNumberPicker(
-                    value = selectedLeaveDays,
-                    onValueChange = { selectedLeaveDays = it },
-                    modifier = Modifier.fillMaxWidth(),
+                PeriodFilterPicker(
+                    yearOptions = yearOptions,
+                    monthOptions = monthOptions,
+                    selectedYear = pickerYear,
+                    selectedMonth = pickerMonth,
+                    onYearChanged = { changedYear: Int ->
+                        pickerYear = changedYear
+                    },
+                    onMonthChanged = { changedMonth: Int? ->
+                        pickerMonth = changedMonth
+                    },
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -136,7 +161,7 @@ fun CalendarLeaveDaysBottomSheet(
                             .background(color = Mint70, shape = RoundedCornerShape(size = 8.dp))
                             .noRippleClickable(
                                 onClick = {
-                                    onLeaveDaysChanged(selectedLeaveDays)
+                                    onPeriodFilterChanged(pickerYear, pickerMonth)
                                     isBottomSheetVisible = false
                                 },
                             ).padding(vertical = 14.dp),
@@ -154,18 +179,84 @@ fun CalendarLeaveDaysBottomSheet(
 }
 
 @Composable
-private fun LeaveDaysNumberPicker(
-    value: Int,
-    onValueChange: (Int) -> Unit,
+private fun PeriodFilterPicker(
+    yearOptions: List<Int>,
+    monthOptions: List<Int?>,
+    selectedYear: Int,
+    selectedMonth: Int?,
+    onYearChanged: (Int) -> Unit,
+    onMonthChanged: (Int?) -> Unit,
+) {
+    val selectedYearIndex = yearOptions.indexOf(selectedYear).coerceAtLeast(0)
+    val selectedMonthIndex = monthOptions.indexOf(selectedMonth).coerceAtLeast(0)
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround,
+        ) {
+            Text(
+                text = stringResource(Res.string.calendar_period_filter_year_label),
+                style = OguriTheme.typography.labelMedium,
+                color = Neutral50,
+            )
+            Text(
+                text = stringResource(Res.string.calendar_period_filter_month_label),
+                style = OguriTheme.typography.labelMedium,
+                color = Neutral50,
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            modifier = Modifier.fillMaxWidth().height(42.dp * PICKER_VISIBLE_ITEM_COUNT),
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(42.dp)
+                        .background(color = Mint50.copy(alpha = 0.5f), shape = RoundedCornerShape(12.dp)),
+            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                SingleColumnPicker(
+                    items = yearOptions.map { year -> year.toString() },
+                    selectedIndex = selectedYearIndex,
+                    onIndexChanged = { changedIndex: Int ->
+                        onYearChanged(yearOptions[changedIndex])
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+                SingleColumnPicker(
+                    items =
+                        monthOptions.map { month: Int? ->
+                            month?.toString() ?: stringResource(Res.string.calendar_period_filter_all)
+                        },
+                    selectedIndex = selectedMonthIndex,
+                    onIndexChanged = { changedIndex: Int ->
+                        onMonthChanged(monthOptions[changedIndex])
+                    },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SingleColumnPicker(
+    items: List<String>,
+    selectedIndex: Int,
+    onIndexChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
     visibleItemCount: Int = PICKER_VISIBLE_ITEM_COUNT,
     itemHeight: Dp = 42.dp,
 ) {
     val centerOffset = (visibleItemCount - 1) / 2
-    val pickerState = rememberLazyListState(initialFirstVisibleItemIndex = (value - MIN_LEAVE_DAYS).coerceAtLeast(0))
+    val pickerState = rememberLazyListState(initialFirstVisibleItemIndex = selectedIndex.coerceAtLeast(0))
     val itemHeightPx = with(LocalDensity.current) { itemHeight.roundToPx() }
 
-    LaunchedEffect(pickerState, itemHeightPx) {
+    LaunchedEffect(pickerState, itemHeightPx, items.size) {
         snapshotFlow {
             pickerState.firstVisibleItemIndex to pickerState.firstVisibleItemScrollOffset
         }.map { (firstVisibleItemIndex, firstVisibleItemScrollOffset) ->
@@ -173,61 +264,54 @@ private fun LeaveDaysNumberPicker(
                 firstVisibleItemIndex = firstVisibleItemIndex,
                 firstVisibleItemScrollOffset = firstVisibleItemScrollOffset,
                 itemHeightPx = itemHeightPx,
+                maximumIndex = items.lastIndex,
             )
         }.distinctUntilChanged()
             .collect { nearestIndex ->
-                val day = (nearestIndex + MIN_LEAVE_DAYS).coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
-                if (day != value) {
-                    onValueChange(day)
+                if (nearestIndex != selectedIndex) {
+                    onIndexChanged(nearestIndex)
                 }
             }
     }
 
-    LaunchedEffect(pickerState.isScrollInProgress, itemHeightPx) {
+    LaunchedEffect(pickerState.isScrollInProgress, itemHeightPx, items.size) {
         if (!pickerState.isScrollInProgress) {
             val nearestIndex =
                 nearestPickerIndex(
                     firstVisibleItemIndex = pickerState.firstVisibleItemIndex,
                     firstVisibleItemScrollOffset = pickerState.firstVisibleItemScrollOffset,
                     itemHeightPx = itemHeightPx,
+                    maximumIndex = items.lastIndex,
                 )
             pickerState.scrollToItem(index = nearestIndex)
         }
     }
 
-    Box(
-        modifier = modifier.height(itemHeight * visibleItemCount),
-        contentAlignment = Alignment.Center,
+    LaunchedEffect(selectedIndex) {
+        pickerState.scrollToItem(index = selectedIndex)
+    }
+
+    LazyColumn(
+        state = pickerState,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        flingBehavior = pickerSnapFlingBehavior(pickerState),
+        modifier = modifier,
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .height(itemHeight)
-                    .background(color = Mint50.copy(alpha = 0.5f), shape = RoundedCornerShape(8.dp)),
-        )
-        LazyColumn(
-            state = pickerState,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            flingBehavior = pickerSnapFlingBehavior(pickerState),
-        ) {
-            items(centerOffset) {
-                Spacer(modifier = Modifier.height(itemHeight))
-            }
-            items(MAX_LEAVE_DAYS - MIN_LEAVE_DAYS + 1) { index ->
-                val day = index + MIN_LEAVE_DAYS
-                val isSelected = day == value
-                Text(
-                    text = day.toString(),
-                    style = OguriTheme.typography.bodyLarge,
-                    color = if (isSelected) Neutral90 else Neutral40,
-                    modifier = Modifier.height(itemHeight).fillMaxWidth().wrapContentHeight(Alignment.CenterVertically),
-                    textAlign = TextAlign.Center,
-                )
-            }
-            items(centerOffset) {
-                Spacer(modifier = Modifier.height(itemHeight))
-            }
+        items(centerOffset) {
+            Spacer(modifier = Modifier.height(itemHeight))
+        }
+        items(items.size) { index: Int ->
+            val isSelected = index == selectedIndex
+            Text(
+                text = items[index],
+                style = OguriTheme.typography.bodyLarge,
+                color = if (isSelected) Neutral90 else Neutral40,
+                modifier = Modifier.height(itemHeight).fillMaxWidth().wrapContentHeight(Alignment.CenterVertically),
+                textAlign = TextAlign.Center,
+            )
+        }
+        items(centerOffset) {
+            Spacer(modifier = Modifier.height(itemHeight))
         }
     }
 }
@@ -236,9 +320,10 @@ private fun nearestPickerIndex(
     firstVisibleItemIndex: Int,
     firstVisibleItemScrollOffset: Int,
     itemHeightPx: Int,
+    maximumIndex: Int,
 ): Int {
     val nextIndexOffset = if (firstVisibleItemScrollOffset >= itemHeightPx / 2) 1 else 0
-    return (firstVisibleItemIndex + nextIndexOffset).coerceIn(0, MAX_LEAVE_DAYS - MIN_LEAVE_DAYS)
+    return (firstVisibleItemIndex + nextIndexOffset).coerceIn(0, maximumIndex)
 }
 
 @Composable
@@ -247,3 +332,13 @@ private fun pickerSnapFlingBehavior(listState: LazyListState): FlingBehavior =
         lazyListState = listState,
         snapPosition = SnapPosition.Center,
     )
+
+@Composable
+private fun rememberCurrentYear(): Int {
+    val today =
+        kotlin.time.Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .date
+    return today.year
+}
