@@ -1,6 +1,6 @@
 package com.bigong.oguri.data.remote
 
-import com.bigong.oguri.core.network.DEBUG_BASE_URL
+import com.bigong.oguri.core.network.BASE_URL
 import com.bigong.oguri.data.remote.model.response.PlaceDetailResponse
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
@@ -21,7 +21,7 @@ class KtorPlaceDetailRemoteDataSource(
         endDate: String?,
         userCountry: String,
     ): PlaceDetailResponse {
-        val requestUrl = "$DEBUG_BASE_URL$DESTINATION_API_PATH/$placeId"
+        val requestUrl = "$BASE_URL$DESTINATION_API_PATH/$placeId"
         return authRequestExecutor.execute {
             httpClient
                 .get(requestUrl) {
@@ -38,13 +38,13 @@ class KtorPlaceDetailRemoteDataSource(
 
     override suspend fun saveDestination(placeId: Long) {
         authRequestExecutor.execute {
-            httpClient.post("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId")
+            httpClient.post("$BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId")
         }
     }
 
     override suspend fun deleteSavedDestination(placeId: Long) {
         authRequestExecutor.execute {
-            httpClient.delete("$DEBUG_BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId")
+            httpClient.delete("$BASE_URL$MEMBER_SAVED_DESTINATIONS_API_PATH/$placeId")
         }
     }
 
