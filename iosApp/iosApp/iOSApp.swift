@@ -7,8 +7,13 @@ import GoogleMobileAds
 import FirebaseCore
 import FirebaseCrashlytics
 
+#if DEBUG
+private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
+private let iosAppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023"
+#else
 private let iosBannerAdUnitId = "ca-app-pub-9643550840413935/1095385664"
 private let iosAppOpenAdUnitId = "ca-app-pub-9643550840413935/1058191792"
+#endif
 #if DEBUG
 private let firebaseConfigurationPlistName = "GoogleService-Info-Debug"
 #else

@@ -24,6 +24,7 @@ private fun CalendarScreenPreview() {
             pagedPeriodCards = pagedPeriodCards,
             savedStateByPeriodKey = emptyMap(),
             onLeaveDaysChanged = {},
+            onPeriodFilterChanged = { _, _ -> },
             onCardClick = {},
             onSaveToggleClick = {},
             onDetailClick = {},
