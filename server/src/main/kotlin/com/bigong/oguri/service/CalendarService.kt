@@ -7,8 +7,10 @@ import com.bigong.oguri.dto.PeriodDetailResponse
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.PublicHolidayRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
@@ -94,12 +96,28 @@ class CalendarService(
     }
 
     fun getCalendarData(
-        yearMonth: YearMonth,
+        year: Int,
+        month: Int?,
         memberId: String,
         dayOffCount: Int?,
         page: Int,
         size: Int
     ): CalendarResponse {
+        validateCalendarFilter(year = year, month = month)
+
+        val currentDate: LocalDate = LocalDate.now()
+        val startMonth: Int = resolveSearchStartMonth(
+            year = year,
+            month = month,
+            currentYear = currentDate.year,
+            currentMonth = currentDate.monthValue
+        )
+        val startYearMonth: YearMonth = YearMonth.of(year, startMonth)
+        val monthRangeCount: Int = resolveSearchMonthRangeCount(
+            month = month,
+            startMonth = startMonth
+        )
+
         val targetDayOff = (dayOffCount ?: memberService.getPreferredDayOff(memberId)).coerceAtLeast(1)
         val normalizedPage = page.coerceAtLeast(0)
         val normalizedSize = size.coerceIn(MIN_PAGE_SIZE, MAX_PAGE_SIZE)
@@ -113,12 +131,12 @@ class CalendarService(
         }.toSet()
 
         val periodCandidates = findTopPeriods(
-            startYearMonth = yearMonth,
+            startYearMonth = startYearMonth,
             userDayOff = targetDayOff,
             holidayMap = holidayMap,
-            monthRangeCount = RECOMMENDATION_MONTH_RANGE,
+            monthRangeCount = monthRangeCount,
             periodLimitPerMonth = PERIOD_LIMIT_PER_MONTH,
-            startDateCutoff = LocalDate.now()
+            startDateCutoff = currentDate
         )
 
         val offset = normalizedPage * normalizedSize
@@ -170,8 +188,44 @@ class CalendarService(
 
     private fun buildPeriodKey(startDate: LocalDate, endDate: LocalDate): String = "${startDate}_${endDate}"
 
+    private fun validateCalendarFilter(year: Int, month: Int?) {
+        if (year < MINIMUM_SUPPORTED_YEAR) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "year는 $MINIMUM_SUPPORTED_YEAR 이상이어야 합니다."
+            )
+        }
+        if (month != null && month !in MONTH_MIN_VALUE..MONTH_MAX_VALUE) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "month는 $MONTH_MIN_VALUE~$MONTH_MAX_VALUE 범위여야 합니다."
+            )
+        }
+    }
+
+    private fun resolveSearchStartMonth(year: Int, month: Int?, currentYear: Int, currentMonth: Int): Int {
+        if (month != null) {
+            return month
+        }
+        return if (year == currentYear) {
+            currentMonth
+        } else {
+            MONTH_MIN_VALUE
+        }
+    }
+
+    private fun resolveSearchMonthRangeCount(month: Int?, startMonth: Int): Int {
+        if (month != null) {
+            return SINGLE_MONTH_RANGE
+        }
+        return MONTH_MAX_VALUE - startMonth + 1
+    }
+
     private companion object {
-        private const val RECOMMENDATION_MONTH_RANGE = 12
+        private const val MINIMUM_SUPPORTED_YEAR = 1
+        private const val MONTH_MIN_VALUE = 1
+        private const val MONTH_MAX_VALUE = 12
+        private const val SINGLE_MONTH_RANGE = 1
         private const val PERIOD_LIMIT_PER_MONTH = 6
         private const val MIN_PAGE_SIZE = 1
         private const val MAX_PAGE_SIZE = 50

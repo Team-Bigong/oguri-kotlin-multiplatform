@@ -18,6 +18,7 @@ import com.bigong.oguri.core.ad.AdMobBannerPlacement
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestProfileSection
@@ -267,7 +268,7 @@ fun MyPageScreen(
         MyPageWithdrawDialog(
             inputText = myPageUiState.withdrawInputText,
             targetPhrase = withdrawTargetPhrase,
-            isConfirmEnabled = myPageUiState.isWithdrawConfirmEnabled,
+            isConfirmEnabled = myPageUiState.isWithdrawConfirmEnabled && !myPageUiState.isWithdrawSubmitting,
             onInputChange = { inputText ->
                 onWithdrawInputChange(inputText, withdrawTargetPhrase)
             },
@@ -275,6 +276,21 @@ fun MyPageScreen(
             onConfirmClick = onConfirmWithdraw,
         )
     }
+
+    if (myPageUiState.isWithdrawSubmitting) {
+        CenteredLoadingIndicator()
+    }
+}
+
+@Composable
+private fun MyPageBottomBanner() {
+    AdMobBanner(
+        placement = AdMobBannerPlacement.MYPAGE_BOTTOM,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+    )
 }
 
 @Composable

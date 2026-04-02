@@ -58,7 +58,7 @@ const frequentlyAskedQuestions = [
   },
   {
     question: "어디서 설치할 수 있나요?",
-    answer: "Google Play와 App Store에서 바로 설치할 수 있어요."
+    answer: "아직 출시 전이며, 2026년 4월 이내 출시를 목표로 준비하고 있어요."
   }
 ]
 
@@ -67,13 +67,20 @@ type StoreButtonsProps = {
 }
 
 const StoreButtons = ({ className }: StoreButtonsProps): React.JSX.Element => {
+  const unreleasedStoreNoticeMessage = "조금만 기다려주세요! 4월 이내 출시 예정이에요."
+
+  const handleStoreButtonClick = (event: React.MouseEvent<HTMLAnchorElement>): void => {
+    event.preventDefault()
+    window.alert(unreleasedStoreNoticeMessage)
+  }
+
   return (
     <div className={`storeButtons ${className ?? ""}`.trim()}>
-      <a href={playStoreUrl} target="_blank" rel="noreferrer" className="storeButton">
+      <a href={playStoreUrl} target="_blank" rel="noreferrer" className="storeButton" onClick={handleStoreButtonClick}>
         <img src="/assets/official/store/play-store-logo.png" alt="" className="storeButtonIcon" />
         <span className="storeButtonLabel">Google Play</span>
       </a>
-      <a href={appStoreUrl} target="_blank" rel="noreferrer" className="storeButton">
+      <a href={appStoreUrl} target="_blank" rel="noreferrer" className="storeButton" onClick={handleStoreButtonClick}>
         <img src="/assets/official/store/app-store-logo.png" alt="" className="storeButtonIcon" />
         <span className="storeButtonLabel">App Store</span>
       </a>

@@ -1,0 +1,117 @@
+name: android-cd
+
+on:
+  workflow_run:
+    workflows:
+      - android-ci
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'release-android'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Grant execute permission for Gradle
+        run: chmod +x ./gradlew
+
+      - name: Inject local.properties for Android build
+        env:
+          ANDROID_DEBUG_BASE_URL: ${{ secrets.ANDROID_DEBUG_BASE_URL }}
+          ANDROID_RELEASE_BASE_URL: ${{ secrets.ANDROID_RELEASE_BASE_URL }}
+          ANDROID_KAKAO_NATIVE_APP_KEY: ${{ secrets.ANDROID_KAKAO_NATIVE_APP_KEY }}
+          ANDROID_GOOGLE_WEB_CLIENT_ID: ${{ secrets.ANDROID_GOOGLE_WEB_CLIENT_ID }}
+          ANDROID_AMPLITUDE_API_KEY: ${{ secrets.ANDROID_AMPLITUDE_API_KEY }}
+        run: |
+          if [ -z "${ANDROID_DEBUG_BASE_URL}" ] || [ -z "${ANDROID_RELEASE_BASE_URL}" ] || [ -z "${ANDROID_KAKAO_NATIVE_APP_KEY}" ] || [ -z "${ANDROID_GOOGLE_WEB_CLIENT_ID}" ] || [ -z "${ANDROID_AMPLITUDE_API_KEY}" ]; then
+            echo "Android local.properties secrets are not fully set"
+            exit 1
+          fi
+
+          cat > local.properties <<EOF
+          debug.base.url=${ANDROID_DEBUG_BASE_URL}
+          release.base.url=${ANDROID_RELEASE_BASE_URL}
+          kakao.key=${ANDROID_KAKAO_NATIVE_APP_KEY}
+          google.web.client.id=${ANDROID_GOOGLE_WEB_CLIENT_ID}
+          amplitude.api.key=${ANDROID_AMPLITUDE_API_KEY}
+          EOF
+
+      - name: Inject release google-services.json
+        env:
+          GOOGLE_SERVICES_JSON_RELEASE: ${{ secrets.GOOGLE_SERVICES_JSON_RELEASE }}
+        run: |
+          if [ -z "${GOOGLE_SERVICES_JSON_RELEASE}" ]; then
+            echo "GOOGLE_SERVICES_JSON_RELEASE is not set"
+            exit 1
+          fi
+
+          mkdir -p composeApp/src/release
+          printf '%s' "${GOOGLE_SERVICES_JSON_RELEASE}" > composeApp/src/release/google-services.json
+
+      - name: Decode signing keystore
+        env:
+          ANDROID_SIGNING_KEYSTORE_BASE64: ${{ secrets.ANDROID_SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "${ANDROID_SIGNING_KEYSTORE_BASE64}" ]; then
+            echo "ANDROID_SIGNING_KEYSTORE_BASE64 is not set"
+            exit 1
+          fi
+
+          echo "${ANDROID_SIGNING_KEYSTORE_BASE64}" | base64 --decode > "${RUNNER_TEMP}/android-release.keystore"
+
+      - name: Build signed Android App Bundle
+        env:
+          ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
+          ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "${ANDROID_SIGNING_STORE_PASSWORD}" ] || [ -z "${ANDROID_SIGNING_KEY_ALIAS}" ] || [ -z "${ANDROID_SIGNING_KEY_PASSWORD}" ]; then
+            echo "Android signing secrets are not fully set"
+            exit 1
+          fi
+
+          ./gradlew :composeApp:bundleRelease \
+            -Pandroid.injected.signing.store.file="${RUNNER_TEMP}/android-release.keystore" \
+            -Pandroid.injected.signing.store.password="${ANDROID_SIGNING_STORE_PASSWORD}" \
+            -Pandroid.injected.signing.key.alias="${ANDROID_SIGNING_KEY_ALIAS}" \
+            -Pandroid.injected.signing.key.password="${ANDROID_SIGNING_KEY_PASSWORD}" \
+            --stacktrace
+
+      - name: Prepare Korean release notes from version file
+        run: |
+          VERSION_NAME="$(sed -n 's/.*versionName = \"\\(.*\\)\".*/\\1/p' composeApp/build.gradle.kts | head -n 1)"
+          if [ -z "${VERSION_NAME}" ]; then
+            echo "Failed to resolve versionName from composeApp/build.gradle.kts"
+            exit 1
+          fi
+
+          KOREAN_RELEASE_NOTE_FILE_PATH="release-notes/android/ko-KR/${VERSION_NAME}.txt"
+          if [ ! -f "${KOREAN_RELEASE_NOTE_FILE_PATH}" ]; then
+            echo "Release note file not found: ${KOREAN_RELEASE_NOTE_FILE_PATH}"
+            exit 1
+          fi
+
+          mkdir -p "${RUNNER_TEMP}/whatsnew"
+          cp "${KOREAN_RELEASE_NOTE_FILE_PATH}" "${RUNNER_TEMP}/whatsnew/whatsnew-ko-KR"
+
+      - name: Upload to Google Play production
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.bigong.oguri
+          releaseFiles: composeApp/build/outputs/bundle/release/*.aab
+          tracks: production
+          status: completed
+          whatsNewDirectory: ${{ runner.temp }}/whatsnew

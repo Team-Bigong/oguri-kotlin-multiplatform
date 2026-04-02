@@ -57,7 +57,7 @@ class CalendarViewModel(
     val pagedPeriodCards: Flow<PagingData<CalendarPeriodCardUiModel>> =
         pagingQueryFlow
             .flatMapLatest { query: CalendarPagingQuery ->
-                if (query.year <= 0 || query.month <= 0) {
+                if (query.year <= 0) {
                     flowOf(PagingData.empty())
                 } else {
                     Pager(
@@ -118,13 +118,13 @@ class CalendarViewModel(
         _uiState.update { currentUiState ->
             currentUiState.copy(
                 selectedYear = today.year,
-                selectedMonth = today.month.ordinal + 1,
+                selectedMonth = null,
             )
         }
         pagingQueryFlow.value =
             CalendarPagingQuery(
                 year = today.year,
-                month = today.month.ordinal + 1,
+                month = null,
                 dayOffCount = null,
                 requestVersion = 0,
             )
@@ -147,6 +147,28 @@ class CalendarViewModel(
         periodCardById.value = emptyMap()
         _sideEffect.tryEmit(CalendarSideEffect.LeaveDaysUpdated)
         refreshByDayOffCount(dayOffCount = leaveDays)
+    }
+
+    fun updatePeriodFilter(
+        year: Int,
+        month: Int?,
+    ) {
+        val resolvedMonth = month?.takeIf { selectedMonth: Int -> selectedMonth in MONTH_MIN_VALUE..MONTH_MAX_VALUE }
+        val currentUiState: CalendarUiState = uiState.value
+        if (currentUiState.selectedYear == year && currentUiState.selectedMonth == resolvedMonth) {
+            return
+        }
+        _uiState.update { previousUiState ->
+            previousUiState.copy(
+                selectedYear = year,
+                selectedMonth = resolvedMonth,
+                expandedPeriodId = null,
+                selectedDateByPeriodId = emptyMap(),
+                savedStateByPeriodKey = emptyMap(),
+            )
+        }
+        periodCardById.value = emptyMap()
+        refreshByPeriodFilter(year = year, month = resolvedMonth)
     }
 
     fun refreshWithPreferredLeaveDays(preferredLeaveDays: Int) {
@@ -307,14 +329,29 @@ class CalendarViewModel(
             )
     }
 
+    private fun refreshByPeriodFilter(
+        year: Int,
+        month: Int?,
+    ) {
+        val query: CalendarPagingQuery = pagingQueryFlow.value
+        pagingQueryFlow.value =
+            query.copy(
+                year = year,
+                month = month,
+                requestVersion = query.requestVersion + 1,
+            )
+    }
+
     private data class CalendarPagingQuery(
         val year: Int = 0,
-        val month: Int = 0,
+        val month: Int? = null,
         val dayOffCount: Int? = null,
         val requestVersion: Int = 0,
     )
 
     private companion object {
         private const val CALENDAR_PAGE_SIZE = 10
+        private const val MONTH_MIN_VALUE = 1
+        private const val MONTH_MAX_VALUE = 12
     }
 }
