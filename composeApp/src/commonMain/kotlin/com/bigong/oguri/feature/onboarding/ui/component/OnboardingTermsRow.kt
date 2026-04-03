@@ -12,8 +12,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.SuccessGreen
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_right_arrow
@@ -52,6 +54,7 @@ fun OnboardingTermsRow(
                         },
                     ),
                 contentDescription = null,
+                colorFilter = ColorFilter.tint(if (isChecked) SuccessGreen else Neutral50),
                 modifier = Modifier.size(30.dp),
             )
             Text(

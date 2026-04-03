@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -160,6 +161,7 @@ fun CalendarPeriodBottomSheet(
                     Image(
                         painter = painterResource(resource = Res.drawable.btn_exit),
                         contentDescription = null,
+                        colorFilter = ColorFilter.tint(Neutral50),
                         modifier = Modifier.size(36.dp).noRippleClickable(onClick = { isBottomSheetVisible = false }),
                     )
                 }
