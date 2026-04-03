@@ -220,17 +220,20 @@ private fun PeriodFilterPicker(
     Column {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
         ) {
             Text(
                 text = stringResource(Res.string.calendar_period_filter_year_label),
                 style = OguriTheme.typography.labelMedium,
                 color = Neutral50,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
             )
             Text(
                 text = stringResource(Res.string.calendar_period_filter_month_label),
                 style = OguriTheme.typography.labelMedium,
                 color = Neutral50,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.weight(1f),
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
