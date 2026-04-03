@@ -125,7 +125,7 @@ class CalendarViewModel(
             CalendarPagingQuery(
                 year = today.year,
                 month = null,
-                dayOffCount = null,
+                dayOffCount = _uiState.value.leaveDays,
                 requestVersion = 0,
             )
         observeRecommendationSavedChanges()
@@ -305,6 +305,9 @@ class CalendarViewModel(
         viewModelScope.launch {
             observePreferredLeaveDaysChangesUseCase().collect { change ->
                 val preferredLeaveDays: Int = change.preferredLeaveDays.coerceAtLeast(1)
+                if (preferredLeaveDays == uiState.value.leaveDays) {
+                    return@collect
+                }
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
                         leaveDays = preferredLeaveDays,

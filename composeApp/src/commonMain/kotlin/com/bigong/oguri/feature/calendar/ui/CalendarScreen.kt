@@ -48,7 +48,7 @@ import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarPeriodBottomSheet
-import com.bigong.oguri.feature.calendar.ui.component.CalendarRecommendationSection
+import com.bigong.oguri.feature.calendar.ui.component.calendarRecommendationSection
 import com.bigong.oguri.feature.calendar.ui.component.CalendarSkeletonContent
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
@@ -168,30 +168,30 @@ fun CalendarScreen(
                 Spacer(modifier = Modifier.height(18.dp))
             }
 
-            item {
-                CalendarRecommendationSection(
-                    pagedPeriodCards = pagedPeriodCards,
-                    savedStateByPeriodKey = savedStateByPeriodKey,
-                    expandedPeriodId = calendarUiState.expandedPeriodId,
-                    isLoadingNextPage = isAppending,
-                    showEndHint = shouldShowEndHint,
-                    listViewportBottomInWindow = listViewportBottomInWindow,
-                    onCardClick = onCardClick,
-                    onSaveToggleClick = onSaveToggleClick,
-                    onDetailClick = onDetailClick,
-                    onRequestScrollBy = { scrollByPixels ->
-                        if (scrollByPixels <= 0f) {
-                            return@CalendarRecommendationSection
-                        }
-                        coroutineScope.launch {
-                            listState.animateScrollBy(
-                                value = scrollByPixels,
-                                animationSpec = tween(durationMillis = 220),
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
+            calendarRecommendationSection(
+                pagedPeriodCards = pagedPeriodCards,
+                savedStateByPeriodKey = savedStateByPeriodKey,
+                expandedPeriodId = calendarUiState.expandedPeriodId,
+                isLoadingNextPage = isAppending,
+                showEndHint = shouldShowEndHint,
+                listViewportBottomInWindow = listViewportBottomInWindow,
+                onCardClick = onCardClick,
+                onSaveToggleClick = onSaveToggleClick,
+                onDetailClick = onDetailClick,
+                onRequestScrollBy = { scrollByPixels ->
+                    if (scrollByPixels <= 0f) {
+                        return@calendarRecommendationSection
+                    }
+                    coroutineScope.launch {
+                        listState.animateScrollBy(
+                            value = scrollByPixels,
+                            animationSpec = tween(durationMillis = 220),
+                        )
+                    }
+                },
+            )
+
+            item(key = "calendar_recommendation_bottom_spacing") {
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }

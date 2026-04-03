@@ -1,6 +1,7 @@
 package com.bigong.oguri.feature.calendar.ui.component
 
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
@@ -40,17 +41,19 @@ private fun CalendarRecommendationSectionPreview() {
     val pagedPeriodCards = flowOf(PagingData.from(cards)).collectAsLazyPagingItems()
 
     OguriTheme {
-        CalendarRecommendationSection(
-            pagedPeriodCards = pagedPeriodCards,
-            savedStateByPeriodKey = emptyMap(),
-            expandedPeriodId = 1L,
-            isLoadingNextPage = false,
-            showEndHint = false,
-            listViewportBottomInWindow = 2_000f,
-            onCardClick = {},
-            onSaveToggleClick = {},
-            onDetailClick = {},
-            onRequestScrollBy = {},
-        )
+        LazyColumn {
+            calendarRecommendationSection(
+                pagedPeriodCards = pagedPeriodCards,
+                savedStateByPeriodKey = emptyMap(),
+                expandedPeriodId = 1L,
+                isLoadingNextPage = false,
+                showEndHint = false,
+                listViewportBottomInWindow = 2_000f,
+                onCardClick = {},
+                onSaveToggleClick = {},
+                onDetailClick = {},
+                onRequestScrollBy = {},
+            )
+        }
     }
 }
