@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -52,6 +54,7 @@ fun HomeScreen(
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
+    scrollToTopTrigger: Int,
 ) {
     if (homeUiState.isLoading) {
         HomeSkeletonContent()
@@ -74,6 +77,13 @@ fun HomeScreen(
             stringResource(Res.string.home_tab_rank_two),
             stringResource(Res.string.home_tab_rank_three),
         )
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.animateScrollToItem(index = 0)
+        }
+    }
 
     Column(
         modifier =
@@ -83,6 +93,7 @@ fun HomeScreen(
                 .statusBarsPadding(),
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.weight(weight = 1f),
         ) {
             item {

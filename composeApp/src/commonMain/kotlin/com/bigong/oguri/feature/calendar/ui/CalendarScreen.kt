@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +67,7 @@ fun CalendarScreen(
     calendarUiState: CalendarUiState,
     pagedPeriodCards: LazyPagingItems<CalendarPeriodCardUiModel>,
     savedStateByPeriodKey: Map<String, Boolean>,
+    scrollToTopTrigger: Int,
     onLeaveDaysChanged: (Int) -> Unit,
     onPeriodFilterChanged: (Int, Int?) -> Unit,
     onCardClick: (Long) -> Unit,
@@ -97,6 +99,11 @@ fun CalendarScreen(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.animateScrollToItem(index = 0)
+        }
+    }
     var listViewportBottomInWindow by remember { mutableStateOf(0f) }
     val shouldShowScrollTopButton by remember {
         androidx.compose.runtime.derivedStateOf {
