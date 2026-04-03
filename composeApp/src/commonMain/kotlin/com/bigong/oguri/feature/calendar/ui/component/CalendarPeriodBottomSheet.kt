@@ -45,6 +45,7 @@ import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -140,7 +141,11 @@ fun CalendarPeriodBottomSheet(
             containerColor = Neutral0,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .consumeVerticalDragForBottomSheetContent()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
