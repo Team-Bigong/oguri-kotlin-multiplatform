@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
@@ -71,6 +72,7 @@ fun MyPageSavedPlaceCard(
             Image(
                 painter = painterResource(Res.drawable.ic_trashcan),
                 contentDescription = null,
+                colorFilter = ColorFilter.tint(Neutral50),
                 modifier =
                     Modifier
                         .noRippleClickable(onClick = { onDeleteClick(place.id) })

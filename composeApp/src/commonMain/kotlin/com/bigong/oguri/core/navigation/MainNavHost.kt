@@ -41,6 +41,9 @@ fun MainNavHost(
     navigator: MainNavigator,
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
+    homeTabReselectTrigger: Int,
+    calendarTabReselectTrigger: Int,
+    myPageTabReselectTrigger: Int,
     onLoginSucceeded: () -> Unit,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
@@ -141,6 +144,7 @@ fun MainNavHost(
             HomeRoute(
                 homeViewModel = homeViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                scrollToTopTrigger = homeTabReselectTrigger,
                 onPlaceClick = navigator::navigateToPlaceDetail,
                 onPeriodClick = navigator::navigateToPeriodDetail,
                 onMoveToCalendarClick = {
@@ -157,6 +161,7 @@ fun MainNavHost(
             CalendarRoute(
                 calendarViewModel = calendarViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                scrollToTopTrigger = calendarTabReselectTrigger,
                 onLoginRequired = navigator::navigateToLogin,
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
@@ -165,6 +170,7 @@ fun MainNavHost(
             MyPageRoute(
                 myPageViewModel = myPageViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                scrollToTopTrigger = myPageTabReselectTrigger,
                 onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },

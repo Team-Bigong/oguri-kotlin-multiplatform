@@ -44,17 +44,6 @@ class KtorAuthRemoteDataSource(
             }.body()
     }
 
-    override suspend fun loginWithGoogle(request: GoogleLoginRequest): AuthLoginResponse {
-        val requestUrl = "$DEBUG_BASE_URL$AUTH_LOGIN_GOOGLE_API_PATH"
-        return httpClient
-            .post(requestUrl) {
-                headers.remove(HttpHeaders.Authorization)
-                headers.remove(USER_ID_HEADER_NAME)
-                headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
-                setBody(request)
-            }.body()
-    }
-
     override suspend fun loginWithApple(request: AppleLoginRequest): AuthLoginResponse {
         val requestUrl = "$BASE_URL$AUTH_LOGIN_APPLE_API_PATH"
         return httpClient

@@ -90,8 +90,7 @@ fun OguriTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    @Suppress("UNUSED_VARIABLE")
-    val ignoredDynamicColor = dynamicColor
+    applyLegacyColorTokenMode(isDarkTheme = darkTheme)
     val typographySystem = rememberOguriTypographySystem()
     val materialTypography = rememberOguriMaterialTypography(typographySystem)
     val colorPalette = if (darkTheme) DarkOguriColorPalette else LightOguriColorPalette
