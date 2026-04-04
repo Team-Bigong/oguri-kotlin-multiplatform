@@ -38,28 +38,30 @@ class VacationRecommendationService {
                 var usedDayOffCount = 0
                 var currentEnd = currentStart
                 var holidayCount = 0
-                val holidayNames = linkedSetOf<String>()
+                val actualHolidayNames = linkedSetOf<String>()
+                val nonActualHolidayNames = linkedSetOf<String>()
                 val holidayDateDetails = linkedMapOf<LocalDate, CalendarHolidayDateResponse>()
 
                 val maxRange = (dayIndex + searchWindow).coerceAtMost(daysInMonth)
                 for (windowIndex in dayIndex until maxRange) {
                     val date = startOfMonth.plusDays(windowIndex.toLong())
                     val matchedHoliday = holidayMap[date]
-                    val actualHoliday = matchedHoliday?.takeIf { holiday: PublicHoliday -> holiday.isActualHoliday }
                     val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
                     val isPublicHoliday = matchedHoliday != null
-                    val isActualPublicHoliday = actualHoliday != null
                     val isHoliday = isWeekend || isPublicHoliday
 
                     if (isHoliday) {
                         holidayCount++
-                        if (isActualPublicHoliday) {
-                            actualHoliday.name
-                                .takeIf { holidayName: String -> holidayName.isNotBlank() }
-                                ?.let { holidayName: String ->
-                                    holidayNames.add(holidayName)
+                        matchedHoliday
+                            ?.name
+                            ?.takeIf { holidayName: String -> holidayName.isNotBlank() }
+                            ?.let { holidayName: String ->
+                                if (matchedHoliday.isActualHoliday) {
+                                    actualHolidayNames.add(holidayName)
+                                } else {
+                                    nonActualHolidayNames.add(holidayName)
                                 }
-                        }
+                            }
                         holidayDateDetails[date] =
                             CalendarHolidayDateResponse(
                                 date = date,
@@ -79,6 +81,12 @@ class VacationRecommendationService {
 
                 val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
                 if (totalDays >= MINIMUM_RECOMMENDATION_TOTAL_DAYS) {
+                    val summaryHolidayNames =
+                        when {
+                            actualHolidayNames.isNotEmpty() -> actualHolidayNames.toList()
+                            nonActualHolidayNames.isNotEmpty() -> nonActualHolidayNames.toList()
+                            else -> emptyList()
+                        }
                     monthlyCandidates.add(
                         RecommendationPeriod(
                             start = currentStart,
@@ -86,7 +94,7 @@ class VacationRecommendationService {
                             totalDays = totalDays,
                             usedDayOffCount = usedDayOffCount,
                             holidayCount = holidayCount,
-                            holidayNames = holidayNames.toList(),
+                            holidayNames = summaryHolidayNames,
                             holidayDateDetails = holidayDateDetails.values.toList(),
                         ),
                     )
