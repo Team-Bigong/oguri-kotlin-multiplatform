@@ -4,6 +4,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -48,12 +50,13 @@ import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarPeriodBottomSheet
-import com.bigong.oguri.feature.calendar.ui.component.calendarRecommendationSection
 import com.bigong.oguri.feature.calendar.ui.component.CalendarSkeletonContent
+import com.bigong.oguri.feature.calendar.ui.component.calendarRecommendationSection
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.calendar_end_of_list_message
 import oguri.composeapp.generated.resources.calendar_header_subtitle
 import oguri.composeapp.generated.resources.calendar_header_title
 import oguri.composeapp.generated.resources.ic_arrow_up
@@ -74,11 +77,6 @@ fun CalendarScreen(
     onSaveToggleClick: (Long) -> Unit,
     onDetailClick: (Long) -> Unit,
 ) {
-    if (calendarUiState.isLeaveDaysRefreshing) {
-        CalendarSkeletonContent()
-        return
-    }
-
     val isInitialLoading =
         pagedPeriodCards.loadState.refresh is LoadState.Loading &&
             pagedPeriodCards.itemCount == 0
@@ -111,14 +109,14 @@ fun CalendarScreen(
                 (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset > 280)
         }
     }
-    val shouldShowEndHint by remember(pagedPeriodCards.loadState.append) {
+    val shouldShowEndHint by remember(listState.isScrollInProgress, pagedPeriodCards.loadState.append, pagedPeriodCards.itemCount) {
         androidx.compose.runtime.derivedStateOf {
             !listState.canScrollForward &&
                 listState.isScrollInProgress &&
-                pagedPeriodCards.loadState.append is LoadState.NotLoading
+                pagedPeriodCards.loadState.append is LoadState.NotLoading &&
+                pagedPeriodCards.itemCount > 0
         }
     }
-
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -173,7 +171,6 @@ fun CalendarScreen(
                 savedStateByPeriodKey = savedStateByPeriodKey,
                 expandedPeriodId = calendarUiState.expandedPeriodId,
                 isLoadingNextPage = isAppending,
-                showEndHint = shouldShowEndHint,
                 listViewportBottomInWindow = listViewportBottomInWindow,
                 onCardClick = onCardClick,
                 onSaveToggleClick = onSaveToggleClick,
@@ -194,6 +191,22 @@ fun CalendarScreen(
             item(key = "calendar_recommendation_bottom_spacing") {
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+
+        AnimatedVisibility(
+            visible = shouldShowEndHint,
+            enter = fadeIn(animationSpec = tween(120)) + slideInVertically(animationSpec = tween(120)) { it / 2 },
+            exit = fadeOut(animationSpec = tween(120)) + slideOutVertically(animationSpec = tween(120)) { it / 2 },
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 18.dp),
+        ) {
+            Text(
+                text = stringResource(Res.string.calendar_end_of_list_message),
+                style = OguriTheme.typography.bodySmall,
+                color = Neutral50,
+            )
         }
 
         AnimatedVisibility(

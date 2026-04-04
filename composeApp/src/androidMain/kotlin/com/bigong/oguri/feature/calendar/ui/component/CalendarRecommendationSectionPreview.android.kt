@@ -47,7 +47,6 @@ private fun CalendarRecommendationSectionPreview() {
                 savedStateByPeriodKey = emptyMap(),
                 expandedPeriodId = 1L,
                 isLoadingNextPage = false,
-                showEndHint = false,
                 listViewportBottomInWindow = 2_000f,
                 onCardClick = {},
                 onSaveToggleClick = {},
