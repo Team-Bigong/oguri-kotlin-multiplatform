@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
@@ -38,6 +40,7 @@ fun SaveToggleButton(
         Image(
             painter = painterResource(if (checked) Res.drawable.ic_save_checked else Res.drawable.ic_save_unchecked),
             contentDescription = null,
+            colorFilter = ColorFilter.tint(Mint70),
             modifier = Modifier.fillMaxSize(),
         )
     }

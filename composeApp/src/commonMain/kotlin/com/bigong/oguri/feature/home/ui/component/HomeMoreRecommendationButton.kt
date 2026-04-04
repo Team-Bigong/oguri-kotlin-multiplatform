@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
@@ -34,7 +34,7 @@ fun HomeMoreRecommendationButton(
         Text(
             text = subtitleText,
             style = OguriTheme.typography.caption,
-            color = Neutral50,
+            color = Neutral60,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )

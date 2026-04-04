@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint60
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_share
@@ -30,6 +32,7 @@ fun PlaceDetailShareButton(
         Image(
             painter = painterResource(Res.drawable.btn_share),
             contentDescription = null,
+            colorFilter = ColorFilter.tint(Mint60),
             modifier = Modifier.fillMaxSize(),
         )
     }

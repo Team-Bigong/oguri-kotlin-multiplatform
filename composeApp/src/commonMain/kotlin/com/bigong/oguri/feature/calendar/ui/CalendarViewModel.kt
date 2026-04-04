@@ -65,7 +65,7 @@ class CalendarViewModel(
                             PagingConfig(
                                 pageSize = CALENDAR_PAGE_SIZE,
                                 initialLoadSize = CALENDAR_PAGE_SIZE,
-                                prefetchDistance = 2,
+                                prefetchDistance = CALENDAR_PREFETCH_DISTANCE,
                                 enablePlaceholders = false,
                             ),
                         pagingSourceFactory = {
@@ -86,14 +86,8 @@ class CalendarViewModel(
                                         currentMap + loadedCards.associateBy { card -> card.id }
                                     }
                                     _uiState.update { currentUiState ->
-                                        val addedSelections =
-                                            loadedCards
-                                                .filterNot { card -> currentUiState.selectedDateByPeriodId.containsKey(card.id) }
-                                                .associate { card -> card.id to card.startDate }
                                         currentUiState.copy(
                                             isLeaveDaysRefreshing = false,
-                                            selectedDateByPeriodId =
-                                                currentUiState.selectedDateByPeriodId + addedSelections,
                                             expandedPeriodId = currentUiState.expandedPeriodId ?: loadedCards.firstOrNull()?.id,
                                         )
                                     }
@@ -125,7 +119,7 @@ class CalendarViewModel(
             CalendarPagingQuery(
                 year = today.year,
                 month = null,
-                dayOffCount = null,
+                dayOffCount = _uiState.value.leaveDays,
                 requestVersion = 0,
             )
         observeRecommendationSavedChanges()
@@ -305,6 +299,9 @@ class CalendarViewModel(
         viewModelScope.launch {
             observePreferredLeaveDaysChangesUseCase().collect { change ->
                 val preferredLeaveDays: Int = change.preferredLeaveDays.coerceAtLeast(1)
+                if (preferredLeaveDays == uiState.value.leaveDays) {
+                    return@collect
+                }
                 _uiState.update { currentUiState ->
                     currentUiState.copy(
                         leaveDays = preferredLeaveDays,
@@ -351,6 +348,7 @@ class CalendarViewModel(
 
     private companion object {
         private const val CALENDAR_PAGE_SIZE = 10
+        private const val CALENDAR_PREFETCH_DISTANCE = 6
         private const val MONTH_MIN_VALUE = 1
         private const val MONTH_MAX_VALUE = 12
     }

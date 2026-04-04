@@ -23,6 +23,7 @@ private fun CalendarScreenPreview() {
                 ),
             pagedPeriodCards = pagedPeriodCards,
             savedStateByPeriodKey = emptyMap(),
+            scrollToTopTrigger = 0,
             onLeaveDaysChanged = {},
             onPeriodFilterChanged = { _, _ -> },
             onCardClick = {},

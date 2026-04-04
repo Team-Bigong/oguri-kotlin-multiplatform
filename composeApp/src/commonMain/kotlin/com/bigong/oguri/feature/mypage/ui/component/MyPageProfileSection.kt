@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
@@ -64,7 +64,7 @@ fun MyPageProfileSection(
                 Text(
                     text = stringResource(Res.string.mypage_profile_leave_days, remainingLeaveDays, preferredLeaveDays),
                     style = OguriTheme.typography.bodySmall,
-                    color = Neutral50,
+                    color = Neutral60,
                 )
                 Box(
                     modifier =
@@ -76,7 +76,7 @@ fun MyPageProfileSection(
                     Image(
                         painter = painterResource(Res.drawable.ic_pen),
                         contentDescription = null,
-                        colorFilter = ColorFilter.tint(Neutral50),
+                        colorFilter = ColorFilter.tint(Neutral60),
                         modifier = Modifier.size(18.dp),
                     )
                 }
