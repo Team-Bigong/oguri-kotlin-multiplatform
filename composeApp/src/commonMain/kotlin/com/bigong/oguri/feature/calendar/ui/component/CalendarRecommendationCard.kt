@@ -42,10 +42,8 @@ import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral30
-import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.Neutral80
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.getStyledText
