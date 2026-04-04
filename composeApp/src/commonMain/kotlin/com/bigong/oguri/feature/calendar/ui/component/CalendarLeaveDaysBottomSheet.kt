@@ -2,7 +2,6 @@ package com.bigong.oguri.feature.calendar.ui.component
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.FlingBehavior
 import androidx.compose.foundation.gestures.snapping.SnapPosition
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -34,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -45,14 +45,15 @@ import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_exit
+import oguri.composeapp.generated.resources.calendar_leave_days_chip_text
 import oguri.composeapp.generated.resources.calendar_leave_days_sheet_done
 import oguri.composeapp.generated.resources.calendar_leave_days_sheet_title
-import oguri.composeapp.generated.resources.ic_pen
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -70,34 +71,14 @@ fun CalendarLeaveDaysBottomSheet(
     var isBottomSheetVisible by rememberSaveable { mutableStateOf(false) }
     var selectedLeaveDays by rememberSaveable(leaveDays) { mutableIntStateOf(leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)) }
 
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .background(color = Neutral0, shape = RoundedCornerShape(8.dp))
-                .border(width = 1.dp, color = Mint70, shape = RoundedCornerShape(8.dp))
-                .noRippleClickable(
-                    onClick = {
-                        selectedLeaveDays = leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
-                        isBottomSheetVisible = true
-                    },
-                ).padding(horizontal = 16.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Box(modifier = Modifier.weight(weight = 1f)) {
-            Text(
-                text = leaveDays.toString(),
-                style = OguriTheme.typography.cardTitle,
-                color = Mint70,
-                modifier = Modifier.align(Alignment.Center),
-            )
-        }
-        Image(
-            painter = painterResource(resource = Res.drawable.ic_pen),
-            contentDescription = null,
-        )
-    }
+    CalendarFilterChip(
+        text = stringResource(Res.string.calendar_leave_days_chip_text, leaveDays),
+        onClick = {
+            selectedLeaveDays = leaveDays.coerceIn(MIN_LEAVE_DAYS, MAX_LEAVE_DAYS)
+            isBottomSheetVisible = true
+        },
+        modifier = modifier,
+    )
 
     if (isBottomSheetVisible) {
         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -121,7 +102,11 @@ fun CalendarLeaveDaysBottomSheet(
             containerColor = Neutral0,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .consumeVerticalDragForBottomSheetContent()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -136,6 +121,7 @@ fun CalendarLeaveDaysBottomSheet(
                     Image(
                         painter = painterResource(resource = Res.drawable.btn_exit),
                         contentDescription = null,
+                        colorFilter = ColorFilter.tint(Neutral50),
                         modifier = Modifier.size(36.dp).noRippleClickable(onClick = { isBottomSheetVisible = false }),
                     )
                 }

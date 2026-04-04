@@ -55,6 +55,7 @@ fun LoginRoute(
     }
 
     LoginScreen(
+        isLoading = loginUiState.isLoading,
         onGoogleLoginClick = {
             if (loginUiState.isLoading) {
                 return@LoginScreen

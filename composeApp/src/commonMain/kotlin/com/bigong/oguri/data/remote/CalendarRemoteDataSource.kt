@@ -6,7 +6,7 @@ import com.bigong.oguri.data.remote.model.response.CalendarRecommendationRespons
 interface CalendarRemoteDataSource {
     suspend fun getCalendarRecommendationResponse(
         year: Int,
-        month: Int,
+        month: Int?,
         dayOffCount: Int?,
         page: Int,
         size: Int,

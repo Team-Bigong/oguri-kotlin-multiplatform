@@ -60,6 +60,31 @@ val localProperties: Properties =
         }
     }
 
+val versionProperties: Properties =
+    Properties().apply {
+        val versionPropertiesFile = rootProject.file("version.properties")
+        if (!versionPropertiesFile.exists()) {
+            throw GradleException("version.properties file is missing at project root.")
+        }
+        versionPropertiesFile.inputStream().use { inputStream ->
+            load(inputStream)
+        }
+    }
+
+val currentProjectVersionValue: String =
+    versionProperties
+        .getProperty("CURRENT_PROJECT_VERSION")
+        ?.trim()
+        .takeUnless { it.isNullOrEmpty() }
+        ?: throw GradleException("CURRENT_PROJECT_VERSION is missing in version.properties.")
+
+val marketingVersionValue: String =
+    versionProperties
+        .getProperty("MARKETING_VERSION")
+        ?.trim()
+        .takeUnless { it.isNullOrEmpty() }
+        ?: throw GradleException("MARKETING_VERSION is missing in version.properties.")
+
 val debugBaseUrlValue: String =
     (localProperties.getProperty("debug.base.url") ?: "")
         .trim()
@@ -71,7 +96,8 @@ val releaseBaseUrlValue: String =
 val kakaoNativeAppKeyValue: String = localProperties.getProperty("kakao.key")?.trim().orEmpty()
 val googleWebClientIdValue: String = localProperties.getProperty("google.web.client.id")?.trim().orEmpty()
 val amplitudeApiKeyValue: String = localProperties.getProperty("amplitude.api.key")?.trim().orEmpty()
-val admobAndroidAppIdValue: String = "ca-app-pub-2833810411143763~1974881745"
+val admobAndroidAppIdDebugValue: String = "ca-app-pub-3940256099942544~3347511713"
+val admobAndroidAppIdReleaseValue: String = "ca-app-pub-9643550840413935~4120437007"
 
 val generatedNetworkConfigDirectory =
     layout.buildDirectory
@@ -185,10 +211,9 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = currentProjectVersionValue.toInt()
+        versionName = marketingVersionValue
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
-        manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdValue
     }
     packaging {
         resources {
@@ -198,9 +223,16 @@ android {
     buildTypes {
         getByName("debug") {
             applicationIdSuffix = ".debug"
+            manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdDebugValue
         }
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            manifestPlaceholders["admobAndroidAppId"] = admobAndroidAppIdReleaseValue
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
     compileOptions {

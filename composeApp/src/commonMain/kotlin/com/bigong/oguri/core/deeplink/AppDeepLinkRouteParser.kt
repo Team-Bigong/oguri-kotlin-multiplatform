@@ -6,7 +6,9 @@ import io.ktor.http.Url
 private const val SCHEME_HTTPS = "https"
 private const val SCHEME_HTTP = "http"
 private const val SCHEME_OGURI = "oguri"
+private const val SCHEME_KAKAO_PREFIX = "kakao"
 private const val DEEP_LINK_HOST = "open"
+private const val KAKAO_LINK_HOST = "kakaolink"
 private const val DEEP_LINK_PATH_OPEN = "open"
 private const val DEEP_LINK_PATH_PLACE = "place"
 private const val DEEP_LINK_PATH_PERIOD = "period"
@@ -14,6 +16,7 @@ private const val DEEP_LINK_PATH_PERIOD = "period"
 private const val QUERY_KEY_PLACE_ID = "placeId"
 private const val QUERY_KEY_START_DATE = "startDate"
 private const val QUERY_KEY_END_DATE = "endDate"
+private const val QUERY_KEY_DEEP_LINK = "deeplink"
 
 private val supportedDeepLinkHosts =
     setOf(
@@ -27,14 +30,15 @@ fun parseAppDeepLinkRoute(urlText: String): RouteModel? {
     val host = url.host.lowercase()
     val pathSegments = url.segments.filter { pathSegment -> pathSegment.isNotBlank() }
 
-    return when (scheme) {
-        SCHEME_OGURI -> parseOguriScheme(host = host, pathSegments = pathSegments, url = url)
-        SCHEME_HTTPS,
-        SCHEME_HTTP,
-        -> parseHttpScheme(host = host, pathSegments = pathSegments, url = url)
+    return when {
+        scheme == SCHEME_OGURI -> parseOguriScheme(host = host, pathSegments = pathSegments, url = url)
+        inKakaoScheme(scheme) -> parseKakaoScheme(host = host, url = url)
+        scheme == SCHEME_HTTPS || scheme == SCHEME_HTTP -> parseHttpScheme(host = host, pathSegments = pathSegments, url = url)
         else -> null
     }
 }
+
+private fun inKakaoScheme(scheme: String): Boolean = scheme.startsWith(SCHEME_KAKAO_PREFIX)
 
 private fun parseOguriScheme(
     host: String,
@@ -61,6 +65,17 @@ private fun parseHttpScheme(
     }
     val routeType = pathSegments[1]
     return parseRouteByType(routeType = routeType, url = url)
+}
+
+private fun parseKakaoScheme(
+    host: String,
+    url: Url,
+): RouteModel? {
+    if (host != KAKAO_LINK_HOST) {
+        return null
+    }
+    val deepLinkUrl = url.parameters[QUERY_KEY_DEEP_LINK] ?: return null
+    return parseAppDeepLinkRoute(urlText = deepLinkUrl)
 }
 
 private fun parseRouteByType(

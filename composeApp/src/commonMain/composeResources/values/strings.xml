@@ -16,6 +16,7 @@
 
     <string name="home_strategy_period">%1$s - %2$s</string>
     <string name="home_strategy_holiday_with">It lines up perfectly with %1$s</string>
+    <string name="home_strategy_holiday_with_next_year">Next year, %1$s</string>
     <string name="home_strategy_day_off_hint">With %1$d leave days, you can rest for %2$d days</string>
 
     <string name="home_guide_match_places">These are perfect places to visit at that time</string>
@@ -41,7 +42,7 @@
     <string name="place_detail_country">%1$s</string>
     <string name="place_detail_section_experience">How about these in %1$s?</string>
     <string name="place_detail_section_experience_highlight">How about these?</string>
-    <string name="place_detail_section_experience_subtitle">Tap a card you like</string>
+    <string name="place_detail_section_experience_subtitle">Tap a card to go to the partner page</string>
     <string name="place_detail_flight_title">Want to at least take a look at flights?</string>
     <string name="place_detail_flight_title_highlight">take a look</string>
     <string name="place_detail_flight_card_title">View flights for %1$s itinerary</string>
@@ -51,7 +52,7 @@
     <string name="place_detail_menu_share">Share</string>
     <string name="place_detail_menu_save">Save</string>
     <string name="place_detail_menu_unsave">Remove from saved</string>
-    <string name="place_detail_experience_detail">Go to partner page</string>
+    <string name="place_detail_experience_detail">See details</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_google_with_account">Sign in with Google account</string>
@@ -133,8 +134,15 @@
     <string name="calendar_d_day_before">D-%1$d</string>
     <string name="calendar_d_day_after">D+%1$d</string>
     <string name="calendar_end_of_list_message">This is the last available schedule for this leave setting 👋</string>
+    <string name="calendar_leave_days_chip_text">Leave %1$d days</string>
     <string name="calendar_leave_days_sheet_title">Leave Settings</string>
     <string name="calendar_leave_days_sheet_done">Done</string>
+    <string name="calendar_period_filter_sheet_title">Leave Period</string>
+    <string name="calendar_period_filter_year_label">Year</string>
+    <string name="calendar_period_filter_month_label">Month</string>
+    <string name="calendar_period_filter_all">All</string>
+    <string name="calendar_period_chip_year_all">%1$d All</string>
+    <string name="calendar_period_chip_year_month">%1$d %2$d</string>
     <string name="period_detail_title">Period Detail</string>
     <string name="period_detail_holiday_fallback">long weekend</string>
     <string name="period_detail_empty_places_hint">No recommended places for this period yet.</string>

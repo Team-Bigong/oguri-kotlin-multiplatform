@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
-import java.time.YearMonth
 
 @Tag(name = "Calendar API", description = "캘린더 화면 관련 API")
 @RestController
@@ -24,8 +23,10 @@ class CalendarController(
     )
     @GetMapping
     fun getCalendar(
-        @Parameter(description = "조회 시작 기준 연월(yyyy-MM)", example = "2026-03")
-        @RequestParam @DateTimeFormat(pattern = "yyyy-MM") yearMonth: YearMonth,
+        @Parameter(description = "조회 연도", example = "2026")
+        @RequestParam year: Int,
+        @Parameter(description = "조회 월(1~12, 미입력 시 해당 연도의 현재 월~12월 조회)", example = "3")
+        @RequestParam(required = false) month: Int?,
         @Parameter(description = "연차 사용 일수(미입력 시 사용자 기본값 사용)", example = "3")
         @RequestParam(required = false) dayOffCount: Int?,
         @Parameter(description = "페이지 번호(0부터 시작)", example = "0")
@@ -35,7 +36,8 @@ class CalendarController(
         request: HttpServletRequest
     ): CalendarResponse {
         return calendarService.getCalendarData(
-            yearMonth = yearMonth,
+            year = year,
+            month = month,
             memberId = request.resolveMemberId(),
             dayOffCount = dayOffCount,
             page = page,

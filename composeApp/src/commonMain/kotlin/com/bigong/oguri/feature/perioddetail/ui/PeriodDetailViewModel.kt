@@ -6,6 +6,7 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.model.CalendarPeriodDetail
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.usecase.CalculateDDayUseCase
@@ -13,12 +14,15 @@ import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
 import com.bigong.oguri.domain.usecase.GetCalendarPeriodDetailUseCase
 import com.bigong.oguri.domain.usecase.GetMyPageInfoUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
+import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailSideEffect
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -40,6 +44,8 @@ class PeriodDetailViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(PeriodDetailUiState())
     val uiState = _uiState.asStateFlow()
+    private val _sideEffect = MutableSharedFlow<PeriodDetailSideEffect>(extraBufferCapacity = 1)
+    val sideEffect = _sideEffect.asSharedFlow()
 
     private val queryFlow = MutableStateFlow(PeriodDetailPagingQuery())
     private var lastResolvedPeriodDetail: CalendarPeriodDetail? = null
@@ -136,9 +142,20 @@ class PeriodDetailViewModel(
                         )
                     }
                 }
+            }.onSuccess {
+                _sideEffect.tryEmit(
+                    if (nextSavedState) {
+                        PeriodDetailSideEffect.RecommendationSaved
+                    } else {
+                        PeriodDetailSideEffect.RecommendationDeleted
+                    },
+                )
             }.onFailure {
                 _uiState.update { currentUiState ->
                     currentUiState.copy(isSaved = previousSavedState)
+                }
+                if (it.isUnauthorized()) {
+                    _sideEffect.tryEmit(PeriodDetailSideEffect.LoginRequired)
                 }
             }
         }

@@ -119,6 +119,9 @@ fun NavDisplay(
         var previousRouteText by remember { mutableStateOf<String?>(null) }
         var hasShownLaunchAppOpenAd by remember { mutableStateOf(false) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
+        var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
+        var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
+        var myPageTabReselectTrigger by remember { mutableIntStateOf(0) }
         val shouldShowBottomNavigation =
             bottomNavigationDestinations.any { destination ->
                 isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
@@ -154,6 +157,14 @@ fun NavDisplay(
                         myPageViewModelLazy.value.refreshMyPageInfo()
                     }
                 }
+                if (isCalendarRoute(currentRouteText) && isMyPageRoute(previousRoute)) {
+                    val preferredLeaveDays =
+                        myPageViewModelLazy.value.uiState.value.myPageInfo
+                            ?.preferredLeaveDays
+                    if (preferredLeaveDays != null) {
+                        calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
+                    }
+                }
             } else if (currentRouteText != null && previousRoute == null && isHomeRoute(currentRouteText)) {
                 if (!hasShownLaunchAppOpenAd) {
                     hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
@@ -180,7 +191,25 @@ fun NavDisplay(
                         if (shouldShowBottomNavigation) {
                             BottomNavigationBar(
                                 currentDestination = currentDestination,
-                                onDestinationClick = { destination ->
+                                onDestinationClick = { destination, isReselected ->
+                                    if (isReselected) {
+                                        when (destination.routeModel) {
+                                            RouteModel.Home -> {
+                                                homeTabReselectTrigger += 1
+                                            }
+
+                                            RouteModel.Calendar -> {
+                                                calendarTabReselectTrigger += 1
+                                            }
+
+                                            RouteModel.MyPage -> {
+                                                myPageTabReselectTrigger += 1
+                                            }
+
+                                            else -> Unit
+                                        }
+                                        return@BottomNavigationBar
+                                    }
                                     navigator.navigateToBottomNavigationDestination(destination)
                                 },
                             )
@@ -201,6 +230,9 @@ fun NavDisplay(
                         navigator = navigator,
                         snackbarHostState = snackbarHostState,
                         contentPaddingValues = contentPaddingValues,
+                        homeTabReselectTrigger = homeTabReselectTrigger,
+                        calendarTabReselectTrigger = calendarTabReselectTrigger,
+                        myPageTabReselectTrigger = myPageTabReselectTrigger,
                         onLoginSucceeded = {
                             coroutineScope.launch {
                                 snackbarHostState.showOguriSnackbar(
@@ -270,7 +302,7 @@ private fun isBottomNavigationDestinationSelected(
 @Composable
 private fun BottomNavigationBar(
     currentDestination: NavDestination?,
-    onDestinationClick: (BottomNavigationDestination) -> Unit,
+    onDestinationClick: (BottomNavigationDestination, Boolean) -> Unit,
 ) {
     Column {
         HorizontalDivider(thickness = 1.dp, color = Neutral20)
@@ -303,11 +335,8 @@ private fun BottomNavigationBar(
                         Modifier
                             .noRippleClickable(
                                 onClick = {
-                                    if (isSelected) {
-                                        return@noRippleClickable
-                                    }
                                     HapticType.Selection.perform()
-                                    onDestinationClick(destination)
+                                    onDestinationClick(destination, isSelected)
                                 },
                             ).padding(horizontal = 18.dp, vertical = 10.dp)
                             .weight(1f),
@@ -352,6 +381,14 @@ private fun isMyPageRoute(routeText: String): Boolean {
             .serializer()
             .descriptor.serialName
     return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
+}
+
+private fun isCalendarRoute(routeText: String): Boolean {
+    val calendarRouteSerialName =
+        RouteModel.Calendar
+            .serializer()
+            .descriptor.serialName
+    return routeText == calendarRouteSerialName || routeText.startsWith(calendarRouteSerialName)
 }
 
 private fun isOnboardingRoute(routeText: String): Boolean {

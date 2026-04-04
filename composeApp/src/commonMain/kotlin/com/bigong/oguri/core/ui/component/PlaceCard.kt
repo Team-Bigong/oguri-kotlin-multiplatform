@@ -18,8 +18,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral40
-import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral60
+import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.Place
@@ -69,14 +69,14 @@ fun PlaceCard(
                 Text(
                     text = place.country,
                     style = OguriTheme.typography.labelSmall,
-                    color = Neutral40,
+                    color = Neutral60,
                 )
             }
             Spacer(modifier = Modifier.height(height = 4.dp))
             Text(
                 text = place.summary,
                 style = OguriTheme.typography.labelMedium,
-                color = Neutral50,
+                color = Neutral70,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )

@@ -4,6 +4,7 @@ import com.bigong.oguri.dto.AdminPublicHolidayResponse
 import com.bigong.oguri.dto.AdminPublicHolidayUpsertRequest
 import com.bigong.oguri.service.AdminPublicHolidayService
 import io.swagger.v3.oas.annotations.Hidden
+import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
 @Hidden
@@ -33,6 +34,7 @@ class AdminPublicHolidayController(
     }
 
     @DeleteMapping("/{holidayId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deletePublicHoliday(
         @PathVariable holidayId: Int
     ) {

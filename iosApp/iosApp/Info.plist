@@ -24,7 +24,7 @@
 		</dict>
 	</array>
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-2833810411143763~7781707774</string>
+	<string>$(GAD_APPLICATION_ID)</string>
 	<key>KEY_KAKAO</key>
 	<string>$(KEY_KAKAO)</string>
 	<key>LSApplicationQueriesSchemes</key>

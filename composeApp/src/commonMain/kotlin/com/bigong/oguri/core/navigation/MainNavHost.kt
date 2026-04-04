@@ -41,6 +41,9 @@ fun MainNavHost(
     navigator: MainNavigator,
     snackbarHostState: SnackbarHostState,
     contentPaddingValues: PaddingValues,
+    homeTabReselectTrigger: Int,
+    calendarTabReselectTrigger: Int,
+    myPageTabReselectTrigger: Int,
     onLoginSucceeded: () -> Unit,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
@@ -141,6 +144,7 @@ fun MainNavHost(
             HomeRoute(
                 homeViewModel = homeViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                scrollToTopTrigger = homeTabReselectTrigger,
                 onPlaceClick = navigator::navigateToPlaceDetail,
                 onPeriodClick = navigator::navigateToPeriodDetail,
                 onMoveToCalendarClick = {
@@ -157,6 +161,8 @@ fun MainNavHost(
             CalendarRoute(
                 calendarViewModel = calendarViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                scrollToTopTrigger = calendarTabReselectTrigger,
+                onLoginRequired = navigator::navigateToLogin,
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
@@ -164,6 +170,7 @@ fun MainNavHost(
             MyPageRoute(
                 myPageViewModel = myPageViewModelProvider(),
                 snackbarHostState = snackbarHostState,
+                scrollToTopTrigger = myPageTabReselectTrigger,
                 onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
@@ -189,6 +196,7 @@ fun MainNavHost(
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
+                onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { targetPlaceId ->
                     navigator.navigateToPlaceDetail(
                         placeId = targetPlaceId,
@@ -216,9 +224,11 @@ fun MainNavHost(
             val route = navBackStackEntry.toRoute<RouteModel.PeriodDetail>()
             PeriodDetailRoute(
                 periodDetailViewModelProvider = appGraph.periodDetailViewModelProvider,
+                snackbarHostState = snackbarHostState,
                 startDate = route.startDate,
                 endDate = route.endDate,
                 onBackClick = { navigator.popBackStack() },
+                onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { placeId ->
                     navigator.navigateToPlaceDetail(
                         placeId = placeId,

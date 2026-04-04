@@ -20,7 +20,7 @@ class DefaultCalendarRepository(
 ) : CalendarRepository {
     override suspend fun getCalendarRecommendation(
         year: Int,
-        month: Int,
+        month: Int?,
         dayOffCount: Int?,
         page: Int,
         size: Int,

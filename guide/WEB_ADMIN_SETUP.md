@@ -6,7 +6,10 @@
 - 장소 이미지는 업로드 시 가로 1280px 리사이즈 + 800KB 이하 압축 후 Firebase Storage로 업로드한다.
 - Firebase Storage 저장 경로는 `places/{country}/{city}/{index}.jpg` 규칙을 사용한다.
 - 장소 experience 썸네일은 `places/{country}/{city}/experiences/{index}.jpg` 경로로 업로드한다.
-- 어드민 장소 폼에서 Storage 경로(`country`, `city`)는 드롭다운으로 선택하거나 직접 입력할 수 있다.
+- 어드민 장소 폼의 국가/Storage 경로(`country`, `city`)는 각각 단일 입력칸에서 추천 목록 선택 + 직접 입력을 함께 지원한다.
+- Storage 경로(`country`, `city`)는 영문 소문자 slug만 허용한다. (`a-z`, `0-9`, `-`)
+- Storage 경로 추천 목록은 하드코딩이 아니라 DB에 저장된 장소 이미지/체험 썸네일 URL에서 추출한 실제 경로를 사용한다.
+- 어드민 장소 폼에서 `체험 관리(Experience)` 섹션으로 제목/설명/링크/썸네일을 추가·수정·삭제할 수 있다.
 - 장소 수정 시 폼에서 제거된 기존 이미지는 저장 완료 후 Firebase에서도 함께 삭제한다.
 - 장소 수정 시 폼에서 제거된 기존 experience 썸네일도 저장 완료 후 Firebase에서 함께 삭제한다.
 - 장소 삭제 시 연결된 모든 장소 이미지 + experience 썸네일을 Firebase에서 함께 삭제한다.
@@ -31,6 +34,14 @@ web/
 └─ package.json
 ```
 
+## 어드민 UI 레이아웃
+- PC 최적화 대시보드형 UI:
+  - 좌측 사이드바(기능 탭)
+  - 상단 헤더(현재 섹션 + 빠른 액션)
+  - 상단 요약 카드(장소/체험/이미지/사용자/공휴일)
+  - 본문 작업 영역(CRUD 폼 + 목록)
+- 컬러 톤은 오구리 공식 웹과 맞춘 블루/민트 계열로 통일한다.
+
 ## 서버 어드민 API
 - Prefix: `/api/admin/v1`
 - 인증: `POST /api/admin/v1/auth/login`으로 토큰 발급 후 `Authorization: Bearer {token}` 사용
@@ -48,13 +59,14 @@ web/
 
 #### 장소 요청/응답 스펙(요약)
 - `POST/PUT /api/admin/v1/destinations`의 body에 `experiences`를 포함한다.
+- `POST/PUT /api/admin/v1/destinations`의 body에 `flightUrl`을 포함해 스카이스캐너 링크를 저장한다.
 - `experiences` 항목 필드:
   - `title`: 액티비티 제목
   - `description`: 액티비티 설명
   - `thumbnailUrl`: 액티비티 썸네일 URL
   - `link`: 외부 이동 링크
   - `sortOrder`: 정렬 순서(1 이상)
-- `GET /api/admin/v1/destinations` 응답에도 `experiences`가 포함된다.
+- `GET /api/admin/v1/destinations` 응답에도 `flightUrl`, `experiences`가 포함된다.
 
 ### 사용자
 - `GET /api/admin/v1/members`

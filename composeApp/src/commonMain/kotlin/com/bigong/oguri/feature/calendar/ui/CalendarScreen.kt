@@ -4,10 +4,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -21,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,12 +49,14 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
-import com.bigong.oguri.feature.calendar.ui.component.CalendarRecommendationSection
+import com.bigong.oguri.feature.calendar.ui.component.CalendarPeriodBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarSkeletonContent
+import com.bigong.oguri.feature.calendar.ui.component.calendarRecommendationSection
 import com.bigong.oguri.feature.calendar.ui.model.CalendarPeriodCardUiModel
 import com.bigong.oguri.feature.calendar.ui.model.CalendarUiState
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.calendar_end_of_list_message
 import oguri.composeapp.generated.resources.calendar_header_subtitle
 import oguri.composeapp.generated.resources.calendar_header_title
 import oguri.composeapp.generated.resources.ic_arrow_up
@@ -64,16 +70,13 @@ fun CalendarScreen(
     calendarUiState: CalendarUiState,
     pagedPeriodCards: LazyPagingItems<CalendarPeriodCardUiModel>,
     savedStateByPeriodKey: Map<String, Boolean>,
+    scrollToTopTrigger: Int,
     onLeaveDaysChanged: (Int) -> Unit,
+    onPeriodFilterChanged: (Int, Int?) -> Unit,
     onCardClick: (Long) -> Unit,
     onSaveToggleClick: (Long) -> Unit,
     onDetailClick: (Long) -> Unit,
 ) {
-    if (calendarUiState.isLeaveDaysRefreshing) {
-        CalendarSkeletonContent()
-        return
-    }
-
     val isInitialLoading =
         pagedPeriodCards.loadState.refresh is LoadState.Loading &&
             pagedPeriodCards.itemCount == 0
@@ -94,6 +97,11 @@ fun CalendarScreen(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    LaunchedEffect(scrollToTopTrigger) {
+        if (scrollToTopTrigger > 0) {
+            listState.animateScrollToItem(index = 0)
+        }
+    }
     var listViewportBottomInWindow by remember { mutableStateOf(0f) }
     val shouldShowScrollTopButton by remember {
         androidx.compose.runtime.derivedStateOf {
@@ -101,14 +109,14 @@ fun CalendarScreen(
                 (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset > 280)
         }
     }
-    val shouldShowEndHint by remember(pagedPeriodCards.loadState.append) {
+    val shouldShowEndHint by remember(listState.isScrollInProgress, pagedPeriodCards.loadState.append, pagedPeriodCards.itemCount) {
         androidx.compose.runtime.derivedStateOf {
             !listState.canScrollForward &&
                 listState.isScrollInProgress &&
-                pagedPeriodCards.loadState.append is LoadState.NotLoading
+                pagedPeriodCards.loadState.append is LoadState.NotLoading &&
+                pagedPeriodCards.itemCount > 0
         }
     }
-
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -139,42 +147,66 @@ fun CalendarScreen(
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
                 Spacer(modifier = Modifier.height(24.dp))
-                CalendarLeaveDaysBottomSheet(
-                    leaveDays = calendarUiState.leaveDays,
-                    onLeaveDaysChanged = onLeaveDaysChanged,
+                Row(
                     modifier = Modifier.padding(horizontal = 20.dp),
-                )
-                Spacer(modifier = Modifier.height(24.dp))
+                ) {
+                    CalendarPeriodBottomSheet(
+                        selectedYear = calendarUiState.selectedYear,
+                        selectedMonth = calendarUiState.selectedMonth,
+                        onPeriodFilterChanged = onPeriodFilterChanged,
+                    )
+                    Spacer(modifier = Modifier.size(8.dp))
+                    CalendarLeaveDaysBottomSheet(
+                        leaveDays = calendarUiState.leaveDays,
+                        onLeaveDaysChanged = onLeaveDaysChanged,
+                    )
+                }
+                Spacer(modifier = Modifier.height(20.dp))
                 HorizontalDivider(color = Neutral20)
                 Spacer(modifier = Modifier.height(18.dp))
             }
 
-            item {
-                CalendarRecommendationSection(
-                    pagedPeriodCards = pagedPeriodCards,
-                    savedStateByPeriodKey = savedStateByPeriodKey,
-                    expandedPeriodId = calendarUiState.expandedPeriodId,
-                    isLoadingNextPage = isAppending,
-                    showEndHint = shouldShowEndHint,
-                    listViewportBottomInWindow = listViewportBottomInWindow,
-                    onCardClick = onCardClick,
-                    onSaveToggleClick = onSaveToggleClick,
-                    onDetailClick = onDetailClick,
-                    onRequestScrollBy = { scrollByPixels ->
-                        if (scrollByPixels <= 0f) {
-                            return@CalendarRecommendationSection
-                        }
-                        coroutineScope.launch {
-                            listState.animateScrollBy(
-                                value = scrollByPixels,
-                                animationSpec = tween(durationMillis = 220),
-                            )
-                        }
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                )
+            calendarRecommendationSection(
+                pagedPeriodCards = pagedPeriodCards,
+                savedStateByPeriodKey = savedStateByPeriodKey,
+                expandedPeriodId = calendarUiState.expandedPeriodId,
+                isLoadingNextPage = isAppending,
+                listViewportBottomInWindow = listViewportBottomInWindow,
+                onCardClick = onCardClick,
+                onSaveToggleClick = onSaveToggleClick,
+                onDetailClick = onDetailClick,
+                onRequestScrollBy = { scrollByPixels ->
+                    if (scrollByPixels <= 0f) {
+                        return@calendarRecommendationSection
+                    }
+                    coroutineScope.launch {
+                        listState.animateScrollBy(
+                            value = scrollByPixels,
+                            animationSpec = tween(durationMillis = 220),
+                        )
+                    }
+                },
+            )
+
+            item(key = "calendar_recommendation_bottom_spacing") {
                 Spacer(modifier = Modifier.height(16.dp))
             }
+        }
+
+        AnimatedVisibility(
+            visible = shouldShowEndHint,
+            enter = fadeIn(animationSpec = tween(120)) + slideInVertically(animationSpec = tween(120)) { it / 2 },
+            exit = fadeOut(animationSpec = tween(120)) + slideOutVertically(animationSpec = tween(120)) { it / 2 },
+            modifier =
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 18.dp),
+        ) {
+            Text(
+                text = stringResource(Res.string.calendar_end_of_list_message),
+                style = OguriTheme.typography.bodySmall,
+                color = Neutral50,
+            )
         }
 
         AnimatedVisibility(

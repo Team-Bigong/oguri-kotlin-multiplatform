@@ -7,12 +7,20 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ResponseStatusException
+import org.slf4j.LoggerFactory
 
 @Component
 class GoogleIdentityTokenVerifier(
-    @Value("\${google.web-client-id:}")
+    @param:Value("\${google.web-client-id:}")
     private val googleWebClientId: String,
 ) {
+    private val googleIdTokenVerifier: GoogleIdTokenVerifier by lazy {
+        GoogleIdTokenVerifier
+            .Builder(NetHttpTransport(), GsonFactory.getDefaultInstance())
+            .setAudience(listOf(googleWebClientId))
+            .build()
+    }
+
     fun extractGoogleSubject(identityToken: String): String {
         require(value = identityToken.isNotBlank()) {
             "Google identity token is empty."
@@ -20,12 +28,7 @@ class GoogleIdentityTokenVerifier(
         if (googleWebClientId.isBlank()) {
             throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "GOOGLE_WEB_CLIENT_ID 설정이 필요합니다.")
         }
-
-        val googleIdTokenVerifier =
-            GoogleIdTokenVerifier
-                .Builder(NetHttpTransport(), GsonFactory.getDefaultInstance())
-                .setAudience(listOf(googleWebClientId))
-                .build()
+        val startedAt = System.currentTimeMillis()
 
         val verifiedGoogleIdToken =
             runCatching {
@@ -37,8 +40,10 @@ class GoogleIdentityTokenVerifier(
         if (issuer !in ALLOWED_GOOGLE_ISSUERS) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google identityToken issuer가 올바르지 않습니다.")
         }
-        return verifiedGoogleIdToken.payload.subject
+        val subject = verifiedGoogleIdToken.payload.subject
             ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Google 사용자 식별자(sub)가 없습니다.")
+        logger.info("Google identity token verified. elapsedMs={}", System.currentTimeMillis() - startedAt)
+        return subject
     }
 
     private companion object {
@@ -46,5 +51,6 @@ class GoogleIdentityTokenVerifier(
             "accounts.google.com",
             "https://accounts.google.com",
         )
+        private val logger = LoggerFactory.getLogger(GoogleIdentityTokenVerifier::class.java)
     }
 }
