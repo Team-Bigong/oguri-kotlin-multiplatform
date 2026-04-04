@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -26,11 +27,12 @@ import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral30
-import com.bigong.oguri.core.designsystem.Neutral40
-import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral60
+import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
+import com.bigong.oguri.core.designsystem.WarningAmber
 import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
@@ -80,6 +82,7 @@ fun MyPageWithdrawDialog(
                 Image(
                     painter = painterResource(Res.drawable.ic_alert),
                     contentDescription = null,
+                    colorFilter = ColorFilter.tint(WarningAmber),
                     modifier = Modifier.size(48.dp),
                 )
                 Text(
@@ -99,7 +102,7 @@ fun MyPageWithdrawDialog(
                 Text(
                     text = stringResource(Res.string.mypage_withdraw_dialog_instruction),
                     style = OguriTheme.typography.bodyMedium,
-                    color = Neutral50,
+                    color = Neutral60,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
@@ -134,7 +137,7 @@ fun MyPageWithdrawDialog(
                                 Text(
                                     text = targetPhrase,
                                     style = OguriTheme.typography.bodyLarge,
-                                    color = Neutral40,
+                                    color = Neutral60,
                                 )
                             }
                             innerTextField()
@@ -147,6 +150,7 @@ fun MyPageWithdrawDialog(
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
                 ) {
                     val confirmButtonBackground = if (isConfirmEnabled) Mint70 else Neutral30
+                    val confirmButtonTextColor = if (isConfirmEnabled) Neutral0 else Neutral70
 
                     Box(
                         modifier =
@@ -165,7 +169,7 @@ fun MyPageWithdrawDialog(
                         Text(
                             text = stringResource(Res.string.mypage_dialog_confirm),
                             style = OguriTheme.typography.bodyMedium,
-                            color = Neutral0,
+                            color = confirmButtonTextColor,
                         )
                     }
 

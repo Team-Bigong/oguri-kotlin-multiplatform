@@ -42,7 +42,7 @@ import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral30
-import com.bigong.oguri.core.designsystem.Neutral70
+import com.bigong.oguri.core.designsystem.Neutral80
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.core.util.HapticType
@@ -261,12 +261,15 @@ fun CalendarRecommendationCard(
                                 text =
                                     summaryHolidayText.takeIf { holidayText -> holidayText.isNotBlank() }?.let { highlightedHoliday ->
                                         summaryText.getStyledText(
-                                            style = OguriTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                            style =
+                                                OguriTheme.typography.bodyMedium.copy(
+                                                    fontWeight = FontWeight.SemiBold,
+                                                ),
                                             highlightedHoliday,
                                         )
                                     } ?: AnnotatedString(summaryText),
                                 style = OguriTheme.typography.bodyMedium,
-                                color = Neutral70,
+                                color = Neutral80,
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
@@ -321,13 +324,16 @@ fun CalendarRecommendationCard(
                     text =
                         summaryHolidayText.takeIf { holidayText -> holidayText.isNotBlank() }?.let { highlightedHoliday ->
                             summaryText.getStyledText(
-                                style = OguriTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                style =
+                                    OguriTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.SemiBold,
+                                    ),
                                 highlightedHoliday,
                             )
                         } ?: androidx.compose.ui.text
                             .AnnotatedString(summaryText),
                     style = OguriTheme.typography.bodyMedium,
-                    color = Neutral70,
+                    color = Neutral80,
                 )
             }
         }
