@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ fun LoginActionButton(
     titleText: String,
     backgroundColor: Color,
     contentColor: Color,
+    iconTintColor: Color? = null,
     borderColor: Color = backgroundColor,
     onClick: () -> Unit,
 ) {
@@ -50,6 +52,7 @@ fun LoginActionButton(
         Image(
             painter = painterResource(resource = iconResource),
             contentDescription = null,
+            colorFilter = iconTintColor?.let { tintColor -> ColorFilter.tint(tintColor) },
             modifier = Modifier.size(size = iconSize),
         )
         Spacer(modifier = Modifier.size(size = 12.dp))
