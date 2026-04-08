@@ -1,6 +1,6 @@
 package com.bigong.oguri.data.remote
 
-import com.bigong.oguri.core.network.DEBUG_BASE_URL
+import com.bigong.oguri.core.network.BASE_URL
 import com.bigong.oguri.data.remote.model.request.AppleLoginRequest
 import com.bigong.oguri.data.remote.model.request.GoogleLoginRequest
 import com.bigong.oguri.data.remote.model.request.KakaoLoginRequest
@@ -23,7 +23,18 @@ class KtorAuthRemoteDataSource(
     private val httpClient: HttpClient,
 ) : AuthRemoteDataSource {
     override suspend fun loginWithKakao(request: KakaoLoginRequest): AuthLoginResponse {
-        val requestUrl = "$DEBUG_BASE_URL$AUTH_LOGIN_KAKAO_API_PATH"
+        val requestUrl = "$BASE_URL$AUTH_LOGIN_KAKAO_API_PATH"
+        return httpClient
+            .post(requestUrl) {
+                headers.remove(HttpHeaders.Authorization)
+                headers.remove(USER_ID_HEADER_NAME)
+                headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
+                setBody(request)
+            }.body()
+    }
+
+    override suspend fun loginWithGoogle(request: GoogleLoginRequest): AuthLoginResponse {
+        val requestUrl = "$BASE_URL$AUTH_LOGIN_GOOGLE_API_PATH"
         return httpClient
             .post(requestUrl) {
                 headers.remove(HttpHeaders.Authorization)
@@ -45,7 +56,7 @@ class KtorAuthRemoteDataSource(
     }
 
     override suspend fun loginWithApple(request: AppleLoginRequest): AuthLoginResponse {
-        val requestUrl = "$DEBUG_BASE_URL$AUTH_LOGIN_APPLE_API_PATH"
+        val requestUrl = "$BASE_URL$AUTH_LOGIN_APPLE_API_PATH"
         return httpClient
             .post(requestUrl) {
                 headers.remove(HttpHeaders.Authorization)
@@ -56,7 +67,7 @@ class KtorAuthRemoteDataSource(
     }
 
     override suspend fun refreshToken(request: RefreshTokenRequest): RefreshTokenResponse {
-        val requestUrl = "$DEBUG_BASE_URL$AUTH_REFRESH_API_PATH"
+        val requestUrl = "$BASE_URL$AUTH_REFRESH_API_PATH"
         return httpClient
             .post(requestUrl) {
                 headers.remove(HttpHeaders.Authorization)
@@ -67,14 +78,14 @@ class KtorAuthRemoteDataSource(
     }
 
     override suspend fun getMemberMe(): MemberMeResponse {
-        val requestUrl = "$DEBUG_BASE_URL$MEMBER_ME_API_PATH"
+        val requestUrl = "$BASE_URL$MEMBER_ME_API_PATH"
         return httpClient
             .get(requestUrl)
             .body()
     }
 
     override suspend fun completeOnboarding(request: UpdateMemberDayOffRequest) {
-        val requestUrl = "$DEBUG_BASE_URL$MEMBER_ONBOARDING_API_PATH"
+        val requestUrl = "$BASE_URL$MEMBER_ONBOARDING_API_PATH"
         httpClient.post(requestUrl) {
             headers[HttpHeaders.ContentType] = ContentType.Application.Json.toString()
             setBody(request)

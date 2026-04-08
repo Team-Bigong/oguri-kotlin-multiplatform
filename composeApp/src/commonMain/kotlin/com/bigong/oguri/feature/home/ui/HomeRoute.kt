@@ -27,6 +27,7 @@ import org.jetbrains.compose.resources.stringResource
 fun HomeRoute(
     homeViewModel: HomeViewModel,
     snackbarHostState: SnackbarHostState,
+    scrollToTopTrigger: Int,
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
@@ -101,6 +102,7 @@ fun HomeRoute(
         onPlaceClick = onPlaceClick,
         onPeriodClick = onPeriodClick,
         onMoveToCalendarClick = onMoveToCalendarClick,
+        scrollToTopTrigger = scrollToTopTrigger,
     )
 
     if (isLoginRequiredDialogVisible) {

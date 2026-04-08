@@ -24,6 +24,7 @@ import org.jetbrains.compose.resources.stringResource
 fun MyPageRoute(
     myPageViewModel: MyPageViewModel,
     snackbarHostState: SnackbarHostState,
+    scrollToTopTrigger: Int,
     onOpenSuggestion: () -> Unit,
     onOpenTermsOfService: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
@@ -83,6 +84,7 @@ fun MyPageRoute(
     }
     MyPageScreen(
         myPageUiState = myPageUiState,
+        scrollToTopTrigger = scrollToTopTrigger,
         onRetryClick = myPageViewModel::loadMyPageInfo,
         onEditLeaveDaysClick = myPageViewModel::showEditLeaveDaysBottomSheet,
         onDismissLeaveDaysBottomSheet = myPageViewModel::hideEditLeaveDaysBottomSheet,

@@ -33,6 +33,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -44,6 +45,7 @@ import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -100,7 +102,11 @@ fun CalendarLeaveDaysBottomSheet(
             containerColor = Neutral0,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .consumeVerticalDragForBottomSheetContent()
+                        .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -115,6 +121,7 @@ fun CalendarLeaveDaysBottomSheet(
                     Image(
                         painter = painterResource(resource = Res.drawable.btn_exit),
                         contentDescription = null,
+                        colorFilter = ColorFilter.tint(Neutral50),
                         modifier = Modifier.size(36.dp).noRippleClickable(onClick = { isBottomSheetVisible = false }),
                     )
                 }
