@@ -47,4 +47,10 @@ class AuthController(
     fun refresh(
         @RequestBody request: com.bigong.oguri.dto.TokenRefreshRequest,
     ): com.bigong.oguri.dto.TokenRefreshResponse = memberService.refreshAccessToken(request.refreshToken)
+
+    @Operation(summary = "가짜 로그인 (로컬 테스트용)", description = "소셜 로그인 없이 특정 ID로 즉시 로그인을 시도합니다. 로컬 개발 환경에서만 사용하세요.")
+    @PostMapping("/login/mock")
+    fun loginWithMock(
+        @RequestParam(defaultValue = "test_user") id: String,
+    ): LoginResponse = memberService.loginWithMock(id)
 }

@@ -86,6 +86,15 @@ class MemberService(
     }
 
     /**
+     * 로컬 테스트용 가짜 로그인
+     */
+    fun loginWithMock(mockId: String): LoginResponse {
+        val memberId = "MOCK_$mockId"
+        val member = findOrCreateMember(memberId)
+        return issueLoginTokens(member)
+    }
+
+    /**
      * 내 정보 및 저장된 데이터 전체 조회
      */
     fun getMyInfo(memberId: String): MemberMeResponse {
