@@ -145,6 +145,10 @@ class MainNavigator(
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
+    fun navigateToDisplaySettings() {
+        navHostController.navigate(RouteModel.DisplaySettings)
+    }
+
     fun navigateToRouteModel(routeModel: RouteModel) {
         when (routeModel) {
             is RouteModel.PlaceDetail -> {
@@ -177,6 +181,7 @@ class MainNavigator(
             RouteModel.Home,
             RouteModel.Calendar,
             RouteModel.MyPage,
+            RouteModel.DisplaySettings,
             RouteModel.Login,
             RouteModel.Splash,
             -> {

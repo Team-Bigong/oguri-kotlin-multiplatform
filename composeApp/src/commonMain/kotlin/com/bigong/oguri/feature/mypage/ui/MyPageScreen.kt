@@ -44,6 +44,7 @@ import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
 import oguri.composeapp.generated.resources.mypage_guest_name
 import oguri.composeapp.generated.resources.mypage_logout_dialog_title
+import oguri.composeapp.generated.resources.mypage_menu_display_settings
 import oguri.composeapp.generated.resources.mypage_menu_logout
 import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
 import oguri.composeapp.generated.resources.mypage_menu_suggest
@@ -69,6 +70,7 @@ fun MyPageScreen(
     onDismissDeleteSavedPlaceDialog: () -> Unit,
     onConfirmDeleteSavedPlace: () -> Unit,
     onSuggestClick: () -> Unit,
+    onDisplaySettingsClick: () -> Unit,
     onTermsOfServiceClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onWithdrawClick: () -> Unit,
@@ -135,6 +137,10 @@ fun MyPageScreen(
                     MyPageMenuSection(
                         menuItems =
                             listOf(
+                                MyPageMenuItem(
+                                    label = stringResource(Res.string.mypage_menu_display_settings),
+                                    onClick = onDisplaySettingsClick,
+                                ),
                                 MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
                                 MyPageMenuItem(
                                     label = stringResource(Res.string.mypage_menu_terms_of_service),
@@ -213,6 +219,10 @@ fun MyPageScreen(
                 MyPageMenuSection(
                     menuItems =
                         listOf(
+                            MyPageMenuItem(
+                                label = stringResource(Res.string.mypage_menu_display_settings),
+                                onClick = onDisplaySettingsClick,
+                            ),
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
                             MyPageMenuItem(
                                 label = stringResource(Res.string.mypage_menu_terms_of_service),

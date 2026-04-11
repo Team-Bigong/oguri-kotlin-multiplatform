@@ -157,6 +157,7 @@
     <string name="mypage_selected_period_information">휴일 %1$d일 · 연차 %2$d일</string>
     <string name="mypage_empty_selected_period">아직 골라둔 휴가 일정이 없어요.</string>
     <string name="mypage_empty_saved_place">아직 담아둔 여행지가 없어요.</string>
+    <string name="mypage_menu_display_settings">디스플레이 설정</string>
     <string name="mypage_menu_suggest">건의하기</string>
     <string name="mypage_menu_terms_of_service">서비스 이용약관</string>
     <string name="mypage_menu_privacy_policy">개인정보 처리방침</string>
@@ -180,4 +181,7 @@
     <string name="mypage_leave_days_field_remaining">남은 연차</string>
     <string name="mypage_leave_days_field_preferred">선호하는 연차</string>
     <string name="mypage_leave_days_unit">일</string>
+    <string name="display_settings_follow_system">시스템 설정에 따름</string>
+    <string name="display_settings_light_mode">라이트 모드</string>
+    <string name="display_settings_dark_mode">다크 모드</string>
 </resources>

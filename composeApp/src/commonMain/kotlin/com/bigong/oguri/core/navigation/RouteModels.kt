@@ -39,6 +39,9 @@ sealed interface RouteModel {
     data object MyPage : RouteModel
 
     @Serializable
+    data object DisplaySettings : RouteModel
+
+    @Serializable
     data class PlaceDetail(
         val placeId: Long,
         val startDate: String? = null,

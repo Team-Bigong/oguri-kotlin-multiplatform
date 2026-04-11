@@ -157,6 +157,7 @@
     <string name="mypage_selected_period_information">Holiday %1$d days · Leave %2$d days</string>
     <string name="mypage_empty_selected_period">No saved vacation period.</string>
     <string name="mypage_empty_saved_place">No saved place.</string>
+    <string name="mypage_menu_display_settings">Display Settings</string>
     <string name="mypage_menu_suggest">Send feedback</string>
     <string name="mypage_menu_terms_of_service">Terms of Service</string>
     <string name="mypage_menu_privacy_policy">Privacy Policy</string>
@@ -180,4 +181,7 @@
     <string name="mypage_leave_days_field_remaining">Remaining leave days</string>
     <string name="mypage_leave_days_field_preferred">Preferred leave days</string>
     <string name="mypage_leave_days_unit">days</string>
+    <string name="display_settings_follow_system">Follow system setting</string>
+    <string name="display_settings_light_mode">Light mode</string>
+    <string name="display_settings_dark_mode">Dark mode</string>
 </resources>

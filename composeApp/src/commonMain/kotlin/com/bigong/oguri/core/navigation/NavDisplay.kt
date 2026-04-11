@@ -2,6 +2,7 @@ package com.bigong.oguri.core.navigation
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,7 +55,9 @@ import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.core.util.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
+import com.bigong.oguri.data.local.provideDisplayThemeModeLocalDataSource
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
+import com.bigong.oguri.domain.model.DisplayThemeMode
 import dev.zacsweers.metro.createGraphFactory
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
@@ -75,7 +78,22 @@ fun NavDisplay(
     snackbarHostState: SnackbarHostState,
     onExitApp: () -> Unit = {},
 ) {
-    OguriTheme {
+    val displayThemeModeLocalDataSource = remember { provideDisplayThemeModeLocalDataSource() }
+    val initialDisplayThemeMode =
+        remember(displayThemeModeLocalDataSource) {
+            displayThemeModeLocalDataSource.initialize()
+            displayThemeModeLocalDataSource.readDisplayThemeMode() ?: DisplayThemeMode.SYSTEM
+        }
+    var currentDisplayThemeMode by remember { mutableStateOf(initialDisplayThemeMode) }
+    val isSystemDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme =
+        when (currentDisplayThemeMode) {
+            DisplayThemeMode.SYSTEM -> isSystemDarkTheme
+            DisplayThemeMode.LIGHT -> false
+            DisplayThemeMode.DARK -> true
+        }
+
+    OguriTheme(darkTheme = isDarkTheme) {
         val navigator = rememberMainNavigator()
         val currentDestination = navigator.currentDestination()
         var authSessionVersion by remember { mutableIntStateOf(0) }
@@ -260,6 +278,11 @@ fun NavDisplay(
                                     type = OguriSnackBarType.INFO,
                                 )
                             }
+                        },
+                        currentDisplayThemeMode = currentDisplayThemeMode,
+                        onDisplayThemeModeChange = { displayThemeMode ->
+                            currentDisplayThemeMode = displayThemeMode
+                            displayThemeModeLocalDataSource.writeDisplayThemeMode(displayThemeMode)
                         },
                     )
                 }
