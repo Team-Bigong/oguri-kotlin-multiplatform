@@ -111,8 +111,10 @@ type CropQueueItem = {
 
 type CropSessionState = {
   targetType: CropTargetType
+  applyMode: "append" | "replace"
   queueItems: CropQueueItem[]
   currentIndex: number
+  destinationImageIndex: number | null
   experienceIndex: number | null
   zoom: number
   offsetX: number
@@ -306,6 +308,17 @@ const createCropQueueItems = async (files: File[]): Promise<CropQueueItem[]> => 
     })
   )
   return queueItems
+}
+
+const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
+  const response = await fetch(imageUrl)
+  if (!response.ok) {
+    throw new Error("이미지를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.")
+  }
+  const binary = await response.blob()
+  const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
+  const fileName = `crop-source-${Date.now()}.jpg`
+  return new File([binary], fileName, { type: fileType })
 }
 
 const clampCropOffset = (
@@ -806,7 +819,11 @@ export const AdminApp = (): React.JSX.Element => {
   const openCropSession = useCallback(async (
     targetType: CropTargetType,
     files: File[],
-    experienceIndex: number | null
+    options: {
+      applyMode: "append" | "replace"
+      destinationImageIndex: number | null
+      experienceIndex: number | null
+    }
   ): Promise<void> => {
     if (files.length === 0) {
       return
@@ -819,9 +836,11 @@ export const AdminApp = (): React.JSX.Element => {
       const queueItems = await createCropQueueItems(files)
       setCropSessionState({
         targetType,
+        applyMode: options.applyMode,
         queueItems,
         currentIndex: 0,
-        experienceIndex,
+        destinationImageIndex: options.destinationImageIndex,
+        experienceIndex: options.experienceIndex,
         zoom: CROP_ZOOM_MINIMUM,
         offsetX: 0,
         offsetY: 0,
@@ -864,6 +883,48 @@ export const AdminApp = (): React.JSX.Element => {
       }
     })
   }, [destinationFormState.images, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
+
+  const replaceCroppedDestinationImage = useCallback(async (
+    destinationImageIndex: number,
+    binary: Blob
+  ): Promise<void> => {
+    const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
+    const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
+    const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
+      (maximumSequenceNumber, image) => {
+        const parsedSequenceNumber = parseImageSequenceNumberFromImageUrl(image.imageUrl)
+        return parsedSequenceNumber == null
+          ? maximumSequenceNumber
+          : Math.max(maximumSequenceNumber, parsedSequenceNumber)
+      },
+      0
+    )
+    const imageSequenceNumber = currentMaximumImageSequenceNumber + 1
+    const objectPath = `places/${countryPathSegment}/${cityPathSegment}/${imageSequenceNumber}.jpg`
+    const replacedImageUrl = await uploadImageToFirebaseStorage(binary, objectPath)
+    const currentImageUrl = destinationFormState.images[destinationImageIndex]?.imageUrl ?? ""
+
+    if (currentImageUrl.length > 0 && destinationFormState.newlyUploadedImageUrls.includes(currentImageUrl)) {
+      await deleteImageFromFirebaseStorageByUrl(currentImageUrl)
+    }
+
+    setDestinationFormState((previousState) => ({
+      ...previousState,
+      images: previousState.images.map((image, index) => {
+        if (index !== destinationImageIndex) {
+          return image
+        }
+        return {
+          ...image,
+          imageUrl: replacedImageUrl
+        }
+      }),
+      newlyUploadedImageUrls: [
+        ...previousState.newlyUploadedImageUrls.filter((imageUrl) => imageUrl !== currentImageUrl),
+        replacedImageUrl
+      ]
+    }))
+  }, [destinationFormState.images, destinationFormState.newlyUploadedImageUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
 
   const uploadCroppedExperienceThumbnail = useCallback(async (
     experienceIndex: number,
@@ -913,6 +974,31 @@ export const AdminApp = (): React.JSX.Element => {
     })
   }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
 
+  const openCropSessionFromUploadedImage = useCallback(async (
+    targetType: CropTargetType,
+    imageUrl: string,
+    options: {
+      destinationImageIndex: number | null
+      experienceIndex: number | null
+    }
+  ): Promise<void> => {
+    beginUploadTask("preparing")
+    setErrorMessage("")
+    setNoticeMessage("")
+    try {
+      const sourceFile = await createFileFromImageUrl(imageUrl)
+      await openCropSession(targetType, [sourceFile], {
+        applyMode: "replace",
+        destinationImageIndex: options.destinationImageIndex,
+        experienceIndex: options.experienceIndex
+      })
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "이미지 크롭 편집을 시작할 수 없습니다.")
+    } finally {
+      endUploadTask()
+    }
+  }, [beginUploadTask, endUploadTask, openCropSession])
+
   const applyCurrentCrop = useCallback(async (): Promise<void> => {
     if (cropSessionState == null || cropSessionItem == null) {
       return
@@ -957,7 +1043,15 @@ export const AdminApp = (): React.JSX.Element => {
       setCurrentUploadStage("uploading")
       if (cropSessionState.targetType === "destination") {
         setUploadingDestinationImageCount((previousCount) => previousCount + 1)
-        await uploadCroppedDestinationImage(croppedBinary)
+        if (cropSessionState.applyMode === "replace") {
+          const destinationImageIndex = cropSessionState.destinationImageIndex
+          if (destinationImageIndex == null) {
+            throw new Error("수정할 장소 사진 인덱스를 확인할 수 없습니다.")
+          }
+          await replaceCroppedDestinationImage(destinationImageIndex, croppedBinary)
+        } else {
+          await uploadCroppedDestinationImage(croppedBinary)
+        }
         setUploadingDestinationImageCount((previousCount) => Math.max(0, previousCount - 1))
       } else {
         const experienceIndex = cropSessionState.experienceIndex
@@ -1003,7 +1097,7 @@ export const AdminApp = (): React.JSX.Element => {
     } finally {
       endUploadTask()
     }
-  }, [beginUploadTask, closeCropSession, cropFrameHeight, cropFrameWidth, cropSessionItem, cropSessionState, endUploadTask, uploadCroppedDestinationImage, uploadCroppedExperienceThumbnail])
+  }, [beginUploadTask, closeCropSession, cropFrameHeight, cropFrameWidth, cropSessionItem, cropSessionState, endUploadTask, replaceCroppedDestinationImage, uploadCroppedDestinationImage, uploadCroppedExperienceThumbnail])
 
   const updateCropTransform = useCallback((zoom: number, offsetX: number, offsetY: number): void => {
     setCropSessionState((previousSession) => {
@@ -1069,11 +1163,16 @@ export const AdminApp = (): React.JSX.Element => {
 
   const handleImageFileSelection = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files
+    const selectedFiles = fileList == null ? [] : Array.from(fileList)
     event.target.value = ""
-    if (fileList == null || fileList.length === 0) {
+    if (selectedFiles.length === 0) {
       return
     }
-    void openCropSession("destination", Array.from(fileList), null)
+    void openCropSession("destination", selectedFiles, {
+      applyMode: "append",
+      destinationImageIndex: null,
+      experienceIndex: null
+    })
   }, [openCropSession])
 
   const addExperienceItem = useCallback(() => {
@@ -1152,7 +1251,11 @@ export const AdminApp = (): React.JSX.Element => {
     if (selectedFile == null) {
       return
     }
-    void openCropSession("experience", [selectedFile], experienceIndex)
+    void openCropSession("experience", [selectedFile], {
+      applyMode: "replace",
+      destinationImageIndex: null,
+      experienceIndex
+    })
   }, [openCropSession])
 
   const activeTitle = useMemo(() => {
@@ -1334,13 +1437,11 @@ export const AdminApp = (): React.JSX.Element => {
               <LabelInput
                 label="도시명"
                 value={destinationFormState.name}
-                enableBoldFormatting
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, name: value }))}
               />
               <LabelInput
                 label="요약 (25자 내외)"
                 value={destinationFormState.summary}
-                enableBoldFormatting
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, summary: value }))}
               />
               <LabelInput
@@ -1409,13 +1510,22 @@ export const AdminApp = (): React.JSX.Element => {
                 <View style={styles.imageListContainer}>
                   {destinationFormState.images.map((image, index) => (
                     <View style={styles.imageRow} key={`${image.imageUrl}_${index}`}>
-                      <View style={styles.imagePreviewContainer}>
+                      <Pressable
+                        style={styles.imagePreviewContainer}
+                        onPress={() => {
+                          void openCropSessionFromUploadedImage("destination", image.imageUrl, {
+                            destinationImageIndex: index,
+                            experienceIndex: null
+                          })
+                        }}
+                      >
                         <img
                           src={image.imageUrl}
                           alt={`destination-image-${index + 1}`}
                           style={htmlImagePreviewStyle}
                         />
-                      </View>
+                      </Pressable>
+                      <Text style={styles.helperText}>미리보기를 클릭하면 크롭을 다시 수정할 수 있습니다.</Text>
                       <Text style={styles.imageUrlText}>{image.imageUrl}</Text>
                       <View style={styles.imageRowControls}>
                         <Pressable
@@ -1481,7 +1591,6 @@ export const AdminApp = (): React.JSX.Element => {
                       <LabelInput
                         label="제목"
                         value={experience.title}
-                        enableBoldFormatting
                         onChangeText={(value) => {
                           setDestinationFormState((previousState) => ({
                             ...previousState,
@@ -1498,7 +1607,6 @@ export const AdminApp = (): React.JSX.Element => {
                         label="설명 (40자 내외)"
                         value={experience.description}
                         multiline
-                        enableBoldFormatting
                         onChangeText={(value) => {
                           setDestinationFormState((previousState) => ({
                             ...previousState,
@@ -1536,12 +1644,25 @@ export const AdminApp = (): React.JSX.Element => {
                           }}
                         />
                         {experience.thumbnailUrl.length > 0 && (
-                          <View style={styles.imagePreviewContainer}>
+                          <Pressable
+                            style={styles.imagePreviewContainer}
+                            onPress={() => {
+                              void openCropSessionFromUploadedImage("experience", experience.thumbnailUrl, {
+                                destinationImageIndex: null,
+                                experienceIndex
+                              })
+                            }}
+                          >
                             <img
                               src={experience.thumbnailUrl}
                               alt={`experience-thumbnail-${experienceIndex + 1}`}
                               style={htmlImagePreviewStyle}
                             />
+                          </Pressable>
+                        )}
+                        {experience.thumbnailUrl.length > 0 && (
+                          <View>
+                            <Text style={styles.helperText}>미리보기를 클릭하면 크롭을 다시 수정할 수 있습니다.</Text>
                             <Text style={styles.imageUrlText}>{experience.thumbnailUrl}</Text>
                           </View>
                         )}
