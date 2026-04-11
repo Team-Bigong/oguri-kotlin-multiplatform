@@ -134,7 +134,7 @@ const PLACE_IMAGE_SECONDARY_ASPECT_RATIO = 100 / 67
 const EXPERIENCE_IMAGE_ASPECT_RATIO = 100 / 60
 const PLACE_IMAGE_OUTPUT_WIDTH_PX = 1280
 const EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX = 1200
-const CROP_MINIMUM_WIDTH_RATIO = 0.18
+const CROP_MINIMUM_SIZE_PX = 120
 
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
@@ -353,20 +353,31 @@ const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
   }
 }
 
-const getCropAspectRatio = (targetType: CropTargetType): number => {
-  return targetType === "experience" ? EXPERIENCE_IMAGE_ASPECT_RATIO : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
+const createInitialCropArea = (item: CropQueueItem): CropArea => {
+  return {
+    x: 0,
+    y: 0,
+    width: item.naturalWidth,
+    height: item.naturalHeight
+  }
 }
 
-const createInitialCropArea = (item: CropQueueItem, targetType: CropTargetType): CropArea => {
-  const aspectRatio = getCropAspectRatio(targetType)
-  const maximumWidthByHeight = item.naturalHeight * aspectRatio
-  const initialWidth = Math.min(item.naturalWidth * 0.9, maximumWidthByHeight * 0.9)
-  const initialHeight = initialWidth / aspectRatio
+const createGuideRect = (
+  containerWidth: number,
+  containerHeight: number,
+  aspectRatio: number
+): CropArea => {
+  let width = containerWidth
+  let height = width / aspectRatio
+  if (height > containerHeight) {
+    height = containerHeight
+    width = height * aspectRatio
+  }
   return {
-    x: (item.naturalWidth - initialWidth) / 2,
-    y: (item.naturalHeight - initialHeight) / 2,
-    width: initialWidth,
-    height: initialHeight
+    x: (containerWidth - width) / 2,
+    y: (containerHeight - height) / 2,
+    width,
+    height
   }
 }
 
@@ -498,6 +509,29 @@ export const AdminApp = (): React.JSX.Element => {
       displayHeight: cropSessionItem.naturalHeight * displayScale
     }
   }, [cropSessionItem, windowHeight, windowWidth])
+  const primaryGuideRect = useMemo(() => {
+    if (cropImageRenderMetrics == null || cropSessionState == null) {
+      return null
+    }
+    const aspectRatio = cropSessionState.targetType === "experience"
+      ? EXPERIENCE_IMAGE_ASPECT_RATIO
+      : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
+    return createGuideRect(
+      cropImageRenderMetrics.displayWidth,
+      cropImageRenderMetrics.displayHeight,
+      aspectRatio
+    )
+  }, [cropImageRenderMetrics, cropSessionState])
+  const secondaryGuideRect = useMemo(() => {
+    if (cropImageRenderMetrics == null || cropSessionState?.targetType !== "destination") {
+      return null
+    }
+    return createGuideRect(
+      cropImageRenderMetrics.displayWidth,
+      cropImageRenderMetrics.displayHeight,
+      PLACE_IMAGE_SECONDARY_ASPECT_RATIO
+    )
+  }, [cropImageRenderMetrics, cropSessionState?.targetType])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -873,7 +907,7 @@ export const AdminApp = (): React.JSX.Element => {
         currentIndex: 0,
         destinationImageIndex: options.destinationImageIndex,
         experienceIndex: options.experienceIndex,
-        cropArea: createInitialCropArea(currentQueueItem, targetType),
+        cropArea: createInitialCropArea(currentQueueItem),
         isProcessing: false
       })
     } catch (error) {
@@ -1094,7 +1128,7 @@ export const AdminApp = (): React.JSX.Element => {
           return {
             ...previousSession,
             currentIndex: nextIndex,
-            cropArea: createInitialCropArea(nextQueueItem, previousSession.targetType),
+            cropArea: createInitialCropArea(nextQueueItem),
             isProcessing: false
           }
         })
@@ -1154,7 +1188,6 @@ export const AdminApp = (): React.JSX.Element => {
     event.preventDefault()
     const deltaX = (event.clientX - cropDragState.current.pointerStartX) / cropImageRenderMetrics.displayScale
     const deltaY = (event.clientY - cropDragState.current.pointerStartY) / cropImageRenderMetrics.displayScale
-    const cropAspectRatio = getCropAspectRatio(cropSessionState.targetType)
 
     setCropSessionState((previousSession) => {
       if (previousSession == null) {
@@ -1174,15 +1207,12 @@ export const AdminApp = (): React.JSX.Element => {
         }
       }
 
-      const minimumCropWidth = Math.max(120, cropSessionItem.naturalWidth * CROP_MINIMUM_WIDTH_RATIO)
-      const maximumCropWidthByImageWidth = cropSessionItem.naturalWidth - cropAreaAtStart.x
-      const maximumCropWidthByImageHeight = (cropSessionItem.naturalHeight - cropAreaAtStart.y) * cropAspectRatio
-      const maximumCropWidth = Math.max(
-        minimumCropWidth,
-        Math.min(maximumCropWidthByImageWidth, maximumCropWidthByImageHeight)
-      )
+      const minimumCropWidth = Math.min(CROP_MINIMUM_SIZE_PX, cropSessionItem.naturalWidth)
+      const minimumCropHeight = Math.min(CROP_MINIMUM_SIZE_PX, cropSessionItem.naturalHeight)
+      const maximumCropWidth = cropSessionItem.naturalWidth - cropAreaAtStart.x
+      const maximumCropHeight = cropSessionItem.naturalHeight - cropAreaAtStart.y
       const nextWidth = Math.max(minimumCropWidth, Math.min(maximumCropWidth, cropAreaAtStart.width + deltaX))
-      const nextHeight = nextWidth / cropAspectRatio
+      const nextHeight = Math.max(minimumCropHeight, Math.min(maximumCropHeight, cropAreaAtStart.height + deltaY))
 
       return {
         ...previousSession,
@@ -2077,6 +2107,28 @@ export const AdminApp = (): React.JSX.Element => {
                   height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
                 }}
               />
+              {secondaryGuideRect != null && (
+                <div
+                  style={{
+                    ...htmlSecondaryCropGuideStyle,
+                    left: secondaryGuideRect.x,
+                    top: secondaryGuideRect.y,
+                    width: secondaryGuideRect.width,
+                    height: secondaryGuideRect.height
+                  }}
+                />
+              )}
+              {primaryGuideRect != null && (
+                <div
+                  style={{
+                    ...htmlReferenceGuideStyle,
+                    left: primaryGuideRect.x,
+                    top: primaryGuideRect.y,
+                    width: primaryGuideRect.width,
+                    height: primaryGuideRect.height
+                  }}
+                />
+              )}
               <div
                 style={{
                   ...htmlPrimaryCropAreaStyle,
@@ -2087,18 +2139,6 @@ export const AdminApp = (): React.JSX.Element => {
                 }}
                 onMouseDown={beginMoveCropArea}
               >
-                {cropSessionState.targetType === "destination" && (
-                  <div
-                    style={{
-                      ...htmlSecondaryCropGuideStyle,
-                      height: (cropSessionState.cropArea.width / PLACE_IMAGE_SECONDARY_ASPECT_RATIO) * cropImageRenderMetrics.displayScale,
-                      top: (
-                        (cropSessionState.cropArea.height - (cropSessionState.cropArea.width / PLACE_IMAGE_SECONDARY_ASPECT_RATIO))
-                        / 2
-                      ) * cropImageRenderMetrics.displayScale
-                    }}
-                  />
-                )}
                 <div
                   style={htmlCropResizeHandleStyle}
                   onMouseDown={beginResizeCropArea}
@@ -2106,7 +2146,7 @@ export const AdminApp = (): React.JSX.Element => {
               </div>
             </div>
             <Text style={styles.helperText}>
-              사각형 내부를 드래그해 위치를 바꾸고, 우하단 핸들을 드래그해 크기를 조절하세요.
+              파랑/민트 가이드는 참고용입니다. 크롭 사각형은 자유 비율로 이동·조절할 수 있습니다.
             </Text>
             <View style={styles.rowButtonContainer}>
               <ActionButton
@@ -2123,7 +2163,7 @@ export const AdminApp = (): React.JSX.Element => {
                     }
                     return {
                       ...previousSession,
-                      cropArea: createInitialCropArea(currentQueueItem, previousSession.targetType)
+                      cropArea: createInitialCropArea(currentQueueItem)
                     }
                   })
                 }}
@@ -2817,16 +2857,24 @@ const htmlPrimaryCropAreaStyle: React.CSSProperties = {
   position: "absolute",
   border: "2px solid #4fa4ff",
   boxSizing: "border-box",
-  cursor: "move"
+  cursor: "move",
+  zIndex: 3
+}
+
+const htmlReferenceGuideStyle: React.CSSProperties = {
+  position: "absolute",
+  border: "2px solid #59a7ff",
+  boxSizing: "border-box",
+  pointerEvents: "none",
+  zIndex: 2
 }
 
 const htmlSecondaryCropGuideStyle: React.CSSProperties = {
   position: "absolute",
-  left: 0,
-  width: "100%",
   border: "2px solid #00c8b5",
   boxSizing: "border-box",
-  pointerEvents: "none"
+  pointerEvents: "none",
+  zIndex: 2
 }
 
 const htmlCropResizeHandleStyle: React.CSSProperties = {
