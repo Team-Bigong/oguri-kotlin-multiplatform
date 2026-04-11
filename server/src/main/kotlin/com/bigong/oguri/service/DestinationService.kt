@@ -8,6 +8,8 @@ import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -22,7 +24,11 @@ class DestinationService(
     private val savedDestinationRepository: SavedDestinationRepository,
     private val homeService: HomeService,
     private val exchangeService: ExchangeService,
+    private val countryRepository: com.bigong.oguri.repository.CountryRepository,
 ) {
+    // 대한민국의 빅맥 지수를 캐싱 (성능 최적화)
+    private var koreaBigMacIndex: BigDecimal? = null
+
     /**
      * 마음에 드는 여행지 저장하기
      */
@@ -103,6 +109,9 @@ class DestinationService(
         // 7. 실시간 환율 정보 (해당 국가의 통화 코드 사용)
         val exchangeRateInfo = exchangeService.getExchangeRateInfo(target.country?.currencyCode)
 
+        // 8. 체감 물가 계산 (해당 국가 BMI / 대한민국 BMI)
+        val relativeCostIndex = calculateRelativeCostIndex(target.country?.bigMacIndex)
+
         return PlaceDetailResponse(
             id = target.id.toLong(),
             country = target.country?.name ?: "Unknown",
@@ -110,11 +119,30 @@ class DestinationService(
             thumbnailUrls = thumbnailUrls,
             isSaved = isSaved,
             exchangeRateInfo = exchangeRateInfo,
+            relativeCostIndex = relativeCostIndex,
             description = description,
             experiences = experiences,
             flightUrl = flightUrl,
             relevantPlaces = relevantPlaces,
         )
+    }
+
+    /**
+     * 대한민국의 빅맥 지수를 기준으로 상대적인 물가 지수를 계산합니다.
+     */
+    private fun calculateRelativeCostIndex(targetBmi: BigDecimal?): Double? {
+        if (targetBmi == null) return null
+
+        // 캐싱된 대한민국 BMI가 없으면 조회 (최초 1회)
+        if (koreaBigMacIndex == null) {
+            koreaBigMacIndex = countryRepository.findByName("대한민국")?.bigMacIndex
+        }
+
+        val baseBmi = koreaBigMacIndex ?: return null
+        if (baseBmi.compareTo(BigDecimal.ZERO) == 0) return null
+
+        // 상대 지수 = 대상 국가 BMI / 대한민국 BMI (소수점 둘째자리까지)
+        return targetBmi.divide(baseBmi, 2, RoundingMode.HALF_UP).toDouble()
     }
 
     /**
