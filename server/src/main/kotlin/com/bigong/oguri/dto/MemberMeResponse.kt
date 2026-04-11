@@ -11,19 +11,19 @@ data class MemberMeResponse(
     val preferredDayOff: Int,
     val remainingDayOff: Int,
     val savedPeriods: List<SavedPeriodDto>,
-    val savedPlaces: List<SavedPlaceDto>
+    val savedPlaces: List<SavedPlaceDto>,
 )
 
 data class SavedPeriodDto(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val dayOffCount: Int,
-    val totalTripCount: Int
+    val totalTripCount: Int,
 )
 
 data class SavedPlaceDto(
     val id: Long,
     val country: String,
     val city: String,
-    val thumbnailUrl: String
+    val thumbnailUrl: String,
 )

@@ -11,9 +11,13 @@ import org.springframework.web.servlet.HandlerInterceptor
 
 @Component
 class AuthInterceptor(
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
 ) : HandlerInterceptor {
-    override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
+    override fun preHandle(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        handler: Any,
+    ): Boolean {
         if (request.method == HttpMethod.OPTIONS.name()) {
             request.setAttribute(AuthContext.AUTHENTICATED_MEMBER_ID_ATTRIBUTE, AuthContext.GUEST_MEMBER_ID)
             return true

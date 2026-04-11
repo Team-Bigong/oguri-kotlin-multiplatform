@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.ad.AdMobBanner
@@ -53,6 +55,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 fun MyPageScreen(
     myPageUiState: MyPageUiState,
+    scrollToTopTrigger: Int,
     onRetryClick: () -> Unit,
     onEditLeaveDaysClick: () -> Unit,
     onDismissLeaveDaysBottomSheet: () -> Unit,
@@ -77,6 +80,14 @@ fun MyPageScreen(
     onDismissLogoutDialog: () -> Unit,
     onConfirmLogout: () -> Unit,
 ) {
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(scrollToTopTrigger, myPageUiState.isLoading, myPageUiState.isError) {
+        if (scrollToTopTrigger > 0 && !myPageUiState.isLoading && !myPageUiState.isError) {
+            listState.animateScrollToItem(index = 0)
+        }
+    }
+
     if (myPageUiState.isLoading) {
         MyPageSkeletonContent()
         return
@@ -95,6 +106,7 @@ fun MyPageScreen(
                     .background(Neutral5),
         ) {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.weight(1f),
             ) {
                 item {
@@ -158,6 +170,7 @@ fun MyPageScreen(
                 .background(Neutral5),
     ) {
         LazyColumn(
+            state = listState,
             modifier = Modifier.weight(1f),
         ) {
             item {

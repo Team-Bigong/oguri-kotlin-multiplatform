@@ -13,16 +13,16 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/api/admin/v1/auth")
 class AdminAuthController(
-    private val adminAuthService: AdminAuthService
+    private val adminAuthService: AdminAuthService,
 ) {
     @PostMapping("/login")
     fun login(
-        @RequestBody request: AdminLoginRequest
+        @RequestBody request: AdminLoginRequest,
     ): AdminLoginResponse {
         val (accessToken, expiresInSeconds) = adminAuthService.login(request.username, request.password)
         return AdminLoginResponse(
             accessToken = accessToken,
-            expiresInSeconds = expiresInSeconds
+            expiresInSeconds = expiresInSeconds,
         )
     }
 }

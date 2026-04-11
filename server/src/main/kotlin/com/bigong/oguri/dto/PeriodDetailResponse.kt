@@ -20,5 +20,5 @@ data class PeriodDetailResponse(
     val size: Int,
     @field:Schema(description = "다음 페이지 존재 여부", example = "true")
     val hasNext: Boolean,
-    val places: List<PlaceResponse>
+    val places: List<PlaceResponse>,
 )

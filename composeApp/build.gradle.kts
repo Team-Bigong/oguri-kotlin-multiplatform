@@ -60,6 +60,31 @@ val localProperties: Properties =
         }
     }
 
+val versionProperties: Properties =
+    Properties().apply {
+        val versionPropertiesFile = rootProject.file("version.properties")
+        if (!versionPropertiesFile.exists()) {
+            throw GradleException("version.properties file is missing at project root.")
+        }
+        versionPropertiesFile.inputStream().use { inputStream ->
+            load(inputStream)
+        }
+    }
+
+val currentProjectVersionValue: String =
+    versionProperties
+        .getProperty("CURRENT_PROJECT_VERSION")
+        ?.trim()
+        .takeUnless { it.isNullOrEmpty() }
+        ?: throw GradleException("CURRENT_PROJECT_VERSION is missing in version.properties.")
+
+val marketingVersionValue: String =
+    versionProperties
+        .getProperty("MARKETING_VERSION")
+        ?.trim()
+        .takeUnless { it.isNullOrEmpty() }
+        ?: throw GradleException("MARKETING_VERSION is missing in version.properties.")
+
 val debugBaseUrlValue: String =
     (localProperties.getProperty("debug.base.url") ?: "")
         .trim()
@@ -186,8 +211,8 @@ android {
             libs.versions.android.targetSdk
                 .get()
                 .toInt()
-        versionCode = 3
-        versionName = "1.0.0"
+        versionCode = currentProjectVersionValue.toInt()
+        versionName = marketingVersionValue
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
     }
     packaging {

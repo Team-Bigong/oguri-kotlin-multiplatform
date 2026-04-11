@@ -13,7 +13,7 @@ data class CalendarResponse(
     @field:Schema(description = "다음 페이지 존재 여부", example = "true")
     val hasNext: Boolean,
     @field:Schema(description = "추천 일정 목록(가장 추천할만한 일정 순)")
-    val periods: List<CalendarPeriodRecommendationResponse>
+    val periods: List<CalendarPeriodRecommendationResponse>,
 )
 
 data class CalendarPeriodRecommendationResponse(
@@ -32,7 +32,7 @@ data class CalendarPeriodRecommendationResponse(
     @field:Schema(description = "기간 내 휴일 날짜 상세 목록")
     val holidayDateDetails: List<CalendarHolidayDateResponse>,
     @field:Schema(description = "저장된 일정 여부", example = "false")
-    val isSaved: Boolean
+    val isSaved: Boolean,
 )
 
 data class CalendarHolidayDateResponse(
@@ -43,5 +43,5 @@ data class CalendarHolidayDateResponse(
     @field:Schema(description = "주말 여부", example = "false")
     val weekend: Boolean,
     @field:Schema(description = "공휴일 테이블 기반 휴일 여부", example = "true")
-    val publicHoliday: Boolean
+    val publicHoliday: Boolean,
 )

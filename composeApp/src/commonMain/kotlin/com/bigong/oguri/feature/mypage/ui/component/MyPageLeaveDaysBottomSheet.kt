@@ -25,6 +25,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
@@ -130,6 +131,7 @@ fun MyPageLeaveDaysBottomSheet(
                 Image(
                     painter = painterResource(resource = Res.drawable.btn_exit),
                     contentDescription = null,
+                    colorFilter = ColorFilter.tint(Neutral50),
                     modifier = Modifier.size(36.dp).noRippleClickable(onClick = onDismissRequest),
                 )
             }

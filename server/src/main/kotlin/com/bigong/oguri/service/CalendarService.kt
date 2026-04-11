@@ -27,7 +27,7 @@ class CalendarService(
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val destinationRepository: DestinationRepository,
     private val homeService: HomeService,
-    private val vacationRecommendationService: VacationRecommendationService
+    private val vacationRecommendationService: VacationRecommendationService,
 ) {
     /**
      * 특정 기간(시작~종료)의 상세 정보 및 추천 장소 조회
@@ -38,20 +38,35 @@ class CalendarService(
         userCountry: String,
         memberId: String,
         page: Int,
-        size: Int
+        size: Int,
     ): PeriodDetailResponse {
         // 1. 공휴일 정보 로드
         val allHolidays = publicHolidayRepository.findAll()
         val holidayMap = allHolidays.associateBy { it.holidayDate }
 
-        // 2. 해당 기간 내 공휴일 명칭 추출 (isActualHoliday인 것만)
-        val holidayNames = mutableListOf<String>()
+        // 2. 해당 기간 내 공휴일 명칭 추출
+        val actualHolidayNames = linkedSetOf<String>()
+        val nonActualHolidayNames = linkedSetOf<String>()
         var curr = startDate
         while (!curr.isAfter(endDate)) {
-            holidayMap[curr]?.let { if (it.isActualHoliday) holidayNames.add(it.name) }
+            holidayMap[curr]
+                ?.name
+                ?.takeIf { holidayName: String -> holidayName.isNotBlank() }
+                ?.let { holidayName: String ->
+                    if (holidayMap[curr]?.isActualHoliday == true) {
+                        actualHolidayNames.add(holidayName)
+                    } else {
+                        nonActualHolidayNames.add(holidayName)
+                    }
+                }
             curr = curr.plusDays(1)
         }
-        val finalHolidays = if (holidayNames.isEmpty()) listOf("주말") else holidayNames.distinct()
+        val finalHolidays =
+            when {
+                actualHolidayNames.isNotEmpty() -> actualHolidayNames.toList()
+                nonActualHolidayNames.isNotEmpty() -> nonActualHolidayNames.toList()
+                else -> listOf(DEFAULT_HOLIDAY_NAME)
+            }
 
         // 3. 총 휴가 일수 및 연차 사용 개수 계산
         val totalTripCount = ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
@@ -75,19 +90,25 @@ class CalendarService(
             page = normalizedPage,
             size = normalizedSize,
             hasNext = hasNext,
-            places = pagedPlaces
+            places = pagedPlaces,
         )
     }
 
     /**
      * 특정 기간 동안 실제로 사용하게 되는 연차 개수 계산
      */
-    private fun calculateUsedDayOff(start: LocalDate, end: LocalDate, holidayMap: Map<LocalDate, PublicHoliday>): Int {
+    private fun calculateUsedDayOff(
+        start: LocalDate,
+        end: LocalDate,
+        holidayMap: Map<LocalDate, PublicHoliday>,
+    ): Int {
         var count = 0
         var curr = start
         while (!curr.isAfter(end)) {
             // 평일(월~금)이면서 공휴일이 아닌 날만 연차 소진으로 계산
-            if (curr.dayOfWeek != DayOfWeek.SATURDAY && curr.dayOfWeek != DayOfWeek.SUNDAY && !holidayMap.containsKey(curr)) {
+            val isWeekend = curr.dayOfWeek == DayOfWeek.SATURDAY || curr.dayOfWeek == DayOfWeek.SUNDAY
+            val isPublicHoliday = holidayMap.containsKey(curr)
+            if (!isWeekend && !isPublicHoliday) {
                 count++
             }
             curr = curr.plusDays(1)
@@ -101,43 +122,49 @@ class CalendarService(
         memberId: String,
         dayOffCount: Int?,
         page: Int,
-        size: Int
+        size: Int,
     ): CalendarResponse {
         validateCalendarFilter(year = year, month = month)
 
         val currentDate: LocalDate = LocalDate.now()
-        val startMonth: Int = resolveSearchStartMonth(
-            year = year,
-            month = month,
-            currentYear = currentDate.year,
-            currentMonth = currentDate.monthValue
-        )
+        val startMonth: Int =
+            resolveSearchStartMonth(
+                year = year,
+                month = month,
+                currentYear = currentDate.year,
+                currentMonth = currentDate.monthValue,
+            )
         val startYearMonth: YearMonth = YearMonth.of(year, startMonth)
-        val monthRangeCount: Int = resolveSearchMonthRangeCount(
-            month = month,
-            startMonth = startMonth
-        )
+        val monthRangeCount: Int =
+            resolveSearchMonthRangeCount(
+                month = month,
+                startMonth = startMonth,
+            )
 
         val targetDayOff = (dayOffCount ?: memberService.getPreferredDayOff(memberId)).coerceAtLeast(1)
         val normalizedPage = page.coerceAtLeast(0)
         val normalizedSize = size.coerceIn(MIN_PAGE_SIZE, MAX_PAGE_SIZE)
         val allHolidays = publicHolidayRepository.findAll()
         val holidayMap = allHolidays.associateBy { it.holidayDate }
-        val savedPeriodKeys = savedRecommendationRepository.findAllByMemberId(memberId).map { recommendation ->
-            buildPeriodKey(
-                startDate = recommendation.startDate,
-                endDate = recommendation.endDate
-            )
-        }.toSet()
+        val savedPeriodKeys =
+            savedRecommendationRepository
+                .findAllByMemberId(memberId)
+                .map { recommendation ->
+                    buildPeriodKey(
+                        startDate = recommendation.startDate,
+                        endDate = recommendation.endDate,
+                    )
+                }.toSet()
 
-        val periodCandidates = findTopPeriods(
-            startYearMonth = startYearMonth,
-            userDayOff = targetDayOff,
-            holidayMap = holidayMap,
-            monthRangeCount = monthRangeCount,
-            periodLimitPerMonth = PERIOD_LIMIT_PER_MONTH,
-            startDateCutoff = currentDate
-        )
+        val periodCandidates =
+            findTopPeriods(
+                startYearMonth = startYearMonth,
+                userDayOff = targetDayOff,
+                holidayMap = holidayMap,
+                monthRangeCount = monthRangeCount,
+                periodLimitPerMonth = PERIOD_LIMIT_PER_MONTH,
+                startDateCutoff = currentDate,
+            )
 
         val offset = normalizedPage * normalizedSize
         val pagedPeriods = periodCandidates.drop(offset).take(normalizedSize)
@@ -148,23 +175,25 @@ class CalendarService(
             page = normalizedPage,
             size = normalizedSize,
             hasNext = hasNext,
-            periods = pagedPeriods.map { period ->
-                CalendarPeriodRecommendationResponse(
-                    startDate = period.start,
-                    endDate = period.end,
-                    totalTripCount = period.totalDays,
-                    holidayCount = period.holidayCount,
-                    dayOffCount = period.usedDayOffCount,
-                    holidays = period.holidayNames.ifEmpty { listOf(DEFAULT_HOLIDAY_NAME) },
-                    holidayDateDetails = period.holidayDateDetails,
-                    isSaved = savedPeriodKeys.contains(
-                        buildPeriodKey(
-                            startDate = period.start,
-                            endDate = period.end
-                        )
+            periods =
+                pagedPeriods.map { period ->
+                    CalendarPeriodRecommendationResponse(
+                        startDate = period.start,
+                        endDate = period.end,
+                        totalTripCount = period.totalDays,
+                        holidayCount = period.holidayCount,
+                        dayOffCount = period.usedDayOffCount,
+                        holidays = period.holidayNames.ifEmpty { listOf(DEFAULT_HOLIDAY_NAME) },
+                        holidayDateDetails = period.holidayDateDetails,
+                        isSaved =
+                            savedPeriodKeys.contains(
+                                buildPeriodKey(
+                                    startDate = period.start,
+                                    endDate = period.end,
+                                ),
+                            ),
                     )
-                )
-            }
+                },
         )
     }
 
@@ -174,36 +203,46 @@ class CalendarService(
         holidayMap: Map<LocalDate, PublicHoliday>,
         monthRangeCount: Int,
         periodLimitPerMonth: Int,
-        startDateCutoff: LocalDate
-    ): List<VacationRecommendationService.RecommendationPeriod> {
-        return vacationRecommendationService.findRecommendedPeriods(
+        startDateCutoff: LocalDate,
+    ): List<VacationRecommendationService.RecommendationPeriod> =
+        vacationRecommendationService.findRecommendedPeriods(
             startYearMonth = startYearMonth,
             userDayOff = userDayOff,
             holidayMap = holidayMap,
             monthRangeCount = monthRangeCount,
             periodLimitPerMonth = periodLimitPerMonth,
-            startDateCutoff = startDateCutoff
+            startDateCutoff = startDateCutoff,
         )
-    }
 
-    private fun buildPeriodKey(startDate: LocalDate, endDate: LocalDate): String = "${startDate}_${endDate}"
+    private fun buildPeriodKey(
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): String = "${startDate}_$endDate"
 
-    private fun validateCalendarFilter(year: Int, month: Int?) {
+    private fun validateCalendarFilter(
+        year: Int,
+        month: Int?,
+    ) {
         if (year < MINIMUM_SUPPORTED_YEAR) {
             throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "year는 $MINIMUM_SUPPORTED_YEAR 이상이어야 합니다."
+                "year는 $MINIMUM_SUPPORTED_YEAR 이상이어야 합니다.",
             )
         }
         if (month != null && month !in MONTH_MIN_VALUE..MONTH_MAX_VALUE) {
             throw ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "month는 $MONTH_MIN_VALUE~$MONTH_MAX_VALUE 범위여야 합니다."
+                "month는 $MONTH_MIN_VALUE~$MONTH_MAX_VALUE 범위여야 합니다.",
             )
         }
     }
 
-    private fun resolveSearchStartMonth(year: Int, month: Int?, currentYear: Int, currentMonth: Int): Int {
+    private fun resolveSearchStartMonth(
+        year: Int,
+        month: Int?,
+        currentYear: Int,
+        currentMonth: Int,
+    ): Int {
         if (month != null) {
             return month
         }
@@ -214,7 +253,10 @@ class CalendarService(
         }
     }
 
-    private fun resolveSearchMonthRangeCount(month: Int?, startMonth: Int): Int {
+    private fun resolveSearchMonthRangeCount(
+        month: Int?,
+        startMonth: Int,
+    ): Int {
         if (month != null) {
             return SINGLE_MONTH_RANGE
         }

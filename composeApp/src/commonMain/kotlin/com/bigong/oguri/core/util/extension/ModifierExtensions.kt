@@ -23,11 +23,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral20
@@ -97,3 +101,29 @@ fun Modifier.skeletonShimmer(
                 measuredSize = size
             }
     }
+
+@Composable
+fun Modifier.consumeVerticalDragForBottomSheetContent(): Modifier {
+    val nestedScrollConnection =
+        remember {
+            object : NestedScrollConnection {
+                override fun onPostScroll(
+                    consumed: Offset,
+                    available: Offset,
+                    source: NestedScrollSource,
+                ): Offset =
+                    if (source == NestedScrollSource.UserInput) {
+                        Offset(x = 0f, y = available.y)
+                    } else {
+                        Offset.Zero
+                    }
+
+                override suspend fun onPostFling(
+                    consumed: Velocity,
+                    available: Velocity,
+                ): Velocity = Velocity(x = 0f, y = available.y)
+            }
+        }
+
+    return this.nestedScroll(nestedScrollConnection)
+}

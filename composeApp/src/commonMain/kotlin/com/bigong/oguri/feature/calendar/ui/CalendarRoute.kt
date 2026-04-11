@@ -27,6 +27,7 @@ import org.jetbrains.compose.resources.stringResource
 fun CalendarRoute(
     calendarViewModel: CalendarViewModel,
     snackbarHostState: SnackbarHostState,
+    scrollToTopTrigger: Int,
     onLoginRequired: () -> Unit,
     onOpenPeriodDetail: (String, String) -> Unit = { _, _ -> },
 ) {
@@ -93,6 +94,7 @@ fun CalendarRoute(
         },
         onCardClick = calendarViewModel::onCardClick,
         onSaveToggleClick = calendarViewModel::toggleSaved,
+        scrollToTopTrigger = scrollToTopTrigger,
         onDetailClick = { periodId ->
             trackOguriEvent(
                 eventName = OguriAnalyticsEvent.CALENDAR_PERIOD_DETAIL_CLICKED,

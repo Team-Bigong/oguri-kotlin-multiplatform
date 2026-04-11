@@ -14,7 +14,7 @@ class JwtTokenProvider(
     @Value("\${jwt.access-token-validity-seconds:1800}")
     private val accessTokenValidityInSeconds: Long,
     @Value("\${jwt.refresh-token-validity-seconds:1209600}")
-    private val refreshTokenValidityInSeconds: Long
+    private val refreshTokenValidityInSeconds: Long,
 ) {
     private val key: SecretKey = Keys.hmacShaKeyFor(secretKeyString.toByteArray())
 
@@ -24,19 +24,19 @@ class JwtTokenProvider(
     private val refreshTokenValidityInMilliseconds: Long =
         refreshTokenValidityInSeconds.coerceAtLeast(MINIMUM_TOKEN_VALIDITY_IN_SECONDS) * MILLISECONDS_PER_SECOND
 
-    fun createAccessToken(memberId: String): String {
-        return createToken(memberId, accessTokenValidityInMilliseconds)
-    }
+    fun createAccessToken(memberId: String): String = createToken(memberId, accessTokenValidityInMilliseconds)
 
-    fun createRefreshToken(memberId: String): String {
-        return createToken(memberId, refreshTokenValidityInMilliseconds)
-    }
+    fun createRefreshToken(memberId: String): String = createToken(memberId, refreshTokenValidityInMilliseconds)
 
-    private fun createToken(subject: String, validityInMilliseconds: Long): String {
+    private fun createToken(
+        subject: String,
+        validityInMilliseconds: Long,
+    ): String {
         val now = Date()
         val validity = Date(now.time + validityInMilliseconds)
 
-        return Jwts.builder()
+        return Jwts
+            .builder()
             .subject(subject)
             .issuedAt(now)
             .expiration(validity)
@@ -44,26 +44,27 @@ class JwtTokenProvider(
             .compact()
     }
 
-    fun getMemberId(token: String): String {
-        return Jwts.parser()
+    fun getMemberId(token: String): String =
+        Jwts
+            .parser()
             .verifyWith(key)
             .build()
             .parseSignedClaims(token)
             .payload
             .subject
-    }
 
-    fun validateToken(token: String): Boolean {
-        return try {
-            val claims = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
+    fun validateToken(token: String): Boolean =
+        try {
+            val claims =
+                Jwts
+                    .parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
             !claims.payload.expiration.before(Date())
         } catch (e: Exception) {
             false
         }
-    }
 
     private companion object {
         private const val MILLISECONDS_PER_SECOND: Long = 1000

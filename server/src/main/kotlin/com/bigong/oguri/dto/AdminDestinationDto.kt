@@ -3,7 +3,7 @@ package com.bigong.oguri.dto
 data class AdminDestinationImageUpsertRequest(
     val imageUrl: String,
     val isThumbnail: Boolean,
-    val sortOrder: Int
+    val sortOrder: Int,
 )
 
 data class AdminDestinationExperienceUpsertRequest(
@@ -11,7 +11,7 @@ data class AdminDestinationExperienceUpsertRequest(
     val description: String,
     val thumbnailUrl: String,
     val link: String,
-    val sortOrder: Int
+    val sortOrder: Int,
 )
 
 data class AdminDestinationUpsertRequest(
@@ -26,14 +26,14 @@ data class AdminDestinationUpsertRequest(
     val flightTimeMinutes: Int?,
     val flightUrl: String? = null,
     val images: List<AdminDestinationImageUpsertRequest>,
-    val experiences: List<AdminDestinationExperienceUpsertRequest> = emptyList()
+    val experiences: List<AdminDestinationExperienceUpsertRequest> = emptyList(),
 )
 
 data class AdminDestinationImageResponse(
     val id: Int,
     val imageUrl: String,
     val isThumbnail: Boolean,
-    val sortOrder: Int
+    val sortOrder: Int,
 )
 
 data class AdminDestinationExperienceResponse(
@@ -42,7 +42,7 @@ data class AdminDestinationExperienceResponse(
     val description: String,
     val thumbnailUrl: String,
     val link: String,
-    val sortOrder: Int
+    val sortOrder: Int,
 )
 
 data class AdminDestinationResponse(
@@ -59,10 +59,10 @@ data class AdminDestinationResponse(
     val flightTimeMinutes: Int?,
     val flightUrl: String?,
     val images: List<AdminDestinationImageResponse>,
-    val experiences: List<AdminDestinationExperienceResponse>
+    val experiences: List<AdminDestinationExperienceResponse>,
 )
 
 data class AdminCountryResponse(
     val id: Int,
-    val name: String
+    val name: String,
 )

@@ -12,12 +12,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral50
+import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.getStyledText
 import org.jetbrains.compose.resources.DrawableResource
@@ -39,6 +40,7 @@ fun GuideHeader(
         Image(
             painter = painterResource(resource = iconResource),
             contentDescription = null,
+            colorFilter = ColorFilter.tint(Mint70),
             modifier = Modifier.size(size = 24.dp),
         )
         Column {
@@ -66,7 +68,7 @@ fun GuideHeader(
                 Text(
                     text = subtitleText,
                     style = OguriTheme.typography.labelMedium,
-                    color = Neutral50,
+                    color = Neutral60,
                 )
             }
         }

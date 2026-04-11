@@ -9,13 +9,10 @@ class PublicHoliday(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int = 0,
-
     @Column(nullable = false)
     val holidayDate: LocalDate,
-
     @Column(nullable = false, length = 100)
     val name: String,
-
     @Column(nullable = false)
-    val isActualHoliday: Boolean = true
+    val isActualHoliday: Boolean = true,
 )

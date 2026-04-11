@@ -7,8 +7,19 @@ import java.time.LocalDate
 
 @Repository
 interface SavedRecommendationRepository : JpaRepository<SavedRecommendation, Int> {
-    fun findByMemberIdAndStartDateAndEndDate(memberId: String, startDate: LocalDate, endDate: LocalDate): SavedRecommendation?
-    fun deleteByMemberIdAndStartDateAndEndDate(memberId: String, startDate: LocalDate, endDate: LocalDate)
+    fun findByMemberIdAndStartDateAndEndDate(
+        memberId: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    ): SavedRecommendation?
+
+    fun deleteByMemberIdAndStartDateAndEndDate(
+        memberId: String,
+        startDate: LocalDate,
+        endDate: LocalDate,
+    )
+
     fun findAllByMemberId(memberId: String): List<SavedRecommendation>
+
     fun deleteAllByMemberId(memberId: String)
 }
