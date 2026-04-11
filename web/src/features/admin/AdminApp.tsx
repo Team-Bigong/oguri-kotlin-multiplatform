@@ -398,6 +398,21 @@ const createGuideRect = (
   }
 }
 
+const clampGuideRectWithinCropArea = (
+  guideRect: CropArea,
+  cropAreaWidth: number,
+  cropAreaHeight: number
+): CropArea => {
+  const clampedWidth = Math.min(guideRect.width, cropAreaWidth)
+  const clampedHeight = Math.min(guideRect.height, cropAreaHeight)
+  return {
+    x: Math.max(0, Math.min(cropAreaWidth - clampedWidth, guideRect.x)),
+    y: Math.max(0, Math.min(cropAreaHeight - clampedHeight, guideRect.y)),
+    width: clampedWidth,
+    height: clampedHeight
+  }
+}
+
 export const AdminApp = (): React.JSX.Element => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions()
   const isWideDesktopLayout = windowWidth >= 1360
@@ -535,11 +550,12 @@ export const AdminApp = (): React.JSX.Element => {
     const aspectRatio = cropSessionState.targetType === "experience"
       ? EXPERIENCE_IMAGE_ASPECT_RATIO
       : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
-    return createGuideRect(
+    const guideRect = createGuideRect(
       cropDisplayWidth,
       cropDisplayHeight,
       aspectRatio
     )
+    return clampGuideRectWithinCropArea(guideRect, cropDisplayWidth, cropDisplayHeight)
   }, [cropImageRenderMetrics, cropSessionState])
   const secondaryGuideRectInCropArea = useMemo(() => {
     if (cropImageRenderMetrics == null || cropSessionState?.targetType !== "destination") {
@@ -547,11 +563,12 @@ export const AdminApp = (): React.JSX.Element => {
     }
     const cropDisplayWidth = cropSessionState.cropArea.width * cropImageRenderMetrics.displayScale
     const cropDisplayHeight = cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
-    return createGuideRect(
+    const guideRect = createGuideRect(
       cropDisplayWidth,
       cropDisplayHeight,
       PLACE_IMAGE_SECONDARY_ASPECT_RATIO
     )
+    return clampGuideRectWithinCropArea(guideRect, cropDisplayWidth, cropDisplayHeight)
   }, [cropImageRenderMetrics, cropSessionState])
 
   const loadAll = useCallback(async () => {
@@ -1196,7 +1213,7 @@ export const AdminApp = (): React.JSX.Element => {
     }
   }, [cropSessionState])
 
-  const moveCropAreaPointer = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
+  const moveCropAreaByPointerPosition = useCallback((pointerX: number, pointerY: number): void => {
     if (cropSessionState == null || cropSessionItem == null || cropImageRenderMetrics == null) {
       return
     }
@@ -1206,9 +1223,8 @@ export const AdminApp = (): React.JSX.Element => {
       return
     }
 
-    event.preventDefault()
-    const deltaX = (event.clientX - cropDragState.current.pointerStartX) / cropImageRenderMetrics.displayScale
-    const deltaY = (event.clientY - cropDragState.current.pointerStartY) / cropImageRenderMetrics.displayScale
+    const deltaX = (pointerX - cropDragState.current.pointerStartX) / cropImageRenderMetrics.displayScale
+    const deltaY = (pointerY - cropDragState.current.pointerStartY) / cropImageRenderMetrics.displayScale
 
     setCropSessionState((previousSession) => {
       if (previousSession == null) {
@@ -1254,6 +1270,29 @@ export const AdminApp = (): React.JSX.Element => {
       cropAreaAtStart: null
     }
   }, [])
+
+  useEffect(() => {
+    const handleWindowMouseMove = (event: MouseEvent): void => {
+      if (cropDragState.current.mode == null) {
+        return
+      }
+      moveCropAreaByPointerPosition(event.clientX, event.clientY)
+    }
+
+    const handleWindowMouseUp = (): void => {
+      if (cropDragState.current.mode == null) {
+        return
+      }
+      endCropAreaPointer()
+    }
+
+    window.addEventListener("mousemove", handleWindowMouseMove)
+    window.addEventListener("mouseup", handleWindowMouseUp)
+    return () => {
+      window.removeEventListener("mousemove", handleWindowMouseMove)
+      window.removeEventListener("mouseup", handleWindowMouseUp)
+    }
+  }, [endCropAreaPointer, moveCropAreaByPointerPosition])
 
   const handleImageFileSelection = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files
@@ -2090,9 +2129,6 @@ export const AdminApp = (): React.JSX.Element => {
                 width: cropImageRenderMetrics.displayWidth,
                 height: cropImageRenderMetrics.displayHeight
               }}
-              onMouseMove={moveCropAreaPointer}
-              onMouseUp={endCropAreaPointer}
-              onMouseLeave={endCropAreaPointer}
             >
               <img
                 src={cropSessionItem.previewUrl}
@@ -2878,6 +2914,7 @@ const htmlPrimaryCropAreaStyle: React.CSSProperties = {
   position: "absolute",
   border: "2px solid #4fa4ff",
   boxSizing: "border-box",
+  overflow: "hidden",
   cursor: "move",
   zIndex: 3
 }
