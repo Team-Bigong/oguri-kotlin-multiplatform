@@ -1,19 +1,23 @@
 package com.bigong.oguri.config
 
+import com.bigong.oguri.service.AdminAuthService
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import org.springframework.web.servlet.HandlerInterceptor
-import com.bigong.oguri.service.AdminAuthService
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.servlet.HandlerInterceptor
 
 @Component
 class AdminAuthInterceptor(
-    private val adminAuthService: AdminAuthService
+    private val adminAuthService: AdminAuthService,
 ) : HandlerInterceptor {
-    override fun preHandle(request: HttpServletRequest, response: HttpServletResponse, handler: Any): Boolean {
+    override fun preHandle(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        handler: Any,
+    ): Boolean {
         if (request.method == HttpMethod.OPTIONS.name()) {
             return true
         }

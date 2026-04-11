@@ -19,9 +19,12 @@ class AdminAuthService(
     @Value("\${admin.session-secret:}")
     private val configuredSessionSecret: String,
     @Value("\${admin.session-validity-seconds:28800}")
-    private val sessionValiditySeconds: Long
+    private val sessionValiditySeconds: Long,
 ) {
-    fun login(username: String, password: String): Pair<String, Long> {
+    fun login(
+        username: String,
+        password: String,
+    ): Pair<String, Long> {
         validateAdminConfiguration()
 
         if (username != configuredUsername || password != configuredPassword) {
@@ -30,13 +33,15 @@ class AdminAuthService(
 
         val now = Date()
         val expiration = Date(now.time + sessionValiditySeconds * MILLISECONDS_PER_SECOND)
-        val token = Jwts.builder()
-            .subject(username)
-            .claim(ADMIN_ROLE_CLAIM_NAME, ADMIN_ROLE_CLAIM_VALUE)
-            .issuedAt(now)
-            .expiration(expiration)
-            .signWith(resolveSigningKey())
-            .compact()
+        val token =
+            Jwts
+                .builder()
+                .subject(username)
+                .claim(ADMIN_ROLE_CLAIM_NAME, ADMIN_ROLE_CLAIM_VALUE)
+                .issuedAt(now)
+                .expiration(expiration)
+                .signWith(resolveSigningKey())
+                .compact()
 
         return token to sessionValiditySeconds
     }
@@ -63,9 +68,7 @@ class AdminAuthService(
         }
     }
 
-    private fun resolveSigningKey(): SecretKey {
-        return Keys.hmacShaKeyFor(configuredSessionSecret.toByteArray(StandardCharsets.UTF_8))
-    }
+    private fun resolveSigningKey(): SecretKey = Keys.hmacShaKeyFor(configuredSessionSecret.toByteArray(StandardCharsets.UTF_8))
 
     private companion object {
         private const val ADMIN_ROLE_CLAIM_NAME = "role"
