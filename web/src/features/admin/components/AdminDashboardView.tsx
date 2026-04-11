@@ -52,7 +52,6 @@ type AdminDashboardViewProps = {
   setHolidayListSearchKeyword: React.Dispatch<React.SetStateAction<string>>
   filteredPublicHolidays: PublicHoliday[]
   handleImageFileSelection: (event: React.ChangeEvent<HTMLInputElement>) => void
-  handleOpenDestinationImageCrop: (imageUrl: string, destinationImageIndex: number) => void
   handleRemoveDestinationImage: (destinationImageIndex: number) => void
   addExperienceItem: () => void
   moveExperienceItem: (experienceIndex: number, direction: "up" | "down") => void
@@ -61,7 +60,6 @@ type AdminDashboardViewProps = {
     experienceIndex: number,
     event: React.ChangeEvent<HTMLInputElement>
   ) => void
-  handleOpenExperienceImageCrop: (imageUrl: string, experienceIndex: number) => void
   onSubmitDestination: () => void
   onResetDestinationForm: () => void
   onLoadDestination: (destination: Destination) => void
@@ -107,13 +105,11 @@ export const AdminDashboardView = ({
   setHolidayListSearchKeyword,
   filteredPublicHolidays,
   handleImageFileSelection,
-  handleOpenDestinationImageCrop,
   handleRemoveDestinationImage,
   addExperienceItem,
   moveExperienceItem,
   removeExperienceItem,
   handleExperienceThumbnailFileSelection,
-  handleOpenExperienceImageCrop,
   onSubmitDestination,
   onResetDestinationForm,
   onLoadDestination,
@@ -208,13 +204,11 @@ export const AdminDashboardView = ({
                   parseFlightTimeMinutes={parseFlightTimeMinutes}
                   handleImageFileSelection={handleImageFileSelection}
                   uploadingDestinationImageCount={uploadingDestinationImageCount}
-                  handleOpenDestinationImageCrop={handleOpenDestinationImageCrop}
                   handleRemoveDestinationImage={handleRemoveDestinationImage}
                   addExperienceItem={addExperienceItem}
                   moveExperienceItem={moveExperienceItem}
                   removeExperienceItem={removeExperienceItem}
                   handleExperienceThumbnailFileSelection={handleExperienceThumbnailFileSelection}
-                  handleOpenExperienceImageCrop={handleOpenExperienceImageCrop}
                   uploadingExperienceIndexes={uploadingExperienceIndexes}
                   onSubmitDestination={onSubmitDestination}
                   onResetDestinationForm={onResetDestinationForm}

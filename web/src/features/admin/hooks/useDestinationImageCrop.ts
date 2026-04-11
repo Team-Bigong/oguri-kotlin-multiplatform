@@ -17,7 +17,6 @@ import {
   PLACE_IMAGE_SECONDARY_ASPECT_RATIO,
   clampGuideRectWithinCropArea,
   createCropQueueItems,
-  createFileFromImageUrl,
   createGuideRect,
   createInitialCropArea,
   parseExperienceSequenceNumberFromThumbnailUrl,
@@ -63,14 +62,6 @@ type UseDestinationImageCropResult = {
     files: File[],
     options: {
       applyMode: "append" | "replace"
-      destinationImageIndex: number | null
-      experienceIndex: number | null
-    }
-  ) => Promise<void>
-  openCropSessionFromUploadedImage: (
-    targetType: CropTargetType,
-    imageUrl: string,
-    options: {
       destinationImageIndex: number | null
       experienceIndex: number | null
     }
@@ -362,28 +353,6 @@ export const useDestinationImageCrop = ({
     })
   }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug, setDestinationFormState])
 
-  const openCropSessionFromUploadedImage = useCallback(async (
-    targetType: CropTargetType,
-    imageUrl: string,
-    options: {
-      destinationImageIndex: number | null
-      experienceIndex: number | null
-    }
-  ): Promise<void> => {
-    setErrorMessage("")
-    setNoticeMessage("")
-    try {
-      const sourceFile = await createFileFromImageUrl(imageUrl)
-      await openCropSession(targetType, [sourceFile], {
-        applyMode: "replace",
-        destinationImageIndex: options.destinationImageIndex,
-        experienceIndex: options.experienceIndex
-      })
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "이미지 크롭 편집을 시작할 수 없습니다.")
-    }
-  }, [openCropSession, setErrorMessage, setNoticeMessage])
-
   const applyCurrentCrop = useCallback(async (): Promise<void> => {
     if (cropSessionState == null || cropSessionItem == null) {
       return
@@ -604,7 +573,6 @@ export const useDestinationImageCrop = ({
     primaryGuideRectInCropArea,
     secondaryGuideRectInCropArea,
     openCropSession,
-    openCropSessionFromUploadedImage,
     beginMoveCropArea,
     beginResizeCropArea,
     resetCurrentCropArea,

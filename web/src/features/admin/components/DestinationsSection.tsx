@@ -1,7 +1,7 @@
 import React from "react"
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native"
 import { Country, Destination } from "../../../types/admin"
-import { htmlFieldStyle, htmlImagePreviewStyle, styles } from "../styles/adminStyles"
+import { htmlFieldStyle, htmlImagePreviewStyle, htmlImageUrlLinkStyle, styles } from "../styles/adminStyles"
 import { DestinationFormState, StorageCountryOption } from "../types/adminLocalTypes"
 import { ActionButton } from "./ActionButton"
 import { LabelInput } from "./LabelInput"
@@ -16,13 +16,11 @@ type DestinationsSectionProps = {
   parseFlightTimeMinutes: (value: string) => string
   handleImageFileSelection: (event: React.ChangeEvent<HTMLInputElement>) => void
   uploadingDestinationImageCount: number
-  handleOpenDestinationImageCrop: (imageUrl: string, destinationImageIndex: number) => void
   handleRemoveDestinationImage: (destinationImageIndex: number) => void
   addExperienceItem: () => void
   moveExperienceItem: (experienceIndex: number, direction: "up" | "down") => void
   removeExperienceItem: (experienceIndex: number) => void
   handleExperienceThumbnailFileSelection: (experienceIndex: number, event: React.ChangeEvent<HTMLInputElement>) => void
-  handleOpenExperienceImageCrop: (imageUrl: string, experienceIndex: number) => void
   uploadingExperienceIndexes: number[]
   onSubmitDestination: () => void
   onResetDestinationForm: () => void
@@ -43,13 +41,11 @@ export const DestinationsSection = ({
   parseFlightTimeMinutes,
   handleImageFileSelection,
   uploadingDestinationImageCount,
-  handleOpenDestinationImageCrop,
   handleRemoveDestinationImage,
   addExperienceItem,
   moveExperienceItem,
   removeExperienceItem,
   handleExperienceThumbnailFileSelection,
-  handleOpenExperienceImageCrop,
   uploadingExperienceIndexes,
   onSubmitDestination,
   onResetDestinationForm,
@@ -198,7 +194,7 @@ export const DestinationsSection = ({
           <View style={styles.uploadRow}>
             <Text style={styles.fieldLabel}>사진 업로드</Text>
             <input type="file" accept="image/*" multiple onChange={handleImageFileSelection} />
-            <Text style={styles.helperText}>크롭 가이드: 100:87(파랑) + 100:67(민트) 프레임을 확인해 업로드하세요.</Text>
+            <Text style={styles.helperText}>권장되는 장소 이미지 규격은 100:87(파랑), 100:67(민트)입니다. 크롭 프레임을 참고해 이미지를 맞춰 업로드해주세요.</Text>
             {uploadingDestinationImageCount > 0 && (
               <View style={styles.inlineUploadingBadge}>
                 <ActivityIndicator size="small" color="#2a6bd8" />
@@ -211,20 +207,16 @@ export const DestinationsSection = ({
             <View style={styles.imageListContainer}>
               {destinationFormState.images.map((image, index) => (
                 <View style={styles.imageRow} key={`${image.imageUrl}_${index}`}>
-                  <Pressable
-                    style={styles.imagePreviewContainer}
-                    onPress={() => {
-                      handleOpenDestinationImageCrop(image.imageUrl, index)
-                    }}
-                  >
+                  <View style={styles.imagePreviewContainer}>
                     <img
                       src={image.imageUrl}
                       alt={`destination-image-${index + 1}`}
                       style={htmlImagePreviewStyle}
                     />
-                  </Pressable>
-                  <Text style={styles.helperText}>미리보기를 클릭하면 크롭을 다시 수정할 수 있습니다.</Text>
-                  <Text style={styles.imageUrlText}>{image.imageUrl}</Text>
+                  </View>
+                  <a href={image.imageUrl} target="_blank" rel="noreferrer" style={htmlImageUrlLinkStyle}>
+                    {image.imageUrl}
+                  </a>
                   <View style={styles.imageRowControls}>
                     <Pressable
                       onPress={() => {
@@ -320,26 +312,22 @@ export const DestinationsSection = ({
                       }}
                     />
                     {experience.thumbnailUrl.length > 0 && (
-                      <Pressable
-                        style={styles.imagePreviewContainer}
-                        onPress={() => {
-                          handleOpenExperienceImageCrop(experience.thumbnailUrl, experienceIndex)
-                        }}
-                      >
+                      <View style={styles.imagePreviewContainer}>
                         <img
                           src={experience.thumbnailUrl}
                           alt={`experience-thumbnail-${experienceIndex + 1}`}
                           style={htmlImagePreviewStyle}
                         />
-                      </Pressable>
+                      </View>
                     )}
                     {experience.thumbnailUrl.length > 0 && (
                       <View>
-                        <Text style={styles.helperText}>미리보기를 클릭하면 크롭을 다시 수정할 수 있습니다.</Text>
-                        <Text style={styles.imageUrlText}>{experience.thumbnailUrl}</Text>
+                        <a href={experience.thumbnailUrl} target="_blank" rel="noreferrer" style={htmlImageUrlLinkStyle}>
+                          {experience.thumbnailUrl}
+                        </a>
                       </View>
                     )}
-                    <Text style={styles.helperText}>크롭 가이드: 100:60 프레임</Text>
+                    <Text style={styles.helperText}>권장되는 체험 썸네일 규격은 100:60입니다. 크롭 프레임을 참고해 이미지를 맞춰 업로드해주세요.</Text>
                     {uploadingExperienceIndexes.includes(experienceIndex) && (
                       <View style={styles.inlineUploadingBadge}>
                         <ActivityIndicator size="small" color="#2a6bd8" />

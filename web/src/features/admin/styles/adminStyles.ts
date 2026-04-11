@@ -567,3 +567,10 @@ export const htmlCropResizeHandleStyle: React.CSSProperties = {
   border: "2px solid #ffffff",
   cursor: "nwse-resize"
 }
+
+export const htmlImageUrlLinkStyle: React.CSSProperties = {
+  color: "#48678f",
+  fontSize: "12px",
+  textDecoration: "underline",
+  wordBreak: "break-all"
+}

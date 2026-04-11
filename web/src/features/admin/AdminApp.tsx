@@ -71,7 +71,6 @@ export const AdminApp = (): React.JSX.Element => {
     primaryGuideRectInCropArea,
     secondaryGuideRectInCropArea,
     openCropSession,
-    openCropSessionFromUploadedImage,
     beginMoveCropArea,
     beginResizeCropArea,
     resetCurrentCropArea,
@@ -89,8 +88,6 @@ export const AdminApp = (): React.JSX.Element => {
   const {
     handleImageFileSelection,
     handleExperienceThumbnailFileSelection,
-    handleOpenDestinationImageCrop,
-    handleOpenExperienceImageCrop,
     handleRemoveDestinationImage,
     addExperienceItem,
     moveExperienceItem,
@@ -99,8 +96,7 @@ export const AdminApp = (): React.JSX.Element => {
     destinationFormState,
     setDestinationFormState,
     setErrorMessage,
-    openCropSession,
-    openCropSessionFromUploadedImage
+    openCropSession
   })
 
   const isUploadingImages = activeUploadTaskCount > 0
@@ -161,13 +157,11 @@ export const AdminApp = (): React.JSX.Element => {
         setHolidayListSearchKeyword={setHolidayListSearchKeyword}
         filteredPublicHolidays={filteredPublicHolidays}
         handleImageFileSelection={handleImageFileSelection}
-        handleOpenDestinationImageCrop={handleOpenDestinationImageCrop}
         handleRemoveDestinationImage={handleRemoveDestinationImage}
         addExperienceItem={addExperienceItem}
         moveExperienceItem={moveExperienceItem}
         removeExperienceItem={removeExperienceItem}
         handleExperienceThumbnailFileSelection={handleExperienceThumbnailFileSelection}
-        handleOpenExperienceImageCrop={handleOpenExperienceImageCrop}
         onSubmitDestination={() => {
           void submitDestination()
         }}

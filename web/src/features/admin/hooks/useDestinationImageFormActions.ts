@@ -15,14 +15,6 @@ type UseDestinationImageFormActionsParams = {
       experienceIndex: number | null
     }
   ) => Promise<void>
-  openCropSessionFromUploadedImage: (
-    targetType: CropTargetType,
-    imageUrl: string,
-    options: {
-      destinationImageIndex: number | null
-      experienceIndex: number | null
-    }
-  ) => Promise<void>
 }
 
 type UseDestinationImageFormActionsResult = {
@@ -31,8 +23,6 @@ type UseDestinationImageFormActionsResult = {
     experienceIndex: number,
     event: React.ChangeEvent<HTMLInputElement>
   ) => void
-  handleOpenDestinationImageCrop: (imageUrl: string, destinationImageIndex: number) => void
-  handleOpenExperienceImageCrop: (imageUrl: string, experienceIndex: number) => void
   handleRemoveDestinationImage: (destinationImageIndex: number) => void
   addExperienceItem: () => void
   moveExperienceItem: (experienceIndex: number, direction: "up" | "down") => void
@@ -43,8 +33,7 @@ export const useDestinationImageFormActions = ({
   destinationFormState,
   setDestinationFormState,
   setErrorMessage,
-  openCropSession,
-  openCropSessionFromUploadedImage
+  openCropSession
 }: UseDestinationImageFormActionsParams): UseDestinationImageFormActionsResult => {
   const handleImageFileSelection = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const fileList = event.target.files
@@ -75,20 +64,6 @@ export const useDestinationImageFormActions = ({
       experienceIndex
     })
   }, [openCropSession])
-
-  const handleOpenDestinationImageCrop = useCallback((imageUrl: string, destinationImageIndex: number): void => {
-    void openCropSessionFromUploadedImage("destination", imageUrl, {
-      destinationImageIndex,
-      experienceIndex: null
-    })
-  }, [openCropSessionFromUploadedImage])
-
-  const handleOpenExperienceImageCrop = useCallback((imageUrl: string, experienceIndex: number): void => {
-    void openCropSessionFromUploadedImage("experience", imageUrl, {
-      destinationImageIndex: null,
-      experienceIndex
-    })
-  }, [openCropSessionFromUploadedImage])
 
   const addExperienceItem = useCallback(() => {
     setDestinationFormState((previousState) => ({
@@ -186,8 +161,6 @@ export const useDestinationImageFormActions = ({
   return {
     handleImageFileSelection,
     handleExperienceThumbnailFileSelection,
-    handleOpenDestinationImageCrop,
-    handleOpenExperienceImageCrop,
     handleRemoveDestinationImage,
     addExperienceItem,
     moveExperienceItem,
