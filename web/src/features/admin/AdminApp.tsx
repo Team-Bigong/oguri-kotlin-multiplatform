@@ -135,6 +135,8 @@ const EXPERIENCE_IMAGE_ASPECT_RATIO = 100 / 60
 const PLACE_IMAGE_OUTPUT_WIDTH_PX = 1280
 const EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX = 1200
 const CROP_MINIMUM_SIZE_PX = 120
+const IMAGE_FETCH_WAIT_TIMEOUT_MILLISECONDS = 10_000
+const IMAGE_FETCH_WAIT_POLL_INTERVAL_MILLISECONDS = 300
 
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
@@ -330,27 +332,42 @@ const loadBlobWithXmlHttpRequest = async (imageUrl: string): Promise<Blob> => {
   })
 }
 
+const waitForMilliseconds = async (milliseconds: number): Promise<void> => {
+  await new Promise((resolve) => {
+    setTimeout(resolve, milliseconds)
+  })
+}
+
 const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
   const sanitizedImageUrl = imageUrl.trim()
-  try {
-    const response = await fetch(sanitizedImageUrl, { method: "GET" })
-    if (!response.ok) {
-      throw new Error(`status:${response.status}`)
-    }
-    const binary = await response.blob()
-    const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
-    const fileName = `crop-source-${Date.now()}.jpg`
-    return new File([binary], fileName, { type: fileType })
-  } catch (fetchError) {
+  const waitDeadlineTimestamp = Date.now() + IMAGE_FETCH_WAIT_TIMEOUT_MILLISECONDS
+
+  while (Date.now() <= waitDeadlineTimestamp) {
     try {
-      const binary = await loadBlobWithXmlHttpRequest(sanitizedImageUrl)
+      const response = await fetch(sanitizedImageUrl, { method: "GET" })
+      if (!response.ok) {
+        throw new Error(`status:${response.status}`)
+      }
+      const binary = await response.blob()
       const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
       const fileName = `crop-source-${Date.now()}.jpg`
       return new File([binary], fileName, { type: fileType })
-    } catch (xmlHttpRequestError) {
-      throw new Error("이미지 파일을 다시 가져오지 못했습니다. CORS 또는 네트워크 상태를 확인해주세요.")
+    } catch (fetchError) {
+      try {
+        const binary = await loadBlobWithXmlHttpRequest(sanitizedImageUrl)
+        const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
+        const fileName = `crop-source-${Date.now()}.jpg`
+        return new File([binary], fileName, { type: fileType })
+      } catch (xmlHttpRequestError) {
+        if (Date.now() > waitDeadlineTimestamp) {
+          break
+        }
+        await waitForMilliseconds(IMAGE_FETCH_WAIT_POLL_INTERVAL_MILLISECONDS)
+      }
     }
   }
+
+  throw new Error("이미지 파일을 다시 가져오지 못했습니다. 잠시 후 다시 시도해주세요.")
 }
 
 const createInitialCropArea = (item: CropQueueItem): CropArea => {
@@ -509,29 +526,33 @@ export const AdminApp = (): React.JSX.Element => {
       displayHeight: cropSessionItem.naturalHeight * displayScale
     }
   }, [cropSessionItem, windowHeight, windowWidth])
-  const primaryGuideRect = useMemo(() => {
+  const primaryGuideRectInCropArea = useMemo(() => {
     if (cropImageRenderMetrics == null || cropSessionState == null) {
       return null
     }
+    const cropDisplayWidth = cropSessionState.cropArea.width * cropImageRenderMetrics.displayScale
+    const cropDisplayHeight = cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
     const aspectRatio = cropSessionState.targetType === "experience"
       ? EXPERIENCE_IMAGE_ASPECT_RATIO
       : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
     return createGuideRect(
-      cropImageRenderMetrics.displayWidth,
-      cropImageRenderMetrics.displayHeight,
+      cropDisplayWidth,
+      cropDisplayHeight,
       aspectRatio
     )
   }, [cropImageRenderMetrics, cropSessionState])
-  const secondaryGuideRect = useMemo(() => {
+  const secondaryGuideRectInCropArea = useMemo(() => {
     if (cropImageRenderMetrics == null || cropSessionState?.targetType !== "destination") {
       return null
     }
+    const cropDisplayWidth = cropSessionState.cropArea.width * cropImageRenderMetrics.displayScale
+    const cropDisplayHeight = cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
     return createGuideRect(
-      cropImageRenderMetrics.displayWidth,
-      cropImageRenderMetrics.displayHeight,
+      cropDisplayWidth,
+      cropDisplayHeight,
       PLACE_IMAGE_SECONDARY_ASPECT_RATIO
     )
-  }, [cropImageRenderMetrics, cropSessionState?.targetType])
+  }, [cropImageRenderMetrics, cropSessionState])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -2107,28 +2128,6 @@ export const AdminApp = (): React.JSX.Element => {
                   height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
                 }}
               />
-              {secondaryGuideRect != null && (
-                <div
-                  style={{
-                    ...htmlSecondaryCropGuideStyle,
-                    left: secondaryGuideRect.x,
-                    top: secondaryGuideRect.y,
-                    width: secondaryGuideRect.width,
-                    height: secondaryGuideRect.height
-                  }}
-                />
-              )}
-              {primaryGuideRect != null && (
-                <div
-                  style={{
-                    ...htmlReferenceGuideStyle,
-                    left: primaryGuideRect.x,
-                    top: primaryGuideRect.y,
-                    width: primaryGuideRect.width,
-                    height: primaryGuideRect.height
-                  }}
-                />
-              )}
               <div
                 style={{
                   ...htmlPrimaryCropAreaStyle,
@@ -2139,6 +2138,28 @@ export const AdminApp = (): React.JSX.Element => {
                 }}
                 onMouseDown={beginMoveCropArea}
               >
+                {secondaryGuideRectInCropArea != null && (
+                  <div
+                    style={{
+                      ...htmlSecondaryCropGuideStyle,
+                      left: secondaryGuideRectInCropArea.x,
+                      top: secondaryGuideRectInCropArea.y,
+                      width: secondaryGuideRectInCropArea.width,
+                      height: secondaryGuideRectInCropArea.height
+                    }}
+                  />
+                )}
+                {primaryGuideRectInCropArea != null && (
+                  <div
+                    style={{
+                      ...htmlReferenceGuideStyle,
+                      left: primaryGuideRectInCropArea.x,
+                      top: primaryGuideRectInCropArea.y,
+                      width: primaryGuideRectInCropArea.width,
+                      height: primaryGuideRectInCropArea.height
+                    }}
+                  />
+                )}
                 <div
                   style={htmlCropResizeHandleStyle}
                   onMouseDown={beginResizeCropArea}
