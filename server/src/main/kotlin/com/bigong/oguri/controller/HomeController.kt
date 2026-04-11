@@ -1,7 +1,7 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
-import com.bigong.oguri.dto.RecommendPeriodResponse
+import com.bigong.oguri.dto.response.RecommendPeriodResponse
 import com.bigong.oguri.service.HomeService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag

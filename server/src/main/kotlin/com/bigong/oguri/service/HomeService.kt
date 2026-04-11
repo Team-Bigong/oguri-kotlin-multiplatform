@@ -2,9 +2,9 @@ package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.Destination
 import com.bigong.oguri.domain.PublicHoliday
-import com.bigong.oguri.dto.AdvertisementResponse
-import com.bigong.oguri.dto.PlaceResponse
-import com.bigong.oguri.dto.RecommendPeriodResponse
+import com.bigong.oguri.dto.response.AdvertisementResponse
+import com.bigong.oguri.dto.response.PlaceResponse
+import com.bigong.oguri.dto.response.RecommendPeriodResponse
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.PublicHolidayRepository

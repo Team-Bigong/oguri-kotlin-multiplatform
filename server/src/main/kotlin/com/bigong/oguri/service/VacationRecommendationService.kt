@@ -1,7 +1,7 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.PublicHoliday
-import com.bigong.oguri.dto.CalendarHolidayDateResponse
+import com.bigong.oguri.dto.response.CalendarHolidayDateResponse
 import org.springframework.stereotype.Service
 import java.time.DayOfWeek
 import java.time.LocalDate

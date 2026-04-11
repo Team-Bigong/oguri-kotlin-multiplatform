@@ -1,8 +1,8 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.SavedDestination
-import com.bigong.oguri.dto.ExperienceResponse
-import com.bigong.oguri.dto.PlaceDetailResponse
+import com.bigong.oguri.dto.response.ExperienceResponse
+import com.bigong.oguri.dto.response.PlaceDetailResponse
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.SavedDestinationRepository

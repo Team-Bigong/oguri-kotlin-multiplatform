@@ -1,11 +1,4 @@
-package com.bigong.oguri.dto
-
-/**
- * 토큰 재발급 요청
- */
-data class TokenRefreshRequest(
-    val refreshToken: String,
-)
+package com.bigong.oguri.dto.response
 
 /**
  * 토큰 재발급 응답

@@ -1,12 +1,6 @@
-package com.bigong.oguri.dto
+package com.bigong.oguri.dto.response
 
 import java.time.LocalDate
-
-data class AdminPublicHolidayUpsertRequest(
-    val holidayDate: LocalDate,
-    val name: String,
-    val isActualHoliday: Boolean,
-)
 
 data class AdminPublicHolidayResponse(
     val id: Int,
