@@ -21,6 +21,7 @@ class DestinationService(
     private val destinationExperienceRepository: DestinationExperienceRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
     private val homeService: HomeService,
+    private val exchangeService: ExchangeService,
 ) {
     /**
      * 마음에 드는 여행지 저장하기
@@ -99,12 +100,16 @@ class DestinationService(
         // 6. 스카이스캐너 검색 링크 생성
         val flightUrl = target.flightUrl ?: "https://www.skyscanner.co.kr/transport/flights/sel/${target.name}"
 
+        // 7. 실시간 환율 정보 (해당 국가의 통화 코드 사용)
+        val exchangeRateInfo = exchangeService.getExchangeRateInfo(target.country?.currencyCode)
+
         return PlaceDetailResponse(
             id = target.id.toLong(),
             country = target.country?.name ?: "Unknown",
             city = target.name,
             thumbnailUrls = thumbnailUrls,
             isSaved = isSaved,
+            exchangeRateInfo = exchangeRateInfo,
             description = description,
             experiences = experiences,
             flightUrl = flightUrl,

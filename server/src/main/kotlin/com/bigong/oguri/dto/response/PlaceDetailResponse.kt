@@ -13,6 +13,8 @@ data class PlaceDetailResponse(
     val thumbnailUrls: List<String>,
     @field:Schema(description = "장소 저장 여부", example = "true")
     val isSaved: Boolean,
+    @field:Schema(description = "환율 정보", example = "1,400원 / 1달러 (2026.04.11)")
+    val exchangeRateInfo: String?,
     @field:Schema(description = "장소 상세 설명")
     val description: String,
     @field:Schema(description = "장소별 액티비티/즐길거리 목록")

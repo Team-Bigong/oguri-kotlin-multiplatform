@@ -53,6 +53,9 @@ auth:
     connect-timeout-millis: ${AUTH_HTTP_CONNECT_TIMEOUT_MILLIS:2000}
     read-timeout-millis: ${AUTH_HTTP_READ_TIMEOUT_MILLIS:3000}
 
+koreaexim:
+  authkey: ${KOREAEXIM_AUTHKEY:}
+
 admin:
   username: ${ADMIN_USERNAME:}
   password: ${ADMIN_PASSWORD:}
