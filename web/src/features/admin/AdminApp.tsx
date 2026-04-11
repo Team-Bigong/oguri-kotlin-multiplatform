@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native"
 import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
 import { cropAndCompressImage } from "../../lib/imageProcessing"
-import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
+import { deleteImageFromFirebaseStorageByUrl, getImageBlobFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
 import {
   AdminLoginResponse,
   Country,
@@ -359,6 +359,14 @@ const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
         const fileName = `crop-source-${Date.now()}.jpg`
         return new File([binary], fileName, { type: fileType })
       } catch (xmlHttpRequestError) {
+        try {
+          const binary = await getImageBlobFromFirebaseStorageByUrl(sanitizedImageUrl)
+          const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
+          const fileName = `crop-source-${Date.now()}.jpg`
+          return new File([binary], fileName, { type: fileType })
+        } catch (firebaseSdkError) {
+          // no-op
+        }
         if (Date.now() > waitDeadlineTimestamp) {
           break
         }
