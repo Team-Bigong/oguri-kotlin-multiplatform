@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from "firebase/app"
-import { deleteObject, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage"
+import { deleteObject, getBlob, getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage"
 import { webEnvironment } from "../config/env"
 
 const firebaseApplication = getApps()[0] ?? initializeApp({
@@ -30,6 +30,12 @@ const extractObjectPathFromFirebaseStorageUrl = (imageUrl: string): string => {
   }
 
   return decodedObjectPath
+}
+
+export const getImageBlobFromFirebaseStorageByUrl = async (imageUrl: string): Promise<Blob> => {
+  const objectPath = extractObjectPathFromFirebaseStorageUrl(imageUrl)
+  const storageReference = ref(firebaseStorage, objectPath)
+  return getBlob(storageReference)
 }
 
 export const deleteImageFromFirebaseStorageByUrl = async (imageUrl: string): Promise<void> => {
