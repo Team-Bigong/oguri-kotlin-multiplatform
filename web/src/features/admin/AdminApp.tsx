@@ -1409,6 +1409,13 @@ export const AdminApp = (): React.JSX.Element => {
                 <View style={styles.imageListContainer}>
                   {destinationFormState.images.map((image, index) => (
                     <View style={styles.imageRow} key={`${image.imageUrl}_${index}`}>
+                      <View style={styles.imagePreviewContainer}>
+                        <img
+                          src={image.imageUrl}
+                          alt={`destination-image-${index + 1}`}
+                          style={htmlImagePreviewStyle}
+                        />
+                      </View>
                       <Text style={styles.imageUrlText}>{image.imageUrl}</Text>
                       <View style={styles.imageRowControls}>
                         <Pressable
@@ -1529,7 +1536,14 @@ export const AdminApp = (): React.JSX.Element => {
                           }}
                         />
                         {experience.thumbnailUrl.length > 0 && (
-                          <Text style={styles.imageUrlText}>{experience.thumbnailUrl}</Text>
+                          <View style={styles.imagePreviewContainer}>
+                            <img
+                              src={experience.thumbnailUrl}
+                              alt={`experience-thumbnail-${experienceIndex + 1}`}
+                              style={htmlImagePreviewStyle}
+                            />
+                            <Text style={styles.imageUrlText}>{experience.thumbnailUrl}</Text>
+                          </View>
                         )}
                         <Text style={styles.helperText}>크롭 가이드: 100:60 프레임</Text>
                         {uploadingExperienceIndexes.includes(experienceIndex) && (
@@ -2399,6 +2413,15 @@ const styles = StyleSheet.create({
   imageListContainer: {
     gap: 8
   },
+  imagePreviewContainer: {
+    width: 160,
+    height: 108,
+    borderRadius: 8,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#bfd1ef",
+    backgroundColor: "#e9f2ff"
+  },
   imageRow: {
     borderWidth: 1,
     borderColor: "#cfddf3",
@@ -2563,4 +2586,11 @@ const htmlTextAreaFieldStyle: React.CSSProperties = {
   resize: "vertical",
   fontFamily: "inherit",
   fontSize: 14
+}
+
+const htmlImagePreviewStyle: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  display: "block"
 }
