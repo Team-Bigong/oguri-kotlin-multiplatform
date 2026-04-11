@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react"
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { ActivityIndicator, GestureResponderEvent, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native"
 import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
-import { resizeAndCompressImage } from "../../lib/imageProcessing"
+import { cropAndCompressImage } from "../../lib/imageProcessing"
 import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
 import {
   AdminLoginResponse,
@@ -99,6 +99,37 @@ type PublicHolidayApiResponse = {
   isActualHoliday?: boolean
   actualHoliday?: boolean
 }
+
+type CropTargetType = "destination" | "experience"
+
+type CropQueueItem = {
+  file: File
+  previewUrl: string
+  naturalWidth: number
+  naturalHeight: number
+}
+
+type CropSessionState = {
+  targetType: CropTargetType
+  queueItems: CropQueueItem[]
+  currentIndex: number
+  experienceIndex: number | null
+  zoom: number
+  offsetX: number
+  offsetY: number
+  isProcessing: boolean
+}
+
+type UploadStage = "preparing" | "uploading"
+
+const CROP_ZOOM_MINIMUM = 1
+const CROP_ZOOM_MAXIMUM = 4
+const CROP_ZOOM_STEP = 0.05
+const PLACE_IMAGE_PRIMARY_ASPECT_RATIO = 100 / 87
+const PLACE_IMAGE_SECONDARY_ASPECT_RATIO = 100 / 67
+const EXPERIENCE_IMAGE_ASPECT_RATIO = 100 / 60
+const PLACE_IMAGE_OUTPUT_WIDTH_PX = 1280
+const EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX = 1200
 
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
@@ -247,6 +278,55 @@ const validateStoragePathSegment = (value: string, label: string): string => {
   return trimmedValue
 }
 
+const loadImageNaturalSize = async (file: File): Promise<{ naturalWidth: number; naturalHeight: number }> => {
+  const previewUrl = URL.createObjectURL(file)
+  try {
+    const imageElement = new Image()
+    imageElement.src = previewUrl
+    await imageElement.decode()
+    return {
+      naturalWidth: imageElement.naturalWidth,
+      naturalHeight: imageElement.naturalHeight
+    }
+  } finally {
+    URL.revokeObjectURL(previewUrl)
+  }
+}
+
+const createCropQueueItems = async (files: File[]): Promise<CropQueueItem[]> => {
+  const queueItems = await Promise.all(
+    files.map(async (file) => {
+      const { naturalWidth, naturalHeight } = await loadImageNaturalSize(file)
+      return {
+        file,
+        previewUrl: URL.createObjectURL(file),
+        naturalWidth,
+        naturalHeight
+      } as CropQueueItem
+    })
+  )
+  return queueItems
+}
+
+const clampCropOffset = (
+  item: CropQueueItem,
+  frameWidth: number,
+  frameHeight: number,
+  zoom: number,
+  offsetX: number,
+  offsetY: number
+): { offsetX: number; offsetY: number } => {
+  const baseScale = Math.max(frameWidth / item.naturalWidth, frameHeight / item.naturalHeight)
+  const scaledWidth = item.naturalWidth * baseScale * zoom
+  const scaledHeight = item.naturalHeight * baseScale * zoom
+  const maximumOffsetX = Math.max(0, (scaledWidth - frameWidth) / 2)
+  const maximumOffsetY = Math.max(0, (scaledHeight - frameHeight) / 2)
+  return {
+    offsetX: Math.max(-maximumOffsetX, Math.min(maximumOffsetX, offsetX)),
+    offsetY: Math.max(-maximumOffsetY, Math.min(maximumOffsetY, offsetY))
+  }
+}
+
 export const AdminApp = (): React.JSX.Element => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions()
   const isWideDesktopLayout = windowWidth >= 1360
@@ -272,7 +352,17 @@ export const AdminApp = (): React.JSX.Element => {
   const [memberFormState, setMemberFormState] = useState<MemberFormState>(createInitialMemberFormState)
   const [holidayFormState, setHolidayFormState] = useState<HolidayFormState>(createInitialHolidayFormState)
 
-  const [uploadingImages, setUploadingImages] = useState<boolean>(false)
+  const [activeUploadTaskCount, setActiveUploadTaskCount] = useState<number>(0)
+  const [currentUploadStage, setCurrentUploadStage] = useState<UploadStage | null>(null)
+  const [uploadingDestinationImageCount, setUploadingDestinationImageCount] = useState<number>(0)
+  const [uploadingExperienceIndexes, setUploadingExperienceIndexes] = useState<number[]>([])
+  const [cropSessionState, setCropSessionState] = useState<CropSessionState | null>(null)
+  const cropSessionRef = useRef<CropSessionState | null>(null)
+  const cropDragState = useRef<{ isDragging: boolean; lastPointerX: number; lastPointerY: number }>({
+    isDragging: false,
+    lastPointerX: 0,
+    lastPointerY: 0
+  })
   const storageCountryOptions = useMemo<StorageCountryOption[]>(() => {
     const countryCityMap = new Map<string, Set<string>>()
     destinations.forEach((destination) => {
@@ -339,6 +429,36 @@ export const AdminApp = (): React.JSX.Element => {
     })
   }, [holidayListSearchKeyword, publicHolidays])
 
+  const isUploadingImages = activeUploadTaskCount > 0
+
+  const cropAspectRatio = cropSessionState?.targetType === "experience"
+    ? EXPERIENCE_IMAGE_ASPECT_RATIO
+    : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
+  const cropFrameWidth = Math.min(Math.max(320, windowWidth * 0.62), 760)
+  const cropFrameHeight = cropFrameWidth / cropAspectRatio
+  const cropSessionItem = cropSessionState == null ? null : cropSessionState.queueItems[cropSessionState.currentIndex]
+  const cropRenderMetrics = useMemo(() => {
+    if (cropSessionState == null || cropSessionItem == null) {
+      return null
+    }
+    const baseScale = Math.max(cropFrameWidth / cropSessionItem.naturalWidth, cropFrameHeight / cropSessionItem.naturalHeight)
+    const scaledWidth = cropSessionItem.naturalWidth * baseScale * cropSessionState.zoom
+    const scaledHeight = cropSessionItem.naturalHeight * baseScale * cropSessionState.zoom
+    const clampedOffset = clampCropOffset(
+      cropSessionItem,
+      cropFrameWidth,
+      cropFrameHeight,
+      cropSessionState.zoom,
+      cropSessionState.offsetX,
+      cropSessionState.offsetY
+    )
+    return {
+      scaledWidth,
+      scaledHeight,
+      clampedOffset
+    }
+  }, [cropFrameHeight, cropFrameWidth, cropSessionItem, cropSessionState])
+
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
       return
@@ -378,6 +498,22 @@ export const AdminApp = (): React.JSX.Element => {
       void loadAll()
     }
   }, [isAuthenticated, loadAll])
+
+  useEffect(() => {
+    cropSessionRef.current = cropSessionState
+  }, [cropSessionState])
+
+  useEffect(() => {
+    return () => {
+      const activeCropSession = cropSessionRef.current
+      if (activeCropSession == null) {
+        return
+      }
+      activeCropSession.queueItems.forEach((queueItem) => {
+        URL.revokeObjectURL(queueItem.previewUrl)
+      })
+    }
+  }, [])
 
   const submitAdminLogin = useCallback(async () => {
     if (loginUsername.trim().length === 0 || loginPassword.trim().length === 0) {
@@ -641,58 +777,304 @@ export const AdminApp = (): React.JSX.Element => {
     }
   }, [loadAll])
 
-  const handleImageFileSelection = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = event.target.files
-    if (fileList == null || fileList.length === 0) {
+  const closeCropSession = useCallback((session: CropSessionState | null): void => {
+    if (session == null) {
+      setCropSessionState(null)
+      return
+    }
+    session.queueItems.forEach((queueItem) => {
+      URL.revokeObjectURL(queueItem.previewUrl)
+    })
+    setCropSessionState(null)
+    cropDragState.current = {
+      isDragging: false,
+      lastPointerX: 0,
+      lastPointerY: 0
+    }
+  }, [])
+
+  const beginUploadTask = useCallback((stage: UploadStage): void => {
+    setCurrentUploadStage(stage)
+    setActiveUploadTaskCount((previousCount) => previousCount + 1)
+  }, [])
+
+  const endUploadTask = useCallback((): void => {
+    setActiveUploadTaskCount((previousCount) => Math.max(0, previousCount - 1))
+    setCurrentUploadStage(null)
+  }, [])
+
+  const openCropSession = useCallback(async (
+    targetType: CropTargetType,
+    files: File[],
+    experienceIndex: number | null
+  ): Promise<void> => {
+    if (files.length === 0) {
       return
     }
 
-    setUploadingImages(true)
     setErrorMessage("")
     setNoticeMessage("")
 
     try {
-      const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
-      const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
+      const queueItems = await createCropQueueItems(files)
+      setCropSessionState({
+        targetType,
+        queueItems,
+        currentIndex: 0,
+        experienceIndex,
+        zoom: CROP_ZOOM_MINIMUM,
+        offsetX: 0,
+        offsetY: 0,
+        isProcessing: false
+      })
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "이미지 크롭 준비에 실패했습니다.")
+    }
+  }, [])
 
-      const selectedFiles = Array.from(fileList)
-      const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
-        (maximumSequenceNumber, image) => {
-          const parsedSequenceNumber = parseImageSequenceNumberFromImageUrl(image.imageUrl)
-          return parsedSequenceNumber == null
-            ? maximumSequenceNumber
-            : Math.max(maximumSequenceNumber, parsedSequenceNumber)
-        },
-        0
-      )
-      const uploadedImages = await Promise.all(
-        selectedFiles.map(async (file, index) => {
-          const compressedBinary = await resizeAndCompressImage(file)
-          const imageSequenceNumber = currentMaximumImageSequenceNumber + index + 1
-          const objectPath = `places/${countryPathSegment}/${cityPathSegment}/${imageSequenceNumber}.jpg`
-          const imageUrl = await uploadImageToFirebaseStorage(compressedBinary, objectPath)
+  const uploadCroppedDestinationImage = useCallback(async (binary: Blob): Promise<void> => {
+    const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
+    const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
+    const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
+      (maximumSequenceNumber, image) => {
+        const parsedSequenceNumber = parseImageSequenceNumberFromImageUrl(image.imageUrl)
+        return parsedSequenceNumber == null
+          ? maximumSequenceNumber
+          : Math.max(maximumSequenceNumber, parsedSequenceNumber)
+      },
+      0
+    )
+    const imageSequenceNumber = currentMaximumImageSequenceNumber + 1
+    const objectPath = `places/${countryPathSegment}/${cityPathSegment}/${imageSequenceNumber}.jpg`
+    const imageUrl = await uploadImageToFirebaseStorage(binary, objectPath)
 
-          return {
-            imageUrl,
-            isThumbnail: destinationFormState.images.length === 0 && index === 0,
-            sortOrder: destinationFormState.images.length + index + 1
-          } as DestinationImageRequest
-        })
-      )
-
-      setDestinationFormState((previousState) => ({
+    setDestinationFormState((previousState) => {
+      const hasThumbnail = previousState.images.some((image) => image.isThumbnail)
+      return {
         ...previousState,
-        images: [...previousState.images, ...uploadedImages],
-        newlyUploadedImageUrls: [...previousState.newlyUploadedImageUrls, ...uploadedImages.map((image) => image.imageUrl)]
-      }))
-      setNoticeMessage("이미지 업로드가 완료되었습니다.")
+        images: [
+          ...previousState.images,
+          {
+            imageUrl,
+            isThumbnail: !hasThumbnail,
+            sortOrder: previousState.images.length + 1
+          }
+        ],
+        newlyUploadedImageUrls: [...previousState.newlyUploadedImageUrls, imageUrl]
+      }
+    })
+  }, [destinationFormState.images, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
+
+  const uploadCroppedExperienceThumbnail = useCallback(async (
+    experienceIndex: number,
+    binary: Blob
+  ): Promise<void> => {
+    const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
+    const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
+
+    const currentMaximumExperienceSequenceNumber = destinationFormState.experiences.reduce(
+      (maximumSequenceNumber, experience) => {
+        const parsedSequenceNumber = parseExperienceSequenceNumberFromThumbnailUrl(experience.thumbnailUrl)
+        return parsedSequenceNumber == null
+          ? maximumSequenceNumber
+          : Math.max(maximumSequenceNumber, parsedSequenceNumber)
+      },
+      0
+    )
+
+    const currentThumbnailUrl = destinationFormState.experiences[experienceIndex]?.thumbnailUrl ?? ""
+    const experienceSequenceNumber = currentMaximumExperienceSequenceNumber + 1
+    const objectPath = `places/${countryPathSegment}/${cityPathSegment}/experiences/${experienceSequenceNumber}.jpg`
+    const uploadedThumbnailUrl = await uploadImageToFirebaseStorage(binary, objectPath)
+
+    if (currentThumbnailUrl.length > 0 && destinationFormState.newlyUploadedExperienceThumbnailUrls.includes(currentThumbnailUrl)) {
+      await deleteImageFromFirebaseStorageByUrl(currentThumbnailUrl)
+    }
+
+    setDestinationFormState((previousState) => {
+      const nextExperienceItems = previousState.experiences.map((experience, targetIndex) => {
+        if (targetIndex !== experienceIndex) {
+          return experience
+        }
+        return {
+          ...experience,
+          thumbnailUrl: uploadedThumbnailUrl
+        }
+      })
+
+      return {
+        ...previousState,
+        experiences: nextExperienceItems,
+        newlyUploadedExperienceThumbnailUrls: [
+          ...previousState.newlyUploadedExperienceThumbnailUrls.filter((thumbnailUrl) => thumbnailUrl !== currentThumbnailUrl),
+          uploadedThumbnailUrl
+        ]
+      }
+    })
+  }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
+
+  const applyCurrentCrop = useCallback(async (): Promise<void> => {
+    if (cropSessionState == null || cropSessionItem == null) {
+      return
+    }
+    if (cropSessionState.isProcessing) {
+      return
+    }
+
+    setCropSessionState((previousSession) => previousSession == null ? null : { ...previousSession, isProcessing: true })
+    beginUploadTask("preparing")
+
+    try {
+      const clampedOffset = clampCropOffset(
+        cropSessionItem,
+        cropFrameWidth,
+        cropFrameHeight,
+        cropSessionState.zoom,
+        cropSessionState.offsetX,
+        cropSessionState.offsetY
+      )
+      const baseScale = Math.max(cropFrameWidth / cropSessionItem.naturalWidth, cropFrameHeight / cropSessionItem.naturalHeight)
+      const scaledWidth = cropSessionItem.naturalWidth * baseScale * cropSessionState.zoom
+      const scaledHeight = cropSessionItem.naturalHeight * baseScale * cropSessionState.zoom
+      const imageLeft = (cropFrameWidth - scaledWidth) / 2 + clampedOffset.offsetX
+      const imageTop = (cropFrameHeight - scaledHeight) / 2 + clampedOffset.offsetY
+      const sourceX = Math.max(0, -imageLeft / (baseScale * cropSessionState.zoom))
+      const sourceY = Math.max(0, -imageTop / (baseScale * cropSessionState.zoom))
+      const sourceWidth = cropFrameWidth / (baseScale * cropSessionState.zoom)
+      const sourceHeight = cropFrameHeight / (baseScale * cropSessionState.zoom)
+
+      const outputWidth = cropSessionState.targetType === "experience"
+        ? EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX
+        : PLACE_IMAGE_OUTPUT_WIDTH_PX
+      const croppedBinary = await cropAndCompressImage(cropSessionItem.file, {
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
+        outputWidth
+      })
+
+      setCurrentUploadStage("uploading")
+      if (cropSessionState.targetType === "destination") {
+        setUploadingDestinationImageCount((previousCount) => previousCount + 1)
+        await uploadCroppedDestinationImage(croppedBinary)
+        setUploadingDestinationImageCount((previousCount) => Math.max(0, previousCount - 1))
+      } else {
+        const experienceIndex = cropSessionState.experienceIndex
+        if (experienceIndex == null) {
+          throw new Error("체험 인덱스를 확인할 수 없습니다.")
+        }
+        setUploadingExperienceIndexes((previousIndexes) => {
+          if (previousIndexes.includes(experienceIndex)) {
+            return previousIndexes
+          }
+          return [...previousIndexes, experienceIndex]
+        })
+        await uploadCroppedExperienceThumbnail(experienceIndex, croppedBinary)
+        setUploadingExperienceIndexes((previousIndexes) => previousIndexes.filter((index) => index !== experienceIndex))
+      }
+
+      const hasNextImage = cropSessionState.currentIndex < cropSessionState.queueItems.length - 1
+      if (hasNextImage) {
+        setCropSessionState((previousSession) => {
+          if (previousSession == null) {
+            return null
+          }
+          return {
+            ...previousSession,
+            currentIndex: previousSession.currentIndex + 1,
+            zoom: CROP_ZOOM_MINIMUM,
+            offsetX: 0,
+            offsetY: 0,
+            isProcessing: false
+          }
+        })
+      } else {
+        closeCropSession(cropSessionState)
+        if (cropSessionState.targetType === "destination") {
+          setNoticeMessage("장소 사진 업로드가 완료되었습니다.")
+        } else {
+          setNoticeMessage("체험 썸네일 업로드가 완료되었습니다.")
+        }
+      }
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.")
+      setCropSessionState((previousSession) => previousSession == null ? null : { ...previousSession, isProcessing: false })
     } finally {
-      setUploadingImages(false)
-      event.target.value = ""
+      endUploadTask()
     }
-  }, [destinationFormState.images, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
+  }, [beginUploadTask, closeCropSession, cropFrameHeight, cropFrameWidth, cropSessionItem, cropSessionState, endUploadTask, uploadCroppedDestinationImage, uploadCroppedExperienceThumbnail])
+
+  const updateCropTransform = useCallback((zoom: number, offsetX: number, offsetY: number): void => {
+    setCropSessionState((previousSession) => {
+      if (previousSession == null) {
+        return null
+      }
+      const queueItem = previousSession.queueItems[previousSession.currentIndex]
+      if (queueItem == null) {
+        return previousSession
+      }
+      const nextZoom = Math.max(CROP_ZOOM_MINIMUM, Math.min(CROP_ZOOM_MAXIMUM, zoom))
+      const clampedOffset = clampCropOffset(
+        queueItem,
+        cropFrameWidth,
+        cropFrameHeight,
+        nextZoom,
+        offsetX,
+        offsetY
+      )
+      return {
+        ...previousSession,
+        zoom: nextZoom,
+        offsetX: clampedOffset.offsetX,
+        offsetY: clampedOffset.offsetY
+      }
+    })
+  }, [cropFrameHeight, cropFrameWidth])
+
+  const shouldBeginCropDrag = useCallback((): boolean => {
+    return true
+  }, [])
+
+  const beginCropDrag = useCallback((event: GestureResponderEvent): void => {
+    cropDragState.current = {
+      isDragging: true,
+      lastPointerX: event.nativeEvent.pageX,
+      lastPointerY: event.nativeEvent.pageY
+    }
+  }, [])
+
+  const moveCropDrag = useCallback((event: GestureResponderEvent): void => {
+    if (!cropDragState.current.isDragging || cropSessionState == null) {
+      return
+    }
+    const movedX = event.nativeEvent.pageX - cropDragState.current.lastPointerX
+    const movedY = event.nativeEvent.pageY - cropDragState.current.lastPointerY
+    cropDragState.current.lastPointerX = event.nativeEvent.pageX
+    cropDragState.current.lastPointerY = event.nativeEvent.pageY
+    updateCropTransform(
+      cropSessionState.zoom,
+      cropSessionState.offsetX + movedX,
+      cropSessionState.offsetY + movedY
+    )
+  }, [cropSessionState, updateCropTransform])
+
+  const endCropDrag = useCallback((): void => {
+    cropDragState.current = {
+      isDragging: false,
+      lastPointerX: 0,
+      lastPointerY: 0
+    }
+  }, [])
+
+  const handleImageFileSelection = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files
+    event.target.value = ""
+    if (fileList == null || fileList.length === 0) {
+      return
+    }
+    void openCropSession("destination", Array.from(fileList), null)
+  }, [openCropSession])
 
   const addExperienceItem = useCallback(() => {
     setDestinationFormState((previousState) => ({
@@ -761,69 +1143,17 @@ export const AdminApp = (): React.JSX.Element => {
     })()
   }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls])
 
-  const handleExperienceThumbnailFileSelection = useCallback(async (
+  const handleExperienceThumbnailFileSelection = useCallback((
     experienceIndex: number,
     event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  ): void => {
     const selectedFile = event.target.files?.[0]
+    event.target.value = ""
     if (selectedFile == null) {
       return
     }
-
-    setUploadingImages(true)
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
-      const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
-
-      const currentMaximumExperienceSequenceNumber = destinationFormState.experiences.reduce(
-        (maximumSequenceNumber, experience) => {
-          const parsedSequenceNumber = parseExperienceSequenceNumberFromThumbnailUrl(experience.thumbnailUrl)
-          return parsedSequenceNumber == null
-            ? maximumSequenceNumber
-            : Math.max(maximumSequenceNumber, parsedSequenceNumber)
-        },
-        0
-      )
-      const currentThumbnailUrl = destinationFormState.experiences[experienceIndex]?.thumbnailUrl ?? ""
-      const compressedBinary = await resizeAndCompressImage(selectedFile)
-      const experienceSequenceNumber = currentMaximumExperienceSequenceNumber + 1
-      const objectPath = `places/${countryPathSegment}/${cityPathSegment}/experiences/${experienceSequenceNumber}.jpg`
-      const uploadedThumbnailUrl = await uploadImageToFirebaseStorage(compressedBinary, objectPath)
-
-      if (currentThumbnailUrl.length > 0 && destinationFormState.newlyUploadedExperienceThumbnailUrls.includes(currentThumbnailUrl)) {
-        await deleteImageFromFirebaseStorageByUrl(currentThumbnailUrl)
-      }
-
-      setDestinationFormState((previousState) => {
-        const nextExperienceItems = previousState.experiences.map((experience, targetIndex) => {
-          if (targetIndex !== experienceIndex) {
-            return experience
-          }
-          return {
-            ...experience,
-            thumbnailUrl: uploadedThumbnailUrl
-          }
-        })
-        return {
-          ...previousState,
-          experiences: nextExperienceItems,
-          newlyUploadedExperienceThumbnailUrls: [
-            ...previousState.newlyUploadedExperienceThumbnailUrls.filter((thumbnailUrl) => thumbnailUrl !== currentThumbnailUrl),
-            uploadedThumbnailUrl
-          ]
-        }
-      })
-      setNoticeMessage("체험 썸네일 업로드가 완료되었습니다.")
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "체험 썸네일 업로드에 실패했습니다.")
-    } finally {
-      setUploadingImages(false)
-      event.target.value = ""
-    }
-  }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
+    void openCropSession("experience", [selectedFile], experienceIndex)
+  }, [openCropSession])
 
   const activeTitle = useMemo(() => {
     if (activeTab === "destinations") return "장소 DB 관리"
@@ -907,6 +1237,17 @@ export const AdminApp = (): React.JSX.Element => {
 
           {noticeMessage.length > 0 && <Text style={styles.noticeText}>{noticeMessage}</Text>}
           {errorMessage.length > 0 && <Text style={styles.errorText}>{errorMessage}</Text>}
+          {isUploadingImages && (
+            <View style={styles.uploadStatusCard}>
+              <ActivityIndicator color="#2a6bd8" />
+              <View style={styles.uploadStatusTextContainer}>
+                <Text style={styles.uploadStatusTitle}>이미지 업로드 진행 중</Text>
+                <Text style={styles.uploadStatusDescription}>
+                  {currentUploadStage === "preparing" ? "크롭/압축 처리 중" : "Firebase 업로드 중"} · 다른 입력 작업은 계속 가능합니다.
+                </Text>
+              </View>
+            </View>
+          )}
 
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -1052,7 +1393,13 @@ export const AdminApp = (): React.JSX.Element => {
               <View style={styles.uploadRow}>
                 <Text style={styles.fieldLabel}>사진 업로드</Text>
                 <input type="file" accept="image/*" multiple onChange={handleImageFileSelection} />
-                {uploadingImages && <Text style={styles.helperText}>이미지를 처리 중입니다...</Text>}
+                <Text style={styles.helperText}>크롭 가이드: 100:87(파랑) + 100:67(민트) 프레임을 확인해 업로드하세요.</Text>
+                {uploadingDestinationImageCount > 0 && (
+                  <View style={styles.inlineUploadingBadge}>
+                    <ActivityIndicator size="small" color="#2a6bd8" />
+                    <Text style={styles.inlineUploadingBadgeText}>장소 사진 {uploadingDestinationImageCount}건 업로드 중</Text>
+                  </View>
+                )}
               </View>
 
               {destinationFormState.images.length > 0 && (
@@ -1114,9 +1461,6 @@ export const AdminApp = (): React.JSX.Element => {
               <View style={styles.row}>
                 <Text style={styles.sectionTitle}>체험 관리 (Experience)</Text>
                 <Text style={styles.helperText}>현재 {destinationFormState.experiences.length}건 · 순서 변경/제목/설명/링크/썸네일을 관리합니다.</Text>
-                <View style={styles.rowButtonContainer}>
-                  <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
-                </View>
               </View>
 
               {destinationFormState.experiences.length > 0 && (
@@ -1140,7 +1484,7 @@ export const AdminApp = (): React.JSX.Element => {
                         }}
                       />
                       <LabelInput
-                        label="설명"
+                        label="설명 (40자 내외)"
                         value={experience.description}
                         multiline
                         onChangeText={(value) => {
@@ -1182,6 +1526,13 @@ export const AdminApp = (): React.JSX.Element => {
                         {experience.thumbnailUrl.length > 0 && (
                           <Text style={styles.imageUrlText}>{experience.thumbnailUrl}</Text>
                         )}
+                        <Text style={styles.helperText}>크롭 가이드: 100:60 프레임</Text>
+                        {uploadingExperienceIndexes.includes(experienceIndex) && (
+                          <View style={styles.inlineUploadingBadge}>
+                            <ActivityIndicator size="small" color="#2a6bd8" />
+                            <Text style={styles.inlineUploadingBadgeText}>체험 썸네일 업로드 중</Text>
+                          </View>
+                        )}
                       </View>
                       <View style={styles.rowButtonContainer}>
                         <ActionButton
@@ -1204,6 +1555,10 @@ export const AdminApp = (): React.JSX.Element => {
                   ))}
                 </View>
               )}
+
+              <View style={styles.rowButtonContainer}>
+                <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
+              </View>
 
                   <View style={styles.rowButtonContainer}>
                     <ActionButton label={destinationFormState.selectedId == null ? "장소 생성" : "장소 수정"} onPress={() => void submitDestination()} />
@@ -1486,6 +1841,90 @@ export const AdminApp = (): React.JSX.Element => {
           )}
         </View>
       </View>
+      {cropSessionState != null && cropSessionItem != null && cropRenderMetrics != null && (
+        <View style={styles.cropModalBackdrop}>
+          <View style={styles.cropModalCard}>
+            <Text style={styles.cropModalTitle}>
+              {cropSessionState.targetType === "destination" ? "장소 사진 크롭" : "체험 썸네일 크롭"}
+            </Text>
+            <Text style={styles.helperText}>
+              {cropSessionState.currentIndex + 1} / {cropSessionState.queueItems.length} · 드래그로 위치 이동, 줌으로 프레임 맞춤
+            </Text>
+            <View
+              style={[
+                styles.cropFrame,
+                {
+                  width: cropFrameWidth,
+                  height: cropFrameHeight
+                }
+              ]}
+              onStartShouldSetResponder={shouldBeginCropDrag}
+              onResponderGrant={beginCropDrag}
+              onResponderMove={moveCropDrag}
+              onResponderRelease={endCropDrag}
+              onResponderTerminate={endCropDrag}
+            >
+              <img
+                src={cropSessionItem.previewUrl}
+                alt="crop-preview"
+                draggable={false}
+                style={{
+                  position: "absolute",
+                  left: (cropFrameWidth - cropRenderMetrics.scaledWidth) / 2 + cropRenderMetrics.clampedOffset.offsetX,
+                  top: (cropFrameHeight - cropRenderMetrics.scaledHeight) / 2 + cropRenderMetrics.clampedOffset.offsetY,
+                  width: cropRenderMetrics.scaledWidth,
+                  height: cropRenderMetrics.scaledHeight,
+                  userSelect: "none",
+                  pointerEvents: "none"
+                }}
+              />
+              {cropSessionState.targetType === "destination" && (
+                <View
+                  style={[
+                    styles.cropGuideSecondary,
+                    {
+                      width: cropFrameWidth,
+                      height: cropFrameWidth / PLACE_IMAGE_SECONDARY_ASPECT_RATIO,
+                      top: (cropFrameHeight - cropFrameWidth / PLACE_IMAGE_SECONDARY_ASPECT_RATIO) / 2
+                    }
+                  ]}
+                />
+              )}
+              <View style={styles.cropGuidePrimary} />
+            </View>
+            <View style={styles.cropSliderContainer}>
+              <Text style={styles.fieldLabel}>줌 {cropSessionState.zoom.toFixed(2)}x</Text>
+              <input
+                type="range"
+                min={CROP_ZOOM_MINIMUM}
+                max={CROP_ZOOM_MAXIMUM}
+                step={CROP_ZOOM_STEP}
+                value={cropSessionState.zoom}
+                onChange={(event) => {
+                  const nextZoom = Number(event.target.value)
+                  updateCropTransform(nextZoom, cropSessionState.offsetX, cropSessionState.offsetY)
+                }}
+                style={htmlRangeInputStyle}
+              />
+            </View>
+            <View style={styles.rowButtonContainer}>
+              <ActionButton
+                label="취소"
+                variant="secondary"
+                onPress={() => closeCropSession(cropSessionState)}
+              />
+              <ActionButton
+                label={cropSessionState.isProcessing ? "처리 중..." : "크롭 적용"}
+                onPress={() => {
+                  if (!cropSessionState.isProcessing) {
+                    void applyCurrentCrop()
+                  }
+                }}
+              />
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   )
 }
@@ -1732,6 +2171,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8
   },
+  uploadStatusCard: {
+    marginBottom: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#b7d0f5",
+    backgroundColor: "#f3f8ff",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8
+  },
+  uploadStatusTextContainer: {
+    gap: 3
+  },
+  uploadStatusTitle: {
+    color: "#1f4f8a",
+    fontSize: 14,
+    fontWeight: "700"
+  },
+  uploadStatusDescription: {
+    color: "#4f76a8",
+    fontSize: 12
+  },
   loadingContainer: {
     minHeight: 300,
     justifyContent: "center",
@@ -1826,6 +2289,23 @@ const styles = StyleSheet.create({
   uploadRow: {
     gap: 8
   },
+  inlineUploadingBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "#b7d0f5",
+    backgroundColor: "#f4f8ff",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    alignSelf: "flex-start"
+  },
+  inlineUploadingBadgeText: {
+    color: "#2a5e9f",
+    fontSize: 12,
+    fontWeight: "600"
+  },
   imageListContainer: {
     gap: 8
   },
@@ -1912,6 +2392,61 @@ const styles = StyleSheet.create({
   listItemDescription: {
     color: "#5a7fa7",
     fontSize: 13
+  },
+  cropModalBackdrop: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    backgroundColor: "rgba(6, 17, 30, 0.58)",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 14,
+    paddingVertical: 20
+  },
+  cropModalCard: {
+    width: "100%",
+    maxWidth: 860,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#bad0ef",
+    backgroundColor: "#ffffff",
+    padding: 16,
+    gap: 10
+  },
+  cropModalTitle: {
+    color: "#173e74",
+    fontSize: 20,
+    fontWeight: "800"
+  },
+  cropFrame: {
+    alignSelf: "center",
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#10151b",
+    borderWidth: 2,
+    borderColor: "#6db2ff",
+    position: "relative"
+  },
+  cropGuidePrimary: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    borderWidth: 2,
+    borderColor: "#59a7ff",
+    boxShadow: "0 0 0 999px rgba(4, 15, 29, 0.62)"
+  },
+  cropGuideSecondary: {
+    position: "absolute",
+    left: 0,
+    borderWidth: 2,
+    borderColor: "#00c8b5"
+  },
+  cropSliderContainer: {
+    gap: 6
   }
 })
 
@@ -1922,4 +2457,8 @@ const htmlFieldStyle: React.CSSProperties = {
   borderWidth: 1,
   padding: 8,
   backgroundColor: "#f8fbff"
+}
+
+const htmlRangeInputStyle: React.CSSProperties = {
+  width: "100%"
 }
