@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ActivityIndicator, GestureResponderEvent, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native"
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions } from "react-native"
 import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
 import { cropAndCompressImage } from "../../lib/imageProcessing"
 import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
@@ -116,22 +116,25 @@ type CropSessionState = {
   currentIndex: number
   destinationImageIndex: number | null
   experienceIndex: number | null
-  zoom: number
-  offsetX: number
-  offsetY: number
+  cropArea: CropArea
   isProcessing: boolean
+}
+
+type CropArea = {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 type UploadStage = "preparing" | "uploading"
 
-const CROP_ZOOM_MINIMUM = 1
-const CROP_ZOOM_MAXIMUM = 4
-const CROP_ZOOM_STEP = 0.05
 const PLACE_IMAGE_PRIMARY_ASPECT_RATIO = 100 / 87
 const PLACE_IMAGE_SECONDARY_ASPECT_RATIO = 100 / 67
 const EXPERIENCE_IMAGE_ASPECT_RATIO = 100 / 60
 const PLACE_IMAGE_OUTPUT_WIDTH_PX = 1280
 const EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX = 1200
+const CROP_MINIMUM_WIDTH_RATIO = 0.18
 
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
@@ -310,33 +313,60 @@ const createCropQueueItems = async (files: File[]): Promise<CropQueueItem[]> => 
   return queueItems
 }
 
-const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
-  const response = await fetch(imageUrl)
-  if (!response.ok) {
-    throw new Error("이미지를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.")
-  }
-  const binary = await response.blob()
-  const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
-  const fileName = `crop-source-${Date.now()}.jpg`
-  return new File([binary], fileName, { type: fileType })
+const loadBlobWithXmlHttpRequest = async (imageUrl: string): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest()
+    request.open("GET", imageUrl, true)
+    request.responseType = "blob"
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300 && request.response != null) {
+        resolve(request.response)
+        return
+      }
+      reject(new Error(`status:${request.status}`))
+    }
+    request.onerror = () => reject(new Error("network-error"))
+    request.send()
+  })
 }
 
-const clampCropOffset = (
-  item: CropQueueItem,
-  frameWidth: number,
-  frameHeight: number,
-  zoom: number,
-  offsetX: number,
-  offsetY: number
-): { offsetX: number; offsetY: number } => {
-  const baseScale = Math.max(frameWidth / item.naturalWidth, frameHeight / item.naturalHeight)
-  const scaledWidth = item.naturalWidth * baseScale * zoom
-  const scaledHeight = item.naturalHeight * baseScale * zoom
-  const maximumOffsetX = Math.max(0, (scaledWidth - frameWidth) / 2)
-  const maximumOffsetY = Math.max(0, (scaledHeight - frameHeight) / 2)
+const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
+  const sanitizedImageUrl = imageUrl.trim()
+  try {
+    const response = await fetch(sanitizedImageUrl, { method: "GET" })
+    if (!response.ok) {
+      throw new Error(`status:${response.status}`)
+    }
+    const binary = await response.blob()
+    const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
+    const fileName = `crop-source-${Date.now()}.jpg`
+    return new File([binary], fileName, { type: fileType })
+  } catch (fetchError) {
+    try {
+      const binary = await loadBlobWithXmlHttpRequest(sanitizedImageUrl)
+      const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
+      const fileName = `crop-source-${Date.now()}.jpg`
+      return new File([binary], fileName, { type: fileType })
+    } catch (xmlHttpRequestError) {
+      throw new Error("이미지 파일을 다시 가져오지 못했습니다. CORS 또는 네트워크 상태를 확인해주세요.")
+    }
+  }
+}
+
+const getCropAspectRatio = (targetType: CropTargetType): number => {
+  return targetType === "experience" ? EXPERIENCE_IMAGE_ASPECT_RATIO : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
+}
+
+const createInitialCropArea = (item: CropQueueItem, targetType: CropTargetType): CropArea => {
+  const aspectRatio = getCropAspectRatio(targetType)
+  const maximumWidthByHeight = item.naturalHeight * aspectRatio
+  const initialWidth = Math.min(item.naturalWidth * 0.9, maximumWidthByHeight * 0.9)
+  const initialHeight = initialWidth / aspectRatio
   return {
-    offsetX: Math.max(-maximumOffsetX, Math.min(maximumOffsetX, offsetX)),
-    offsetY: Math.max(-maximumOffsetY, Math.min(maximumOffsetY, offsetY))
+    x: (item.naturalWidth - initialWidth) / 2,
+    y: (item.naturalHeight - initialHeight) / 2,
+    width: initialWidth,
+    height: initialHeight
   }
 }
 
@@ -371,10 +401,16 @@ export const AdminApp = (): React.JSX.Element => {
   const [uploadingExperienceIndexes, setUploadingExperienceIndexes] = useState<number[]>([])
   const [cropSessionState, setCropSessionState] = useState<CropSessionState | null>(null)
   const cropSessionRef = useRef<CropSessionState | null>(null)
-  const cropDragState = useRef<{ isDragging: boolean; lastPointerX: number; lastPointerY: number }>({
-    isDragging: false,
-    lastPointerX: 0,
-    lastPointerY: 0
+  const cropDragState = useRef<{
+    mode: "move" | "resize" | null
+    pointerStartX: number
+    pointerStartY: number
+    cropAreaAtStart: CropArea | null
+  }>({
+    mode: null,
+    pointerStartX: 0,
+    pointerStartY: 0,
+    cropAreaAtStart: null
   })
   const storageCountryOptions = useMemo<StorageCountryOption[]>(() => {
     const countryCityMap = new Map<string, Set<string>>()
@@ -444,33 +480,24 @@ export const AdminApp = (): React.JSX.Element => {
 
   const isUploadingImages = activeUploadTaskCount > 0
 
-  const cropAspectRatio = cropSessionState?.targetType === "experience"
-    ? EXPERIENCE_IMAGE_ASPECT_RATIO
-    : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
-  const cropFrameWidth = Math.min(Math.max(320, windowWidth * 0.62), 760)
-  const cropFrameHeight = cropFrameWidth / cropAspectRatio
   const cropSessionItem = cropSessionState == null ? null : cropSessionState.queueItems[cropSessionState.currentIndex]
-  const cropRenderMetrics = useMemo(() => {
-    if (cropSessionState == null || cropSessionItem == null) {
+  const cropImageRenderMetrics = useMemo(() => {
+    if (cropSessionItem == null) {
       return null
     }
-    const baseScale = Math.max(cropFrameWidth / cropSessionItem.naturalWidth, cropFrameHeight / cropSessionItem.naturalHeight)
-    const scaledWidth = cropSessionItem.naturalWidth * baseScale * cropSessionState.zoom
-    const scaledHeight = cropSessionItem.naturalHeight * baseScale * cropSessionState.zoom
-    const clampedOffset = clampCropOffset(
-      cropSessionItem,
-      cropFrameWidth,
-      cropFrameHeight,
-      cropSessionState.zoom,
-      cropSessionState.offsetX,
-      cropSessionState.offsetY
+    const containerMaximumWidth = Math.min(Math.max(360, windowWidth * 0.72), 860)
+    const containerMaximumHeight = Math.min(Math.max(260, windowHeight * 0.62), 560)
+    const fitScale = Math.min(
+      containerMaximumWidth / cropSessionItem.naturalWidth,
+      containerMaximumHeight / cropSessionItem.naturalHeight
     )
+    const displayScale = Number.isFinite(fitScale) && fitScale > 0 ? fitScale : 1
     return {
-      scaledWidth,
-      scaledHeight,
-      clampedOffset
+      displayScale,
+      displayWidth: cropSessionItem.naturalWidth * displayScale,
+      displayHeight: cropSessionItem.naturalHeight * displayScale
     }
-  }, [cropFrameHeight, cropFrameWidth, cropSessionItem, cropSessionState])
+  }, [cropSessionItem, windowHeight, windowWidth])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -800,9 +827,10 @@ export const AdminApp = (): React.JSX.Element => {
     })
     setCropSessionState(null)
     cropDragState.current = {
-      isDragging: false,
-      lastPointerX: 0,
-      lastPointerY: 0
+      mode: null,
+      pointerStartX: 0,
+      pointerStartY: 0,
+      cropAreaAtStart: null
     }
   }, [])
 
@@ -834,6 +862,10 @@ export const AdminApp = (): React.JSX.Element => {
 
     try {
       const queueItems = await createCropQueueItems(files)
+      const currentQueueItem = queueItems[0]
+      if (currentQueueItem == null) {
+        return
+      }
       setCropSessionState({
         targetType,
         applyMode: options.applyMode,
@@ -841,9 +873,7 @@ export const AdminApp = (): React.JSX.Element => {
         currentIndex: 0,
         destinationImageIndex: options.destinationImageIndex,
         experienceIndex: options.experienceIndex,
-        zoom: CROP_ZOOM_MINIMUM,
-        offsetX: 0,
-        offsetY: 0,
+        cropArea: createInitialCropArea(currentQueueItem, targetType),
         isProcessing: false
       })
     } catch (error) {
@@ -1011,32 +1041,14 @@ export const AdminApp = (): React.JSX.Element => {
     beginUploadTask("preparing")
 
     try {
-      const clampedOffset = clampCropOffset(
-        cropSessionItem,
-        cropFrameWidth,
-        cropFrameHeight,
-        cropSessionState.zoom,
-        cropSessionState.offsetX,
-        cropSessionState.offsetY
-      )
-      const baseScale = Math.max(cropFrameWidth / cropSessionItem.naturalWidth, cropFrameHeight / cropSessionItem.naturalHeight)
-      const scaledWidth = cropSessionItem.naturalWidth * baseScale * cropSessionState.zoom
-      const scaledHeight = cropSessionItem.naturalHeight * baseScale * cropSessionState.zoom
-      const imageLeft = (cropFrameWidth - scaledWidth) / 2 + clampedOffset.offsetX
-      const imageTop = (cropFrameHeight - scaledHeight) / 2 + clampedOffset.offsetY
-      const sourceX = Math.max(0, -imageLeft / (baseScale * cropSessionState.zoom))
-      const sourceY = Math.max(0, -imageTop / (baseScale * cropSessionState.zoom))
-      const sourceWidth = cropFrameWidth / (baseScale * cropSessionState.zoom)
-      const sourceHeight = cropFrameHeight / (baseScale * cropSessionState.zoom)
-
       const outputWidth = cropSessionState.targetType === "experience"
         ? EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX
         : PLACE_IMAGE_OUTPUT_WIDTH_PX
       const croppedBinary = await cropAndCompressImage(cropSessionItem.file, {
-        sourceX,
-        sourceY,
-        sourceWidth,
-        sourceHeight,
+        sourceX: cropSessionState.cropArea.x,
+        sourceY: cropSessionState.cropArea.y,
+        sourceWidth: cropSessionState.cropArea.width,
+        sourceHeight: cropSessionState.cropArea.height,
         outputWidth
       })
 
@@ -1074,12 +1086,15 @@ export const AdminApp = (): React.JSX.Element => {
           if (previousSession == null) {
             return null
           }
+          const nextIndex = previousSession.currentIndex + 1
+          const nextQueueItem = previousSession.queueItems[nextIndex]
+          if (nextQueueItem == null) {
+            return null
+          }
           return {
             ...previousSession,
-            currentIndex: previousSession.currentIndex + 1,
-            zoom: CROP_ZOOM_MINIMUM,
-            offsetX: 0,
-            offsetY: 0,
+            currentIndex: nextIndex,
+            cropArea: createInitialCropArea(nextQueueItem, previousSession.targetType),
             isProcessing: false
           }
         })
@@ -1097,67 +1112,95 @@ export const AdminApp = (): React.JSX.Element => {
     } finally {
       endUploadTask()
     }
-  }, [beginUploadTask, closeCropSession, cropFrameHeight, cropFrameWidth, cropSessionItem, cropSessionState, endUploadTask, replaceCroppedDestinationImage, uploadCroppedDestinationImage, uploadCroppedExperienceThumbnail])
+  }, [beginUploadTask, closeCropSession, cropSessionItem, cropSessionState, endUploadTask, replaceCroppedDestinationImage, uploadCroppedDestinationImage, uploadCroppedExperienceThumbnail])
 
-  const updateCropTransform = useCallback((zoom: number, offsetX: number, offsetY: number): void => {
+  const beginMoveCropArea = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
+    if (cropSessionState == null) {
+      return
+    }
+    event.preventDefault()
+    cropDragState.current = {
+      mode: "move",
+      pointerStartX: event.clientX,
+      pointerStartY: event.clientY,
+      cropAreaAtStart: cropSessionState.cropArea
+    }
+  }, [cropSessionState])
+
+  const beginResizeCropArea = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
+    if (cropSessionState == null) {
+      return
+    }
+    event.preventDefault()
+    event.stopPropagation()
+    cropDragState.current = {
+      mode: "resize",
+      pointerStartX: event.clientX,
+      pointerStartY: event.clientY,
+      cropAreaAtStart: cropSessionState.cropArea
+    }
+  }, [cropSessionState])
+
+  const moveCropAreaPointer = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
+    if (cropSessionState == null || cropSessionItem == null || cropImageRenderMetrics == null) {
+      return
+    }
+    const dragMode = cropDragState.current.mode
+    const cropAreaAtStart = cropDragState.current.cropAreaAtStart
+    if (dragMode == null || cropAreaAtStart == null) {
+      return
+    }
+
+    event.preventDefault()
+    const deltaX = (event.clientX - cropDragState.current.pointerStartX) / cropImageRenderMetrics.displayScale
+    const deltaY = (event.clientY - cropDragState.current.pointerStartY) / cropImageRenderMetrics.displayScale
+    const cropAspectRatio = getCropAspectRatio(cropSessionState.targetType)
+
     setCropSessionState((previousSession) => {
       if (previousSession == null) {
         return null
       }
-      const queueItem = previousSession.queueItems[previousSession.currentIndex]
-      if (queueItem == null) {
-        return previousSession
+
+      if (dragMode === "move") {
+        const clampedX = Math.max(0, Math.min(cropSessionItem.naturalWidth - cropAreaAtStart.width, cropAreaAtStart.x + deltaX))
+        const clampedY = Math.max(0, Math.min(cropSessionItem.naturalHeight - cropAreaAtStart.height, cropAreaAtStart.y + deltaY))
+        return {
+          ...previousSession,
+          cropArea: {
+            ...previousSession.cropArea,
+            x: clampedX,
+            y: clampedY
+          }
+        }
       }
-      const nextZoom = Math.max(CROP_ZOOM_MINIMUM, Math.min(CROP_ZOOM_MAXIMUM, zoom))
-      const clampedOffset = clampCropOffset(
-        queueItem,
-        cropFrameWidth,
-        cropFrameHeight,
-        nextZoom,
-        offsetX,
-        offsetY
+
+      const minimumCropWidth = Math.max(120, cropSessionItem.naturalWidth * CROP_MINIMUM_WIDTH_RATIO)
+      const maximumCropWidthByImageWidth = cropSessionItem.naturalWidth - cropAreaAtStart.x
+      const maximumCropWidthByImageHeight = (cropSessionItem.naturalHeight - cropAreaAtStart.y) * cropAspectRatio
+      const maximumCropWidth = Math.max(
+        minimumCropWidth,
+        Math.min(maximumCropWidthByImageWidth, maximumCropWidthByImageHeight)
       )
+      const nextWidth = Math.max(minimumCropWidth, Math.min(maximumCropWidth, cropAreaAtStart.width + deltaX))
+      const nextHeight = nextWidth / cropAspectRatio
+
       return {
         ...previousSession,
-        zoom: nextZoom,
-        offsetX: clampedOffset.offsetX,
-        offsetY: clampedOffset.offsetY
+        cropArea: {
+          ...previousSession.cropArea,
+          width: nextWidth,
+          height: nextHeight
+        }
       }
     })
-  }, [cropFrameHeight, cropFrameWidth])
+  }, [cropImageRenderMetrics, cropSessionItem, cropSessionState])
 
-  const shouldBeginCropDrag = useCallback((): boolean => {
-    return true
-  }, [])
-
-  const beginCropDrag = useCallback((event: GestureResponderEvent): void => {
+  const endCropAreaPointer = useCallback((): void => {
     cropDragState.current = {
-      isDragging: true,
-      lastPointerX: event.nativeEvent.pageX,
-      lastPointerY: event.nativeEvent.pageY
-    }
-  }, [])
-
-  const moveCropDrag = useCallback((event: GestureResponderEvent): void => {
-    if (!cropDragState.current.isDragging || cropSessionState == null) {
-      return
-    }
-    const movedX = event.nativeEvent.pageX - cropDragState.current.lastPointerX
-    const movedY = event.nativeEvent.pageY - cropDragState.current.lastPointerY
-    cropDragState.current.lastPointerX = event.nativeEvent.pageX
-    cropDragState.current.lastPointerY = event.nativeEvent.pageY
-    updateCropTransform(
-      cropSessionState.zoom,
-      cropSessionState.offsetX + movedX,
-      cropSessionState.offsetY + movedY
-    )
-  }, [cropSessionState, updateCropTransform])
-
-  const endCropDrag = useCallback((): void => {
-    cropDragState.current = {
-      isDragging: false,
-      lastPointerX: 0,
-      lastPointerY: 0
+      mode: null,
+      pointerStartX: 0,
+      pointerStartY: 0,
+      cropAreaAtStart: null
     }
   }, [])
 
@@ -1981,70 +2024,109 @@ export const AdminApp = (): React.JSX.Element => {
           )}
         </View>
       </View>
-      {cropSessionState != null && cropSessionItem != null && cropRenderMetrics != null && (
+      {cropSessionState != null && cropSessionItem != null && cropImageRenderMetrics != null && (
         <View style={styles.cropModalBackdrop}>
           <View style={styles.cropModalCard}>
             <Text style={styles.cropModalTitle}>
               {cropSessionState.targetType === "destination" ? "장소 사진 크롭" : "체험 썸네일 크롭"}
             </Text>
             <Text style={styles.helperText}>
-              {cropSessionState.currentIndex + 1} / {cropSessionState.queueItems.length} · 드래그로 위치 이동, 줌으로 프레임 맞춤
+              {cropSessionState.currentIndex + 1} / {cropSessionState.queueItems.length} · 사각형 내부만 저장됩니다.
             </Text>
-            <View
-              style={[
-                styles.cropFrame,
-                {
-                  width: cropFrameWidth,
-                  height: cropFrameHeight
-                }
-              ]}
-              onStartShouldSetResponder={shouldBeginCropDrag}
-              onResponderGrant={beginCropDrag}
-              onResponderMove={moveCropDrag}
-              onResponderRelease={endCropDrag}
-              onResponderTerminate={endCropDrag}
+            <div
+              style={{
+                ...htmlCropStageStyle,
+                width: cropImageRenderMetrics.displayWidth,
+                height: cropImageRenderMetrics.displayHeight
+              }}
+              onMouseMove={moveCropAreaPointer}
+              onMouseUp={endCropAreaPointer}
+              onMouseLeave={endCropAreaPointer}
             >
               <img
                 src={cropSessionItem.previewUrl}
                 alt="crop-preview"
                 draggable={false}
+                style={htmlCropBaseImageStyle}
+              />
+              <div
                 style={{
-                  position: "absolute",
-                  left: (cropFrameWidth - cropRenderMetrics.scaledWidth) / 2 + cropRenderMetrics.clampedOffset.offsetX,
-                  top: (cropFrameHeight - cropRenderMetrics.scaledHeight) / 2 + cropRenderMetrics.clampedOffset.offsetY,
-                  width: cropRenderMetrics.scaledWidth,
-                  height: cropRenderMetrics.scaledHeight,
-                  userSelect: "none",
-                  pointerEvents: "none"
+                  ...htmlCropOutsideTopStyle,
+                  height: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale
                 }}
               />
-              {cropSessionState.targetType === "destination" && (
-                <View
-                  style={[
-                    styles.cropGuideSecondary,
-                    {
-                      width: cropFrameWidth,
-                      height: cropFrameWidth / PLACE_IMAGE_SECONDARY_ASPECT_RATIO,
-                      top: (cropFrameHeight - cropFrameWidth / PLACE_IMAGE_SECONDARY_ASPECT_RATIO) / 2
-                    }
-                  ]}
-                />
-              )}
-              <View style={styles.cropGuidePrimary} />
-            </View>
-            <View style={styles.cropSliderContainer}>
-              <Text style={styles.fieldLabel}>줌 {cropSessionState.zoom.toFixed(2)}x</Text>
-              <input
-                type="range"
-                min={CROP_ZOOM_MINIMUM}
-                max={CROP_ZOOM_MAXIMUM}
-                step={CROP_ZOOM_STEP}
-                value={cropSessionState.zoom}
-                onChange={(event) => {
-                  const nextZoom = Number(event.target.value)
-                  updateCropTransform(nextZoom, cropSessionState.offsetX, cropSessionState.offsetY)
+              <div
+                style={{
+                  ...htmlCropOutsideBottomStyle,
+                  top: (cropSessionState.cropArea.y + cropSessionState.cropArea.height) * cropImageRenderMetrics.displayScale
                 }}
-                style={htmlRangeInputStyle}
+              />
+              <div
+                style={{
+                  ...htmlCropOutsideLeftStyle,
+                  top: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale,
+                  height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale,
+                  width: cropSessionState.cropArea.x * cropImageRenderMetrics.displayScale
+                }}
+              />
+              <div
+                style={{
+                  ...htmlCropOutsideRightStyle,
+                  top: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale,
+                  left: (cropSessionState.cropArea.x + cropSessionState.cropArea.width) * cropImageRenderMetrics.displayScale,
+                  height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
+                }}
+              />
+              <div
+                style={{
+                  ...htmlPrimaryCropAreaStyle,
+                  left: cropSessionState.cropArea.x * cropImageRenderMetrics.displayScale,
+                  top: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale,
+                  width: cropSessionState.cropArea.width * cropImageRenderMetrics.displayScale,
+                  height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
+                }}
+                onMouseDown={beginMoveCropArea}
+              >
+                {cropSessionState.targetType === "destination" && (
+                  <div
+                    style={{
+                      ...htmlSecondaryCropGuideStyle,
+                      height: (cropSessionState.cropArea.width / PLACE_IMAGE_SECONDARY_ASPECT_RATIO) * cropImageRenderMetrics.displayScale,
+                      top: (
+                        (cropSessionState.cropArea.height - (cropSessionState.cropArea.width / PLACE_IMAGE_SECONDARY_ASPECT_RATIO))
+                        / 2
+                      ) * cropImageRenderMetrics.displayScale
+                    }}
+                  />
+                )}
+                <div
+                  style={htmlCropResizeHandleStyle}
+                  onMouseDown={beginResizeCropArea}
+                />
+              </div>
+            </div>
+            <Text style={styles.helperText}>
+              사각형 내부를 드래그해 위치를 바꾸고, 우하단 핸들을 드래그해 크기를 조절하세요.
+            </Text>
+            <View style={styles.rowButtonContainer}>
+              <ActionButton
+                label="초기화"
+                variant="secondary"
+                onPress={() => {
+                  setCropSessionState((previousSession) => {
+                    if (previousSession == null) {
+                      return null
+                    }
+                    const currentQueueItem = previousSession.queueItems[previousSession.currentIndex]
+                    if (currentQueueItem == null) {
+                      return previousSession
+                    }
+                    return {
+                      ...previousSession,
+                      cropArea: createInitialCropArea(currentQueueItem, previousSession.targetType)
+                    }
+                  })
+                }}
               />
             </View>
             <View style={styles.rowButtonContainer}>
@@ -2125,16 +2207,17 @@ const LabelInput = ({
   const applyBoldFormat = useCallback((): void => {
     const inputElement = inputElementReference.current
     if (inputElement == null) {
-      onChangeText(`${value}****`)
       return
     }
 
     const selectionStart = inputElement.selectionStart ?? value.length
     const selectionEnd = inputElement.selectionEnd ?? selectionStart
     const selectedText = value.slice(selectionStart, selectionEnd)
-    const fallbackText = "굵게 텍스트"
-    const textForBold = selectedText.length > 0 ? selectedText : fallbackText
-    const formattedValue = `${value.slice(0, selectionStart)}**${textForBold}**${value.slice(selectionEnd)}`
+    if (selectedText.length === 0) {
+      return
+    }
+
+    const formattedValue = `${value.slice(0, selectionStart)}**${selectedText}**${value.slice(selectionEnd)}`
     onChangeText(formattedValue)
 
     requestAnimationFrame(() => {
@@ -2142,12 +2225,8 @@ const LabelInput = ({
       if (updatedInputElement == null) {
         return
       }
-      const caretStart = selectedText.length > 0
-        ? selectionStart + 2
-        : selectionStart + 2
-      const caretEnd = selectedText.length > 0
-        ? selectionStart + 2 + selectedText.length
-        : selectionStart + 2 + fallbackText.length
+      const caretStart = selectionStart + 2
+      const caretEnd = selectionStart + 2 + selectedText.length
       updatedInputElement.focus()
       updatedInputElement.setSelectionRange(caretStart, caretEnd)
     })
@@ -2653,34 +2732,6 @@ const styles = StyleSheet.create({
     color: "#173e74",
     fontSize: 20,
     fontWeight: "800"
-  },
-  cropFrame: {
-    alignSelf: "center",
-    borderRadius: 10,
-    overflow: "hidden",
-    backgroundColor: "#10151b",
-    borderWidth: 2,
-    borderColor: "#6db2ff",
-    position: "relative"
-  },
-  cropGuidePrimary: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-    borderWidth: 2,
-    borderColor: "#59a7ff",
-    boxShadow: "0 0 0 999px rgba(4, 15, 29, 0.62)"
-  },
-  cropGuideSecondary: {
-    position: "absolute",
-    left: 0,
-    borderWidth: 2,
-    borderColor: "#00c8b5"
-  },
-  cropSliderContainer: {
-    gap: 6
   }
 })
 
@@ -2691,10 +2742,6 @@ const htmlFieldStyle: React.CSSProperties = {
   borderWidth: 1,
   padding: 8,
   backgroundColor: "#f8fbff"
-}
-
-const htmlRangeInputStyle: React.CSSProperties = {
-  width: "100%"
 }
 
 const htmlTextAreaFieldStyle: React.CSSProperties = {
@@ -2714,4 +2761,82 @@ const htmlImagePreviewStyle: React.CSSProperties = {
   height: "100%",
   objectFit: "cover",
   display: "block"
+}
+
+const htmlCropStageStyle: React.CSSProperties = {
+  position: "relative",
+  alignSelf: "center",
+  borderRadius: 10,
+  overflow: "hidden",
+  border: "1px solid #8fb4e9",
+  backgroundColor: "#091625",
+  userSelect: "none",
+  touchAction: "none"
+}
+
+const htmlCropBaseImageStyle: React.CSSProperties = {
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+  display: "block"
+}
+
+const htmlCropOutsideTopStyle: React.CSSProperties = {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  backgroundColor: "rgba(8, 24, 44, 0.28)",
+  pointerEvents: "none"
+}
+
+const htmlCropOutsideBottomStyle: React.CSSProperties = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  backgroundColor: "rgba(8, 24, 44, 0.28)",
+  pointerEvents: "none"
+}
+
+const htmlCropOutsideLeftStyle: React.CSSProperties = {
+  position: "absolute",
+  left: 0,
+  backgroundColor: "rgba(8, 24, 44, 0.28)",
+  pointerEvents: "none"
+}
+
+const htmlCropOutsideRightStyle: React.CSSProperties = {
+  position: "absolute",
+  right: 0,
+  backgroundColor: "rgba(8, 24, 44, 0.28)",
+  pointerEvents: "none"
+}
+
+const htmlPrimaryCropAreaStyle: React.CSSProperties = {
+  position: "absolute",
+  border: "2px solid #4fa4ff",
+  boxSizing: "border-box",
+  cursor: "move"
+}
+
+const htmlSecondaryCropGuideStyle: React.CSSProperties = {
+  position: "absolute",
+  left: 0,
+  width: "100%",
+  border: "2px solid #00c8b5",
+  boxSizing: "border-box",
+  pointerEvents: "none"
+}
+
+const htmlCropResizeHandleStyle: React.CSSProperties = {
+  position: "absolute",
+  right: -8,
+  bottom: -8,
+  width: 16,
+  height: 16,
+  borderRadius: 999,
+  backgroundColor: "#00c8b5",
+  border: "2px solid #ffffff",
+  cursor: "nwse-resize"
 }
