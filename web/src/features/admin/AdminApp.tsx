@@ -1334,17 +1334,20 @@ export const AdminApp = (): React.JSX.Element => {
               <LabelInput
                 label="도시명"
                 value={destinationFormState.name}
+                enableBoldFormatting
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, name: value }))}
               />
               <LabelInput
                 label="요약 (25자 내외)"
                 value={destinationFormState.summary}
+                enableBoldFormatting
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, summary: value }))}
               />
               <LabelInput
                 label="설명 (150자 내외)"
                 value={destinationFormState.description}
                 multiline
+                enableBoldFormatting
                 onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, description: value }))}
               />
 
@@ -1471,6 +1474,7 @@ export const AdminApp = (): React.JSX.Element => {
                       <LabelInput
                         label="제목"
                         value={experience.title}
+                        enableBoldFormatting
                         onChangeText={(value) => {
                           setDestinationFormState((previousState) => ({
                             ...previousState,
@@ -1487,6 +1491,7 @@ export const AdminApp = (): React.JSX.Element => {
                         label="설명 (40자 내외)"
                         value={experience.description}
                         multiline
+                        enableBoldFormatting
                         onChangeText={(value) => {
                           setDestinationFormState((previousState) => ({
                             ...previousState,
@@ -1968,6 +1973,7 @@ type LabelInputProps = {
   multiline?: boolean
   keyboardType?: "default" | "numeric"
   secureTextEntry?: boolean
+  enableBoldFormatting?: boolean
 }
 
 const LabelInput = ({
@@ -1976,19 +1982,84 @@ const LabelInput = ({
   onChangeText,
   multiline = false,
   keyboardType = "default",
-  secureTextEntry = false
+  secureTextEntry = false,
+  enableBoldFormatting = false
 }: LabelInputProps): React.JSX.Element => {
+  const inputElementReference = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null)
+
+  const applyBoldFormat = useCallback((): void => {
+    const inputElement = inputElementReference.current
+    if (inputElement == null) {
+      onChangeText(`${value}****`)
+      return
+    }
+
+    const selectionStart = inputElement.selectionStart ?? value.length
+    const selectionEnd = inputElement.selectionEnd ?? selectionStart
+    const selectedText = value.slice(selectionStart, selectionEnd)
+    const fallbackText = "굵게 텍스트"
+    const textForBold = selectedText.length > 0 ? selectedText : fallbackText
+    const formattedValue = `${value.slice(0, selectionStart)}**${textForBold}**${value.slice(selectionEnd)}`
+    onChangeText(formattedValue)
+
+    requestAnimationFrame(() => {
+      const updatedInputElement = inputElementReference.current
+      if (updatedInputElement == null) {
+        return
+      }
+      const caretStart = selectedText.length > 0
+        ? selectionStart + 2
+        : selectionStart + 2
+      const caretEnd = selectedText.length > 0
+        ? selectionStart + 2 + selectedText.length
+        : selectionStart + 2 + fallbackText.length
+      updatedInputElement.focus()
+      updatedInputElement.setSelectionRange(caretStart, caretEnd)
+    })
+  }, [onChangeText, value])
+
   return (
     <View style={styles.row}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <TextInput
-        value={value}
-        multiline={multiline}
-        keyboardType={keyboardType}
-        secureTextEntry={secureTextEntry}
-        onChangeText={onChangeText}
-        style={multiline ? styles.textInputMultiline : styles.textInput}
-      />
+      <View style={styles.fieldLabelRow}>
+        <Text style={styles.fieldLabel}>{label}</Text>
+        {enableBoldFormatting && (
+          <Pressable style={styles.formatButton} onPress={applyBoldFormat}>
+            <Text style={styles.formatButtonText}>B</Text>
+          </Pressable>
+        )}
+      </View>
+      {enableBoldFormatting ? (
+        multiline ? (
+          <textarea
+            ref={(element) => {
+              inputElementReference.current = element
+            }}
+            value={value}
+            onChange={(event) => onChangeText(event.target.value)}
+            style={htmlTextAreaFieldStyle}
+          />
+        ) : (
+          <input
+            ref={(element) => {
+              inputElementReference.current = element
+            }}
+            value={value}
+            onChange={(event) => onChangeText(event.target.value)}
+            style={htmlFieldStyle}
+            type={secureTextEntry ? "password" : "text"}
+            inputMode={keyboardType === "numeric" ? "numeric" : "text"}
+          />
+        )
+      ) : (
+        <TextInput
+          value={value}
+          multiline={multiline}
+          keyboardType={keyboardType}
+          secureTextEntry={secureTextEntry}
+          onChangeText={onChangeText}
+          style={multiline ? styles.textInputMultiline : styles.textInput}
+        />
+      )}
     </View>
   )
 }
@@ -2264,6 +2335,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700"
   },
+  fieldLabelRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 8
+  },
+  formatButton: {
+    borderWidth: 1,
+    borderColor: "#b9ccef",
+    borderRadius: 8,
+    backgroundColor: "#f3f8ff",
+    paddingHorizontal: 8,
+    paddingVertical: 4
+  },
+  formatButtonText: {
+    color: "#2a5b97",
+    fontSize: 12,
+    fontWeight: "700"
+  },
   textInput: {
     borderWidth: 1,
     borderColor: "#bfd1ef",
@@ -2461,4 +2551,16 @@ const htmlFieldStyle: React.CSSProperties = {
 
 const htmlRangeInputStyle: React.CSSProperties = {
   width: "100%"
+}
+
+const htmlTextAreaFieldStyle: React.CSSProperties = {
+  minHeight: 94,
+  borderColor: "#bfd1ef",
+  borderRadius: 10,
+  borderWidth: 1,
+  padding: 8,
+  backgroundColor: "#f8fbff",
+  resize: "vertical",
+  fontFamily: "inherit",
+  fontSize: 14
 }
