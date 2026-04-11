@@ -1,1899 +1,212 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { ActivityIndicator, Pressable, ScrollView, Text, View, useWindowDimensions } from "react-native"
-import { adminApiClient, clearAdminAccessToken, getAdminAccessToken, setAdminAccessToken } from "../../lib/apiClient"
-import { cropAndCompressImage } from "../../lib/imageProcessing"
-import { deleteImageFromFirebaseStorageByUrl, uploadImageToFirebaseStorage } from "../../lib/firebase"
-import {
-  AdminLoginResponse,
-  Country,
-  Destination,
-  DestinationExperienceRequest,
-  DestinationImageRequest,
-  DestinationUpsertRequest,
-  Member,
-  MemberCreateRequest,
-  MemberUpdateRequest,
-  PublicHoliday,
-  PublicHolidayUpsertRequest
-} from "../../types/admin"
-import { ActionButton } from "./components/ActionButton"
-import { LabelInput } from "./components/LabelInput"
-import { TabButton } from "./components/TabButton"
-import {
-  htmlCropBaseImageStyle,
-  htmlCropOutsideBottomStyle,
-  htmlCropOutsideLeftStyle,
-  htmlCropOutsideRightStyle,
-  htmlCropOutsideTopStyle,
-  htmlCropResizeHandleStyle,
-  htmlCropStageStyle,
-  htmlImagePreviewStyle,
-  htmlPrimaryCropAreaStyle,
-  htmlReferenceGuideStyle,
-  htmlSecondaryCropGuideStyle,
-  htmlFieldStyle,
-  styles
-} from "./styles/adminStyles"
-import {
-  AdminTab,
-  CropDragState,
-  CropSessionState,
-  CropTargetType,
-  DestinationApiResponse,
-  DestinationFormState,
-  HolidayFormState,
-  MemberFormState,
-  PublicHolidayApiResponse,
-  StorageCountryOption,
-  UploadStage
-} from "./types/adminLocalTypes"
-import {
-  CROP_MINIMUM_SIZE_PX,
-  EXPERIENCE_IMAGE_ASPECT_RATIO,
-  EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX,
-  PLACE_IMAGE_OUTPUT_WIDTH_PX,
-  PLACE_IMAGE_PRIMARY_ASPECT_RATIO,
-  PLACE_IMAGE_SECONDARY_ASPECT_RATIO,
-  clampGuideRectWithinCropArea,
-  createCropQueueItems,
-  createFileFromImageUrl,
-  createGuideRect,
-  createInitialCropArea,
-  createInitialDestinationFormState,
-  createInitialHolidayFormState,
-  createInitialMemberFormState,
-  normalizeDestination,
-  normalizePublicHoliday,
-  parseExperienceSequenceNumberFromThumbnailUrl,
-  parseFirebaseObjectPathFromImageUrl,
-  parseFlightTimeMinutes,
-  parseImageSequenceNumberFromImageUrl,
-  parseStorageSlugsFromImageUrl,
-  validateStoragePathSegment
-} from "./utils/adminHelpers"
+import React from "react"
+import { useWindowDimensions, View } from "react-native"
+import { AdminCropModal } from "./components/AdminCropModal"
+import { AdminDashboardView } from "./components/AdminDashboardView"
+import { AdminLoginView } from "./components/AdminLoginView"
+import { useAdminDataManagement } from "./hooks/useAdminDataManagement"
+import { useDestinationImageFormActions } from "./hooks/useDestinationImageFormActions"
+import { useDestinationImageCrop } from "./hooks/useDestinationImageCrop"
+import { styles } from "./styles/adminStyles"
 
 export const AdminApp = (): React.JSX.Element => {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions()
   const isWideDesktopLayout = windowWidth >= 1360
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(getAdminAccessToken().length > 0)
-  const [loginUsername, setLoginUsername] = useState<string>("")
-  const [loginPassword, setLoginPassword] = useState<string>("")
-  const [loginLoading, setLoginLoading] = useState<boolean>(false)
 
-  const [activeTab, setActiveTab] = useState<AdminTab>("destinations")
-  const [loading, setLoading] = useState<boolean>(false)
-  const [noticeMessage, setNoticeMessage] = useState<string>("")
-  const [errorMessage, setErrorMessage] = useState<string>("")
+  const {
+    isAuthenticated,
+    loginUsername,
+    loginPassword,
+    loginLoading,
+    activeTab,
+    loading,
+    noticeMessage,
+    errorMessage,
+    countries,
+    destinations,
+    members,
+    publicHolidays,
+    destinationListSearchKeyword,
+    memberListSearchKeyword,
+    holidayListSearchKeyword,
+    destinationFormState,
+    memberFormState,
+    holidayFormState,
+    storageCountryOptions,
+    selectedStorageCountryOption,
+    filteredDestinations,
+    filteredMembers,
+    filteredPublicHolidays,
+    setLoginUsername,
+    setLoginPassword,
+    setActiveTab,
+    setDestinationListSearchKeyword,
+    setMemberListSearchKeyword,
+    setHolidayListSearchKeyword,
+    setDestinationFormState,
+    setMemberFormState,
+    setHolidayFormState,
+    setNoticeMessage,
+    setErrorMessage,
+    loadAll,
+    submitAdminLogin,
+    submitAdminLogout,
+    submitDestination,
+    deleteDestination,
+    submitMember,
+    deleteMember,
+    submitHoliday,
+    deleteHoliday,
+    resetDestinationFormWithCleanup,
+    loadDestinationToForm
+  } = useAdminDataManagement()
 
-  const [countries, setCountries] = useState<Country[]>([])
-  const [destinations, setDestinations] = useState<Destination[]>([])
-  const [members, setMembers] = useState<Member[]>([])
-  const [publicHolidays, setPublicHolidays] = useState<PublicHoliday[]>([])
-  const [destinationListSearchKeyword, setDestinationListSearchKeyword] = useState<string>("")
-  const [memberListSearchKeyword, setMemberListSearchKeyword] = useState<string>("")
-  const [holidayListSearchKeyword, setHolidayListSearchKeyword] = useState<string>("")
-
-  const [destinationFormState, setDestinationFormState] = useState<DestinationFormState>(createInitialDestinationFormState)
-  const [memberFormState, setMemberFormState] = useState<MemberFormState>(createInitialMemberFormState)
-  const [holidayFormState, setHolidayFormState] = useState<HolidayFormState>(createInitialHolidayFormState)
-
-  const [activeUploadTaskCount, setActiveUploadTaskCount] = useState<number>(0)
-  const [currentUploadStage, setCurrentUploadStage] = useState<UploadStage | null>(null)
-  const [uploadingDestinationImageCount, setUploadingDestinationImageCount] = useState<number>(0)
-  const [uploadingExperienceIndexes, setUploadingExperienceIndexes] = useState<number[]>([])
-  const [cropSessionState, setCropSessionState] = useState<CropSessionState | null>(null)
-  const cropSessionRef = useRef<CropSessionState | null>(null)
-  const cropDragState = useRef<CropDragState>({
-    mode: null,
-    pointerStartX: 0,
-    pointerStartY: 0,
-    cropAreaAtStart: null
+  const {
+    activeUploadTaskCount,
+    currentUploadStage,
+    uploadingDestinationImageCount,
+    uploadingExperienceIndexes,
+    cropSessionState,
+    cropSessionItem,
+    cropImageRenderMetrics,
+    primaryGuideRectInCropArea,
+    secondaryGuideRectInCropArea,
+    openCropSession,
+    openCropSessionFromUploadedImage,
+    beginMoveCropArea,
+    beginResizeCropArea,
+    resetCurrentCropArea,
+    closeCurrentCropSession,
+    applyCurrentCrop
+  } = useDestinationImageCrop({
+    destinationFormState,
+    setDestinationFormState,
+    windowWidth,
+    windowHeight,
+    setErrorMessage,
+    setNoticeMessage
   })
-  const storageCountryOptions = useMemo<StorageCountryOption[]>(() => {
-    const countryCityMap = new Map<string, Set<string>>()
-    destinations.forEach((destination) => {
-      const imageUrls = [
-        ...destination.images.map((image) => image.imageUrl),
-        ...destination.experiences.map((experience) => experience.thumbnailUrl)
-      ]
-      imageUrls.forEach((imageUrl) => {
-        const { countrySlug, citySlug } = parseStorageSlugsFromImageUrl(imageUrl)
-        if (countrySlug.length === 0 || citySlug.length === 0) {
-          return
-        }
-        const existingCitySlugSet = countryCityMap.get(countrySlug) ?? new Set<string>()
-        existingCitySlugSet.add(citySlug)
-        countryCityMap.set(countrySlug, existingCitySlugSet)
-      })
-    })
-    return Array.from(countryCityMap.entries())
-      .sort(([leftSlug], [rightSlug]) => leftSlug.localeCompare(rightSlug))
-      .map(([countrySlug, citySlugSet]) => ({
-        slug: countrySlug,
-        citySlugs: Array.from(citySlugSet).sort((leftSlug, rightSlug) => leftSlug.localeCompare(rightSlug))
-      }))
-  }, [destinations])
 
-  const selectedStorageCountryOption = useMemo(() => {
-    const trimmedStorageCountrySlug = destinationFormState.storageCountrySlug.trim()
-    return storageCountryOptions.find((countryOption) => countryOption.slug === trimmedStorageCountrySlug)
-  }, [destinationFormState.storageCountrySlug, storageCountryOptions])
-
-  const filteredDestinations = useMemo<Destination[]>(() => {
-    const normalizedKeyword = destinationListSearchKeyword.trim().toLowerCase()
-    if (normalizedKeyword.length === 0) {
-      return destinations
-    }
-    return destinations.filter((destination) => {
-      const normalizedTitle = `${destination.countryName} ${destination.name}`.toLowerCase()
-      const normalizedSummary = (destination.summary ?? "").toLowerCase()
-      return normalizedTitle.includes(normalizedKeyword) || normalizedSummary.includes(normalizedKeyword)
-    })
-  }, [destinationListSearchKeyword, destinations])
-
-  const filteredMembers = useMemo<Member[]>(() => {
-    const normalizedKeyword = memberListSearchKeyword.trim().toLowerCase()
-    if (normalizedKeyword.length === 0) {
-      return members
-    }
-    return members.filter((member) => {
-      const normalizedMemberId = member.id.toLowerCase()
-      const normalizedNickname = (member.nickname ?? "").toLowerCase()
-      return normalizedMemberId.includes(normalizedKeyword) || normalizedNickname.includes(normalizedKeyword)
-    })
-  }, [memberListSearchKeyword, members])
-
-  const filteredPublicHolidays = useMemo<PublicHoliday[]>(() => {
-    const normalizedKeyword = holidayListSearchKeyword.trim().toLowerCase()
-    if (normalizedKeyword.length === 0) {
-      return publicHolidays
-    }
-    return publicHolidays.filter((holiday) => {
-      const normalizedName = holiday.name.toLowerCase()
-      const normalizedDate = holiday.holidayDate.toLowerCase()
-      return normalizedName.includes(normalizedKeyword) || normalizedDate.includes(normalizedKeyword)
-    })
-  }, [holidayListSearchKeyword, publicHolidays])
+  const {
+    handleImageFileSelection,
+    handleExperienceThumbnailFileSelection,
+    handleOpenDestinationImageCrop,
+    handleOpenExperienceImageCrop,
+    handleRemoveDestinationImage,
+    addExperienceItem,
+    moveExperienceItem,
+    removeExperienceItem
+  } = useDestinationImageFormActions({
+    destinationFormState,
+    setDestinationFormState,
+    setErrorMessage,
+    openCropSession,
+    openCropSessionFromUploadedImage
+  })
 
   const isUploadingImages = activeUploadTaskCount > 0
 
-  const cropSessionItem = cropSessionState == null ? null : cropSessionState.queueItems[cropSessionState.currentIndex]
-  const cropImageRenderMetrics = useMemo(() => {
-    if (cropSessionItem == null) {
-      return null
-    }
-    const containerMaximumWidth = Math.min(Math.max(360, windowWidth * 0.72), 860)
-    const containerMaximumHeight = Math.min(Math.max(260, windowHeight * 0.62), 560)
-    const fitScale = Math.min(
-      containerMaximumWidth / cropSessionItem.naturalWidth,
-      containerMaximumHeight / cropSessionItem.naturalHeight
-    )
-    const displayScale = Number.isFinite(fitScale) && fitScale > 0 ? fitScale : 1
-    return {
-      displayScale,
-      displayWidth: cropSessionItem.naturalWidth * displayScale,
-      displayHeight: cropSessionItem.naturalHeight * displayScale
-    }
-  }, [cropSessionItem, windowHeight, windowWidth])
-  const primaryGuideRectInCropArea = useMemo(() => {
-    if (cropImageRenderMetrics == null || cropSessionState == null) {
-      return null
-    }
-    const cropDisplayWidth = cropSessionState.cropArea.width * cropImageRenderMetrics.displayScale
-    const cropDisplayHeight = cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
-    const aspectRatio = cropSessionState.targetType === "experience"
-      ? EXPERIENCE_IMAGE_ASPECT_RATIO
-      : PLACE_IMAGE_PRIMARY_ASPECT_RATIO
-    const guideRect = createGuideRect(
-      cropDisplayWidth,
-      cropDisplayHeight,
-      aspectRatio
-    )
-    return clampGuideRectWithinCropArea(guideRect, cropDisplayWidth, cropDisplayHeight)
-  }, [cropImageRenderMetrics, cropSessionState])
-  const secondaryGuideRectInCropArea = useMemo(() => {
-    if (cropImageRenderMetrics == null || cropSessionState?.targetType !== "destination") {
-      return null
-    }
-    const cropDisplayWidth = cropSessionState.cropArea.width * cropImageRenderMetrics.displayScale
-    const cropDisplayHeight = cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
-    const guideRect = createGuideRect(
-      cropDisplayWidth,
-      cropDisplayHeight,
-      PLACE_IMAGE_SECONDARY_ASPECT_RATIO
-    )
-    return clampGuideRectWithinCropArea(guideRect, cropDisplayWidth, cropDisplayHeight)
-  }, [cropImageRenderMetrics, cropSessionState])
-
-  const loadAll = useCallback(async () => {
-    if (!isAuthenticated) {
-      return
-    }
-
-    setLoading(true)
-    setErrorMessage("")
-
-    try {
-      const [countryList, destinationList, memberList, holidayList] = await Promise.all([
-        adminApiClient.get<Country[]>("/api/admin/v1/countries"),
-        adminApiClient.get<DestinationApiResponse[]>("/api/admin/v1/destinations"),
-        adminApiClient.get<Member[]>("/api/admin/v1/members"),
-        adminApiClient.get<PublicHolidayApiResponse[]>("/api/admin/v1/public-holidays")
-      ])
-
-      setCountries(countryList)
-      setDestinations(destinationList.map(normalizeDestination))
-      setMembers(memberList)
-      setPublicHolidays(holidayList.map(normalizePublicHoliday))
-    } catch (error) {
-      const resolvedMessage = error instanceof Error ? error.message : "데이터를 불러오지 못했습니다."
-      if (resolvedMessage.includes("401")) {
-        clearAdminAccessToken()
-        setIsAuthenticated(false)
-        setErrorMessage("관리자 세션이 만료되었습니다. 다시 로그인해주세요.")
-        return
-      }
-      setErrorMessage(resolvedMessage)
-    } finally {
-      setLoading(false)
-    }
-  }, [isAuthenticated])
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      void loadAll()
-    }
-  }, [isAuthenticated, loadAll])
-
-  useEffect(() => {
-    cropSessionRef.current = cropSessionState
-  }, [cropSessionState])
-
-  useEffect(() => {
-    return () => {
-      const activeCropSession = cropSessionRef.current
-      if (activeCropSession == null) {
-        return
-      }
-      activeCropSession.queueItems.forEach((queueItem) => {
-        URL.revokeObjectURL(queueItem.previewUrl)
-      })
-    }
-  }, [])
-
-  const submitAdminLogin = useCallback(async () => {
-    if (loginUsername.trim().length === 0 || loginPassword.trim().length === 0) {
-      setErrorMessage("아이디와 비밀번호를 모두 입력해주세요.")
-      return
-    }
-
-    setLoginLoading(true)
-    setErrorMessage("")
-
-    try {
-      const response = await adminApiClient.postPublic<AdminLoginResponse>(
-        "/api/admin/v1/auth/login",
-        {
-          username: loginUsername.trim(),
-          password: loginPassword
-        }
-      )
-      setAdminAccessToken(response.accessToken)
-      setIsAuthenticated(true)
-      setLoginPassword("")
-      setNoticeMessage("관리자 로그인에 성공했습니다.")
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "로그인에 실패했습니다.")
-    } finally {
-      setLoginLoading(false)
-    }
-  }, [loginPassword, loginUsername])
-
-  const submitAdminLogout = useCallback(() => {
-    clearAdminAccessToken()
-    setIsAuthenticated(false)
-    setCountries([])
-    setDestinations([])
-    setMembers([])
-    setPublicHolidays([])
-    setNoticeMessage("로그아웃되었습니다.")
-    setErrorMessage("")
-  }, [])
-
-  const createDestinationPayload = useCallback((state: DestinationFormState): DestinationUpsertRequest => {
-    const parseMonth = (value: string): number | null => {
-      if (value.trim().length === 0) {
-        return null
-      }
-      const parsedValue = Number(value)
-      return Number.isNaN(parsedValue) ? null : parsedValue
-    }
-
-    const flightTimeMinutes = parseFlightTimeMinutes(state.flightTime)
-    const trimmedCountryName = state.countryName.trim()
-    const matchedCountry = countries.find((country) => country.name === trimmedCountryName)
-    const resolvedCountryId = state.countryId.length > 0 ? Number(state.countryId) : (matchedCountry?.id ?? null)
-
-    if (resolvedCountryId == null || Number.isNaN(resolvedCountryId)) {
-      throw new Error("국가를 정확히 입력해주세요. 목록의 국가명과 일치해야 합니다.")
-    }
-
-    return {
-      countryId: resolvedCountryId,
-      name: state.name,
-      summary: state.summary.trim().length > 0 ? state.summary : null,
-      description: state.description.trim().length > 0 ? state.description : null,
-      recommendStartMonth1: parseMonth(state.recommendStartMonth1),
-      recommendEndMonth1: parseMonth(state.recommendEndMonth1),
-      recommendStartMonth2: parseMonth(state.recommendStartMonth2),
-      recommendEndMonth2: parseMonth(state.recommendEndMonth2),
-      flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
-      flightUrl: state.flightUrl.trim().length > 0 ? state.flightUrl.trim() : null,
-      images: state.images.map((image) => ({
-        imageUrl: image.imageUrl,
-        sortOrder: image.sortOrder,
-        isThumbnail: image.isThumbnail
-      })),
-      experiences: state.experiences.map((experience, index) => ({
-        title: experience.title.trim(),
-        description: experience.description.trim(),
-        thumbnailUrl: experience.thumbnailUrl.trim(),
-        link: experience.link.trim(),
-        sortOrder: index + 1
-      }))
-    }
-  }, [countries])
-
-  const deleteImagesInFirebaseStorage = useCallback(async (imageUrls: string[]): Promise<number> => {
-    if (imageUrls.length === 0) {
-      return 0
-    }
-
-    const deleteResults = await Promise.allSettled(
-      imageUrls.map((imageUrl) => deleteImageFromFirebaseStorageByUrl(imageUrl))
-    )
-
-    return deleteResults.filter((result) => result.status === "rejected").length
-  }, [])
-
-  const cleanupPendingUploadedImages = useCallback(async (imageUrls: string[], experienceThumbnailUrls: string[]): Promise<void> => {
-    const failedDeleteCount = await deleteImagesInFirebaseStorage([...imageUrls, ...experienceThumbnailUrls])
-    if (failedDeleteCount > 0) {
-      setNoticeMessage(`임시 업로드 이미지 ${failedDeleteCount}건 정리에 실패했습니다.`)
-    }
-  }, [deleteImagesInFirebaseStorage])
-
-  const submitDestination = useCallback(async () => {
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      const payload = createDestinationPayload(destinationFormState)
-      const currentImageObjectPathSet = new Set(
-        destinationFormState.images
-          .map((image) => parseFirebaseObjectPathFromImageUrl(image.imageUrl))
-          .filter((objectPath): objectPath is string => objectPath != null)
-      )
-      const removedExistingImageUrls = destinationFormState.existingImageUrls.filter((imageUrl) => {
-        const objectPath = parseFirebaseObjectPathFromImageUrl(imageUrl)
-        if (objectPath == null) {
-          return !destinationFormState.images.some((image) => image.imageUrl === imageUrl)
-        }
-        return !currentImageObjectPathSet.has(objectPath)
-      })
-      const currentExperienceThumbnailObjectPathSet = new Set(
-        destinationFormState.experiences
-          .map((experience) => parseFirebaseObjectPathFromImageUrl(experience.thumbnailUrl))
-          .filter((objectPath): objectPath is string => objectPath != null)
-      )
-      const removedExistingExperienceThumbnailUrls = destinationFormState.existingExperienceThumbnailUrls.filter((thumbnailUrl) => {
-        const objectPath = parseFirebaseObjectPathFromImageUrl(thumbnailUrl)
-        if (objectPath == null) {
-          return !destinationFormState.experiences.some((experience) => experience.thumbnailUrl === thumbnailUrl)
-        }
-        return !currentExperienceThumbnailObjectPathSet.has(objectPath)
-      })
-
-      if (destinationFormState.selectedId == null) {
-        await adminApiClient.post<Destination>("/api/admin/v1/destinations", payload)
-        setNoticeMessage("장소가 생성되었습니다.")
-      } else {
-        await adminApiClient.put<Destination>(`/api/admin/v1/destinations/${destinationFormState.selectedId}`, payload)
-        const failedDeleteCount = await deleteImagesInFirebaseStorage([
-          ...removedExistingImageUrls,
-          ...removedExistingExperienceThumbnailUrls
-        ])
-        if (failedDeleteCount > 0) {
-          setNoticeMessage(`장소가 수정되었습니다. 삭제된 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
-        } else {
-          setNoticeMessage("장소가 수정되었습니다.")
-        }
-      }
-      setDestinationFormState(createInitialDestinationFormState())
-      await loadAll()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "장소 저장에 실패했습니다.")
-    }
-  }, [createDestinationPayload, deleteImagesInFirebaseStorage, destinationFormState, loadAll])
-
-  const deleteDestination = useCallback(async (destinationId: number) => {
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      const targetDestination = destinations.find((destination) => destination.id === destinationId)
-      await adminApiClient.delete<void>(`/api/admin/v1/destinations/${destinationId}`)
-      const failedDeleteCount = await deleteImagesInFirebaseStorage([
-        ...(targetDestination?.images.map((image) => image.imageUrl) ?? []),
-        ...(targetDestination?.experiences.map((experience) => experience.thumbnailUrl) ?? [])
-      ])
-      if (failedDeleteCount > 0) {
-        setNoticeMessage(`장소가 삭제되었습니다. 사진 ${failedDeleteCount}건은 Firebase 정리에 실패했습니다.`)
-      } else {
-        setNoticeMessage("장소가 삭제되었습니다.")
-      }
-      await loadAll()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "장소 삭제에 실패했습니다.")
-    }
-  }, [deleteImagesInFirebaseStorage, destinations, loadAll])
-
-  const submitMember = useCallback(async () => {
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      if (memberFormState.selectedId == null) {
-        const payload: MemberCreateRequest = {
-          id: memberFormState.id,
-          nickname: memberFormState.nickname.trim().length > 0 ? memberFormState.nickname : null,
-          preferredDayOff: Number(memberFormState.preferredDayOff),
-          remainingDayOff: Number(memberFormState.remainingDayOff),
-          onboardingCompleted: memberFormState.onboardingCompleted
-        }
-        await adminApiClient.post<Member>("/api/admin/v1/members", payload)
-        setNoticeMessage("사용자가 생성되었습니다.")
-      } else {
-        const payload: MemberUpdateRequest = {
-          nickname: memberFormState.nickname.trim().length > 0 ? memberFormState.nickname : null,
-          preferredDayOff: Number(memberFormState.preferredDayOff),
-          remainingDayOff: Number(memberFormState.remainingDayOff),
-          onboardingCompleted: memberFormState.onboardingCompleted
-        }
-        await adminApiClient.put<Member>(`/api/admin/v1/members/${memberFormState.selectedId}`, payload)
-        setNoticeMessage("사용자가 수정되었습니다.")
-      }
-
-      setMemberFormState(createInitialMemberFormState())
-      await loadAll()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "사용자 저장에 실패했습니다.")
-    }
-  }, [loadAll, memberFormState])
-
-  const deleteMember = useCallback(async (memberId: string) => {
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      await adminApiClient.delete<void>(`/api/admin/v1/members/${memberId}`)
-      setNoticeMessage("사용자가 삭제되었습니다.")
-      await loadAll()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "사용자 삭제에 실패했습니다.")
-    }
-  }, [loadAll])
-
-  const submitHoliday = useCallback(async () => {
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      const payload: PublicHolidayUpsertRequest = {
-        holidayDate: holidayFormState.holidayDate,
-        name: holidayFormState.name,
-        isActualHoliday: holidayFormState.isActualHoliday
-      }
-
-      if (holidayFormState.selectedId == null) {
-        await adminApiClient.post<PublicHoliday>("/api/admin/v1/public-holidays", payload)
-        setNoticeMessage("공휴일이 생성되었습니다.")
-      } else {
-        await adminApiClient.put<PublicHoliday>(`/api/admin/v1/public-holidays/${holidayFormState.selectedId}`, payload)
-        setNoticeMessage("공휴일이 수정되었습니다.")
-      }
-
-      setHolidayFormState(createInitialHolidayFormState())
-      await loadAll()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "공휴일 저장에 실패했습니다.")
-    }
-  }, [holidayFormState, loadAll])
-
-  const deleteHoliday = useCallback(async (holidayId: number) => {
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      await adminApiClient.delete<void>(`/api/admin/v1/public-holidays/${holidayId}`)
-      setNoticeMessage("공휴일이 삭제되었습니다.")
-      await loadAll()
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "공휴일 삭제에 실패했습니다.")
-    }
-  }, [loadAll])
-
-  const closeCropSession = useCallback((session: CropSessionState | null): void => {
-    if (session == null) {
-      setCropSessionState(null)
-      return
-    }
-    session.queueItems.forEach((queueItem) => {
-      URL.revokeObjectURL(queueItem.previewUrl)
-    })
-    setCropSessionState(null)
-    cropDragState.current = {
-      mode: null,
-      pointerStartX: 0,
-      pointerStartY: 0,
-      cropAreaAtStart: null
-    }
-  }, [])
-
-  const beginUploadTask = useCallback((stage: UploadStage): void => {
-    setCurrentUploadStage(stage)
-    setActiveUploadTaskCount((previousCount) => previousCount + 1)
-  }, [])
-
-  const endUploadTask = useCallback((): void => {
-    setActiveUploadTaskCount((previousCount) => Math.max(0, previousCount - 1))
-    setCurrentUploadStage(null)
-  }, [])
-
-  const openCropSession = useCallback(async (
-    targetType: CropTargetType,
-    files: File[],
-    options: {
-      applyMode: "append" | "replace"
-      destinationImageIndex: number | null
-      experienceIndex: number | null
-    }
-  ): Promise<void> => {
-    if (files.length === 0) {
-      return
-    }
-
-    setErrorMessage("")
-    setNoticeMessage("")
-
-    try {
-      const queueItems = await createCropQueueItems(files)
-      const currentQueueItem = queueItems[0]
-      if (currentQueueItem == null) {
-        return
-      }
-      setCropSessionState({
-        targetType,
-        applyMode: options.applyMode,
-        queueItems,
-        currentIndex: 0,
-        destinationImageIndex: options.destinationImageIndex,
-        experienceIndex: options.experienceIndex,
-        cropArea: createInitialCropArea(currentQueueItem),
-        isProcessing: false
-      })
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "이미지 크롭 준비에 실패했습니다.")
-    }
-  }, [])
-
-  const uploadCroppedDestinationImage = useCallback(async (binary: Blob): Promise<void> => {
-    const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
-    const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
-    const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
-      (maximumSequenceNumber, image) => {
-        const parsedSequenceNumber = parseImageSequenceNumberFromImageUrl(image.imageUrl)
-        return parsedSequenceNumber == null
-          ? maximumSequenceNumber
-          : Math.max(maximumSequenceNumber, parsedSequenceNumber)
-      },
-      0
-    )
-    const imageSequenceNumber = currentMaximumImageSequenceNumber + 1
-    const objectPath = `places/${countryPathSegment}/${cityPathSegment}/${imageSequenceNumber}.jpg`
-    const imageUrl = await uploadImageToFirebaseStorage(binary, objectPath)
-
-    setDestinationFormState((previousState) => {
-      const hasThumbnail = previousState.images.some((image) => image.isThumbnail)
-      return {
-        ...previousState,
-        images: [
-          ...previousState.images,
-          {
-            imageUrl,
-            isThumbnail: !hasThumbnail,
-            sortOrder: previousState.images.length + 1
-          }
-        ],
-        newlyUploadedImageUrls: [...previousState.newlyUploadedImageUrls, imageUrl]
-      }
-    })
-  }, [destinationFormState.images, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
-
-  const replaceCroppedDestinationImage = useCallback(async (
-    destinationImageIndex: number,
-    binary: Blob
-  ): Promise<void> => {
-    const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
-    const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
-    const currentMaximumImageSequenceNumber = destinationFormState.images.reduce(
-      (maximumSequenceNumber, image) => {
-        const parsedSequenceNumber = parseImageSequenceNumberFromImageUrl(image.imageUrl)
-        return parsedSequenceNumber == null
-          ? maximumSequenceNumber
-          : Math.max(maximumSequenceNumber, parsedSequenceNumber)
-      },
-      0
-    )
-    const imageSequenceNumber = currentMaximumImageSequenceNumber + 1
-    const objectPath = `places/${countryPathSegment}/${cityPathSegment}/${imageSequenceNumber}.jpg`
-    const replacedImageUrl = await uploadImageToFirebaseStorage(binary, objectPath)
-    const currentImageUrl = destinationFormState.images[destinationImageIndex]?.imageUrl ?? ""
-
-    if (currentImageUrl.length > 0 && destinationFormState.newlyUploadedImageUrls.includes(currentImageUrl)) {
-      await deleteImageFromFirebaseStorageByUrl(currentImageUrl)
-    }
-
-    setDestinationFormState((previousState) => ({
-      ...previousState,
-      images: previousState.images.map((image, index) => {
-        if (index !== destinationImageIndex) {
-          return image
-        }
-        return {
-          ...image,
-          imageUrl: replacedImageUrl
-        }
-      }),
-      newlyUploadedImageUrls: [
-        ...previousState.newlyUploadedImageUrls.filter((imageUrl) => imageUrl !== currentImageUrl),
-        replacedImageUrl
-      ]
-    }))
-  }, [destinationFormState.images, destinationFormState.newlyUploadedImageUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
-
-  const uploadCroppedExperienceThumbnail = useCallback(async (
-    experienceIndex: number,
-    binary: Blob
-  ): Promise<void> => {
-    const countryPathSegment = validateStoragePathSegment(destinationFormState.storageCountrySlug, "Storage 국가 경로")
-    const cityPathSegment = validateStoragePathSegment(destinationFormState.storageCitySlug, "Storage 도시 경로")
-
-    const currentMaximumExperienceSequenceNumber = destinationFormState.experiences.reduce(
-      (maximumSequenceNumber, experience) => {
-        const parsedSequenceNumber = parseExperienceSequenceNumberFromThumbnailUrl(experience.thumbnailUrl)
-        return parsedSequenceNumber == null
-          ? maximumSequenceNumber
-          : Math.max(maximumSequenceNumber, parsedSequenceNumber)
-      },
-      0
-    )
-
-    const currentThumbnailUrl = destinationFormState.experiences[experienceIndex]?.thumbnailUrl ?? ""
-    const experienceSequenceNumber = currentMaximumExperienceSequenceNumber + 1
-    const objectPath = `places/${countryPathSegment}/${cityPathSegment}/experiences/${experienceSequenceNumber}.jpg`
-    const uploadedThumbnailUrl = await uploadImageToFirebaseStorage(binary, objectPath)
-
-    if (currentThumbnailUrl.length > 0 && destinationFormState.newlyUploadedExperienceThumbnailUrls.includes(currentThumbnailUrl)) {
-      await deleteImageFromFirebaseStorageByUrl(currentThumbnailUrl)
-    }
-
-    setDestinationFormState((previousState) => {
-      const nextExperienceItems = previousState.experiences.map((experience, targetIndex) => {
-        if (targetIndex !== experienceIndex) {
-          return experience
-        }
-        return {
-          ...experience,
-          thumbnailUrl: uploadedThumbnailUrl
-        }
-      })
-
-      return {
-        ...previousState,
-        experiences: nextExperienceItems,
-        newlyUploadedExperienceThumbnailUrls: [
-          ...previousState.newlyUploadedExperienceThumbnailUrls.filter((thumbnailUrl) => thumbnailUrl !== currentThumbnailUrl),
-          uploadedThumbnailUrl
-        ]
-      }
-    })
-  }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls, destinationFormState.storageCitySlug, destinationFormState.storageCountrySlug])
-
-  const openCropSessionFromUploadedImage = useCallback(async (
-    targetType: CropTargetType,
-    imageUrl: string,
-    options: {
-      destinationImageIndex: number | null
-      experienceIndex: number | null
-    }
-  ): Promise<void> => {
-    setErrorMessage("")
-    setNoticeMessage("")
-    try {
-      const sourceFile = await createFileFromImageUrl(imageUrl)
-      await openCropSession(targetType, [sourceFile], {
-        applyMode: "replace",
-        destinationImageIndex: options.destinationImageIndex,
-        experienceIndex: options.experienceIndex
-      })
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "이미지 크롭 편집을 시작할 수 없습니다.")
-    }
-  }, [openCropSession])
-
-  const applyCurrentCrop = useCallback(async (): Promise<void> => {
-    if (cropSessionState == null || cropSessionItem == null) {
-      return
-    }
-    if (cropSessionState.isProcessing) {
-      return
-    }
-
-    setCropSessionState((previousSession) => previousSession == null ? null : { ...previousSession, isProcessing: true })
-    beginUploadTask("preparing")
-
-    try {
-      const outputWidth = cropSessionState.targetType === "experience"
-        ? EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX
-        : PLACE_IMAGE_OUTPUT_WIDTH_PX
-      const croppedBinary = await cropAndCompressImage(cropSessionItem.file, {
-        sourceX: cropSessionState.cropArea.x,
-        sourceY: cropSessionState.cropArea.y,
-        sourceWidth: cropSessionState.cropArea.width,
-        sourceHeight: cropSessionState.cropArea.height,
-        outputWidth
-      })
-
-      setCurrentUploadStage("uploading")
-      if (cropSessionState.targetType === "destination") {
-        setUploadingDestinationImageCount((previousCount) => previousCount + 1)
-        if (cropSessionState.applyMode === "replace") {
-          const destinationImageIndex = cropSessionState.destinationImageIndex
-          if (destinationImageIndex == null) {
-            throw new Error("수정할 장소 사진 인덱스를 확인할 수 없습니다.")
-          }
-          await replaceCroppedDestinationImage(destinationImageIndex, croppedBinary)
-        } else {
-          await uploadCroppedDestinationImage(croppedBinary)
-        }
-        setUploadingDestinationImageCount((previousCount) => Math.max(0, previousCount - 1))
-      } else {
-        const experienceIndex = cropSessionState.experienceIndex
-        if (experienceIndex == null) {
-          throw new Error("체험 인덱스를 확인할 수 없습니다.")
-        }
-        setUploadingExperienceIndexes((previousIndexes) => {
-          if (previousIndexes.includes(experienceIndex)) {
-            return previousIndexes
-          }
-          return [...previousIndexes, experienceIndex]
-        })
-        await uploadCroppedExperienceThumbnail(experienceIndex, croppedBinary)
-        setUploadingExperienceIndexes((previousIndexes) => previousIndexes.filter((index) => index !== experienceIndex))
-      }
-
-      const hasNextImage = cropSessionState.currentIndex < cropSessionState.queueItems.length - 1
-      if (hasNextImage) {
-        setCropSessionState((previousSession) => {
-          if (previousSession == null) {
-            return null
-          }
-          const nextIndex = previousSession.currentIndex + 1
-          const nextQueueItem = previousSession.queueItems[nextIndex]
-          if (nextQueueItem == null) {
-            return null
-          }
-          return {
-            ...previousSession,
-            currentIndex: nextIndex,
-            cropArea: createInitialCropArea(nextQueueItem),
-            isProcessing: false
-          }
-        })
-      } else {
-        closeCropSession(cropSessionState)
-        if (cropSessionState.targetType === "destination") {
-          setNoticeMessage("장소 사진 업로드가 완료되었습니다.")
-        } else {
-          setNoticeMessage("체험 썸네일 업로드가 완료되었습니다.")
-        }
-      }
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "이미지 업로드에 실패했습니다.")
-      setCropSessionState((previousSession) => previousSession == null ? null : { ...previousSession, isProcessing: false })
-    } finally {
-      endUploadTask()
-    }
-  }, [beginUploadTask, closeCropSession, cropSessionItem, cropSessionState, endUploadTask, replaceCroppedDestinationImage, uploadCroppedDestinationImage, uploadCroppedExperienceThumbnail])
-
-  const beginMoveCropArea = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
-    if (cropSessionState == null) {
-      return
-    }
-    event.preventDefault()
-    cropDragState.current = {
-      mode: "move",
-      pointerStartX: event.clientX,
-      pointerStartY: event.clientY,
-      cropAreaAtStart: cropSessionState.cropArea
-    }
-  }, [cropSessionState])
-
-  const beginResizeCropArea = useCallback((event: React.MouseEvent<HTMLDivElement>): void => {
-    if (cropSessionState == null) {
-      return
-    }
-    event.preventDefault()
-    event.stopPropagation()
-    cropDragState.current = {
-      mode: "resize",
-      pointerStartX: event.clientX,
-      pointerStartY: event.clientY,
-      cropAreaAtStart: cropSessionState.cropArea
-    }
-  }, [cropSessionState])
-
-  const moveCropAreaByPointerPosition = useCallback((pointerX: number, pointerY: number): void => {
-    if (cropSessionState == null || cropSessionItem == null || cropImageRenderMetrics == null) {
-      return
-    }
-    const dragMode = cropDragState.current.mode
-    const cropAreaAtStart = cropDragState.current.cropAreaAtStart
-    if (dragMode == null || cropAreaAtStart == null) {
-      return
-    }
-
-    const deltaX = (pointerX - cropDragState.current.pointerStartX) / cropImageRenderMetrics.displayScale
-    const deltaY = (pointerY - cropDragState.current.pointerStartY) / cropImageRenderMetrics.displayScale
-
-    setCropSessionState((previousSession) => {
-      if (previousSession == null) {
-        return null
-      }
-
-      if (dragMode === "move") {
-        const clampedX = Math.max(0, Math.min(cropSessionItem.naturalWidth - cropAreaAtStart.width, cropAreaAtStart.x + deltaX))
-        const clampedY = Math.max(0, Math.min(cropSessionItem.naturalHeight - cropAreaAtStart.height, cropAreaAtStart.y + deltaY))
-        return {
-          ...previousSession,
-          cropArea: {
-            ...previousSession.cropArea,
-            x: clampedX,
-            y: clampedY
-          }
-        }
-      }
-
-      const minimumCropWidth = Math.min(CROP_MINIMUM_SIZE_PX, cropSessionItem.naturalWidth)
-      const minimumCropHeight = Math.min(CROP_MINIMUM_SIZE_PX, cropSessionItem.naturalHeight)
-      const maximumCropWidth = cropSessionItem.naturalWidth - cropAreaAtStart.x
-      const maximumCropHeight = cropSessionItem.naturalHeight - cropAreaAtStart.y
-      const nextWidth = Math.max(minimumCropWidth, Math.min(maximumCropWidth, cropAreaAtStart.width + deltaX))
-      const nextHeight = Math.max(minimumCropHeight, Math.min(maximumCropHeight, cropAreaAtStart.height + deltaY))
-
-      return {
-        ...previousSession,
-        cropArea: {
-          ...previousSession.cropArea,
-          width: nextWidth,
-          height: nextHeight
-        }
-      }
-    })
-  }, [cropImageRenderMetrics, cropSessionItem, cropSessionState])
-
-  const endCropAreaPointer = useCallback((): void => {
-    cropDragState.current = {
-      mode: null,
-      pointerStartX: 0,
-      pointerStartY: 0,
-      cropAreaAtStart: null
-    }
-  }, [])
-
-  useEffect(() => {
-    const handleWindowMouseMove = (event: MouseEvent): void => {
-      if (cropDragState.current.mode == null) {
-        return
-      }
-      moveCropAreaByPointerPosition(event.clientX, event.clientY)
-    }
-
-    const handleWindowMouseUp = (): void => {
-      if (cropDragState.current.mode == null) {
-        return
-      }
-      endCropAreaPointer()
-    }
-
-    window.addEventListener("mousemove", handleWindowMouseMove)
-    window.addEventListener("mouseup", handleWindowMouseUp)
-    return () => {
-      window.removeEventListener("mousemove", handleWindowMouseMove)
-      window.removeEventListener("mouseup", handleWindowMouseUp)
-    }
-  }, [endCropAreaPointer, moveCropAreaByPointerPosition])
-
-  const handleImageFileSelection = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    const fileList = event.target.files
-    const selectedFiles = fileList == null ? [] : Array.from(fileList)
-    event.target.value = ""
-    if (selectedFiles.length === 0) {
-      return
-    }
-    void openCropSession("destination", selectedFiles, {
-      applyMode: "append",
-      destinationImageIndex: null,
-      experienceIndex: null
-    })
-  }, [openCropSession])
-
-  const addExperienceItem = useCallback(() => {
-    setDestinationFormState((previousState) => ({
-      ...previousState,
-      experiences: [
-        ...previousState.experiences,
-        {
-          title: "",
-          description: "",
-          thumbnailUrl: "",
-          link: "",
-          sortOrder: previousState.experiences.length + 1
-        }
-      ]
-    }))
-  }, [])
-
-  const moveExperienceItem = useCallback((experienceIndex: number, direction: "up" | "down") => {
-    setDestinationFormState((previousState) => {
-      const targetIndex = direction === "up" ? experienceIndex - 1 : experienceIndex + 1
-      if (targetIndex < 0 || targetIndex >= previousState.experiences.length) {
-        return previousState
-      }
-
-      const nextExperienceItems = [...previousState.experiences]
-      const temporaryExperience = nextExperienceItems[experienceIndex]
-      nextExperienceItems[experienceIndex] = nextExperienceItems[targetIndex]
-      nextExperienceItems[targetIndex] = temporaryExperience
-
-      return {
-        ...previousState,
-        experiences: nextExperienceItems.map((experience, sequence) => ({
-          ...experience,
-          sortOrder: sequence + 1
-        }))
-      }
-    })
-  }, [])
-
-  const removeExperienceItem = useCallback((experienceIndex: number) => {
-    void (async () => {
-      const targetExperience = destinationFormState.experiences[experienceIndex]
-      if (targetExperience == null) {
-        return
-      }
-
-      const shouldDeleteImmediately = targetExperience.thumbnailUrl.length > 0 &&
-        destinationFormState.newlyUploadedExperienceThumbnailUrls.includes(targetExperience.thumbnailUrl)
-      if (shouldDeleteImmediately) {
-        try {
-          await deleteImageFromFirebaseStorageByUrl(targetExperience.thumbnailUrl)
-        } catch (error) {
-          setErrorMessage("체험 썸네일 삭제 중 오류가 발생했습니다. 다시 시도해주세요.")
-          return
-        }
-      }
-
-      setDestinationFormState((previousState) => ({
-        ...previousState,
-        experiences: previousState.experiences
-          .filter((_, targetIndex) => targetIndex !== experienceIndex)
-          .map((experience, sequence) => ({ ...experience, sortOrder: sequence + 1 })),
-        newlyUploadedExperienceThumbnailUrls: previousState.newlyUploadedExperienceThumbnailUrls
-          .filter((thumbnailUrl) => thumbnailUrl !== targetExperience.thumbnailUrl)
-      }))
-    })()
-  }, [destinationFormState.experiences, destinationFormState.newlyUploadedExperienceThumbnailUrls])
-
-  const handleExperienceThumbnailFileSelection = useCallback((
-    experienceIndex: number,
-    event: React.ChangeEvent<HTMLInputElement>
-  ): void => {
-    const selectedFile = event.target.files?.[0]
-    event.target.value = ""
-    if (selectedFile == null) {
-      return
-    }
-    void openCropSession("experience", [selectedFile], {
-      applyMode: "replace",
-      destinationImageIndex: null,
-      experienceIndex
-    })
-  }, [openCropSession])
-
-  const activeTitle = useMemo(() => {
-    if (activeTab === "destinations") return "장소 DB 관리"
-    if (activeTab === "members") return "사용자 DB 관리"
-    return "공휴일 DB 관리"
-  }, [activeTab])
-
-  const dashboardSummaryItems = useMemo(() => {
-    const totalDestinationImageCount = destinations.reduce((totalCount, destination) => {
-      return totalCount + destination.images.length
-    }, 0)
-    const totalDestinationExperienceCount = destinations.reduce((totalCount, destination) => {
-      return totalCount + destination.experiences.length
-    }, 0)
-
-    return [
-      { label: "장소", value: destinations.length, accentColor: "#2865d8" },
-      { label: "체험", value: totalDestinationExperienceCount, accentColor: "#0f9d8f" },
-      { label: "장소 이미지", value: totalDestinationImageCount, accentColor: "#2f7b4a" },
-      { label: "사용자", value: members.length, accentColor: "#5b53d9" },
-      { label: "공휴일", value: publicHolidays.length, accentColor: "#b0671f" }
-    ]
-  }, [destinations, members.length, publicHolidays.length])
-
   if (!isAuthenticated) {
     return (
-      <View style={[styles.loginPage, { minHeight: windowHeight }]}>
-        <View style={styles.loginCard}>
-          <Text style={styles.loginTitle}>Oguri Admin Login</Text>
-          <Text style={styles.loginDescription}>관리자 계정으로 로그인 후 DB 관리 기능을 사용할 수 있습니다.</Text>
-          <LabelInput label="아이디" value={loginUsername} onChangeText={setLoginUsername} />
-          <LabelInput label="비밀번호" value={loginPassword} onChangeText={setLoginPassword} secureTextEntry />
-          {errorMessage.length > 0 && <Text style={styles.errorText}>{errorMessage}</Text>}
-          <ActionButton
-            label={loginLoading ? "로그인 중..." : "로그인"}
-            onPress={() => {
-              if (!loginLoading) {
-                void submitAdminLogin()
-              }
-            }}
-          />
-        </View>
-      </View>
+      <AdminLoginView
+        windowHeight={windowHeight}
+        loginUsername={loginUsername}
+        loginPassword={loginPassword}
+        loginLoading={loginLoading}
+        errorMessage={errorMessage}
+        onChangeUsername={setLoginUsername}
+        onChangePassword={setLoginPassword}
+        onSubmit={() => {
+          void submitAdminLogin()
+        }}
+      />
     )
   }
 
   return (
     <View style={styles.page}>
-      <View style={styles.adminLayout}>
-        <View style={styles.sidebarContainer}>
-          <Text style={styles.sidebarBrandTitle}>오구리 어드민</Text>
-          <Text style={styles.sidebarBrandDescription}>운영 데이터를 한 화면에서 빠르게 관리하세요</Text>
-          <View style={styles.sidebarTabList}>
-            <TabButton label="장소 관리" selected={activeTab === "destinations"} onPress={() => setActiveTab("destinations")} />
-            <TabButton label="사용자 관리" selected={activeTab === "members"} onPress={() => setActiveTab("members")} />
-            <TabButton label="공휴일 관리" selected={activeTab === "holidays"} onPress={() => setActiveTab("holidays")} />
-          </View>
-        </View>
+      <AdminDashboardView
+        isWideDesktopLayout={isWideDesktopLayout}
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        onReload={() => {
+          void loadAll()
+        }}
+        onLogout={submitAdminLogout}
+        loading={loading}
+        noticeMessage={noticeMessage}
+        errorMessage={errorMessage}
+        isUploadingImages={isUploadingImages}
+        currentUploadStage={currentUploadStage}
+        countries={countries}
+        destinations={destinations}
+        members={members}
+        publicHolidays={publicHolidays}
+        storageCountryOptions={storageCountryOptions}
+        selectedStorageCountryOption={selectedStorageCountryOption}
+        destinationFormState={destinationFormState}
+        setDestinationFormState={setDestinationFormState}
+        uploadingDestinationImageCount={uploadingDestinationImageCount}
+        uploadingExperienceIndexes={uploadingExperienceIndexes}
+        memberFormState={memberFormState}
+        setMemberFormState={setMemberFormState}
+        holidayFormState={holidayFormState}
+        setHolidayFormState={setHolidayFormState}
+        destinationListSearchKeyword={destinationListSearchKeyword}
+        setDestinationListSearchKeyword={setDestinationListSearchKeyword}
+        filteredDestinations={filteredDestinations}
+        memberListSearchKeyword={memberListSearchKeyword}
+        setMemberListSearchKeyword={setMemberListSearchKeyword}
+        filteredMembers={filteredMembers}
+        holidayListSearchKeyword={holidayListSearchKeyword}
+        setHolidayListSearchKeyword={setHolidayListSearchKeyword}
+        filteredPublicHolidays={filteredPublicHolidays}
+        handleImageFileSelection={handleImageFileSelection}
+        handleOpenDestinationImageCrop={handleOpenDestinationImageCrop}
+        handleRemoveDestinationImage={handleRemoveDestinationImage}
+        addExperienceItem={addExperienceItem}
+        moveExperienceItem={moveExperienceItem}
+        removeExperienceItem={removeExperienceItem}
+        handleExperienceThumbnailFileSelection={handleExperienceThumbnailFileSelection}
+        handleOpenExperienceImageCrop={handleOpenExperienceImageCrop}
+        onSubmitDestination={() => {
+          void submitDestination()
+        }}
+        onResetDestinationForm={resetDestinationFormWithCleanup}
+        onLoadDestination={loadDestinationToForm}
+        onDeleteDestination={(destinationId) => {
+          void deleteDestination(destinationId)
+        }}
+        onSubmitMember={() => {
+          void submitMember()
+        }}
+        onDeleteMember={(memberId) => {
+          void deleteMember(memberId)
+        }}
+        onSubmitHoliday={() => {
+          void submitHoliday()
+        }}
+        onDeleteHoliday={(holidayId) => {
+          void deleteHoliday(holidayId)
+        }}
+      />
 
-        <View style={styles.mainPanel}>
-          <View style={styles.headerContainer}>
-            <View>
-              <Text style={styles.headline}>Oguri Admin Dashboard</Text>
-              <Text style={styles.subtitle}>{activeTitle}</Text>
-            </View>
-            <View style={styles.headerActionRow}>
-              <ActionButton label="새로고침" variant="secondary" onPress={() => void loadAll()} />
-              <ActionButton label="로그아웃" variant="danger" onPress={submitAdminLogout} />
-            </View>
-          </View>
-
-          <View style={styles.metricCardContainer}>
-            {dashboardSummaryItems.map((summaryItem) => (
-              <View style={styles.metricCard} key={summaryItem.label}>
-                <View style={[styles.metricCardAccent, { backgroundColor: summaryItem.accentColor }]} />
-                <Text style={styles.metricCardLabel}>{summaryItem.label}</Text>
-                <Text style={styles.metricCardValue}>{summaryItem.value}</Text>
-              </View>
-            ))}
-          </View>
-
-          {noticeMessage.length > 0 && <Text style={styles.noticeText}>{noticeMessage}</Text>}
-          {errorMessage.length > 0 && <Text style={styles.errorText}>{errorMessage}</Text>}
-          {isUploadingImages && (
-            <View style={styles.uploadStatusCard}>
-              <ActivityIndicator color="#2a6bd8" />
-              <View style={styles.uploadStatusTextContainer}>
-                <Text style={styles.uploadStatusTitle}>이미지 업로드 진행 중</Text>
-                <Text style={styles.uploadStatusDescription}>
-                  {currentUploadStage === "preparing" ? "크롭/압축 처리 중" : "Firebase 업로드 중"} · 다른 입력 작업은 계속 가능합니다.
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator color="#2a6bd8" />
-            </View>
-          ) : (
-            <ScrollView style={styles.contentContainer} contentContainerStyle={styles.contentInnerContainer}>
-          {activeTab === "destinations" && (
-            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
-              <View style={styles.destinationEditorColumn}>
-                <View style={styles.sectionCard}>
-                  <Text style={styles.sectionTitle}>장소 추가/수정</Text>
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>국가</Text>
-                <input
-                  list="admin-country-options"
-                  value={destinationFormState.countryName}
-                  onChange={(event) => {
-                    const typedCountryName = event.target.value
-                    const matchedCountry = countries.find((country) => country.name === typedCountryName.trim())
-                    setDestinationFormState((previousState) => ({
-                      ...previousState,
-                      countryName: typedCountryName,
-                      countryId: matchedCountry == null ? "" : String(matchedCountry.id)
-                    }))
-                  }}
-                  style={htmlFieldStyle}
-                  placeholder="국가명 입력 또는 선택"
-                />
-                <datalist id="admin-country-options">
-                  {countries.map((country) => (
-                    <option value={country.name} key={country.id} />
-                  ))}
-                </datalist>
-              </View>
-
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>Storage 국가 경로</Text>
-                <input
-                  list="admin-storage-country-options"
-                  value={destinationFormState.storageCountrySlug}
-                  onChange={(event) => {
-                    const selectedValue = event.target.value.trim()
-                    const countryOption = storageCountryOptions.find((item) => item.slug === selectedValue)
-                    setDestinationFormState((previousState) => ({
-                      ...previousState,
-                      storageCountrySlug: selectedValue,
-                      storageCitySlug: countryOption == null
-                        ? previousState.storageCitySlug
-                        : (countryOption.citySlugs[0] ?? previousState.storageCitySlug)
-                    }))
-                  }}
-                  style={htmlFieldStyle}
-                  placeholder="예: australia"
-                />
-                <datalist id="admin-storage-country-options">
-                  {storageCountryOptions.map((countryOption) => (
-                    <option value={countryOption.slug} key={countryOption.slug} />
-                  ))}
-                </datalist>
-              </View>
-
-              <View style={styles.row}>
-                <Text style={styles.fieldLabel}>Storage 도시 경로</Text>
-                <input
-                  list="admin-storage-city-options"
-                  value={destinationFormState.storageCitySlug}
-                  onChange={(event) => {
-                    setDestinationFormState((previousState) => ({
-                      ...previousState,
-                      storageCitySlug: event.target.value.trim()
-                    }))
-                  }}
-                  style={htmlFieldStyle}
-                  placeholder="예: brisbane"
-                />
-                <datalist id="admin-storage-city-options">
-                  {(selectedStorageCountryOption?.citySlugs ?? []).map((citySlug) => (
-                    <option value={citySlug} key={citySlug} />
-                  ))}
-                </datalist>
-              </View>
-
-              <LabelInput
-                label="도시명"
-                value={destinationFormState.name}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, name: value }))}
-              />
-              <LabelInput
-                label="요약 (25자 내외)"
-                value={destinationFormState.summary}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, summary: value }))}
-              />
-              <LabelInput
-                label="설명 (150자 내외)"
-                value={destinationFormState.description}
-                multiline
-                enableBoldFormatting
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, description: value }))}
-              />
-
-              <View style={styles.rowSplitContainer}>
-                <LabelInput
-                  label="추천 시작 월 1"
-                  value={destinationFormState.recommendStartMonth1}
-                  keyboardType="numeric"
-                  onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, recommendStartMonth1: value }))}
-                />
-                <LabelInput
-                  label="추천 종료 월 1"
-                  value={destinationFormState.recommendEndMonth1}
-                  keyboardType="numeric"
-                  onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, recommendEndMonth1: value }))}
-                />
-              </View>
-
-              <View style={styles.rowSplitContainer}>
-                <LabelInput
-                  label="추천 시작 월 2"
-                  value={destinationFormState.recommendStartMonth2}
-                  keyboardType="numeric"
-                  onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, recommendStartMonth2: value }))}
-                />
-                <LabelInput
-                  label="추천 종료 월 2"
-                  value={destinationFormState.recommendEndMonth2}
-                  keyboardType="numeric"
-                  onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, recommendEndMonth2: value }))}
-                />
-              </View>
-
-              <LabelInput
-                label="비행 시간(분)"
-                value={destinationFormState.flightTime}
-                keyboardType="numeric"
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightTime: parseFlightTimeMinutes(value) }))}
-              />
-              <LabelInput
-                label="항공권 링크(Skyscanner)"
-                value={destinationFormState.flightUrl}
-                onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightUrl: value }))}
-              />
-
-              <View style={styles.uploadRow}>
-                <Text style={styles.fieldLabel}>사진 업로드</Text>
-                <input type="file" accept="image/*" multiple onChange={handleImageFileSelection} />
-                <Text style={styles.helperText}>크롭 가이드: 100:87(파랑) + 100:67(민트) 프레임을 확인해 업로드하세요.</Text>
-                {uploadingDestinationImageCount > 0 && (
-                  <View style={styles.inlineUploadingBadge}>
-                    <ActivityIndicator size="small" color="#2a6bd8" />
-                    <Text style={styles.inlineUploadingBadgeText}>장소 사진 {uploadingDestinationImageCount}건 업로드 중</Text>
-                  </View>
-                )}
-              </View>
-
-              {destinationFormState.images.length > 0 && (
-                <View style={styles.imageListContainer}>
-                  {destinationFormState.images.map((image, index) => (
-                    <View style={styles.imageRow} key={`${image.imageUrl}_${index}`}>
-                      <Pressable
-                        style={styles.imagePreviewContainer}
-                        onPress={() => {
-                          void openCropSessionFromUploadedImage("destination", image.imageUrl, {
-                            destinationImageIndex: index,
-                            experienceIndex: null
-                          })
-                        }}
-                      >
-                        <img
-                          src={image.imageUrl}
-                          alt={`destination-image-${index + 1}`}
-                          style={htmlImagePreviewStyle}
-                        />
-                      </Pressable>
-                      <Text style={styles.helperText}>미리보기를 클릭하면 크롭을 다시 수정할 수 있습니다.</Text>
-                      <Text style={styles.imageUrlText}>{image.imageUrl}</Text>
-                      <View style={styles.imageRowControls}>
-                        <Pressable
-                          onPress={() => {
-                            setDestinationFormState((previousState) => ({
-                              ...previousState,
-                              images: previousState.images.map((targetImage, targetIndex) => ({
-                                ...targetImage,
-                                isThumbnail: targetIndex === index
-                              }))
-                            }))
-                          }}
-                          style={image.isThumbnail ? styles.badgePrimary : styles.badgeDefault}
-                        >
-                          <Text style={styles.badgeText}>{image.isThumbnail ? "썸네일" : "썸네일 지정"}</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => {
-                            void (async () => {
-                              const targetImage = destinationFormState.images[index]
-                              const shouldDeleteImmediately = targetImage != null &&
-                                destinationFormState.newlyUploadedImageUrls.includes(targetImage.imageUrl)
-
-                              if (shouldDeleteImmediately) {
-                                try {
-                                  await deleteImageFromFirebaseStorageByUrl(targetImage.imageUrl)
-                                } catch (error) {
-                                  setErrorMessage("이미지 삭제 중 오류가 발생했습니다. 다시 시도해주세요.")
-                                  return
-                                }
-                              }
-
-                              setDestinationFormState((previousState) => ({
-                                ...previousState,
-                                images: previousState.images
-                                  .filter((_, targetIndex) => targetIndex !== index)
-                                  .map((targetImageInList, sequence) => ({ ...targetImageInList, sortOrder: sequence + 1 })),
-                                newlyUploadedImageUrls: previousState.newlyUploadedImageUrls
-                                  .filter((imageUrl) => imageUrl !== (targetImage?.imageUrl ?? ""))
-                              }))
-                            })()
-                          }}
-                          style={styles.badgeDanger}
-                        >
-                          <Text style={styles.badgeText}>삭제</Text>
-                        </Pressable>
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              <View style={styles.row}>
-                <Text style={styles.sectionTitle}>체험 관리 (Experience)</Text>
-                <Text style={styles.helperText}>현재 {destinationFormState.experiences.length}건 · 순서 변경/제목/설명/링크/썸네일을 관리합니다.</Text>
-              </View>
-
-              {destinationFormState.experiences.length > 0 && (
-                <View style={styles.imageListContainer}>
-                  {destinationFormState.experiences.map((experience, experienceIndex) => (
-                    <View style={styles.imageRow} key={`experience_${experienceIndex}`}>
-                      <Text style={styles.fieldLabel}>체험 {experienceIndex + 1}</Text>
-                      <LabelInput
-                        label="제목"
-                        value={experience.title}
-                        onChangeText={(value) => {
-                          setDestinationFormState((previousState) => ({
-                            ...previousState,
-                            experiences: previousState.experiences.map((targetExperience, targetIndex) => {
-                              if (targetIndex !== experienceIndex) {
-                                return targetExperience
-                              }
-                              return { ...targetExperience, title: value }
-                            })
-                          }))
-                        }}
-                      />
-                      <LabelInput
-                        label="설명 (40자 내외)"
-                        value={experience.description}
-                        multiline
-                        onChangeText={(value) => {
-                          setDestinationFormState((previousState) => ({
-                            ...previousState,
-                            experiences: previousState.experiences.map((targetExperience, targetIndex) => {
-                              if (targetIndex !== experienceIndex) {
-                                return targetExperience
-                              }
-                              return { ...targetExperience, description: value }
-                            })
-                          }))
-                        }}
-                      />
-                      <LabelInput
-                        label="링크 URL"
-                        value={experience.link}
-                        onChangeText={(value) => {
-                          setDestinationFormState((previousState) => ({
-                            ...previousState,
-                            experiences: previousState.experiences.map((targetExperience, targetIndex) => {
-                              if (targetIndex !== experienceIndex) {
-                                return targetExperience
-                              }
-                              return { ...targetExperience, link: value }
-                            })
-                          }))
-                        }}
-                      />
-                      <View style={styles.uploadRow}>
-                        <Text style={styles.fieldLabel}>썸네일 업로드</Text>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(event) => {
-                            void handleExperienceThumbnailFileSelection(experienceIndex, event)
-                          }}
-                        />
-                        {experience.thumbnailUrl.length > 0 && (
-                          <Pressable
-                            style={styles.imagePreviewContainer}
-                            onPress={() => {
-                              void openCropSessionFromUploadedImage("experience", experience.thumbnailUrl, {
-                                destinationImageIndex: null,
-                                experienceIndex
-                              })
-                            }}
-                          >
-                            <img
-                              src={experience.thumbnailUrl}
-                              alt={`experience-thumbnail-${experienceIndex + 1}`}
-                              style={htmlImagePreviewStyle}
-                            />
-                          </Pressable>
-                        )}
-                        {experience.thumbnailUrl.length > 0 && (
-                          <View>
-                            <Text style={styles.helperText}>미리보기를 클릭하면 크롭을 다시 수정할 수 있습니다.</Text>
-                            <Text style={styles.imageUrlText}>{experience.thumbnailUrl}</Text>
-                          </View>
-                        )}
-                        <Text style={styles.helperText}>크롭 가이드: 100:60 프레임</Text>
-                        {uploadingExperienceIndexes.includes(experienceIndex) && (
-                          <View style={styles.inlineUploadingBadge}>
-                            <ActivityIndicator size="small" color="#2a6bd8" />
-                            <Text style={styles.inlineUploadingBadgeText}>체험 썸네일 업로드 중</Text>
-                          </View>
-                        )}
-                      </View>
-                      <View style={styles.rowButtonContainer}>
-                        <ActionButton
-                          label="위로"
-                          variant="secondary"
-                          onPress={() => moveExperienceItem(experienceIndex, "up")}
-                        />
-                        <ActionButton
-                          label="아래로"
-                          variant="secondary"
-                          onPress={() => moveExperienceItem(experienceIndex, "down")}
-                        />
-                        <ActionButton
-                          label="체험 삭제"
-                          variant="danger"
-                          onPress={() => removeExperienceItem(experienceIndex)}
-                        />
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              <View style={styles.rowButtonContainer}>
-                <ActionButton label="체험 추가" variant="secondary" onPress={addExperienceItem} />
-              </View>
-
-                  <View style={styles.rowButtonContainer}>
-                    <ActionButton label={destinationFormState.selectedId == null ? "장소 생성" : "장소 수정"} onPress={() => void submitDestination()} />
-                    <ActionButton
-                      label="폼 초기화"
-                      variant="secondary"
-                      onPress={() => {
-                        void (async () => {
-                          await cleanupPendingUploadedImages(
-                            destinationFormState.newlyUploadedImageUrls,
-                            destinationFormState.newlyUploadedExperienceThumbnailUrls
-                          )
-                          setDestinationFormState(createInitialDestinationFormState())
-                        })()
-                      }}
-                    />
-                  </View>
-                </View>
-              </View>
-
-              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
-                <View style={[styles.sectionCard, styles.destinationListPanel]}>
-                  <Text style={styles.sectionTitle}>장소 목록</Text>
-                  <Text style={styles.helperText}>오른쪽 목록에서 선택하면 왼쪽 폼으로 즉시 불러옵니다.</Text>
-                  <input
-                    value={destinationListSearchKeyword}
-                    onChange={(event) => setDestinationListSearchKeyword(event.target.value)}
-                    style={htmlFieldStyle}
-                    placeholder="국가/도시/요약 검색"
-                  />
-                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
-                    {filteredDestinations.map((destination) => (
-                      <View style={styles.listItemCard} key={destination.id}>
-                        <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
-                        <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
-                        <Text style={styles.listItemDescription}>이미지 {destination.images.length}장</Text>
-                        <Text style={styles.listItemDescription}>체험 {destination.experiences.length}건</Text>
-                        <View style={styles.rowButtonContainer}>
-                          <ActionButton
-                            label="불러오기"
-                            variant="secondary"
-                            onPress={() => {
-                              void (async () => {
-                                await cleanupPendingUploadedImages(
-                                  destinationFormState.newlyUploadedImageUrls,
-                                  destinationFormState.newlyUploadedExperienceThumbnailUrls
-                                )
-                                setDestinationFormState({
-                                  selectedId: destination.id,
-                                  countryId: destination.countryId == null ? "" : String(destination.countryId),
-                                  countryName: destination.countryName,
-                                  storageCountrySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").countrySlug,
-                                  storageCitySlug: parseStorageSlugsFromImageUrl(destination.images[0]?.imageUrl ?? "").citySlug,
-                                  name: destination.name,
-                                  summary: destination.summary ?? "",
-                                  description: destination.description ?? "",
-                                  recommendStartMonth1: destination.recommendStartMonth1 == null ? "" : String(destination.recommendStartMonth1),
-                                  recommendEndMonth1: destination.recommendEndMonth1 == null ? "" : String(destination.recommendEndMonth1),
-                                  recommendStartMonth2: destination.recommendStartMonth2 == null ? "" : String(destination.recommendStartMonth2),
-                                  recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
-                                  flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
-                                  flightUrl: destination.flightUrl ?? "",
-                                  images: destination.images.map((image) => ({
-                                    imageUrl: image.imageUrl,
-                                    isThumbnail: image.isThumbnail,
-                                    sortOrder: image.sortOrder
-                                  })),
-                                  experiences: destination.experiences.map((experience) => ({
-                                    title: experience.title,
-                                    description: experience.description,
-                                    thumbnailUrl: experience.thumbnailUrl,
-                                    link: experience.link,
-                                    sortOrder: experience.sortOrder
-                                  })),
-                                  existingImageUrls: destination.images.map((image) => image.imageUrl),
-                                  existingExperienceThumbnailUrls: destination.experiences.map((experience) => experience.thumbnailUrl),
-                                  newlyUploadedImageUrls: [],
-                                  newlyUploadedExperienceThumbnailUrls: []
-                                })
-                              })()
-                            }}
-                          />
-                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteDestination(destination.id)} />
-                        </View>
-                      </View>
-                    ))}
-                    {filteredDestinations.length === 0 && (
-                      <Text style={styles.helperText}>검색 결과가 없습니다.</Text>
-                    )}
-                  </ScrollView>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {activeTab === "members" && (
-            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
-              <View style={styles.destinationEditorColumn}>
-                <View style={styles.sectionCard}>
-                  <Text style={styles.sectionTitle}>사용자 추가/수정</Text>
-                  {memberFormState.selectedId == null && (
-                    <LabelInput
-                      label="사용자 ID"
-                      value={memberFormState.id}
-                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, id: value }))}
-                    />
-                  )}
-                  <LabelInput
-                    label="닉네임"
-                    value={memberFormState.nickname}
-                    onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, nickname: value }))}
-                  />
-
-                  <View style={styles.rowSplitContainer}>
-                    <LabelInput
-                      label="선호 연차"
-                      keyboardType="numeric"
-                      value={memberFormState.preferredDayOff}
-                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, preferredDayOff: value }))}
-                    />
-                    <LabelInput
-                      label="남은 연차"
-                      keyboardType="numeric"
-                      value={memberFormState.remainingDayOff}
-                      onChangeText={(value) => setMemberFormState((previousState) => ({ ...previousState, remainingDayOff: value }))}
-                    />
-                  </View>
-
-                  <View style={styles.row}>
-                    <Text style={styles.fieldLabel}>온보딩 완료</Text>
-                    <input
-                      type="checkbox"
-                      checked={memberFormState.onboardingCompleted}
-                      onChange={(event) => {
-                        setMemberFormState((previousState) => ({ ...previousState, onboardingCompleted: event.target.checked }))
-                      }}
-                    />
-                  </View>
-
-                  <View style={styles.rowButtonContainer}>
-                    <ActionButton label={memberFormState.selectedId == null ? "사용자 생성" : "사용자 수정"} onPress={() => void submitMember()} />
-                    <ActionButton
-                      label="폼 초기화"
-                      variant="secondary"
-                      onPress={() => setMemberFormState(createInitialMemberFormState())}
-                    />
-                  </View>
-                </View>
-              </View>
-
-              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
-                <View style={[styles.sectionCard, styles.destinationListPanel]}>
-                  <Text style={styles.sectionTitle}>사용자 목록</Text>
-                  <Text style={styles.helperText}>오른쪽 목록에서 선택한 회원 정보를 즉시 불러옵니다.</Text>
-                  <input
-                    value={memberListSearchKeyword}
-                    onChange={(event) => setMemberListSearchKeyword(event.target.value)}
-                    style={htmlFieldStyle}
-                    placeholder="ID/닉네임 검색"
-                  />
-                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
-                    {filteredMembers.map((member) => (
-                      <View style={styles.listItemCard} key={member.id}>
-                        <Text style={styles.listItemTitle}>{member.id}</Text>
-                        <Text style={styles.listItemDescription}>{member.nickname ?? "(닉네임 없음)"}</Text>
-                        <Text style={styles.listItemDescription}>연차 {member.preferredDayOff}/{member.remainingDayOff}</Text>
-                        <View style={styles.rowButtonContainer}>
-                          <ActionButton
-                            label="불러오기"
-                            variant="secondary"
-                            onPress={() => {
-                              setMemberFormState({
-                                selectedId: member.id,
-                                id: member.id,
-                                nickname: member.nickname ?? "",
-                                preferredDayOff: String(member.preferredDayOff),
-                                remainingDayOff: String(member.remainingDayOff),
-                                onboardingCompleted: member.onboardingCompleted
-                              })
-                            }}
-                          />
-                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteMember(member.id)} />
-                        </View>
-                      </View>
-                    ))}
-                    {filteredMembers.length === 0 && (
-                      <Text style={styles.helperText}>검색 결과가 없습니다.</Text>
-                    )}
-                  </ScrollView>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {activeTab === "holidays" && (
-            <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
-              <View style={styles.destinationEditorColumn}>
-                <View style={styles.sectionCard}>
-                  <Text style={styles.sectionTitle}>공휴일 추가/수정</Text>
-                  <View style={styles.row}>
-                    <Text style={styles.fieldLabel}>공휴일 날짜 (YYYY-MM-DD)</Text>
-                    <input
-                      type="date"
-                      value={holidayFormState.holidayDate}
-                      onChange={(event) => {
-                        setHolidayFormState((previousState) => ({ ...previousState, holidayDate: event.target.value }))
-                      }}
-                      style={htmlFieldStyle}
-                    />
-                  </View>
-                  <LabelInput
-                    label="이름"
-                    value={holidayFormState.name}
-                    onChangeText={(value) => setHolidayFormState((previousState) => ({ ...previousState, name: value }))}
-                  />
-                  <View style={styles.row}>
-                    <Text style={styles.fieldLabel}>실제 공휴일 여부</Text>
-                    <input
-                      type="checkbox"
-                      checked={holidayFormState.isActualHoliday}
-                      onChange={(event) => {
-                        setHolidayFormState((previousState) => ({ ...previousState, isActualHoliday: event.target.checked }))
-                      }}
-                    />
-                  </View>
-
-                  <View style={styles.rowButtonContainer}>
-                    <ActionButton label={holidayFormState.selectedId == null ? "공휴일 생성" : "공휴일 수정"} onPress={() => void submitHoliday()} />
-                    <ActionButton
-                      label="폼 초기화"
-                      variant="secondary"
-                      onPress={() => setHolidayFormState(createInitialHolidayFormState())}
-                    />
-                  </View>
-                </View>
-              </View>
-
-              <View style={[styles.destinationListColumn, !isWideDesktopLayout && styles.destinationListColumnStacked]}>
-                <View style={[styles.sectionCard, styles.destinationListPanel]}>
-                  <Text style={styles.sectionTitle}>공휴일 목록</Text>
-                  <Text style={styles.helperText}>오른쪽 목록에서 선택한 공휴일을 즉시 불러옵니다.</Text>
-                  <input
-                    value={holidayListSearchKeyword}
-                    onChange={(event) => setHolidayListSearchKeyword(event.target.value)}
-                    style={htmlFieldStyle}
-                    placeholder="날짜/이름 검색"
-                  />
-                  <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
-                    {filteredPublicHolidays.map((holiday) => (
-                      <View style={styles.listItemCard} key={holiday.id}>
-                        <Text style={styles.listItemTitle}>{holiday.holidayDate}</Text>
-                        <Text style={styles.listItemDescription}>{holiday.name}</Text>
-                        <Text style={styles.listItemDescription}>{holiday.isActualHoliday ? "실제 공휴일" : "참고일"}</Text>
-                        <View style={styles.rowButtonContainer}>
-                          <ActionButton
-                            label="불러오기"
-                            variant="secondary"
-                            onPress={() => {
-                              setHolidayFormState({
-                                selectedId: holiday.id,
-                                holidayDate: holiday.holidayDate,
-                                name: holiday.name,
-                                isActualHoliday: Boolean(holiday.isActualHoliday)
-                              })
-                            }}
-                          />
-                          <ActionButton label="삭제" variant="danger" onPress={() => void deleteHoliday(holiday.id)} />
-                        </View>
-                      </View>
-                    ))}
-                    {filteredPublicHolidays.length === 0 && (
-                      <Text style={styles.helperText}>검색 결과가 없습니다.</Text>
-                    )}
-                  </ScrollView>
-                </View>
-              </View>
-            </View>
-          )}
-            </ScrollView>
-          )}
-        </View>
-      </View>
       {cropSessionState != null && cropSessionItem != null && cropImageRenderMetrics != null && (
-        <View style={styles.cropModalBackdrop}>
-          <View style={styles.cropModalCard}>
-            <Text style={styles.cropModalTitle}>
-              {cropSessionState.targetType === "destination" ? "장소 사진 크롭" : "체험 썸네일 크롭"}
-            </Text>
-            <Text style={styles.helperText}>
-              {cropSessionState.currentIndex + 1} / {cropSessionState.queueItems.length} · 사각형 내부만 저장됩니다.
-            </Text>
-            <div
-              style={{
-                ...htmlCropStageStyle,
-                width: cropImageRenderMetrics.displayWidth,
-                height: cropImageRenderMetrics.displayHeight
-              }}
-            >
-              <img
-                src={cropSessionItem.previewUrl}
-                alt="crop-preview"
-                draggable={false}
-                style={htmlCropBaseImageStyle}
-              />
-              <div
-                style={{
-                  ...htmlCropOutsideTopStyle,
-                  height: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale
-                }}
-              />
-              <div
-                style={{
-                  ...htmlCropOutsideBottomStyle,
-                  top: (cropSessionState.cropArea.y + cropSessionState.cropArea.height) * cropImageRenderMetrics.displayScale
-                }}
-              />
-              <div
-                style={{
-                  ...htmlCropOutsideLeftStyle,
-                  top: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale,
-                  height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale,
-                  width: cropSessionState.cropArea.x * cropImageRenderMetrics.displayScale
-                }}
-              />
-              <div
-                style={{
-                  ...htmlCropOutsideRightStyle,
-                  top: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale,
-                  left: (cropSessionState.cropArea.x + cropSessionState.cropArea.width) * cropImageRenderMetrics.displayScale,
-                  height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
-                }}
-              />
-              <div
-                style={{
-                  ...htmlPrimaryCropAreaStyle,
-                  left: cropSessionState.cropArea.x * cropImageRenderMetrics.displayScale,
-                  top: cropSessionState.cropArea.y * cropImageRenderMetrics.displayScale,
-                  width: cropSessionState.cropArea.width * cropImageRenderMetrics.displayScale,
-                  height: cropSessionState.cropArea.height * cropImageRenderMetrics.displayScale
-                }}
-                onMouseDown={beginMoveCropArea}
-              >
-                {secondaryGuideRectInCropArea != null && (
-                  <div
-                    style={{
-                      ...htmlSecondaryCropGuideStyle,
-                      left: secondaryGuideRectInCropArea.x,
-                      top: secondaryGuideRectInCropArea.y,
-                      width: secondaryGuideRectInCropArea.width,
-                      height: secondaryGuideRectInCropArea.height
-                    }}
-                  />
-                )}
-                {primaryGuideRectInCropArea != null && (
-                  <div
-                    style={{
-                      ...htmlReferenceGuideStyle,
-                      left: primaryGuideRectInCropArea.x,
-                      top: primaryGuideRectInCropArea.y,
-                      width: primaryGuideRectInCropArea.width,
-                      height: primaryGuideRectInCropArea.height
-                    }}
-                  />
-                )}
-                <div
-                  style={htmlCropResizeHandleStyle}
-                  onMouseDown={beginResizeCropArea}
-                />
-              </div>
-            </div>
-            <Text style={styles.helperText}>
-              파랑/민트 가이드는 참고용입니다. 크롭 사각형은 자유 비율로 이동·조절할 수 있습니다.
-            </Text>
-            <View style={styles.rowButtonContainer}>
-              <ActionButton
-                label="초기화"
-                variant="secondary"
-                onPress={() => {
-                  setCropSessionState((previousSession) => {
-                    if (previousSession == null) {
-                      return null
-                    }
-                    const currentQueueItem = previousSession.queueItems[previousSession.currentIndex]
-                    if (currentQueueItem == null) {
-                      return previousSession
-                    }
-                    return {
-                      ...previousSession,
-                      cropArea: createInitialCropArea(currentQueueItem)
-                    }
-                  })
-                }}
-              />
-            </View>
-            <View style={styles.rowButtonContainer}>
-              <ActionButton
-                label="취소"
-                variant="secondary"
-                onPress={() => closeCropSession(cropSessionState)}
-              />
-              <ActionButton
-                label={cropSessionState.isProcessing ? "처리 중..." : "크롭 적용"}
-                onPress={() => {
-                  if (!cropSessionState.isProcessing) {
-                    void applyCurrentCrop()
-                  }
-                }}
-              />
-            </View>
-          </View>
-        </View>
+        <AdminCropModal
+          cropSessionState={cropSessionState}
+          cropSessionItem={cropSessionItem}
+          cropImageRenderMetrics={cropImageRenderMetrics}
+          primaryGuideRectInCropArea={primaryGuideRectInCropArea}
+          secondaryGuideRectInCropArea={secondaryGuideRectInCropArea}
+          onBeginMoveCropArea={beginMoveCropArea}
+          onBeginResizeCropArea={beginResizeCropArea}
+          onResetCropArea={resetCurrentCropArea}
+          onClose={closeCurrentCropSession}
+          onApply={() => {
+            if (!cropSessionState.isProcessing) {
+              void applyCurrentCrop()
+            }
+          }}
+        />
       )}
     </View>
   )
