@@ -2315,6 +2315,47 @@ const LabelInput = ({
       return
     }
 
+    const hasWrappedBoldMarker =
+      selectionStart >= 2 &&
+      value.slice(selectionStart - 2, selectionStart) === "**" &&
+      value.slice(selectionEnd, selectionEnd + 2) === "**"
+
+    const hasBoldMarkerInsideSelection = selectedText.includes("**")
+
+    if (hasWrappedBoldMarker) {
+      const unwrappedValue = `${value.slice(0, selectionStart - 2)}${selectedText}${value.slice(selectionEnd + 2)}`
+      onChangeText(unwrappedValue)
+
+      requestAnimationFrame(() => {
+        const updatedInputElement = inputElementReference.current
+        if (updatedInputElement == null) {
+          return
+        }
+        const nextSelectionStart = selectionStart - 2
+        const nextSelectionEnd = selectionEnd - 2
+        updatedInputElement.focus()
+        updatedInputElement.setSelectionRange(nextSelectionStart, nextSelectionEnd)
+      })
+      return
+    }
+
+    if (hasBoldMarkerInsideSelection) {
+      const unboldedSelection = selectedText.replace(/\*\*/g, "")
+      const updatedValue = `${value.slice(0, selectionStart)}${unboldedSelection}${value.slice(selectionEnd)}`
+      onChangeText(updatedValue)
+
+      requestAnimationFrame(() => {
+        const updatedInputElement = inputElementReference.current
+        if (updatedInputElement == null) {
+          return
+        }
+        const nextSelectionEnd = selectionStart + unboldedSelection.length
+        updatedInputElement.focus()
+        updatedInputElement.setSelectionRange(selectionStart, nextSelectionEnd)
+      })
+      return
+    }
+
     const formattedValue = `${value.slice(0, selectionStart)}**${selectedText}**${value.slice(selectionEnd)}`
     onChangeText(formattedValue)
 
