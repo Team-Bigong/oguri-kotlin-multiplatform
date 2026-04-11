@@ -1,4 +1,4 @@
-import { Destination, DestinationExperienceRequest, DestinationImageRequest, PublicHoliday } from "../../../types/admin"
+import { DestinationExperienceRequest, DestinationImageRequest } from "../../../types/admin"
 
 export type AdminTab = "destinations" | "members" | "holidays"
 
@@ -131,8 +131,3 @@ export type CropImageRenderMetrics = {
 }
 
 export type GuideRect = CropArea
-
-export type NormalizedData = {
-  normalizePublicHoliday: (holiday: PublicHolidayApiResponse) => PublicHoliday
-  normalizeDestination: (destination: DestinationApiResponse) => Destination
-}
