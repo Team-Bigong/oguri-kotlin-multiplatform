@@ -8,9 +8,8 @@ class Adjective(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int = 0,
-
     @Column(nullable = false, length = 50)
-    val word: String
+    val word: String,
 )
 
 @Entity
@@ -19,7 +18,6 @@ class Noun(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int = 0,
-
     @Column(nullable = false, length = 50)
-    val word: String
+    val word: String,
 )

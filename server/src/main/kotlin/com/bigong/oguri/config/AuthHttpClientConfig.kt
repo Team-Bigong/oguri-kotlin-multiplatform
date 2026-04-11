@@ -11,7 +11,7 @@ class AuthHttpClientConfig(
     @param:Value("\${auth.http.connect-timeout-millis:2000}")
     private val connectTimeoutMillis: Int,
     @param:Value("\${auth.http.read-timeout-millis:3000}")
-    private val readTimeoutMillis: Int
+    private val readTimeoutMillis: Int,
 ) {
     @Bean
     fun authRestTemplate(): RestTemplate {

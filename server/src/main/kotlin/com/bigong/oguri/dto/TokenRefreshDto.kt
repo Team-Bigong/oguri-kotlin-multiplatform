@@ -4,7 +4,7 @@ package com.bigong.oguri.dto
  * 토큰 재발급 요청
  */
 data class TokenRefreshRequest(
-    val refreshToken: String
+    val refreshToken: String,
 )
 
 /**
@@ -12,5 +12,5 @@ data class TokenRefreshRequest(
  */
 data class TokenRefreshResponse(
     val accessToken: String,
-    val refreshToken: String
+    val refreshToken: String,
 )

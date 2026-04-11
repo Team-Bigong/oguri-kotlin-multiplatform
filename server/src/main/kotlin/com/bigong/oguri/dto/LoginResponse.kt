@@ -10,5 +10,5 @@ data class LoginResponse(
     @field:Schema(description = "사용자 닉네임")
     val nickname: String,
     @field:Schema(description = "온보딩 완료 여부. false면 온보딩 화면 진입 필요", example = "false")
-    val onboardingCompleted: Boolean
+    val onboardingCompleted: Boolean,
 )

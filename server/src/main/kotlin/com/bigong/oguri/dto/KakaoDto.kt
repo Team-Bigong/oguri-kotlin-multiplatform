@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * 클라이언트로부터 받는 카카오 로그인 요청
  */
 data class KakaoLoginRequest(
-    val accessToken: String
+    val accessToken: String,
 )
 
 /**
@@ -15,15 +15,15 @@ data class KakaoLoginRequest(
 data class KakaoUserInfoResponse(
     val id: Long,
     @JsonProperty("kakao_account")
-    val kakaoAccount: KakaoAccount?
+    val kakaoAccount: KakaoAccount?,
 )
 
 data class KakaoAccount(
-    val profile: KakaoProfile?
+    val profile: KakaoProfile?,
 )
 
 data class KakaoProfile(
     val nickname: String?,
     @JsonProperty("thumbnail_image_url")
-    val thumbnailImageUrl: String?
+    val thumbnailImageUrl: String?,
 )
