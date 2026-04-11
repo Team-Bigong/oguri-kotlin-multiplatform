@@ -14,11 +14,11 @@ import java.time.LocalDate
 @RestController
 @RequestMapping("/api/v1/destinations")
 class DestinationController(
-    private val destinationService: DestinationService
+    private val destinationService: DestinationService,
 ) {
     @Operation(
         summary = "장소 상세 조회",
-        description = "특정 여행지의 상세 정보, 이미지, 장소별 액티비티(썸네일 URL, 제목, 설명, 링크), 관련 장소 등을 반환합니다."
+        description = "특정 여행지의 상세 정보, 이미지, 장소별 액티비티(썸네일 URL, 제목, 설명, 링크), 관련 장소 등을 반환합니다.",
     )
     @GetMapping("/{id}")
     fun getDestinationDetail(
@@ -26,8 +26,6 @@ class DestinationController(
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) startDate: LocalDate?,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) endDate: LocalDate?,
         @RequestParam(defaultValue = "대한민국") userCountry: String,
-        request: HttpServletRequest
-    ): PlaceDetailResponse {
-        return destinationService.getDestinationDetail(id, startDate, endDate, userCountry, request.resolveMemberId())
-    }
+        request: HttpServletRequest,
+    ): PlaceDetailResponse = destinationService.getDestinationDetail(id, startDate, endDate, userCountry, request.resolveMemberId())
 }

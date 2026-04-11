@@ -4,14 +4,15 @@ import com.bigong.oguri.domain.Destination
 import com.bigong.oguri.domain.DestinationExperience
 import com.bigong.oguri.domain.DestinationImage
 import com.bigong.oguri.dto.AdminCountryResponse
-import com.bigong.oguri.dto.AdminDestinationResponse
-import com.bigong.oguri.dto.AdminDestinationUpsertRequest
 import com.bigong.oguri.dto.AdminDestinationExperienceResponse
 import com.bigong.oguri.dto.AdminDestinationImageResponse
-import com.bigong.oguri.repository.DestinationExperienceRepository
+import com.bigong.oguri.dto.AdminDestinationResponse
+import com.bigong.oguri.dto.AdminDestinationUpsertRequest
 import com.bigong.oguri.repository.CountryRepository
+import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationImageRepository
 import com.bigong.oguri.repository.DestinationRepository
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,75 +24,92 @@ class AdminDestinationService(
     private val destinationRepository: DestinationRepository,
     private val destinationImageRepository: DestinationImageRepository,
     private val destinationExperienceRepository: DestinationExperienceRepository,
-    private val countryRepository: CountryRepository
+    private val countryRepository: CountryRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getCountryList(): List<AdminCountryResponse> {
-        return countryRepository.findAllByOrderByNameAsc().map { country ->
+    fun getCountryList(): List<AdminCountryResponse> =
+        countryRepository.findAllByOrderByNameAsc().map { country ->
             AdminCountryResponse(
                 id = country.id,
-                name = country.name
+                name = country.name,
             )
         }
-    }
 
     @Transactional(readOnly = true)
     fun getDestinationList(): List<AdminDestinationResponse> {
-        val experiencesByDestinationId = destinationExperienceRepository
-            .findAllByOrderByDestinationIdAscSortOrderAscIdAsc()
-            .groupBy { experience -> experience.destinationId }
+        val experiencesByDestinationId =
+            destinationExperienceRepository
+                .findAllByOrderByDestinationIdAscSortOrderAscIdAsc()
+                .groupBy { experience -> experience.destinationId }
         return destinationRepository.findAllWithCountryAndImages().map { destination ->
             destination.toAdminResponse(
-                experiences = experiencesByDestinationId[destination.id].orEmpty()
+                experiences = experiencesByDestinationId[destination.id].orEmpty(),
             )
         }
     }
 
     fun createDestination(request: AdminDestinationUpsertRequest): AdminDestinationResponse {
         validateDestinationRequest(request)
+        val destinationName = request.name.trim()
+        validateDuplicateDestinationNameForCreate(destinationName)
 
-        val country = countryRepository.findById(request.countryId).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "국가를 찾을 수 없습니다. id=${request.countryId}")
-        }
+        val country =
+            countryRepository.findById(request.countryId).orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND, "국가를 찾을 수 없습니다. id=${request.countryId}")
+            }
 
-        val destination = destinationRepository.save(
-            Destination(
-                country = country,
-                name = request.name.trim(),
-                summary = normalizeNullableText(request.summary),
-                description = normalizeNullableText(request.description),
-                recommendStartMonth1 = request.recommendStartMonth1,
-                recommendEndMonth1 = request.recommendEndMonth1,
-                recommendStartMonth2 = request.recommendStartMonth2,
-                recommendEndMonth2 = request.recommendEndMonth2,
-                flightTimeMinutes = request.flightTimeMinutes,
-                flightUrl = normalizeNullableText(request.flightUrl)
-            )
-        )
+        val destination =
+            try {
+                destinationRepository.save(
+                    Destination(
+                        country = country,
+                        name = destinationName,
+                        summary = normalizeNullableText(request.summary),
+                        description = normalizeNullableText(request.description),
+                        recommendStartMonth1 = request.recommendStartMonth1,
+                        recommendEndMonth1 = request.recommendEndMonth1,
+                        recommendStartMonth2 = request.recommendStartMonth2,
+                        recommendEndMonth2 = request.recommendEndMonth2,
+                        flightTimeMinutes = request.flightTimeMinutes,
+                        flightUrl = normalizeNullableText(request.flightUrl),
+                    ),
+                )
+            } catch (exception: DataIntegrityViolationException) {
+                throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 여행지 이름입니다: $destinationName", exception)
+            }
 
         replaceDestinationImages(destination, request)
         replaceDestinationExperiences(destination.id, request)
 
-        return destinationRepository.findByIdWithCountryAndImages(destination.id)
+        return destinationRepository
+            .findByIdWithCountryAndImages(destination.id)
             ?.toAdminResponse(
-                experiences = destinationExperienceRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id)
+                images = destinationImageRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id),
+                experiences = destinationExperienceRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id),
             )
             ?: throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "여행지 생성 후 조회에 실패했습니다.")
     }
 
-    fun updateDestination(destinationId: Int, request: AdminDestinationUpsertRequest): AdminDestinationResponse {
+    fun updateDestination(
+        destinationId: Int,
+        request: AdminDestinationUpsertRequest,
+    ): AdminDestinationResponse {
         validateDestinationRequest(request)
+        val destinationName = request.name.trim()
+        validateDuplicateDestinationNameForUpdate(destinationName, destinationId)
 
-        val destination = destinationRepository.findById(destinationId).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다. id=$destinationId")
-        }
+        val destination =
+            destinationRepository.findById(destinationId).orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND, "여행지를 찾을 수 없습니다. id=$destinationId")
+            }
 
-        val country = countryRepository.findById(request.countryId).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "국가를 찾을 수 없습니다. id=${request.countryId}")
-        }
+        val country =
+            countryRepository.findById(request.countryId).orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND, "국가를 찾을 수 없습니다. id=${request.countryId}")
+            }
 
         destination.country = country
-        destination.name = request.name.trim()
+        destination.name = destinationName
         destination.summary = normalizeNullableText(request.summary)
         destination.description = normalizeNullableText(request.description)
         destination.recommendStartMonth1 = request.recommendStartMonth1
@@ -101,13 +119,19 @@ class AdminDestinationService(
         destination.flightTimeMinutes = request.flightTimeMinutes
         destination.flightUrl = normalizeNullableText(request.flightUrl)
 
-        destinationRepository.save(destination)
+        try {
+            destinationRepository.save(destination)
+        } catch (exception: DataIntegrityViolationException) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 여행지 이름입니다: $destinationName", exception)
+        }
         replaceDestinationImages(destination, request)
         replaceDestinationExperiences(destination.id, request)
 
-        return destinationRepository.findByIdWithCountryAndImages(destination.id)
+        return destinationRepository
+            .findByIdWithCountryAndImages(destination.id)
             ?.toAdminResponse(
-                experiences = destinationExperienceRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id)
+                images = destinationImageRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id),
+                experiences = destinationExperienceRepository.findAllByDestinationIdOrderBySortOrderAscIdAsc(destination.id),
             )
             ?: throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "여행지 수정 후 조회에 실패했습니다.")
     }
@@ -119,7 +143,10 @@ class AdminDestinationService(
         destinationRepository.deleteById(destinationId)
     }
 
-    private fun replaceDestinationImages(destination: Destination, request: AdminDestinationUpsertRequest) {
+    private fun replaceDestinationImages(
+        destination: Destination,
+        request: AdminDestinationUpsertRequest,
+    ) {
         destinationImageRepository.deleteAllByDestinationId(destination.id)
 
         request.images
@@ -130,13 +157,16 @@ class AdminDestinationService(
                         destination = destination,
                         imageUrl = image.imageUrl.trim(),
                         isThumbnail = image.isThumbnail,
-                        sortOrder = image.sortOrder
-                    )
+                        sortOrder = image.sortOrder,
+                    ),
                 )
             }
     }
 
-    private fun replaceDestinationExperiences(destinationId: Int, request: AdminDestinationUpsertRequest) {
+    private fun replaceDestinationExperiences(
+        destinationId: Int,
+        request: AdminDestinationUpsertRequest,
+    ) {
         destinationExperienceRepository.deleteAllByDestinationId(destinationId)
 
         request.experiences
@@ -149,8 +179,8 @@ class AdminDestinationService(
                         description = experience.description.trim(),
                         thumbnailUrl = experience.thumbnailUrl.trim(),
                         link = experience.link.trim(),
-                        sortOrder = experience.sortOrder
-                    )
+                        sortOrder = experience.sortOrder,
+                    ),
                 )
             }
     }
@@ -163,12 +193,12 @@ class AdminDestinationService(
         validateMonthRange(
             request.recommendStartMonth1,
             request.recommendEndMonth1,
-            "추천 기간 1"
+            "추천 기간 1",
         )
         validateMonthRange(
             request.recommendStartMonth2,
             request.recommendEndMonth2,
-            "추천 기간 2"
+            "추천 기간 2",
         )
 
         val thumbnailCount = request.images.count { image -> image.isThumbnail }
@@ -209,7 +239,11 @@ class AdminDestinationService(
         }
     }
 
-    private fun validateMonthRange(startMonth: Int?, endMonth: Int?, label: String) {
+    private fun validateMonthRange(
+        startMonth: Int?,
+        endMonth: Int?,
+        label: String,
+    ) {
         if ((startMonth == null) != (endMonth == null)) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "$label 시작/종료 월은 함께 입력해야 합니다.")
         }
@@ -228,8 +262,24 @@ class AdminDestinationService(
         return if (trimmedValue.isBlank()) null else trimmedValue
     }
 
+    private fun validateDuplicateDestinationNameForCreate(destinationName: String) {
+        if (destinationRepository.existsByName(destinationName)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 여행지 이름입니다: $destinationName")
+        }
+    }
+
+    private fun validateDuplicateDestinationNameForUpdate(
+        destinationName: String,
+        destinationId: Int,
+    ) {
+        if (destinationRepository.existsByNameAndIdNot(destinationName, destinationId)) {
+            throw ResponseStatusException(HttpStatus.CONFLICT, "이미 존재하는 여행지 이름입니다: $destinationName")
+        }
+    }
+
     private fun Destination.toAdminResponse(
-        experiences: List<DestinationExperience>
+        images: List<DestinationImage> = this.images,
+        experiences: List<DestinationExperience>,
     ): AdminDestinationResponse {
         val sortedImages = images.sortedBy { image -> image.sortOrder }
         return AdminDestinationResponse(
@@ -245,24 +295,26 @@ class AdminDestinationService(
             recommendEndMonth2 = recommendEndMonth2,
             flightTimeMinutes = flightTimeMinutes,
             flightUrl = flightUrl,
-            images = sortedImages.map { image ->
-                AdminDestinationImageResponse(
-                    id = image.id,
-                    imageUrl = image.imageUrl,
-                    isThumbnail = image.isThumbnail,
-                    sortOrder = image.sortOrder
-                )
-            },
-            experiences = experiences.map { experience ->
-                AdminDestinationExperienceResponse(
-                    id = experience.id,
-                    title = experience.title,
-                    description = experience.description,
-                    thumbnailUrl = experience.thumbnailUrl,
-                    link = experience.link,
-                    sortOrder = experience.sortOrder
-                )
-            }
+            images =
+                sortedImages.map { image ->
+                    AdminDestinationImageResponse(
+                        id = image.id,
+                        imageUrl = image.imageUrl,
+                        isThumbnail = image.isThumbnail,
+                        sortOrder = image.sortOrder,
+                    )
+                },
+            experiences =
+                experiences.map { experience ->
+                    AdminDestinationExperienceResponse(
+                        id = experience.id,
+                        title = experience.title,
+                        description = experience.description,
+                        thumbnailUrl = experience.thumbnailUrl,
+                        link = experience.link,
+                        sortOrder = experience.sortOrder,
+                    )
+                },
         )
     }
 
