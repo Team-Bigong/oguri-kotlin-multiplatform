@@ -12,4 +12,7 @@ interface DestinationRepository : JpaRepository<Destination, Int> {
 
     @Query("SELECT DISTINCT d FROM Destination d JOIN FETCH d.country LEFT JOIN FETCH d.images WHERE d.id = :destinationId")
     fun findByIdWithCountryAndImages(destinationId: Int): Destination?
+
+    fun existsByName(name: String): Boolean
+    fun existsByNameAndIdNot(name: String, id: Int): Boolean
 }
