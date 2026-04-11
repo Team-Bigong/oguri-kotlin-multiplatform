@@ -26,7 +26,10 @@ class DestinationService(
      * 마음에 드는 여행지 저장하기
      */
     @Transactional
-    fun saveDestination(id: Int, memberId: String) {
+    fun saveDestination(
+        id: Int,
+        memberId: String,
+    ) {
         val existing = savedDestinationRepository.findByMemberIdAndDestinationId(memberId, id)
         if (existing != null) return
         savedDestinationRepository.save(SavedDestination(memberId = memberId, destinationId = id))
@@ -36,7 +39,10 @@ class DestinationService(
      * 저장했던 여행지 취소하기 (삭제)
      */
     @Transactional
-    fun deleteDestination(id: Int, memberId: String) {
+    fun deleteDestination(
+        id: Int,
+        memberId: String,
+    ) {
         savedDestinationRepository.deleteByMemberIdAndDestinationId(memberId, id)
     }
 
@@ -48,11 +54,12 @@ class DestinationService(
         startDate: LocalDate?,
         endDate: LocalDate?,
         userCountry: String,
-        memberId: String
+        memberId: String,
     ): PlaceDetailResponse {
         // 1. 여행지 및 국가, 이미지 통합 조회
-        val target = destinationRepository.findByIdWithCountryAndImages(id)
-            ?: throw IllegalArgumentException("장소를 찾을 수 없습니다. ID: $id")
+        val target =
+            destinationRepository.findByIdWithCountryAndImages(id)
+                ?: throw IllegalArgumentException("장소를 찾을 수 없습니다. ID: $id")
         val destinations = destinationRepository.findAllWithCountryAndImages()
 
         // 2. 이미지 리스트 및 찜 여부 확인
@@ -63,26 +70,31 @@ class DestinationService(
         val description = target.description?.let { processDescription(it) } ?: ""
 
         // 4. 장소별 액티비티/즐길거리 조회
-        val experiences = destinationExperienceRepository
-            .findAllByDestinationIdOrderBySortOrderAscIdAsc(id)
-            .map { experience ->
-                ExperienceResponse(
-                    title = experience.title,
-                    summary = experience.description,
-                    thumbnailUrl = experience.thumbnailUrl,
-                    advertisementUrl = experience.link
-                )
-            }
+        val experiences =
+            destinationExperienceRepository
+                .findAllByDestinationIdOrderBySortOrderAscIdAsc(id)
+                .map { experience ->
+                    ExperienceResponse(
+                        title = experience.title,
+                        summary = experience.description,
+                        thumbnailUrl = experience.thumbnailUrl,
+                        advertisementUrl = experience.link,
+                    )
+                }
 
         // 5. 관련 장소 목록 계산 (당시 추천되었던 다른 도시들)
         val savedDestinationIds = savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }.toSet()
 
-        val relevantPlaces = if (startDate != null && endDate != null) {
-            val totalDays = ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
-            homeService.calculateRecommendedPlaces(startDate, destinations, userCountry, totalDays)
-                .filter { it.id != id.toLong() }
-                .map { it.copy(isSaved = savedDestinationIds.contains(it.id.toInt())) }
-        } else emptyList()
+        val relevantPlaces =
+            if (startDate != null && endDate != null) {
+                val totalDays = ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
+                homeService
+                    .calculateRecommendedPlaces(startDate, destinations, userCountry, totalDays)
+                    .filter { it.id != id.toLong() }
+                    .map { it.copy(isSaved = savedDestinationIds.contains(it.id.toInt())) }
+            } else {
+                emptyList()
+            }
 
         // 6. 스카이스캐너 검색 링크 생성
         val flightUrl = target.flightUrl ?: "https://www.skyscanner.co.kr/transport/flights/sel/${target.name}"
@@ -96,14 +108,12 @@ class DestinationService(
             description = description,
             experiences = experiences,
             flightUrl = flightUrl,
-            relevantPlaces = relevantPlaces
+            relevantPlaces = relevantPlaces,
         )
     }
 
     /**
      * 설명문 마크다운 변환 (볼드 처리)
      */
-    private fun processDescription(text: String): String {
-        return if (text.contains("**")) text else text.replace("추천", "**추천**")
-    }
+    private fun processDescription(text: String): String = if (text.contains("**")) text else text.replace("추천", "**추천**")
 }

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Repository
 @Repository
 interface DestinationImageRepository : JpaRepository<DestinationImage, Int> {
     fun findByDestinationIdAndIsThumbnailTrue(destinationId: Int): DestinationImage?
+
     fun findAllByDestinationIdOrderBySortOrderAscIdAsc(destinationId: Int): List<DestinationImage>
+
     fun deleteAllByDestinationId(destinationId: Int)
 }

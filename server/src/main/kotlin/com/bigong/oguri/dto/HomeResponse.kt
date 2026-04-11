@@ -14,7 +14,7 @@ data class RecommendPeriodResponse(
     val dayOffCount: Int,
     val totalTripCount: Int,
     val places: List<PlaceResponse>,
-    val advertisements: List<AdvertisementResponse>
+    val advertisements: List<AdvertisementResponse>,
 )
 
 /**
@@ -26,7 +26,7 @@ data class PlaceResponse(
     val city: String,
     val summary: String,
     val thumbnailUrl: String,
-    val isSaved: Boolean // 찜 여부 추가
+    val isSaved: Boolean, // 찜 여부 추가
 )
 
 /**
@@ -34,5 +34,5 @@ data class PlaceResponse(
  */
 data class AdvertisementResponse(
     val platform: String,
-    val url: String
+    val url: String,
 )

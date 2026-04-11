@@ -20,7 +20,7 @@ data class PlaceDetailResponse(
     @field:Schema(description = "항공권 검색 링크")
     val flightUrl: String,
     @field:Schema(description = "같은 기간 추천 가능한 다른 장소 목록")
-    val relevantPlaces: List<PlaceResponse>
+    val relevantPlaces: List<PlaceResponse>,
 )
 
 data class ExperienceResponse(
@@ -31,5 +31,5 @@ data class ExperienceResponse(
     @field:Schema(description = "액티비티 썸네일 이미지 URL")
     val thumbnailUrl: String,
     @field:Schema(description = "제휴/상세 페이지 이동 링크")
-    val advertisementUrl: String
+    val advertisementUrl: String,
 )

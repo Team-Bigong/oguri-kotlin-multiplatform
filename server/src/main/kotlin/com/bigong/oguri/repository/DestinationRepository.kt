@@ -14,5 +14,9 @@ interface DestinationRepository : JpaRepository<Destination, Int> {
     fun findByIdWithCountryAndImages(destinationId: Int): Destination?
 
     fun existsByName(name: String): Boolean
-    fun existsByNameAndIdNot(name: String, id: Int): Boolean
+
+    fun existsByNameAndIdNot(
+        name: String,
+        id: Int,
+    ): Boolean
 }

@@ -17,6 +17,7 @@ import com.bigong.oguri.repository.SavedRecommendationRepository
 import com.bigong.oguri.util.AppleIdentityTokenVerifier
 import com.bigong.oguri.util.GoogleIdentityTokenVerifier
 import com.bigong.oguri.util.JwtTokenProvider
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
@@ -25,7 +26,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.server.ResponseStatusException
-import org.slf4j.LoggerFactory
 import java.util.Locale
 import kotlin.random.Random
 
@@ -44,7 +44,7 @@ class MemberService(
     private val authRestTemplate: RestTemplate,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
-    private val destinationRepository: DestinationRepository
+    private val destinationRepository: DestinationRepository,
 ) {
     /**
      * 카카오 로그인 및 가입
@@ -89,32 +89,38 @@ class MemberService(
      * 내 정보 및 저장된 데이터 전체 조회
      */
     fun getMyInfo(memberId: String): MemberMeResponse {
-        val member = memberRepository.findById(memberId).orElseGet {
-            memberRepository.save(Member(id = memberId).apply { setNicknameOnce(generateUniqueNickname()) })
-        }
+        val member =
+            memberRepository.findById(memberId).orElseGet {
+                memberRepository.save(Member(id = memberId).apply { setNicknameOnce(generateUniqueNickname()) })
+            }
 
-        val savedPeriods = savedRecommendationRepository.findAllByMemberId(memberId).map {
-            SavedPeriodDto(
-                startDate = it.startDate,
-                endDate = it.endDate,
-                dayOffCount = it.dayOffCount,
-                totalTripCount = it.totalTripCount
-            )
-        }
+        val savedPeriods =
+            savedRecommendationRepository.findAllByMemberId(memberId).map {
+                SavedPeriodDto(
+                    startDate = it.startDate,
+                    endDate = it.endDate,
+                    dayOffCount = it.dayOffCount,
+                    totalTripCount = it.totalTripCount,
+                )
+            }
 
         val savedDestIds = savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }
-        val savedPlaces = if (savedDestIds.isNotEmpty()) {
-            destinationRepository.findAllWithCountryAndImages()
-                .filter { savedDestIds.contains(it.id) }
-                .map { dest ->
-                    SavedPlaceDto(
-                        id = dest.id.toLong(),
-                        country = dest.country?.name ?: "Unknown",
-                        city = dest.name,
-                        thumbnailUrl = dest.images.find { it.isThumbnail }?.imageUrl ?: ""
-                    )
-                }
-        } else emptyList()
+        val savedPlaces =
+            if (savedDestIds.isNotEmpty()) {
+                destinationRepository
+                    .findAllWithCountryAndImages()
+                    .filter { savedDestIds.contains(it.id) }
+                    .map { dest ->
+                        SavedPlaceDto(
+                            id = dest.id.toLong(),
+                            country = dest.country?.name ?: "Unknown",
+                            city = dest.name,
+                            thumbnailUrl = dest.images.find { it.isThumbnail }?.imageUrl ?: "",
+                        )
+                    }
+            } else {
+                emptyList()
+            }
 
         return MemberMeResponse(
             id = member.id,
@@ -123,7 +129,7 @@ class MemberService(
             preferredDayOff = member.preferredDayOff,
             remainingDayOff = member.remainingDayOff,
             savedPeriods = savedPeriods,
-            savedPlaces = savedPlaces
+            savedPlaces = savedPlaces,
         )
     }
 
@@ -138,15 +144,17 @@ class MemberService(
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 리프레시 토큰입니다.")
         }
 
-        val memberId = runCatching {
-            jwtTokenProvider.getMemberId(refreshToken)
-        }.getOrElse {
-            throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다.")
-        }
+        val memberId =
+            runCatching {
+                jwtTokenProvider.getMemberId(refreshToken)
+            }.getOrElse {
+                throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다.")
+            }
 
-        val member = memberRepository.findById(memberId).orElseThrow {
-            ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다.")
-        }
+        val member =
+            memberRepository.findById(memberId).orElseThrow {
+                ResponseStatusException(HttpStatus.UNAUTHORIZED, "유효하지 않은 리프레시 토큰입니다.")
+            }
         if (member.refreshToken != refreshToken) {
             throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "리프레시 토큰이 일치하지 않습니다.")
         }
@@ -161,24 +169,25 @@ class MemberService(
 
     private fun getKakaoUserInfo(accessToken: String): KakaoUserInfoResponse {
         val url = "https://kapi.kakao.com/v2/user/me"
-        val headers = HttpHeaders().apply {
-            set("Authorization", "Bearer $accessToken")
-            set("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
-        }
+        val headers =
+            HttpHeaders().apply {
+                set("Authorization", "Bearer $accessToken")
+                set("Content-type", "application/x-www-form-urlencoded;charset=utf-8")
+            }
         val startedAt = System.currentTimeMillis()
-        val kakaoResponse = authRestTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), KakaoUserInfoResponse::class.java).body
-            ?: throw RuntimeException("카카오 통신 실패")
+        val kakaoResponse =
+            authRestTemplate.exchange(url, HttpMethod.GET, HttpEntity<Any>(headers), KakaoUserInfoResponse::class.java).body
+                ?: throw RuntimeException("카카오 통신 실패")
         logger.info("Kakao user info fetched. elapsedMs={}", System.currentTimeMillis() - startedAt)
         return kakaoResponse
     }
 
-    private fun findOrCreateMember(memberId: String): Member {
-        return memberRepository.findById(memberId).orElseGet {
+    private fun findOrCreateMember(memberId: String): Member =
+        memberRepository.findById(memberId).orElseGet {
             val newMember = Member(id = memberId)
             newMember.setNicknameOnce(generateUniqueNickname())
             memberRepository.save(newMember)
         }
-    }
 
     private fun issueLoginTokens(member: Member): LoginResponse {
         val serviceAccessToken = jwtTokenProvider.createAccessToken(member.id)
@@ -189,24 +198,34 @@ class MemberService(
             accessToken = serviceAccessToken,
             refreshToken = serviceRefreshToken,
             nickname = member.nickname ?: "",
-            onboardingCompleted = member.onboardingCompleted
+            onboardingCompleted = member.onboardingCompleted,
         )
     }
 
-    fun updateDayOffInfo(memberId: String, preferred: Int, remaining: Int) {
+    fun updateDayOffInfo(
+        memberId: String,
+        preferred: Int,
+        remaining: Int,
+    ) {
         validateDayOffRules(preferred, remaining)
-        val member = memberRepository.findById(memberId).orElseGet {
-            memberRepository.save(Member(id = memberId).apply { setNicknameOnce(generateUniqueNickname()) })
-        }
+        val member =
+            memberRepository.findById(memberId).orElseGet {
+                memberRepository.save(Member(id = memberId).apply { setNicknameOnce(generateUniqueNickname()) })
+            }
         member.updateDayOffInfo(preferred, remaining)
         memberRepository.save(member)
     }
 
-    fun completeOnboarding(memberId: String, preferred: Int, remaining: Int) {
+    fun completeOnboarding(
+        memberId: String,
+        preferred: Int,
+        remaining: Int,
+    ) {
         validateDayOffRules(preferred, remaining)
-        val member = memberRepository.findById(memberId).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.")
-        }
+        val member =
+            memberRepository.findById(memberId).orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.")
+            }
         member.completeOnboarding(preferred, remaining)
         memberRepository.save(member)
     }
@@ -232,7 +251,10 @@ class MemberService(
     @Transactional(readOnly = true)
     fun getRemainingDayOff(memberId: String): Int = memberRepository.findById(memberId).map { it.remainingDayOff }.orElse(3)
 
-    private fun validateDayOffRules(preferredDayOff: Int, remainingDayOff: Int) {
+    private fun validateDayOffRules(
+        preferredDayOff: Int,
+        remainingDayOff: Int,
+    ) {
         if (remainingDayOff < MINIMUM_DAY_OFF) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "남은 연차는 0일 이상이어야 합니다.")
         }
