@@ -135,8 +135,7 @@ const EXPERIENCE_IMAGE_ASPECT_RATIO = 100 / 60
 const PLACE_IMAGE_OUTPUT_WIDTH_PX = 1280
 const EXPERIENCE_IMAGE_OUTPUT_WIDTH_PX = 1200
 const CROP_MINIMUM_SIZE_PX = 120
-const IMAGE_FETCH_WAIT_TIMEOUT_MILLISECONDS = 10_000
-const IMAGE_FETCH_WAIT_POLL_INTERVAL_MILLISECONDS = 300
+const IMAGE_DOWNLOAD_TIMEOUT_MILLISECONDS = 10_000
 
 const createInitialDestinationFormState = (): DestinationFormState => ({
   selectedId: null,
@@ -332,19 +331,15 @@ const loadBlobWithXmlHttpRequest = async (imageUrl: string): Promise<Blob> => {
   })
 }
 
-const waitForMilliseconds = async (milliseconds: number): Promise<void> => {
-  await new Promise((resolve) => {
-    setTimeout(resolve, milliseconds)
-  })
-}
-
 const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
   const sanitizedImageUrl = imageUrl.trim()
-  const waitDeadlineTimestamp = Date.now() + IMAGE_FETCH_WAIT_TIMEOUT_MILLISECONDS
-
-  while (Date.now() <= waitDeadlineTimestamp) {
+  try {
+    const abortController = new AbortController()
+    const timeoutIdentifier = window.setTimeout(() => {
+      abortController.abort()
+    }, IMAGE_DOWNLOAD_TIMEOUT_MILLISECONDS)
     try {
-      const response = await fetch(sanitizedImageUrl, { method: "GET" })
+      const response = await fetch(sanitizedImageUrl, { method: "GET", signal: abortController.signal })
       if (!response.ok) {
         throw new Error(`status:${response.status}`)
       }
@@ -352,30 +347,28 @@ const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
       const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
       const fileName = `crop-source-${Date.now()}.jpg`
       return new File([binary], fileName, { type: fileType })
-    } catch (fetchError) {
-      try {
-        const binary = await loadBlobWithXmlHttpRequest(sanitizedImageUrl)
-        const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
-        const fileName = `crop-source-${Date.now()}.jpg`
-        return new File([binary], fileName, { type: fileType })
-      } catch (xmlHttpRequestError) {
-        try {
-          const binary = await getImageBlobFromFirebaseStorageByUrl(sanitizedImageUrl)
-          const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
-          const fileName = `crop-source-${Date.now()}.jpg`
-          return new File([binary], fileName, { type: fileType })
-        } catch (firebaseSdkError) {
-          // no-op
-        }
-        if (Date.now() > waitDeadlineTimestamp) {
-          break
-        }
-        await waitForMilliseconds(IMAGE_FETCH_WAIT_POLL_INTERVAL_MILLISECONDS)
-      }
+    } finally {
+      window.clearTimeout(timeoutIdentifier)
     }
+  } catch (fetchError) {
+    // Fallback path when direct URL download is blocked or timed out.
   }
 
-  throw new Error("이미지 파일을 다시 가져오지 못했습니다. 잠시 후 다시 시도해주세요.")
+  try {
+    const binary = await loadBlobWithXmlHttpRequest(sanitizedImageUrl)
+    const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
+    const fileName = `crop-source-${Date.now()}.jpg`
+    return new File([binary], fileName, { type: fileType })
+  } catch (xmlHttpRequestError) {
+    try {
+      const binary = await getImageBlobFromFirebaseStorageByUrl(sanitizedImageUrl)
+      const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
+      const fileName = `crop-source-${Date.now()}.jpg`
+      return new File([binary], fileName, { type: fileType })
+    } catch (firebaseSdkError) {
+      throw new Error("이미지 파일을 다시 가져오지 못했습니다. Firebase URL 접근 권한(CORS) 또는 네트워크를 확인해주세요.")
+    }
+  }
 }
 
 const createInitialCropArea = (item: CropQueueItem): CropArea => {
