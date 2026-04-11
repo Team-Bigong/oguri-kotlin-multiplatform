@@ -314,60 +314,35 @@ const createCropQueueItems = async (files: File[]): Promise<CropQueueItem[]> => 
   return queueItems
 }
 
-const loadBlobWithXmlHttpRequest = async (imageUrl: string): Promise<Blob> => {
+const withTimeout = async <T,>(promise: Promise<T>, timeoutMilliseconds: number): Promise<T> => {
   return new Promise((resolve, reject) => {
-    const request = new XMLHttpRequest()
-    request.open("GET", imageUrl, true)
-    request.responseType = "blob"
-    request.onload = () => {
-      if (request.status >= 200 && request.status < 300 && request.response != null) {
-        resolve(request.response)
-        return
-      }
-      reject(new Error(`status:${request.status}`))
-    }
-    request.onerror = () => reject(new Error("network-error"))
-    request.send()
+    const timeoutIdentifier = window.setTimeout(() => {
+      reject(new Error("timeout"))
+    }, timeoutMilliseconds)
+    promise
+      .then((value) => {
+        window.clearTimeout(timeoutIdentifier)
+        resolve(value)
+      })
+      .catch((error) => {
+        window.clearTimeout(timeoutIdentifier)
+        reject(error)
+      })
   })
 }
 
 const createFileFromImageUrl = async (imageUrl: string): Promise<File> => {
   const sanitizedImageUrl = imageUrl.trim()
   try {
-    const abortController = new AbortController()
-    const timeoutIdentifier = window.setTimeout(() => {
-      abortController.abort()
-    }, IMAGE_DOWNLOAD_TIMEOUT_MILLISECONDS)
-    try {
-      const response = await fetch(sanitizedImageUrl, { method: "GET", signal: abortController.signal })
-      if (!response.ok) {
-        throw new Error(`status:${response.status}`)
-      }
-      const binary = await response.blob()
-      const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
-      const fileName = `crop-source-${Date.now()}.jpg`
-      return new File([binary], fileName, { type: fileType })
-    } finally {
-      window.clearTimeout(timeoutIdentifier)
-    }
-  } catch (fetchError) {
-    // Fallback path when direct URL download is blocked or timed out.
-  }
-
-  try {
-    const binary = await loadBlobWithXmlHttpRequest(sanitizedImageUrl)
+    const binary = await withTimeout(
+      getImageBlobFromFirebaseStorageByUrl(sanitizedImageUrl),
+      IMAGE_DOWNLOAD_TIMEOUT_MILLISECONDS
+    )
     const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
     const fileName = `crop-source-${Date.now()}.jpg`
     return new File([binary], fileName, { type: fileType })
-  } catch (xmlHttpRequestError) {
-    try {
-      const binary = await getImageBlobFromFirebaseStorageByUrl(sanitizedImageUrl)
-      const fileType = binary.type.length > 0 ? binary.type : "image/jpeg"
-      const fileName = `crop-source-${Date.now()}.jpg`
-      return new File([binary], fileName, { type: fileType })
-    } catch (firebaseSdkError) {
-      throw new Error("이미지 파일을 다시 가져오지 못했습니다. Firebase URL 접근 권한(CORS) 또는 네트워크를 확인해주세요.")
-    }
+  } catch (firebaseSdkError) {
+    throw new Error("Firebase에서 이미지를 가져오지 못했습니다. 잠시 후 다시 시도해주세요.")
   }
 }
 
@@ -1085,7 +1060,6 @@ export const AdminApp = (): React.JSX.Element => {
       experienceIndex: number | null
     }
   ): Promise<void> => {
-    beginUploadTask("preparing")
     setErrorMessage("")
     setNoticeMessage("")
     try {
@@ -1097,10 +1071,8 @@ export const AdminApp = (): React.JSX.Element => {
       })
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "이미지 크롭 편집을 시작할 수 없습니다.")
-    } finally {
-      endUploadTask()
     }
-  }, [beginUploadTask, endUploadTask, openCropSession])
+  }, [openCropSession])
 
   const applyCurrentCrop = useCallback(async (): Promise<void> => {
     if (cropSessionState == null || cropSessionItem == null) {
