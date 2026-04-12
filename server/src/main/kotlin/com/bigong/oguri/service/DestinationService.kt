@@ -112,6 +112,18 @@ class DestinationService(
         // 8. 체감 물가 계산 (해당 국가 BMI / 대한민국 BMI)
         val relativeCostIndex = calculateRelativeCostIndex(target.country?.bigMacIndex)
 
+        // 9. 요청 기간에 맞는 날씨 정보 선택 (1차 vs 2차)
+        val (selectedTemp, selectedPrecip) = if (startDate != null) {
+            val startMonth = startDate.monthValue
+            if (isMonthInRange(startMonth, target.recommendStartMonth2, target.recommendEndMonth2)) {
+                target.weatherTemp2 to target.weatherPrecipitationMm2
+            } else {
+                target.weatherTemp1 to target.weatherPrecipitationMm1
+            }
+        } else {
+            target.weatherTemp1 to target.weatherPrecipitationMm1
+        }
+
         return PlaceDetailResponse(
             id = target.id.toLong(),
             country = target.country?.name ?: "Unknown",
@@ -120,13 +132,26 @@ class DestinationService(
             isSaved = isSaved,
             exchangeRateInfo = exchangeRateInfo,
             relativeCostIndex = relativeCostIndex,
-            averageTemperature = target.weatherTemp,
-            averagePrecipitation = target.weatherPrecipitationMm,
+            averageTemperature = selectedTemp,
+            averagePrecipitation = selectedPrecip,
             description = description,
             experiences = experiences,
             flightUrl = flightUrl,
             relevantPlaces = relevantPlaces,
         )
+    }
+
+    /**
+     * 특정 월이 추천 기간 범위 내에 있는지 확인합니다.
+     */
+    private fun isMonthInRange(month: Int, start: Int?, end: Int?): Boolean {
+        if (start == null || end == null) return false
+        return if (start <= end) {
+            month in start..end
+        } else {
+            // 해를 넘기는 경우 (예: 11월 ~ 2월)
+            month >= start || month <= end
+        }
     }
 
     /**

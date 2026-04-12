@@ -29,10 +29,14 @@ class Destination(
     var flightTimeMinutes: Int? = null,
     @Column(name = "flight_url", columnDefinition = "TEXT")
     var flightUrl: String? = null,
-    @Column(name = "weather_temp")
-    var weatherTemp: Int? = null,
-    @Column(name = "weather_precipitation_mm")
-    var weatherPrecipitationMm: Double? = null,
+    @Column(name = "weather_temp_1")
+    var weatherTemp1: Int? = null,
+    @Column(name = "weather_precipitation_mm_1")
+    var weatherPrecipitationMm1: Double? = null,
+    @Column(name = "weather_temp_2")
+    var weatherTemp2: Int? = null,
+    @Column(name = "weather_precipitation_mm_2")
+    var weatherPrecipitationMm2: Double? = null,
     @OneToMany(mappedBy = "destination", fetch = FetchType.LAZY)
     var images: List<DestinationImage> = mutableListOf(),
 )
