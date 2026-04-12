@@ -6,7 +6,7 @@ export const playStoreUrl = webEnvironment.playStoreUrl.trim().length > 0
 
 export const appStoreUrl = webEnvironment.appStoreUrl.trim().length > 0
   ? webEnvironment.appStoreUrl
-  : "https://apps.apple.com"
+  : "https://apps.apple.com/kr/app/%EC%98%A4%EA%B5%AC%EB%A6%AC-oguri-%EC%97%B0%EC%B0%A8-%EC%97%AC%ED%96%89-%ED%95%AD%EA%B3%B5%EA%B6%8C-%EC%95%A1%ED%8B%B0%EB%B9%84%ED%8B%B0/id6760905900"
 
 export const suggestionFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdIebTYVf7Gy4XMCJtGaWO26UXMiBImWTDQbCVB2zywYMGV4g/viewform?usp=sharing&ouid=103643341635895040668"
 export const termsOfServiceUrl = "https://wealthy-clematis-4a5.notion.site/31d5bca0ac22806aa8c4f6b0374c3a55?source=copy_link"
@@ -56,6 +56,6 @@ export const frequentlyAskedQuestions = [
   },
   {
     question: "어디서 설치할 수 있나요?",
-    answer: "아직 출시 전이며, 2026년 4월 이내 출시를 목표로 준비하고 있어요."
+    answer: "App Store에서 설치할 수 있고, Google Play 출시도 준비 중이에요."
   }
 ]
