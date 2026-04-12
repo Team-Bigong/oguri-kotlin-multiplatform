@@ -120,6 +120,8 @@ class DestinationService(
             isSaved = isSaved,
             exchangeRateInfo = exchangeRateInfo,
             relativeCostIndex = relativeCostIndex,
+            averageTemperature = target.weatherTemp,
+            averagePrecipitation = target.weatherPrecipitationMm,
             description = description,
             experiences = experiences,
             flightUrl = flightUrl,

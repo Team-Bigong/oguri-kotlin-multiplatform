@@ -17,6 +17,10 @@ data class PlaceDetailResponse(
     val exchangeRateInfo: ExchangeRateResponse?,
     @field:Schema(description = "체감 물가 지수 (한국 대비 비율)", example = "1.68")
     val relativeCostIndex: Double?,
+    @field:Schema(description = "추천 기간 평균 기온 (℃)", example = "16")
+    val averageTemperature: Int?,
+    @field:Schema(description = "추천 기간 평균 강수량 (mm)", example = "70.5")
+    val averagePrecipitation: Double?,
     @field:Schema(description = "장소 상세 설명")
     val description: String,
     @field:Schema(description = "장소별 액티비티/즐길거리 목록")
