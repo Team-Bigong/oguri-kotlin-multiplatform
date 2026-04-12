@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository
 interface CountryRepository : JpaRepository<Country, Int> {
     fun findByName(name: String): Country?
     fun findAllByOrderByNameAsc(): List<Country>
+    fun existsByName(name: String): Boolean
+    fun existsByNameAndIdNot(name: String, id: Int): Boolean
 }

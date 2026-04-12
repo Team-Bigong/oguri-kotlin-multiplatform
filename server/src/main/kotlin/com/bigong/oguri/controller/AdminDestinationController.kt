@@ -1,5 +1,6 @@
 package com.bigong.oguri.controller
 
+import com.bigong.oguri.dto.request.AdminCountryUpsertRequest
 import com.bigong.oguri.dto.response.AdminCountryResponse
 import com.bigong.oguri.dto.response.AdminDestinationResponse
 import com.bigong.oguri.dto.request.AdminDestinationUpsertRequest
@@ -16,6 +17,25 @@ class AdminDestinationController(
 ) {
     @GetMapping("/countries")
     fun getCountryList(): List<AdminCountryResponse> = adminDestinationService.getCountryList()
+
+    @PostMapping("/countries")
+    fun createCountry(
+        @RequestBody request: AdminCountryUpsertRequest,
+    ): AdminCountryResponse = adminDestinationService.createCountry(request)
+
+    @PutMapping("/countries/{countryId}")
+    fun updateCountry(
+        @PathVariable countryId: Int,
+        @RequestBody request: AdminCountryUpsertRequest,
+    ): AdminCountryResponse = adminDestinationService.updateCountry(countryId, request)
+
+    @DeleteMapping("/countries/{countryId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteCountry(
+        @PathVariable countryId: Int,
+    ) {
+        adminDestinationService.deleteCountry(countryId)
+    }
 
     @GetMapping("/destinations")
     fun getDestinationList(): List<AdminDestinationResponse> = adminDestinationService.getDestinationList()
