@@ -191,6 +191,36 @@ export const DestinationsSection = ({
             onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightUrl: value }))}
           />
 
+          <View style={styles.rowSplitContainer}>
+            <LabelInput
+              label="날씨 온도 1 (°C)"
+              value={destinationFormState.weatherTemp1}
+              keyboardType="numeric"
+              onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherTemp1: value }))}
+            />
+            <LabelInput
+              label="강수량 1 (mm)"
+              value={destinationFormState.weatherPrecipitationMm1}
+              keyboardType="numeric"
+              onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherPrecipitationMm1: value }))}
+            />
+          </View>
+
+          <View style={styles.rowSplitContainer}>
+            <LabelInput
+              label="날씨 온도 2 (°C)"
+              value={destinationFormState.weatherTemp2}
+              keyboardType="numeric"
+              onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherTemp2: value }))}
+            />
+            <LabelInput
+              label="강수량 2 (mm)"
+              value={destinationFormState.weatherPrecipitationMm2}
+              keyboardType="numeric"
+              onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherPrecipitationMm2: value }))}
+            />
+          </View>
+
           <View style={styles.uploadRow}>
             <Text style={styles.fieldLabel}>사진 업로드</Text>
             <input type="file" accept="image/*" multiple onChange={handleImageFileSelection} />
