@@ -1,4 +1,4 @@
-package com.bigong.oguri.dto
+package com.bigong.oguri.dto.request
 
 /**
  * 클라이언트로부터 받는 Google 로그인 요청

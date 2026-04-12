@@ -1,13 +1,13 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.Member
-import com.bigong.oguri.dto.KakaoUserInfoResponse
-import com.bigong.oguri.dto.LoginResponse
-import com.bigong.oguri.dto.MemberDayOffResponse
-import com.bigong.oguri.dto.MemberMeResponse
-import com.bigong.oguri.dto.SavedPeriodDto
-import com.bigong.oguri.dto.SavedPlaceDto
-import com.bigong.oguri.dto.TokenRefreshResponse
+import com.bigong.oguri.dto.response.KakaoUserInfoResponse
+import com.bigong.oguri.dto.response.LoginResponse
+import com.bigong.oguri.dto.response.MemberDayOffResponse
+import com.bigong.oguri.dto.response.MemberMeResponse
+import com.bigong.oguri.dto.response.SavedPeriodDto
+import com.bigong.oguri.dto.response.SavedPlaceDto
+import com.bigong.oguri.dto.response.TokenRefreshResponse
 import com.bigong.oguri.repository.AdjectiveRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.MemberRepository
@@ -83,6 +83,15 @@ class MemberService(
         val response = issueLoginTokens(member)
         logger.info("Google login completed. memberId={}, elapsedMs={}", googleMemberId, System.currentTimeMillis() - startedAt)
         return response
+    }
+
+    /**
+     * 로컬 테스트용 가짜 로그인
+     */
+    fun loginWithMock(mockId: String): LoginResponse {
+        val memberId = "MOCK_$mockId"
+        val member = findOrCreateMember(memberId)
+        return issueLoginTokens(member)
     }
 
     /**

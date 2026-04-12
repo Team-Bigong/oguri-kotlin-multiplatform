@@ -1,9 +1,9 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
-import com.bigong.oguri.dto.MemberDayOffRequest
-import com.bigong.oguri.dto.MemberMeResponse
-import com.bigong.oguri.dto.SaveRecommendationRequest
+import com.bigong.oguri.dto.request.MemberDayOffRequest
+import com.bigong.oguri.dto.response.MemberMeResponse
+import com.bigong.oguri.dto.request.SaveRecommendationRequest
 import com.bigong.oguri.service.DestinationService
 import com.bigong.oguri.service.MemberService
 import com.bigong.oguri.service.SavedRecommendationService
