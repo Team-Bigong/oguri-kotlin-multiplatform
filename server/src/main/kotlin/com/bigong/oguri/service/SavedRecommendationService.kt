@@ -2,7 +2,7 @@ package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.PublicHoliday
 import com.bigong.oguri.domain.SavedRecommendation
-import com.bigong.oguri.dto.SaveRecommendationRequest
+import com.bigong.oguri.dto.request.SaveRecommendationRequest
 import com.bigong.oguri.repository.PublicHolidayRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
 import org.springframework.http.HttpStatus

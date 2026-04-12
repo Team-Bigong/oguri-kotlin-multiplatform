@@ -1,4 +1,4 @@
-package com.bigong.oguri.dto
+package com.bigong.oguri.dto.request
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import io.swagger.v3.oas.annotations.media.Schema

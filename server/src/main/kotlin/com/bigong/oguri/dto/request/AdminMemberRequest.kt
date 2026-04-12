@@ -1,4 +1,4 @@
-package com.bigong.oguri.dto
+package com.bigong.oguri.dto.request
 
 data class AdminMemberCreateRequest(
     val id: String,
@@ -13,13 +13,4 @@ data class AdminMemberUpdateRequest(
     val preferredDayOff: Int,
     val remainingDayOff: Int,
     val onboardingCompleted: Boolean,
-)
-
-data class AdminMemberResponse(
-    val id: String,
-    val nickname: String?,
-    val preferredDayOff: Int,
-    val remainingDayOff: Int,
-    val onboardingCompleted: Boolean,
-    val updatedAt: String,
 )

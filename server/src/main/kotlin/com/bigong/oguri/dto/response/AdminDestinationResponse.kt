@@ -1,33 +1,4 @@
-package com.bigong.oguri.dto
-
-data class AdminDestinationImageUpsertRequest(
-    val imageUrl: String,
-    val isThumbnail: Boolean,
-    val sortOrder: Int,
-)
-
-data class AdminDestinationExperienceUpsertRequest(
-    val title: String,
-    val description: String,
-    val thumbnailUrl: String,
-    val link: String,
-    val sortOrder: Int,
-)
-
-data class AdminDestinationUpsertRequest(
-    val countryId: Int,
-    val name: String,
-    val summary: String?,
-    val description: String?,
-    val recommendStartMonth1: Int?,
-    val recommendEndMonth1: Int?,
-    val recommendStartMonth2: Int?,
-    val recommendEndMonth2: Int?,
-    val flightTimeMinutes: Int?,
-    val flightUrl: String? = null,
-    val images: List<AdminDestinationImageUpsertRequest>,
-    val experiences: List<AdminDestinationExperienceUpsertRequest> = emptyList(),
-)
+package com.bigong.oguri.dto.response
 
 data class AdminDestinationImageResponse(
     val id: Int,

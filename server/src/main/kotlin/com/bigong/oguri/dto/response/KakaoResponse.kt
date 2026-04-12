@@ -1,13 +1,6 @@
-package com.bigong.oguri.dto
+package com.bigong.oguri.dto.response
 
 import com.fasterxml.jackson.annotation.JsonProperty
-
-/**
- * 클라이언트로부터 받는 카카오 로그인 요청
- */
-data class KakaoLoginRequest(
-    val accessToken: String,
-)
 
 /**
  * 카카오 서버로부터 받는 유저 정보 응답

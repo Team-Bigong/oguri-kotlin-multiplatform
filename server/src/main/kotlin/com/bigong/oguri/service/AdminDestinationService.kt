@@ -3,11 +3,11 @@ package com.bigong.oguri.service
 import com.bigong.oguri.domain.Destination
 import com.bigong.oguri.domain.DestinationExperience
 import com.bigong.oguri.domain.DestinationImage
-import com.bigong.oguri.dto.AdminCountryResponse
-import com.bigong.oguri.dto.AdminDestinationExperienceResponse
-import com.bigong.oguri.dto.AdminDestinationImageResponse
-import com.bigong.oguri.dto.AdminDestinationResponse
-import com.bigong.oguri.dto.AdminDestinationUpsertRequest
+import com.bigong.oguri.dto.response.AdminCountryResponse
+import com.bigong.oguri.dto.response.AdminDestinationExperienceResponse
+import com.bigong.oguri.dto.response.AdminDestinationImageResponse
+import com.bigong.oguri.dto.response.AdminDestinationResponse
+import com.bigong.oguri.dto.request.AdminDestinationUpsertRequest
 import com.bigong.oguri.repository.CountryRepository
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationImageRepository

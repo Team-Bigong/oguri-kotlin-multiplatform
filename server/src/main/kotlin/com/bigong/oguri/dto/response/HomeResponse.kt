@@ -1,4 +1,4 @@
-package com.bigong.oguri.dto
+package com.bigong.oguri.dto.response
 
 import java.time.LocalDate
 

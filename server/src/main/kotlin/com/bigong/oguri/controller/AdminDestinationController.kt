@@ -1,8 +1,8 @@
 package com.bigong.oguri.controller
 
-import com.bigong.oguri.dto.AdminCountryResponse
-import com.bigong.oguri.dto.AdminDestinationResponse
-import com.bigong.oguri.dto.AdminDestinationUpsertRequest
+import com.bigong.oguri.dto.response.AdminCountryResponse
+import com.bigong.oguri.dto.response.AdminDestinationResponse
+import com.bigong.oguri.dto.request.AdminDestinationUpsertRequest
 import com.bigong.oguri.service.AdminDestinationService
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.http.HttpStatus
