@@ -2,7 +2,6 @@ package com.bigong.oguri.feature.login.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,7 +48,7 @@ actual fun LoginScreen(
     onGuestBrowseClick: () -> Unit,
 ) {
     val logoResource =
-        if (isSystemInDarkTheme()) {
+        if (OguriTheme.isDarkTheme) {
             Res.drawable.ic_app_text_dark
         } else {
             Res.drawable.ic_app_text

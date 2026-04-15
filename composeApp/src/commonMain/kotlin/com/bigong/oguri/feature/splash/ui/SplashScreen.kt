@@ -2,7 +2,6 @@ package com.bigong.oguri.feature.splash.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.OguriTheme
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_app_text
 import oguri.composeapp.generated.resources.ic_app_text_dark
@@ -21,7 +21,7 @@ import org.jetbrains.compose.resources.painterResource
 @Composable
 fun SplashScreen() {
     val logoResource =
-        if (isSystemInDarkTheme()) {
+        if (OguriTheme.isDarkTheme) {
             Res.drawable.ic_app_text_dark
         } else {
             Res.drawable.ic_app_text
