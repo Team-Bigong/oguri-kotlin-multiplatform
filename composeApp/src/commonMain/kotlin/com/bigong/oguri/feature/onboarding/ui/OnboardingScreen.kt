@@ -55,7 +55,7 @@ fun OnboardingScreen(
     onCompleteClick: () -> Unit,
 ) {
     PlatformBackHandler(
-        enabled = onboardingUiState.step == OnboardingStep.LEAVE_DAYS,
+        enabled = true,
         onBack = onBackClick,
     )
 
