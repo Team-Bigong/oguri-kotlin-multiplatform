@@ -23,11 +23,10 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
+import com.bigong.oguri.core.ui.component.OguriAppLogoImage
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.login.ui.component.LoginActionButton
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.ic_app_text
-import oguri.composeapp.generated.resources.ic_app_text_dark
 import oguri.composeapp.generated.resources.ic_apple_login
 import oguri.composeapp.generated.resources.ic_kakao_login
 import oguri.composeapp.generated.resources.img_oguri_walking
@@ -45,13 +44,6 @@ actual fun LoginScreen(
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
 ) {
-    val logoResource =
-        if (OguriTheme.isDarkTheme) {
-            Res.drawable.ic_app_text_dark
-        } else {
-            Res.drawable.ic_app_text
-        }
-
     Box(
         modifier =
             Modifier
@@ -72,9 +64,7 @@ actual fun LoginScreen(
                 contentDescription = null,
                 modifier = Modifier.size(size = 180.dp),
             )
-            Image(
-                painter = painterResource(resource = logoResource),
-                contentDescription = null,
+            OguriAppLogoImage(
                 modifier = Modifier.size(width = 110.dp, height = 56.dp),
             )
             Spacer(modifier = Modifier.height(height = 32.dp))
