@@ -147,14 +147,6 @@ internal fun isCalendarRoute(routeText: String): Boolean {
     return routeText == calendarRouteSerialName || routeText.startsWith(calendarRouteSerialName)
 }
 
-internal fun isOnboardingRoute(routeText: String): Boolean {
-    val onboardingRouteSerialName =
-        RouteModel.Onboarding
-            .serializer()
-            .descriptor.serialName
-    return routeText == onboardingRouteSerialName || routeText.startsWith(onboardingRouteSerialName)
-}
-
 internal fun colorToArgbLong(color: Color): Long {
     val alpha = (color.alpha * 255f).roundToInt().coerceIn(0, 255)
     val red = (color.red * 255f).roundToInt().coerceIn(0, 255)

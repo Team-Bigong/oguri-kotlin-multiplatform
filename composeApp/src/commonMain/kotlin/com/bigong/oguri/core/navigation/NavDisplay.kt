@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,6 +20,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
 import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
@@ -123,8 +127,10 @@ fun NavDisplay(
             appGraph.deepLinkStore.incomingUrl
                 .collectAsState()
                 .value
+        val lifecycleOwner = LocalLifecycleOwner.current
         var previousRouteText by remember { mutableStateOf<String?>(null) }
-        var hasShownLaunchAppOpenAd by remember { mutableStateOf(false) }
+        var hasHandledFirstForegroundStart by remember { mutableStateOf(false) }
+        var hasShownAppOpenAdInCurrentForegroundSession by remember { mutableStateOf(false) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
@@ -179,16 +185,55 @@ fun NavDisplay(
             initializeAdMob()
             preloadAppOpenAd()
         }
+        DisposableEffect(lifecycleOwner) {
+            val observer =
+                LifecycleEventObserver { _, event ->
+                    if (event != Lifecycle.Event.ON_START) {
+                        return@LifecycleEventObserver
+                    }
+
+                    preloadAppOpenAd()
+                    if (!hasHandledFirstForegroundStart) {
+                        hasHandledFirstForegroundStart = true
+                        return@LifecycleEventObserver
+                    }
+
+                    hasShownAppOpenAdInCurrentForegroundSession = false
+                }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
         LaunchedEffect(currentDestination?.route) {
             val currentRouteText = currentDestination?.route
             val previousRoute = previousRouteText
+
+            fun isMainTabRoute(routeText: String): Boolean =
+                isHomeRoute(routeText) || isCalendarRoute(routeText) || isMyPageRoute(routeText)
+
+            fun tryShowAppOpenAdAfterMainTabMove() {
+                if (hasShownAppOpenAdInCurrentForegroundSession) {
+                    return
+                }
+
+                val hasShownAppOpenAd = showAppOpenAdIfAvailable()
+                if (hasShownAppOpenAd) {
+                    hasShownAppOpenAdInCurrentForegroundSession = true
+                }
+            }
             if (currentRouteText != null && previousRoute != null) {
+                val isMainTabMoved =
+                    isMainTabRoute(previousRoute) &&
+                        isMainTabRoute(currentRouteText) &&
+                        previousRoute != currentRouteText
+                if (isMainTabMoved) {
+                    tryShowAppOpenAdAfterMainTabMove()
+                }
+
                 if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
                     if (homeViewModelLazy.isInitialized()) {
                         homeViewModelLazy.value.refreshRecommendPeriods()
-                    }
-                    if (!isOnboardingRoute(previousRoute) && !hasShownLaunchAppOpenAd) {
-                        hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
                     }
                 }
                 if (isMyPageRoute(currentRouteText) && !isMyPageRoute(previousRoute)) {
@@ -203,10 +248,6 @@ fun NavDisplay(
                     if (preferredLeaveDays != null) {
                         calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
                     }
-                }
-            } else if (currentRouteText != null && previousRoute == null && isHomeRoute(currentRouteText)) {
-                if (!hasShownLaunchAppOpenAd) {
-                    hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
                 }
             }
             previousRouteText = currentRouteText
