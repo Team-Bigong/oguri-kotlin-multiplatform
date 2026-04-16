@@ -202,7 +202,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
 
         let measuredContainerWidth = max(containerView.bounds.width, UIScreen.main.bounds.width - 40)
         let adWidth = max(measuredContainerWidth, 320)
-        let adSize = currentOrientationAnchoredAdaptiveBanner(width: adWidth)
+        let adSize = largeAnchoredAdaptiveBanner(width: adWidth)
         let bannerView = BannerView(adSize: adSize)
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         bannerView.adUnitID = resolveBannerAdUnitId(placementKey: placementKey)

@@ -29,6 +29,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
@@ -49,6 +50,9 @@ import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.core.network.provideOguriHttpClient
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
+import com.bigong.oguri.core.platform.isNativeBottomNavigationEnabled
+import com.bigong.oguri.core.platform.nativeBottomNavigationSelectionFlow
+import com.bigong.oguri.core.platform.notifyNativeBottomNavigationState
 import com.bigong.oguri.core.ui.component.OguriSnackBarHost
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -59,14 +63,19 @@ import com.bigong.oguri.data.local.provideDisplayThemeModeLocalDataSource
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import com.bigong.oguri.domain.model.DisplayThemeMode
 import dev.zacsweers.metro.createGraphFactory
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.bottom_navigation_calendar
+import oguri.composeapp.generated.resources.bottom_navigation_home
+import oguri.composeapp.generated.resources.bottom_navigation_my
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 import oguri.composeapp.generated.resources.snackbar_login_success
 import oguri.composeapp.generated.resources.snackbar_logout_completed
 import oguri.composeapp.generated.resources.snackbar_withdraw_completed
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
@@ -130,6 +139,9 @@ fun NavDisplay(
         val loginSuccessMessage = stringResource(Res.string.snackbar_login_success)
         val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
         val withdrawCompletedMessage = stringResource(Res.string.snackbar_withdraw_completed)
+        val homeTabLabel = stringResource(Res.string.bottom_navigation_home)
+        val calendarTabLabel = stringResource(Res.string.bottom_navigation_calendar)
+        val myPageTabLabel = stringResource(Res.string.bottom_navigation_my)
         val incomingDeepLinkUrl =
             appGraph.deepLinkStore.incomingUrl
                 .collectAsState()
@@ -140,11 +152,21 @@ fun NavDisplay(
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
         var myPageTabReselectTrigger by remember { mutableIntStateOf(0) }
+        val nativeBottomNavigationEnabled = isNativeBottomNavigationEnabled()
         val hasPreviousBackStackEntry = navigator.navHostController.previousBackStackEntry != null
         val shouldShowBottomNavigation =
-            bottomNavigationDestinations.any { destination ->
-                isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
-            }
+            !nativeBottomNavigationEnabled &&
+                bottomNavigationDestinations.any { destination ->
+                    isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
+                }
+        val shouldShowNativeBottomNavigation =
+            nativeBottomNavigationEnabled &&
+                bottomNavigationDestinations.any { destination ->
+                    isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
+                }
+        val selectedBottomNavigationTabIndex = resolveSelectedBottomNavigationTabIndex(currentDestination)
+        val selectedBottomNavigationColorArgb = colorToArgbLong(Neutral90)
+        val unselectedBottomNavigationColorArgb = colorToArgbLong(Neutral40)
         val isOnMainTabRoot = isMainTabRootDestination(currentDestination)
         val isOnLoginRoute = isLoginRoute(currentDestination?.route)
         val shouldHandleDoubleBackToExit = isOnMainTabRoot || (isOnLoginRoute && !hasPreviousBackStackEntry)
@@ -192,6 +214,60 @@ fun NavDisplay(
                 }
             }
             previousRouteText = currentRouteText
+        }
+        LaunchedEffect(
+            shouldShowNativeBottomNavigation,
+            selectedBottomNavigationTabIndex,
+            selectedBottomNavigationColorArgb,
+            unselectedBottomNavigationColorArgb,
+            homeTabLabel,
+            calendarTabLabel,
+            myPageTabLabel,
+        ) {
+            if (!nativeBottomNavigationEnabled) {
+                return@LaunchedEffect
+            }
+            notifyNativeBottomNavigationState(
+                isVisible = shouldShowNativeBottomNavigation,
+                selectedTabIndex = selectedBottomNavigationTabIndex,
+                selectedColorArgb = selectedBottomNavigationColorArgb,
+                unselectedColorArgb = unselectedBottomNavigationColorArgb,
+                homeTabLabel = homeTabLabel,
+                calendarTabLabel = calendarTabLabel,
+                myPageTabLabel = myPageTabLabel,
+            )
+        }
+        LaunchedEffect(nativeBottomNavigationEnabled, currentDestination?.route) {
+            if (!nativeBottomNavigationEnabled) {
+                return@LaunchedEffect
+            }
+            nativeBottomNavigationSelectionFlow().collect { tabIndex ->
+                val destination = bottomNavigationDestinations.getOrNull(tabIndex) ?: return@collect
+                val isReselected =
+                    isBottomNavigationDestinationSelected(
+                        currentDestination = currentDestination,
+                        destination = destination,
+                    )
+                if (isReselected) {
+                    when (destination.routeModel) {
+                        RouteModel.Home -> {
+                            homeTabReselectTrigger += 1
+                        }
+
+                        RouteModel.Calendar -> {
+                            calendarTabReselectTrigger += 1
+                        }
+
+                        RouteModel.MyPage -> {
+                            myPageTabReselectTrigger += 1
+                        }
+
+                        else -> Unit
+                    }
+                    return@collect
+                }
+                navigator.navigateToBottomNavigationDestination(destination)
+            }
         }
 
         PlatformBackGestureContainer(
@@ -325,6 +401,20 @@ private fun isBottomNavigationDestinationSelected(
     } == true
 }
 
+private fun resolveSelectedBottomNavigationTabIndex(currentDestination: NavDestination?): Int {
+    val selectedDestinationIndex =
+        bottomNavigationDestinations.indexOfFirst { destination ->
+            isBottomNavigationDestinationSelected(
+                currentDestination = currentDestination,
+                destination = destination,
+            )
+        }
+    if (selectedDestinationIndex >= 0) {
+        return selectedDestinationIndex
+    }
+    return 0
+}
+
 @Composable
 private fun BottomNavigationBar(
     currentDestination: NavDestination?,
@@ -423,6 +513,15 @@ private fun isOnboardingRoute(routeText: String): Boolean {
             .serializer()
             .descriptor.serialName
     return routeText == onboardingRouteSerialName || routeText.startsWith(onboardingRouteSerialName)
+}
+
+private fun colorToArgbLong(color: Color): Long {
+    val alpha = (color.alpha * 255f).roundToInt().coerceIn(0, 255)
+    val red = (color.red * 255f).roundToInt().coerceIn(0, 255)
+    val green = (color.green * 255f).roundToInt().coerceIn(0, 255)
+    val blue = (color.blue * 255f).roundToInt().coerceIn(0, 255)
+    val argbInt = (alpha shl 24) or (red shl 16) or (green shl 8) or blue
+    return argbInt.toLong() and 0xFFFFFFFF
 }
 
 private fun isLoginRoute(routeText: String?): Boolean {
