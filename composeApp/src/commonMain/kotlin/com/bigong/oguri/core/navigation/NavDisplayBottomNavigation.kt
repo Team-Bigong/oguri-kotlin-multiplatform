@@ -24,7 +24,7 @@ import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
 import org.jetbrains.compose.resources.painterResource

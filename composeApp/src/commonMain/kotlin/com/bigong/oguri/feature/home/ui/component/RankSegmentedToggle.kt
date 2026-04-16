@@ -21,7 +21,7 @@ import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
 

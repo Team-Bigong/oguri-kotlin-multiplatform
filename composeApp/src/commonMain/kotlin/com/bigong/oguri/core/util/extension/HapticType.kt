@@ -1,4 +1,4 @@
-package com.bigong.oguri.core.util
+package com.bigong.oguri.core.util.extension
 
 enum class HapticType {
     Selection,

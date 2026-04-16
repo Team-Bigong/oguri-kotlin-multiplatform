@@ -37,6 +37,7 @@ import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.core.network.provideOguriHttpClient
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
+import com.bigong.oguri.core.platform.applyPlatformThemeMode
 import com.bigong.oguri.core.platform.isNativeBottomNavigationEnabled
 import com.bigong.oguri.core.platform.nativeBottomNavigationSelectionFlow
 import com.bigong.oguri.core.platform.notifyNativeBottomNavigationState
@@ -184,6 +185,12 @@ fun NavDisplay(
             initializeOguriAnalytics()
             initializeAdMob()
             preloadAppOpenAd()
+        }
+        LaunchedEffect(currentDisplayThemeMode, isDarkTheme) {
+            applyPlatformThemeMode(
+                isDarkThemeEnabled = isDarkTheme,
+                shouldFollowSystemTheme = currentDisplayThemeMode == DisplayThemeMode.SYSTEM,
+            )
         }
         DisposableEffect(lifecycleOwner) {
             val observer =
