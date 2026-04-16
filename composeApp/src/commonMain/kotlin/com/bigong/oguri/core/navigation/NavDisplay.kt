@@ -140,11 +140,14 @@ fun NavDisplay(
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
         var myPageTabReselectTrigger by remember { mutableIntStateOf(0) }
+        val hasPreviousBackStackEntry = navigator.navHostController.previousBackStackEntry != null
         val shouldShowBottomNavigation =
             bottomNavigationDestinations.any { destination ->
                 isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
             }
         val isOnMainTabRoot = isMainTabRootDestination(currentDestination)
+        val isOnLoginRoute = isLoginRoute(currentDestination?.route)
+        val shouldHandleDoubleBackToExit = isOnMainTabRoot || (isOnLoginRoute && !hasPreviousBackStackEntry)
 
         LaunchedEffect(incomingDeepLinkUrl) {
             val deepLinkUrl = incomingDeepLinkUrl ?: return@LaunchedEffect
@@ -192,7 +195,7 @@ fun NavDisplay(
         }
 
         PlatformBackGestureContainer(
-            enabled = !isOnMainTabRoot,
+            enabled = !shouldHandleDoubleBackToExit,
             onBack = { navigator.popBackStack() },
         ) {
             Box(
@@ -289,8 +292,8 @@ fun NavDisplay(
             }
         }
 
-        key(currentDestination?.route, isOnMainTabRoot) {
-            PlatformBackHandler(enabled = isOnMainTabRoot) {
+        key(currentDestination?.route, shouldHandleDoubleBackToExit) {
+            PlatformBackHandler(enabled = shouldHandleDoubleBackToExit) {
                 val nowMark = TimeSource.Monotonic.markNow()
                 val previousMark = lastMainBackPressedMark
                 val isWithinExitWindow = previousMark != null && previousMark.elapsedNow() < EXIT_BACK_PRESS_WINDOW
@@ -420,4 +423,13 @@ private fun isOnboardingRoute(routeText: String): Boolean {
             .serializer()
             .descriptor.serialName
     return routeText == onboardingRouteSerialName || routeText.startsWith(onboardingRouteSerialName)
+}
+
+private fun isLoginRoute(routeText: String?): Boolean {
+    val loginRouteText = routeText ?: return false
+    val loginRouteSerialName =
+        RouteModel.Login
+            .serializer()
+            .descriptor.serialName
+    return loginRouteText == loginRouteSerialName || loginRouteText.startsWith(loginRouteSerialName)
 }
