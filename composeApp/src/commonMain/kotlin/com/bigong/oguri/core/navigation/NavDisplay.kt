@@ -131,6 +131,7 @@ fun NavDisplay(
         val lifecycleOwner = LocalLifecycleOwner.current
         var previousRouteText by remember { mutableStateOf<String?>(null) }
         var hasHandledFirstForegroundStart by remember { mutableStateOf(false) }
+        var hasCompletedInitialMainTabEntry by remember { mutableStateOf(false) }
         var hasShownAppOpenAdInCurrentForegroundSession by remember { mutableStateOf(false) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
@@ -220,7 +221,7 @@ fun NavDisplay(
             fun isMainTabRoute(routeText: String): Boolean =
                 isHomeRoute(routeText) || isCalendarRoute(routeText) || isMyPageRoute(routeText)
 
-            fun tryShowAppOpenAdAfterMainTabMove() {
+            fun tryShowAppOpenAdAfterScreenMove() {
                 if (hasShownAppOpenAdInCurrentForegroundSession) {
                     return
                 }
@@ -231,12 +232,10 @@ fun NavDisplay(
                 }
             }
             if (currentRouteText != null && previousRoute != null) {
-                val isMainTabMoved =
-                    isMainTabRoute(previousRoute) &&
-                        isMainTabRoute(currentRouteText) &&
-                        previousRoute != currentRouteText
-                if (isMainTabMoved) {
-                    tryShowAppOpenAdAfterMainTabMove()
+                if (!hasCompletedInitialMainTabEntry && isMainTabRoute(currentRouteText)) {
+                    hasCompletedInitialMainTabEntry = true
+                } else if (hasCompletedInitialMainTabEntry && previousRoute != currentRouteText) {
+                    tryShowAppOpenAdAfterScreenMove()
                 }
 
                 if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
@@ -257,6 +256,9 @@ fun NavDisplay(
                         calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
                     }
                 }
+            }
+            if (currentRouteText != null && previousRoute == null && isMainTabRoute(currentRouteText)) {
+                hasCompletedInitialMainTabEntry = true
             }
             previousRouteText = currentRouteText
         }
