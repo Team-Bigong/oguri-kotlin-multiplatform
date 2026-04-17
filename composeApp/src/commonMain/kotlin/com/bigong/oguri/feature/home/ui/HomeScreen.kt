@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.home.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -19,6 +20,7 @@ import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
+import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.feature.home.ui.component.HomeGreetingSection
 import com.bigong.oguri.feature.home.ui.component.HomeLogoHeader
@@ -95,6 +97,14 @@ fun HomeScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(weight = 1f),
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        calculateFloatingBottomNavigationAdditionalBottomPadding(
+                            hasFloatingBottomNavigation = true,
+                            baseBottomPadding = 24.dp,
+                        ),
+                ),
         ) {
             item {
                 Spacer(modifier = Modifier.height(18.dp))
@@ -186,7 +196,9 @@ fun HomeScreen(
                     onClick = onMoveToCalendarClick,
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
-                Spacer(modifier = Modifier.height(height = 24.dp))
+                Spacer(
+                    modifier = Modifier.height(height = 24.dp),
+                )
             }
         }
     }

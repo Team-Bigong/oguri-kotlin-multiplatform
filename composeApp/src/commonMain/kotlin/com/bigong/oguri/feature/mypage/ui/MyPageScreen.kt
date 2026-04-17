@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.mypage.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
+import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestProfileSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
@@ -110,6 +112,14 @@ fun MyPageScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
+                contentPadding =
+                    PaddingValues(
+                        bottom =
+                            calculateFloatingBottomNavigationAdditionalBottomPadding(
+                                hasFloatingBottomNavigation = true,
+                                baseBottomPadding = 24.dp,
+                            ),
+                    ),
             ) {
                 item {
                     Column(
@@ -154,7 +164,9 @@ fun MyPageScreen(
                                 MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onGuestLoginClick),
                             ),
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(
+                        modifier = Modifier.height(24.dp),
+                    )
                 }
             }
             MyPageBottomBanner()
@@ -178,6 +190,14 @@ fun MyPageScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(1f),
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        calculateFloatingBottomNavigationAdditionalBottomPadding(
+                            hasFloatingBottomNavigation = true,
+                            baseBottomPadding = 24.dp,
+                        ),
+                ),
         ) {
             item {
                 Column(
@@ -233,7 +253,9 @@ fun MyPageScreen(
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onLogoutClick),
                         ),
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(
+                    modifier = Modifier.height(24.dp),
+                )
             }
         }
         MyPageBottomBanner()

@@ -39,7 +39,7 @@ import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.platform.isFloatingBottomNavigationEnabled
 
-private val FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING = 138.dp
+private val FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING = 142.dp
 
 @Composable
 fun Modifier.dismissKeyboardOnOutsideTouch(): Modifier {
@@ -108,15 +108,29 @@ fun Modifier.skeletonShimmer(
     }
 
 fun Modifier.floatingNavigationBarsPadding(
-    hasBottomNavigation: Boolean,
+    hasFloatingBottomNavigation: Boolean,
     baseBottomPadding: Dp = 0.dp,
 ): Modifier {
-    val hasFloatingBottomNavigation = hasBottomNavigation && isFloatingBottomNavigationEnabled()
-    if (!hasFloatingBottomNavigation) {
+    val additionalBottomPadding =
+        calculateFloatingBottomNavigationAdditionalBottomPadding(
+            hasFloatingBottomNavigation = hasFloatingBottomNavigation,
+            baseBottomPadding = baseBottomPadding,
+        )
+    if (additionalBottomPadding <= 0.dp) {
         return this
     }
-    val additionalBottomPadding = (FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING - baseBottomPadding).coerceAtLeast(0.dp)
     return this.padding(bottom = additionalBottomPadding)
+}
+
+fun calculateFloatingBottomNavigationAdditionalBottomPadding(
+    hasFloatingBottomNavigation: Boolean,
+    baseBottomPadding: Dp = 0.dp,
+): Dp {
+    val shouldApplyFloatingBottomPadding = hasFloatingBottomNavigation && isFloatingBottomNavigationEnabled()
+    if (!shouldApplyFloatingBottomPadding) {
+        return 0.dp
+    }
+    return (FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING - baseBottomPadding).coerceAtLeast(0.dp)
 }
 
 @Composable

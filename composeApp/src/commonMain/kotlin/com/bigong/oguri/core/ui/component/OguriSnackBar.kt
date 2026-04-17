@@ -88,7 +88,7 @@ fun OguriSnackBarHost(
                 }.padding(horizontal = 16.dp)
                 .padding(bottom = bottomOffset)
                 .floatingNavigationBarsPadding(
-                    hasBottomNavigation = hasBottomNavigation,
+                    hasFloatingBottomNavigation = hasBottomNavigation,
                     baseBottomPadding = bottomOffset,
                 ),
         snackbar = { snackbarData ->

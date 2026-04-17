@@ -10,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,6 +48,7 @@ import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
+import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarPeriodBottomSheet
@@ -130,6 +132,14 @@ fun CalendarScreen(
                     .onGloballyPositioned { coordinates ->
                         listViewportBottomInWindow = coordinates.positionInWindow().y + coordinates.size.height
                     },
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        calculateFloatingBottomNavigationAdditionalBottomPadding(
+                            hasFloatingBottomNavigation = true,
+                            baseBottomPadding = 16.dp,
+                        ),
+                ),
         ) {
             item {
                 Spacer(modifier = Modifier.height(20.dp))
@@ -189,7 +199,9 @@ fun CalendarScreen(
             )
 
             item(key = "calendar_recommendation_bottom_spacing") {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(
+                    modifier = Modifier.height(16.dp),
+                )
             }
         }
 
