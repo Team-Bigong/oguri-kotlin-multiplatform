@@ -49,6 +49,7 @@ import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
+import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarPeriodBottomSheet
@@ -229,7 +230,10 @@ fun CalendarScreen(
                 Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 20.dp, bottom = 20.dp)
-                    .navigationBarsPadding(),
+                    .floatingNavigationBarsPadding(
+                        hasFloatingBottomNavigation = true,
+                        baseBottomPadding = 72.dp,
+                    ).navigationBarsPadding(),
         ) {
             Box(
                 modifier =
