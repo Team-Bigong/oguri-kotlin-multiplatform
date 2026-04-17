@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,11 +31,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral20
+import com.bigong.oguri.core.platform.isFloatingBottomNavigationEnabled
+
+private val FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING = 138.dp
 
 @Composable
 fun Modifier.dismissKeyboardOnOutsideTouch(): Modifier {
@@ -101,6 +106,18 @@ fun Modifier.skeletonShimmer(
                 measuredSize = size
             }
     }
+
+fun Modifier.floatingNavigationBarsPadding(
+    hasBottomNavigation: Boolean,
+    baseBottomPadding: Dp = 0.dp,
+): Modifier {
+    val hasFloatingBottomNavigation = hasBottomNavigation && isFloatingBottomNavigationEnabled()
+    if (!hasFloatingBottomNavigation) {
+        return this
+    }
+    val additionalBottomPadding = (FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING - baseBottomPadding).coerceAtLeast(0.dp)
+    return this.padding(bottom = additionalBottomPadding)
+}
 
 @Composable
 fun Modifier.consumeVerticalDragForBottomSheetContent(): Modifier {

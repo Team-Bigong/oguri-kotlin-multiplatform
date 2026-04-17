@@ -3,10 +3,8 @@ import SwiftUI
 
 private let bottomTabIconPointSize: CGFloat = 18
 private let bottomTabTitleFontSize: CGFloat = 11
-private let defaultBottomTabNormalColor = UIColor(red: 0.58, green: 0.64, blue: 0.72, alpha: 1.0) // #94A3B8
-private let defaultBottomTabSelectedColor = UIColor(red: 0.06, green: 0.09, blue: 0.16, alpha: 1.0) // #0F172A
 
-struct NativeBottomTabBarView: UIViewRepresentable {
+struct FloatingBottomTabBarView: UIViewRepresentable {
     final class Coordinator: NSObject, UITabBarDelegate {
         private let onTabSelected: (Int) -> Void
 
@@ -22,6 +20,7 @@ struct NativeBottomTabBarView: UIViewRepresentable {
     let selectedTabIndex: Int
     let selectedColorArgb: UInt32
     let unselectedColorArgb: UInt32
+    let backgroundColorArgb: UInt32
     let homeTabLabel: String
     let calendarTabLabel: String
     let myPageTabLabel: String
@@ -43,13 +42,14 @@ struct NativeBottomTabBarView: UIViewRepresentable {
     }
 
     private func applyTabBarAppearance(tabBar: UITabBar) {
-        let selectedColor = color(from: selectedColorArgb, fallback: defaultBottomTabSelectedColor)
-        let unselectedColor = color(from: unselectedColorArgb, fallback: defaultBottomTabNormalColor)
+        let selectedColor = color(from: selectedColorArgb, fallback: .label)
+        let unselectedColor = color(from: unselectedColorArgb, fallback: .secondaryLabel)
+        let backgroundColor = color(from: backgroundColorArgb, fallback: .systemBackground)
         let itemTitleFont = UIFont.systemFont(ofSize: bottomTabTitleFontSize, weight: .regular)
 
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithDefaultBackground()
-        tabBarAppearance.backgroundColor = UIColor(red: 0.97, green: 0.98, blue: 0.99, alpha: 0.9)
+        tabBarAppearance.backgroundColor = backgroundColor
 
         func configureItemAppearance(_ itemAppearance: UITabBarItemAppearance) {
             itemAppearance.normal.iconColor = unselectedColor

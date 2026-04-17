@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_alert
 import oguri.composeapp.generated.resources.ic_info
@@ -68,24 +69,28 @@ fun OguriSnackBarHost(
     hasBottomNavigation: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val shouldApplyNavigationBarsPadding = !hasBottomNavigation
     val bottomOffset =
-        if (hasBottomNavigation) {
-            12.dp
-        } else {
-            16.dp
+        when {
+            hasBottomNavigation -> 12.dp
+            else -> 16.dp
         }
     SnackbarHost(
         hostState = hostState,
         modifier =
             modifier
                 .let { snackBarModifier ->
-                    if (hasBottomNavigation) {
-                        snackBarModifier
-                    } else {
+                    if (shouldApplyNavigationBarsPadding) {
                         snackBarModifier.navigationBarsPadding()
+                    } else {
+                        snackBarModifier
                     }
                 }.padding(horizontal = 16.dp)
-                .padding(bottom = bottomOffset),
+                .padding(bottom = bottomOffset)
+                .floatingNavigationBarsPadding(
+                    hasBottomNavigation = hasBottomNavigation,
+                    baseBottomPadding = bottomOffset,
+                ),
         snackbar = { snackbarData ->
             val visuals = snackbarData.visuals as? OguriSnackBarVisuals
             val type = visuals?.type ?: OguriSnackBarType.INFO

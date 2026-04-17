@@ -38,9 +38,9 @@ import com.bigong.oguri.core.network.provideOguriHttpClient
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.platform.applyPlatformThemeMode
-import com.bigong.oguri.core.platform.isNativeBottomNavigationEnabled
-import com.bigong.oguri.core.platform.nativeBottomNavigationSelectionFlow
-import com.bigong.oguri.core.platform.notifyNativeBottomNavigationState
+import com.bigong.oguri.core.platform.floatingBottomNavigationSelectionFlow
+import com.bigong.oguri.core.platform.isFloatingBottomNavigationEnabled
+import com.bigong.oguri.core.platform.notifyFloatingBottomNavigationState
 import com.bigong.oguri.core.ui.component.OguriSnackBarHost
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -136,21 +136,22 @@ fun NavDisplay(
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
         var myPageTabReselectTrigger by remember { mutableIntStateOf(0) }
-        val nativeBottomNavigationEnabled = isNativeBottomNavigationEnabled()
+        val floatingBottomNavigationEnabled = isFloatingBottomNavigationEnabled()
         val hasPreviousBackStackEntry = navigator.navHostController.previousBackStackEntry != null
         val shouldShowBottomNavigation =
-            !nativeBottomNavigationEnabled &&
+            !floatingBottomNavigationEnabled &&
                 bottomNavigationDestinations.any { destination ->
                     isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
                 }
-        val shouldShowNativeBottomNavigation =
-            nativeBottomNavigationEnabled &&
+        val shouldShowFloatingBottomNavigation =
+            floatingBottomNavigationEnabled &&
                 bottomNavigationDestinations.any { destination ->
                     isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
                 }
         val selectedBottomNavigationTabIndex = resolveSelectedBottomNavigationTabIndex(currentDestination)
         val selectedBottomNavigationColorArgb = colorToArgbLong(Neutral90)
         val unselectedBottomNavigationColorArgb = colorToArgbLong(Neutral40)
+        val floatingBottomNavigationBackgroundColorArgb = colorToArgbLong(Neutral5.copy(alpha = 0.9f))
         val isOnMainTabRoot = isMainTabRootDestination(currentDestination)
         val isOnLoginRoute = isLoginRoute(currentDestination?.route)
         val shouldHandleDoubleBackToExit = isOnMainTabRoot || (isOnLoginRoute && !hasPreviousBackStackEntry)
@@ -260,32 +261,34 @@ fun NavDisplay(
             previousRouteText = currentRouteText
         }
         LaunchedEffect(
-            shouldShowNativeBottomNavigation,
+            shouldShowFloatingBottomNavigation,
             selectedBottomNavigationTabIndex,
             selectedBottomNavigationColorArgb,
             unselectedBottomNavigationColorArgb,
+            floatingBottomNavigationBackgroundColorArgb,
             homeTabLabel,
             calendarTabLabel,
             myPageTabLabel,
         ) {
-            if (!nativeBottomNavigationEnabled) {
+            if (!floatingBottomNavigationEnabled) {
                 return@LaunchedEffect
             }
-            notifyNativeBottomNavigationState(
-                isVisible = shouldShowNativeBottomNavigation,
+            notifyFloatingBottomNavigationState(
+                isVisible = shouldShowFloatingBottomNavigation,
                 selectedTabIndex = selectedBottomNavigationTabIndex,
                 selectedColorArgb = selectedBottomNavigationColorArgb,
                 unselectedColorArgb = unselectedBottomNavigationColorArgb,
+                backgroundColorArgb = floatingBottomNavigationBackgroundColorArgb,
                 homeTabLabel = homeTabLabel,
                 calendarTabLabel = calendarTabLabel,
                 myPageTabLabel = myPageTabLabel,
             )
         }
-        LaunchedEffect(nativeBottomNavigationEnabled, currentDestination?.route) {
-            if (!nativeBottomNavigationEnabled) {
+        LaunchedEffect(floatingBottomNavigationEnabled, currentDestination?.route) {
+            if (!floatingBottomNavigationEnabled) {
                 return@LaunchedEffect
             }
-            nativeBottomNavigationSelectionFlow().collect { tabIndex ->
+            floatingBottomNavigationSelectionFlow().collect { tabIndex ->
                 val destination = bottomNavigationDestinations.getOrNull(tabIndex) ?: return@collect
                 val isReselected =
                     isBottomNavigationDestinationSelected(
@@ -331,7 +334,7 @@ fun NavDisplay(
                     snackbarHost = {
                         OguriSnackBarHost(
                             hostState = snackbarHostState,
-                            hasBottomNavigation = shouldShowBottomNavigation,
+                            hasBottomNavigation = shouldShowBottomNavigation || shouldShowFloatingBottomNavigation,
                         )
                     },
                 ) { contentPaddingValues ->

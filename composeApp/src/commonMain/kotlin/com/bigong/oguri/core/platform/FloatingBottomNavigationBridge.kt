@@ -5,19 +5,20 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-expect fun isNativeBottomNavigationEnabled(): Boolean
+expect fun isFloatingBottomNavigationEnabled(): Boolean
 
-expect fun notifyNativeBottomNavigationState(
+expect fun notifyFloatingBottomNavigationState(
     isVisible: Boolean,
     selectedTabIndex: Int,
     selectedColorArgb: Long,
     unselectedColorArgb: Long,
+    backgroundColorArgb: Long,
     homeTabLabel: String,
     calendarTabLabel: String,
     myPageTabLabel: String,
 )
 
-private val nativeBottomNavigationSelectionEvents: MutableSharedFlow<Int> =
+private val floatingBottomNavigationSelectionEvents: MutableSharedFlow<Int> =
     MutableSharedFlow(
         replay = 0,
         extraBufferCapacity = 32,
@@ -25,8 +26,8 @@ private val nativeBottomNavigationSelectionEvents: MutableSharedFlow<Int> =
     )
 
 @Suppress("unused")
-fun emitNativeBottomNavigationSelection(tabIndex: Int) {
-    nativeBottomNavigationSelectionEvents.tryEmit(tabIndex)
+fun emitFloatingBottomNavigationSelection(tabIndex: Int) {
+    floatingBottomNavigationSelectionEvents.tryEmit(tabIndex)
 }
 
-fun nativeBottomNavigationSelectionFlow(): Flow<Int> = nativeBottomNavigationSelectionEvents.asSharedFlow()
+fun floatingBottomNavigationSelectionFlow(): Flow<Int> = floatingBottomNavigationSelectionEvents.asSharedFlow()

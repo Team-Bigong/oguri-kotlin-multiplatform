@@ -11,22 +11,23 @@ struct ComposeView: UIViewControllerRepresentable {
 }
 
 struct ContentView: View {
-    @StateObject private var nativeBottomNavigationStateStore = NativeBottomNavigationStateStore()
+    @StateObject private var floatingBottomNavigationStateStore = FloatingBottomNavigationStateStore()
 
     var body: some View {
         ZStack(alignment: .bottom) {
             ComposeView()
                 .ignoresSafeArea()
 
-            if nativeBottomNavigationStateStore.isVisible {
-                NativeBottomTabBarView(
-                    selectedTabIndex: nativeBottomNavigationStateStore.selectedTabIndex,
-                    selectedColorArgb: nativeBottomNavigationStateStore.selectedColorArgb,
-                    unselectedColorArgb: nativeBottomNavigationStateStore.unselectedColorArgb,
-                    homeTabLabel: nativeBottomNavigationStateStore.homeTabLabel,
-                    calendarTabLabel: nativeBottomNavigationStateStore.calendarTabLabel,
-                    myPageTabLabel: nativeBottomNavigationStateStore.myPageTabLabel,
-                    onTabSelected: handleNativeTabSelected
+            if floatingBottomNavigationStateStore.isVisible {
+                FloatingBottomTabBarView(
+                    selectedTabIndex: floatingBottomNavigationStateStore.selectedTabIndex,
+                    selectedColorArgb: floatingBottomNavigationStateStore.selectedColorArgb,
+                    unselectedColorArgb: floatingBottomNavigationStateStore.unselectedColorArgb,
+                    backgroundColorArgb: floatingBottomNavigationStateStore.backgroundColorArgb,
+                    homeTabLabel: floatingBottomNavigationStateStore.homeTabLabel,
+                    calendarTabLabel: floatingBottomNavigationStateStore.calendarTabLabel,
+                    myPageTabLabel: floatingBottomNavigationStateStore.myPageTabLabel,
+                    onTabSelected: handleFloatingTabSelected
                 )
                 .frame(height: 78)
                 .padding(.horizontal, 12)
@@ -34,13 +35,13 @@ struct ContentView: View {
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: nativeBottomNavigationStateStore.isVisible)
+        .animation(.easeInOut(duration: 0.2), value: floatingBottomNavigationStateStore.isVisible)
     }
 
-    private func handleNativeTabSelected(_ selectedTabIndex: Int) {
+    private func handleFloatingTabSelected(_ selectedTabIndex: Int) {
         if selectedTabIndex < 0 || selectedTabIndex > 2 {
             return
         }
-        NativeBottomNavigationBridgeKt.emitNativeBottomNavigationSelection(tabIndex: Int32(selectedTabIndex))
+        FloatingBottomNavigationBridgeKt.emitFloatingBottomNavigationSelection(tabIndex: Int32(selectedTabIndex))
     }
 }
