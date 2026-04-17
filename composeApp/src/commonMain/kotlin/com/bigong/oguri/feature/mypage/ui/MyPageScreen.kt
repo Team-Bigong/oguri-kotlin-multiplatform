@@ -55,6 +55,10 @@ import oguri.composeapp.generated.resources.mypage_menu_withdraw
 import oguri.composeapp.generated.resources.mypage_withdraw_dialog_phrase
 import org.jetbrains.compose.resources.stringResource
 
+private val MYPAGE_BOTTOM_BANNER_HEIGHT = 60.dp
+private val MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT = 24.dp
+private val MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING = MYPAGE_BOTTOM_BANNER_HEIGHT + MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT
+
 @Composable
 fun MyPageScreen(
     myPageUiState: MyPageUiState,
@@ -117,7 +121,7 @@ fun MyPageScreen(
                         bottom =
                             calculateFloatingBottomNavigationAdditionalBottomPadding(
                                 hasFloatingBottomNavigation = true,
-                                baseBottomPadding = 24.dp,
+                                baseBottomPadding = MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING,
                             ),
                     ),
             ) {
@@ -165,7 +169,7 @@ fun MyPageScreen(
                             ),
                     )
                     Spacer(
-                        modifier = Modifier.height(24.dp),
+                        modifier = Modifier.height(MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT),
                     )
                 }
             }
@@ -195,7 +199,7 @@ fun MyPageScreen(
                     bottom =
                         calculateFloatingBottomNavigationAdditionalBottomPadding(
                             hasFloatingBottomNavigation = true,
-                            baseBottomPadding = 24.dp,
+                            baseBottomPadding = MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING,
                         ),
                 ),
         ) {
@@ -254,7 +258,7 @@ fun MyPageScreen(
                         ),
                 )
                 Spacer(
-                    modifier = Modifier.height(24.dp),
+                    modifier = Modifier.height(MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT),
                 )
             }
         }
@@ -334,6 +338,6 @@ private fun MyPageBottomBanner() {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .height(60.dp),
+                .height(MYPAGE_BOTTOM_BANNER_HEIGHT),
     )
 }
