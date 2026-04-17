@@ -77,6 +77,8 @@ fun PlaceDetailScreen(
     onPhotoClick: (List<String>, Int) -> Unit,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
+    val isInitialLoading = placeDetail == null && placeDetailUiState.isLoading
+    val isInitialError = placeDetail == null && placeDetailUiState.isError
     val lazyListState = rememberLazyListState()
     val isTopBarCollapsed by rememberPlaceDetailTopBarCollapsedState(listState = lazyListState)
     var maxExperienceCardHeightPx by remember { mutableIntStateOf(0) }
@@ -96,11 +98,11 @@ fun PlaceDetailScreen(
                 .navigationBarsPadding(),
     ) {
         when {
-            placeDetailUiState.isLoading -> {
+            isInitialLoading -> {
                 PlaceDetailSkeletonContent()
             }
 
-            placeDetailUiState.isError || placeDetail == null -> {
+            isInitialError || placeDetail == null -> {
                 NetworkErrorRetryContent(onRetryClick = onRetryClick)
             }
 
