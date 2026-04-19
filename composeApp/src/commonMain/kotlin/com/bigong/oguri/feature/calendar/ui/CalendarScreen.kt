@@ -26,6 +26,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -107,13 +108,13 @@ fun CalendarScreen(
     }
     var listViewportBottomInWindow by remember { mutableStateOf(0f) }
     val shouldShowScrollTopButton by remember {
-        androidx.compose.runtime.derivedStateOf {
+        derivedStateOf {
             listState.firstVisibleItemIndex > 1 ||
                 (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset > 280)
         }
     }
     val shouldShowEndHint by remember(listState.isScrollInProgress, pagedPeriodCards.loadState.append, pagedPeriodCards.itemCount) {
-        androidx.compose.runtime.derivedStateOf {
+        derivedStateOf {
             !listState.canScrollForward &&
                 listState.isScrollInProgress &&
                 pagedPeriodCards.loadState.append is LoadState.NotLoading &&
@@ -201,7 +202,7 @@ fun CalendarScreen(
 
             item(key = "calendar_recommendation_bottom_spacing") {
                 Spacer(
-                    modifier = Modifier.height(16.dp),
+                    modifier = Modifier.height(28.dp),
                 )
             }
         }
