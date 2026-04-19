@@ -56,6 +56,7 @@ fun HomeScreen(
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
+    onSearchClick: () -> Unit,
     scrollToTopTrigger: Int,
 ) {
     if (homeUiState.isLoading) {
@@ -108,7 +109,10 @@ fun HomeScreen(
         ) {
             item {
                 Spacer(modifier = Modifier.height(18.dp))
-                HomeLogoHeader(modifier = Modifier.padding(horizontal = 20.dp))
+                HomeLogoHeader(
+                    modifier = Modifier.padding(horizontal = 20.dp),
+                    onSearchClick = onSearchClick,
+                )
             }
             item {
                 Spacer(modifier = Modifier.height(24.dp))

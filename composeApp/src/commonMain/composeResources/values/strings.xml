@@ -9,6 +9,7 @@
 
     <string name="home_greeting_name">Only Oguri knew this combination.</string>
     <string name="home_greeting_question">How about taking a break like this?</string>
+    <string name="home_button_search">Search</string>
 
     <string name="home_tab_rank_one">1st</string>
     <string name="home_tab_rank_two">2nd</string>

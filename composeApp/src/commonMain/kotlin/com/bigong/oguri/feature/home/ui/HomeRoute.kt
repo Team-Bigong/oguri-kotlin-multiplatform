@@ -31,6 +31,7 @@ fun HomeRoute(
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onLoginRequired: () -> Unit,
 ) {
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
@@ -102,6 +103,7 @@ fun HomeRoute(
         onPlaceClick = onPlaceClick,
         onPeriodClick = onPeriodClick,
         onMoveToCalendarClick = onMoveToCalendarClick,
+        onSearchClick = onSearchClick,
         scrollToTopTrigger = scrollToTopTrigger,
     )
 
