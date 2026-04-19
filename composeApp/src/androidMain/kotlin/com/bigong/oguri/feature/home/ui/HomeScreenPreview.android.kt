@@ -80,6 +80,7 @@ private fun HomeScreenPreview() {
             onPlaceClick = { _, _, _ -> },
             onPeriodClick = { _, _ -> },
             onMoveToCalendarClick = {},
+            onSearchClick = {},
             scrollToTopTrigger = 0,
         )
     }

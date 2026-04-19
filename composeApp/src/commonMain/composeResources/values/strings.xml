@@ -10,6 +10,13 @@
     <string name="home_greeting_name">Only Oguri knew this combination.</string>
     <string name="home_greeting_question">How about taking a break like this?</string>
     <string name="home_button_search">Search</string>
+    <string name="search_hint_place">Search for a place you want to visit</string>
+    <string name="search_section_recent">Recent searches</string>
+    <string name="search_section_popular">Popular searches</string>
+    <string name="search_section_recommended_month">Recommended places this month</string>
+    <string name="search_content_description_back">Back</string>
+    <string name="search_content_description_search">Search</string>
+    <string name="search_content_description_delete_recent">Delete recent search</string>
 
     <string name="home_tab_rank_one">1st</string>
     <string name="home_tab_rank_two">2nd</string>
