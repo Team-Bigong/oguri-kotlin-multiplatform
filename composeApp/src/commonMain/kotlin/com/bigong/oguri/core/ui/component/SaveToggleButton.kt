@@ -28,13 +28,13 @@ fun SaveToggleButton(
     Box(
         modifier =
             modifier
-                .size(48.dp)
+                .size(32.dp)
                 .noRippleClickable(
                     onClick = {
                         HapticType.Selection.perform()
                         onCheckedChange(!checked)
                     },
-                ).padding(14.dp),
+                ).padding(4.dp),
         contentAlignment = Alignment.Center,
     ) {
         Image(
