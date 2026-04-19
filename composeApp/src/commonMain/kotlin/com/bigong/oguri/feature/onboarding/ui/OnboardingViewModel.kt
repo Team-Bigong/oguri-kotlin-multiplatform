@@ -187,10 +187,10 @@ class OnboardingViewModel(
         remainingDayOff: Int,
         preferredDayOff: Int,
     ) {
+        if (!startSubmitting()) {
+            return
+        }
         viewModelScope.launch {
-            _uiState.update { currentUiState ->
-                currentUiState.copy(isSubmitting = true)
-            }
             runCatching {
                 completeOnboardingUseCase(
                     preferredDayOff = preferredDayOff,
@@ -206,6 +206,19 @@ class OnboardingViewModel(
                 }
             }
         }
+    }
+
+    private fun startSubmitting(): Boolean {
+        var canSubmit = false
+        _uiState.update { currentUiState ->
+            if (currentUiState.isSubmitting) {
+                currentUiState
+            } else {
+                canSubmit = true
+                currentUiState.copy(isSubmitting = true)
+            }
+        }
+        return canSubmit
     }
 
     private fun sanitizeDayOffInput(inputText: String): String = inputText.filter { character -> character.isDigit() }.take(2)
