@@ -33,6 +33,9 @@ sealed interface RouteModel {
     data object Home : RouteModel
 
     @Serializable
+    data object Search : RouteModel
+
+    @Serializable
     data object Calendar : RouteModel
 
     @Serializable

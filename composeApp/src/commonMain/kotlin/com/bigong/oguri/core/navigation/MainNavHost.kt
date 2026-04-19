@@ -28,6 +28,7 @@ import com.bigong.oguri.feature.onboarding.ui.OnboardingRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
 import com.bigong.oguri.feature.photodetail.ui.PhotoDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
+import com.bigong.oguri.feature.search.ui.SearchRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 
@@ -158,7 +159,21 @@ fun MainNavHost(
                         }
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
+                onSearchClick = navigator::navigateToSearch,
                 onLoginRequired = navigator::navigateToLogin,
+            )
+        }
+        composable<RouteModel.Search> {
+            SearchRoute(
+                onBackClick = { navigator.popBackStack() },
+                onSearchClick = {},
+                onPlaceClick = { placeId ->
+                    navigator.navigateToPlaceDetail(
+                        placeId = placeId,
+                        startDate = null,
+                        endDate = null,
+                    )
+                },
             )
         }
         composable<RouteModel.Calendar> {

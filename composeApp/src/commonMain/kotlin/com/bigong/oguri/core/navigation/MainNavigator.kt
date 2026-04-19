@@ -103,6 +103,12 @@ class MainNavigator(
         }
     }
 
+    fun navigateToSearch() {
+        navHostController.navigate(RouteModel.Search) {
+            launchSingleTop = true
+        }
+    }
+
     fun navigateToPlaceDetail(
         placeId: Long,
         startDate: String?,
@@ -179,6 +185,7 @@ class MainNavigator(
 
             RouteModel.Onboarding,
             RouteModel.Home,
+            RouteModel.Search,
             RouteModel.Calendar,
             RouteModel.MyPage,
             RouteModel.DisplaySettings,
