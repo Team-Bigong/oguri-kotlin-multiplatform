@@ -128,7 +128,7 @@ fun HomeStrategyCard(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Column(
-                        modifier = Modifier.padding(end = 86.dp),
+                        modifier = Modifier.fillMaxWidth().padding(end = 18.dp),
                         horizontalAlignment = Alignment.Start,
                     ) {
                         Text(

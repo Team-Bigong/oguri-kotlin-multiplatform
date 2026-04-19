@@ -34,7 +34,7 @@ fun SaveToggleButton(
                         HapticType.Selection.perform()
                         onCheckedChange(!checked)
                     },
-                ).padding(4.dp),
+                ).padding(6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Image(
