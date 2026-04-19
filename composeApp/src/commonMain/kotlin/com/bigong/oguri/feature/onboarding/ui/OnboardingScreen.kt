@@ -18,13 +18,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
 import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
@@ -35,7 +38,9 @@ import com.bigong.oguri.feature.onboarding.ui.model.OnboardingStep
 import com.bigong.oguri.feature.onboarding.ui.model.OnboardingUiState
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_back
+import oguri.composeapp.generated.resources.onboarding_day_off_skip
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 private const val ONBOARDING_SCREEN_ANIMATION_DURATION_MILLIS = 260
 
@@ -52,6 +57,7 @@ fun OnboardingScreen(
     onRemainingDayOffCommit: () -> Unit,
     onPreferredDayOffChange: (String) -> Unit,
     onPreferredDayOffCommit: () -> Unit,
+    onSkipClick: () -> Unit,
     onCompleteClick: () -> Unit,
 ) {
     PlatformBackHandler(
@@ -87,12 +93,25 @@ fun OnboardingScreen(
                             .align(Alignment.CenterStart)
                             .noRippleClickable(onClick = onBackClick),
                 )
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.CenterEnd)
-                            .size(24.dp),
-                )
+                if (onboardingUiState.step == OnboardingStep.LEAVE_DAYS && !onboardingUiState.isSubmitting) {
+                    Text(
+                        text = stringResource(Res.string.onboarding_day_off_skip),
+                        style = OguriTheme.typography.bodyMedium,
+                        color = Neutral50,
+                        modifier =
+                            Modifier
+                                .padding(2.dp)
+                                .align(Alignment.CenterEnd)
+                                .noRippleClickable(onClick = onSkipClick),
+                    )
+                } else {
+                    Box(
+                        modifier =
+                            Modifier
+                                .align(Alignment.CenterEnd)
+                                .size(24.dp),
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(24.dp))
             AnimatedContent(

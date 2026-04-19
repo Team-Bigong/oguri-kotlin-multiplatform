@@ -157,6 +157,36 @@ class OnboardingViewModel(
             }
             return
         }
+        completeOnboardingWithDayOff(
+            remainingDayOff = remainingDayOff,
+            preferredDayOff = preferredDayOff,
+        )
+    }
+
+    fun skipOnboardingLeaveDays() {
+        if (uiState.value.isSubmitting) {
+            return
+        }
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                remainingDayOffInput = ValidateOnboardingLeaveDaysUseCase.DEFAULT_REMAINING_DAY_OFF.toString(),
+                preferredDayOffInput = ValidateOnboardingLeaveDaysUseCase.DEFAULT_PREFERRED_DAY_OFF.toString(),
+                isRemainingDayOffConfirmed = true,
+                isPreferredDayOffConfirmed = true,
+                remainingDayOffError = null,
+                preferredDayOffError = null,
+            )
+        }
+        completeOnboardingWithDayOff(
+            remainingDayOff = ValidateOnboardingLeaveDaysUseCase.DEFAULT_REMAINING_DAY_OFF,
+            preferredDayOff = ValidateOnboardingLeaveDaysUseCase.DEFAULT_PREFERRED_DAY_OFF,
+        )
+    }
+
+    private fun completeOnboardingWithDayOff(
+        remainingDayOff: Int,
+        preferredDayOff: Int,
+    ) {
         viewModelScope.launch {
             _uiState.update { currentUiState ->
                 currentUiState.copy(isSubmitting = true)

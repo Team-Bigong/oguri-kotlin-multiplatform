@@ -78,6 +78,7 @@
     <string name="onboarding_day_off_field_remaining">Remaining leave days</string>
     <string name="onboarding_day_off_field_preferred">Preferred leave days</string>
     <string name="onboarding_day_off_unit">days</string>
+    <string name="onboarding_day_off_skip">Skip</string>
     <string name="onboarding_day_off_done">Done</string>
     <string name="onboarding_day_off_error_positive">Please enter at least 1 day.</string>
     <string name="onboarding_day_off_error_max_remaining">Remaining leave days must be 40 or less.</string>

@@ -78,6 +78,7 @@
     <string name="onboarding_day_off_field_remaining">남은 연차</string>
     <string name="onboarding_day_off_field_preferred">선호 연차</string>
     <string name="onboarding_day_off_unit">일</string>
+    <string name="onboarding_day_off_skip">건너뛰기</string>
     <string name="onboarding_day_off_done">완료</string>
     <string name="onboarding_day_off_error_positive">1일 이상 입력해 주세요.</string>
     <string name="onboarding_day_off_error_max_remaining">남은 연차는 40일 이하로 입력해 주세요.</string>

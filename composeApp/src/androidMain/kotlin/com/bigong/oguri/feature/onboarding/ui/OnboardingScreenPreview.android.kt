@@ -22,6 +22,7 @@ private fun OnboardingScreenTermsPreview() {
             onRemainingDayOffCommit = {},
             onPreferredDayOffChange = {},
             onPreferredDayOffCommit = {},
+            onSkipClick = {},
             onCompleteClick = {},
         )
     }
@@ -50,6 +51,7 @@ private fun OnboardingScreenLeaveDaysPreview() {
             onRemainingDayOffCommit = {},
             onPreferredDayOffChange = {},
             onPreferredDayOffCommit = {},
+            onSkipClick = {},
             onCompleteClick = {},
         )
     }
