@@ -1,8 +1,8 @@
 package com.bigong.oguri.controller
 
-import com.bigong.oguri.dto.AdminMemberCreateRequest
-import com.bigong.oguri.dto.AdminMemberResponse
-import com.bigong.oguri.dto.AdminMemberUpdateRequest
+import com.bigong.oguri.dto.request.AdminMemberCreateRequest
+import com.bigong.oguri.dto.response.AdminMemberResponse
+import com.bigong.oguri.dto.request.AdminMemberUpdateRequest
 import com.bigong.oguri.service.AdminMemberService
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.http.HttpStatus
@@ -12,32 +12,26 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/admin/v1/members")
 class AdminMemberController(
-    private val adminMemberService: AdminMemberService
+    private val adminMemberService: AdminMemberService,
 ) {
     @GetMapping
-    fun getMemberList(): List<AdminMemberResponse> {
-        return adminMemberService.getMemberList()
-    }
+    fun getMemberList(): List<AdminMemberResponse> = adminMemberService.getMemberList()
 
     @PostMapping
     fun createMember(
-        @RequestBody request: AdminMemberCreateRequest
-    ): AdminMemberResponse {
-        return adminMemberService.createMember(request)
-    }
+        @RequestBody request: AdminMemberCreateRequest,
+    ): AdminMemberResponse = adminMemberService.createMember(request)
 
     @PutMapping("/{memberId}")
     fun updateMember(
         @PathVariable memberId: String,
-        @RequestBody request: AdminMemberUpdateRequest
-    ): AdminMemberResponse {
-        return adminMemberService.updateMember(memberId, request)
-    }
+        @RequestBody request: AdminMemberUpdateRequest,
+    ): AdminMemberResponse = adminMemberService.updateMember(memberId, request)
 
     @DeleteMapping("/{memberId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteMember(
-        @PathVariable memberId: String
+        @PathVariable memberId: String,
     ) {
         adminMemberService.deleteMember(memberId)
     }
