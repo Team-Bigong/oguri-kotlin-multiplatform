@@ -113,7 +113,7 @@
     <string name="share_period_description">With %1$d leave days, you can rest for %2$d days.\nTake a look.</string>
     <string name="share_button_open_in_app">View in app</string>
     <string name="share_default_fallback_message">This is a great time to take a break.\nWant to take a look?</string>
-    <string name="share_default_fallback_url">https://www.oguri.com</string>
+    <string name="share_default_fallback_url">https://www.oguri.kr</string>
 
     <string name="calendar_header_title">How many leave days can you use?</string>
     <string name="calendar_header_subtitle">Adjust your leave days to find the best combinations</string>
