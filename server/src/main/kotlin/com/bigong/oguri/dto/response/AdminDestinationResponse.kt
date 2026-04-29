@@ -1,5 +1,7 @@
 package com.bigong.oguri.dto.response
 
+import java.math.BigDecimal
+
 data class AdminDestinationImageResponse(
     val id: Int,
     val imageUrl: String,
@@ -29,6 +31,10 @@ data class AdminDestinationResponse(
     val recommendEndMonth2: Int?,
     val flightTimeMinutes: Int?,
     val flightUrl: String?,
+    val weatherTemp1: Int?,
+    val weatherPrecipitationMm1: Double?,
+    val weatherTemp2: Int?,
+    val weatherPrecipitationMm2: Double?,
     val images: List<AdminDestinationImageResponse>,
     val experiences: List<AdminDestinationExperienceResponse>,
 )
@@ -36,4 +42,6 @@ data class AdminDestinationResponse(
 data class AdminCountryResponse(
     val id: Int,
     val name: String,
+    val currencyCode: String?,
+    val bigMacIndex: BigDecimal?,
 )
