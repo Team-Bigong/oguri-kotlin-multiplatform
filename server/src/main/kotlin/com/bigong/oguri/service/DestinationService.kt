@@ -77,8 +77,17 @@ class DestinationService(
         // 3. 마크다운 처리된 상세 설명
         val description = target.description?.let { processDescription(it) } ?: ""
 
-        // 3.1 최적의 추천 방문 시기 선택
-        val recommendPeriod = selectBestRecommendPeriod(target, startDate)
+        // 3.1 최적의 추천 방문 시기 선택 및 그에 따른 날씨 결정
+        val selectedPeriodInfo = selectBestRecommendPeriodInfo(target, startDate)
+        val recommendPeriod = selectedPeriodInfo?.let {
+            PlaceRecommendPeriodResponse(it.first, it.second)
+        }
+
+        // 9. 선택된 추천 기간에 맞는 날씨 정보 사용 (1차 vs 2차)
+        val (selectedTemp, selectedPrecip) = when (selectedPeriodInfo?.third) {
+            2 -> target.weatherTemp2 to target.weatherPrecipitationMm2
+            else -> target.weatherTemp1 to target.weatherPrecipitationMm1
+        }
 
         // 4. 장소별 액티비티/즐길거리 조회
         val experiences =
@@ -94,8 +103,7 @@ class DestinationService(
                 }
 
         // 5. 관련 장소 목록 계산 (당시 추천되었던 다른 도시들)
-        val savedDestinationIds =
-            savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }.toSet()
+        val savedDestinationIds = savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }.toSet()
 
         val relevantPlaces =
             if (startDate != null && endDate != null) {
@@ -117,18 +125,6 @@ class DestinationService(
         // 8. 체감 물가 계산 (해당 국가 BMI / 대한민국 BMI)
         val relativeCostIndex = calculateRelativeCostIndex(target.country?.bigMacIndex)
 
-        // 9. 요청 기간에 맞는 날씨 정보 선택 (1차 vs 2차)
-        val (selectedTemp, selectedPrecip) = if (startDate != null) {
-            val startMonth = startDate.monthValue
-            if (isMonthInRange(startMonth, target.recommendStartMonth2, target.recommendEndMonth2)) {
-                target.weatherTemp2 to target.weatherPrecipitationMm2
-            } else {
-                target.weatherTemp1 to target.weatherPrecipitationMm1
-            }
-        } else {
-            target.weatherTemp1 to target.weatherPrecipitationMm1
-        }
-
         return PlaceDetailResponse(
             id = target.id.toLong(),
             country = target.country?.name ?: "Unknown",
@@ -149,17 +145,18 @@ class DestinationService(
 
     /**
      * 입력받은 날짜 또는 현재 날짜를 기준으로 가장 적합한 추천 기간 하나를 선택합니다.
+     * 반환값: Triple(시작월, 종료월, 기간인덱스(1 or 2))
      */
-    private fun selectBestRecommendPeriod(
+    private fun selectBestRecommendPeriodInfo(
         target: com.bigong.oguri.domain.Destination,
         startDate: LocalDate?,
-    ): PlaceRecommendPeriodResponse? {
-        val periods = mutableListOf<Pair<Int, Int>>()
+    ): Triple<Int, Int, Int>? {
+        val periods = mutableListOf<Triple<Int, Int, Int>>() // start, end, index
         if (target.recommendStartMonth1 != null && target.recommendEndMonth1 != null) {
-            periods.add(target.recommendStartMonth1!! to target.recommendEndMonth1!!)
+            periods.add(Triple(target.recommendStartMonth1!!, target.recommendEndMonth1!!, 1))
         }
         if (target.recommendStartMonth2 != null && target.recommendEndMonth2 != null) {
-            periods.add(target.recommendStartMonth2!! to target.recommendEndMonth2!!)
+            periods.add(Triple(target.recommendStartMonth2!!, target.recommendEndMonth2!!, 2))
         }
 
         if (periods.isEmpty()) return null
@@ -170,15 +167,12 @@ class DestinationService(
         // 2. 해당 월이 포함된 기간이 있는지 확인
         val matchingPeriod = periods.find { isMonthInRange(baseMonth, it.first, it.second) }
         if (matchingPeriod != null) {
-            return PlaceRecommendPeriodResponse(
-                matchingPeriod.first,
-                matchingPeriod.second
-            )
+            return matchingPeriod
         }
 
         // 3. 포함된 기간이 없다면, 기준 월에서 가장 가까운 미래에 시작하는 기간 선택
         val bestPeriod = periods.minBy { getCircularMonthDistance(baseMonth, it.first) }
-        return PlaceRecommendPeriodResponse(bestPeriod.first, bestPeriod.second)
+        return bestPeriod
     }
 
     /**
@@ -221,6 +215,5 @@ class DestinationService(
     /**
      * 설명문 마크다운 변환 (볼드 처리)
      */
-    private fun processDescription(text: String): String =
-        if (text.contains("**")) text else text.replace("추천", "**추천**")
+    private fun processDescription(text: String): String = if (text.contains("**")) text else text.replace("추천", "**추천**")
 }
