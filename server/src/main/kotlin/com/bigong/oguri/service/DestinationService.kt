@@ -77,24 +77,8 @@ class DestinationService(
         // 3. 마크다운 처리된 상세 설명
         val description = target.description?.let { processDescription(it) } ?: ""
 
-        // 3.1 추천 방문 시기 목록 구성
-        val recommendPeriods = mutableListOf<PlaceRecommendPeriodResponse>()
-        if (target.recommendStartMonth1 != null && target.recommendEndMonth1 != null) {
-            recommendPeriods.add(
-                PlaceRecommendPeriodResponse(
-                    startMonth = target.recommendStartMonth1!!,
-                    endMonth = target.recommendEndMonth1!!,
-                ),
-            )
-        }
-        if (target.recommendStartMonth2 != null && target.recommendEndMonth2 != null) {
-            recommendPeriods.add(
-                PlaceRecommendPeriodResponse(
-                    startMonth = target.recommendStartMonth2!!,
-                    endMonth = target.recommendEndMonth2!!,
-                ),
-            )
-        }
+        // 3.1 최적의 추천 방문 시기 선택
+        val recommendPeriod = selectBestRecommendPeriod(target, startDate)
 
         // 4. 장소별 액티비티/즐길거리 조회
         val experiences =
@@ -110,7 +94,8 @@ class DestinationService(
                 }
 
         // 5. 관련 장소 목록 계산 (당시 추천되었던 다른 도시들)
-        val savedDestinationIds = savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }.toSet()
+        val savedDestinationIds =
+            savedDestinationRepository.findAllByMemberId(memberId).map { it.destinationId }.toSet()
 
         val relevantPlaces =
             if (startDate != null && endDate != null) {
@@ -155,12 +140,52 @@ class DestinationService(
             averageTemperature = selectedTemp,
             averagePrecipitation = selectedPrecip,
             description = description,
-            recommendPeriods = recommendPeriods,
+            recommendPeriod = recommendPeriod,
             experiences = experiences,
             flightUrl = flightUrl,
             relevantPlaces = relevantPlaces,
         )
     }
+
+    /**
+     * 입력받은 날짜 또는 현재 날짜를 기준으로 가장 적합한 추천 기간 하나를 선택합니다.
+     */
+    private fun selectBestRecommendPeriod(
+        target: com.bigong.oguri.domain.Destination,
+        startDate: LocalDate?,
+    ): PlaceRecommendPeriodResponse? {
+        val periods = mutableListOf<Pair<Int, Int>>()
+        if (target.recommendStartMonth1 != null && target.recommendEndMonth1 != null) {
+            periods.add(target.recommendStartMonth1!! to target.recommendEndMonth1!!)
+        }
+        if (target.recommendStartMonth2 != null && target.recommendEndMonth2 != null) {
+            periods.add(target.recommendStartMonth2!! to target.recommendEndMonth2!!)
+        }
+
+        if (periods.isEmpty()) return null
+
+        // 1. 기준 월 결정 (입력받은 날짜가 있으면 그 월, 없으면 오늘 기준 월)
+        val baseMonth = startDate?.monthValue ?: LocalDate.now().monthValue
+
+        // 2. 해당 월이 포함된 기간이 있는지 확인
+        val matchingPeriod = periods.find { isMonthInRange(baseMonth, it.first, it.second) }
+        if (matchingPeriod != null) {
+            return PlaceRecommendPeriodResponse(
+                matchingPeriod.first,
+                matchingPeriod.second
+            )
+        }
+
+        // 3. 포함된 기간이 없다면, 기준 월에서 가장 가까운 미래에 시작하는 기간 선택
+        val bestPeriod = periods.minBy { getCircularMonthDistance(baseMonth, it.first) }
+        return PlaceRecommendPeriodResponse(bestPeriod.first, bestPeriod.second)
+    }
+
+    /**
+     * 두 월 사이의 거리를 계산합니다. (미래 방향으로만 계산)
+     * 예: 현재 12월, 시작 1월 -> 거리 1
+     */
+    private fun getCircularMonthDistance(from: Int, to: Int): Int = (to - from + 12) % 12
 
     /**
      * 특정 월이 추천 기간 범위 내에 있는지 확인합니다.
@@ -196,5 +221,6 @@ class DestinationService(
     /**
      * 설명문 마크다운 변환 (볼드 처리)
      */
-    private fun processDescription(text: String): String = if (text.contains("**")) text else text.replace("추천", "**추천**")
+    private fun processDescription(text: String): String =
+        if (text.contains("**")) text else text.replace("추천", "**추천**")
 }

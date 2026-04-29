@@ -23,8 +23,8 @@ data class PlaceDetailResponse(
     val averagePrecipitation: Double?,
     @field:Schema(description = "장소 상세 설명")
     val description: String,
-    @field:Schema(description = "추천 방문 시기 목록")
-    val recommendPeriods: List<PlaceRecommendPeriodResponse>,
+    @field:Schema(description = "추천 방문 시기 (사용자 요청 또는 현재 시점 기준)")
+    val recommendPeriod: PlaceRecommendPeriodResponse?,
     @field:Schema(description = "장소별 액티비티/즐길거리 목록")
     val experiences: List<ExperienceResponse>,
     @field:Schema(description = "항공권 검색 링크")
