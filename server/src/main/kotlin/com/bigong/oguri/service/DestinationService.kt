@@ -3,7 +3,6 @@ package com.bigong.oguri.service
 import com.bigong.oguri.domain.SavedDestination
 import com.bigong.oguri.dto.response.ExperienceResponse
 import com.bigong.oguri.dto.response.PlaceDetailResponse
-import com.bigong.oguri.dto.response.PlaceRecommendPeriodResponse
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
@@ -23,9 +22,9 @@ class DestinationService(
     private val destinationRepository: DestinationRepository,
     private val destinationExperienceRepository: DestinationExperienceRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
-    private val homeService: HomeService,
     private val exchangeService: ExchangeService,
     private val countryRepository: com.bigong.oguri.repository.CountryRepository,
+    private val placeRecommendationService: PlaceRecommendationService,
 ) {
     // 대한민국의 빅맥 지수를 캐싱 (성능 최적화)
     private var koreaBigMacIndex: BigDecimal? = null
@@ -80,7 +79,7 @@ class DestinationService(
         // 3.1 최적의 추천 방문 시기 선택 및 그에 따른 날씨 결정
         val selectedPeriodInfo = selectBestRecommendPeriodInfo(target, startDate)
         val recommendPeriod = selectedPeriodInfo?.let {
-            PlaceRecommendPeriodResponse(it.first, it.second)
+            com.bigong.oguri.dto.response.PlaceRecommendPeriodResponse(it.first, it.second)
         }
 
         // 9. 선택된 추천 기간에 맞는 날씨 정보 사용 (1차 vs 2차)
@@ -108,7 +107,7 @@ class DestinationService(
         val relevantPlaces =
             if (startDate != null && endDate != null) {
                 val totalDays = ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
-                homeService
+                placeRecommendationService
                     .calculateRecommendedPlaces(startDate, destinations, userCountry, totalDays)
                     .filter { it.id != id.toLong() }
                     .map { it.copy(isSaved = savedDestinationIds.contains(it.id.toInt())) }
