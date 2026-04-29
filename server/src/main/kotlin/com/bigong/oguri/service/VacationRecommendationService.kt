@@ -27,6 +27,7 @@ class VacationRecommendationService {
             val startOfMonth = currentYearMonth.atDay(1)
             val endOfMonth = currentYearMonth.atEndOfMonth()
             val daysInMonth = ChronoUnit.DAYS.between(startOfMonth, endOfMonth).toInt() + 1
+            val searchStartBoundary = startDateCutoff?.let { maxOf(startOfMonth, it) } ?: startOfMonth
             val monthlyCandidates = mutableListOf<RecommendationPeriod>()
 
             for (dayIndex in 0 until daysInMonth) {
@@ -35,18 +36,25 @@ class VacationRecommendationService {
                     continue
                 }
 
+                val candidateStart =
+                    resolveContiguousHolidayStart(
+                        currentStart = currentStart,
+                        searchStartBoundary = searchStartBoundary,
+                        holidayMap = holidayMap,
+                    )
                 var usedDayOffCount = 0
-                var currentEnd = currentStart
+                var currentEnd = candidateStart
                 var holidayCount = 0
                 val actualHolidayNames = linkedSetOf<String>()
                 val nonActualHolidayNames = linkedSetOf<String>()
                 val holidayDateDetails = linkedMapOf<LocalDate, CalendarHolidayDateResponse>()
 
-                val maxRange = (dayIndex + searchWindow).coerceAtMost(daysInMonth)
-                for (windowIndex in dayIndex until maxRange) {
-                    val date = startOfMonth.plusDays(windowIndex.toLong())
+                val maxSearchEnd = candidateStart.plusDays((searchWindow - 1).toLong())
+                val searchEnd = if (maxSearchEnd.isBefore(endOfMonth)) maxSearchEnd else endOfMonth
+                var date = candidateStart
+                while (!date.isAfter(searchEnd)) {
                     val matchedHoliday = holidayMap[date]
-                    val isWeekend = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+                    val isWeekend = isWeekend(date)
                     val isPublicHoliday = matchedHoliday != null
                     val isHoliday = isWeekend || isPublicHoliday
 
@@ -77,9 +85,10 @@ class VacationRecommendationService {
                         }
                     }
                     currentEnd = date
+                    date = date.plusDays(1)
                 }
 
-                val totalDays = ChronoUnit.DAYS.between(currentStart, currentEnd).toInt() + 1
+                val totalDays = ChronoUnit.DAYS.between(candidateStart, currentEnd).toInt() + 1
                 if (totalDays >= MINIMUM_RECOMMENDATION_TOTAL_DAYS) {
                     val summaryHolidayNames =
                         when {
@@ -89,7 +98,7 @@ class VacationRecommendationService {
                         }
                     monthlyCandidates.add(
                         RecommendationPeriod(
-                            start = currentStart,
+                            start = candidateStart,
                             end = currentEnd,
                             totalDays = totalDays,
                             usedDayOffCount = usedDayOffCount,
@@ -128,6 +137,27 @@ class VacationRecommendationService {
         startDate: LocalDate,
         endDate: LocalDate,
     ): String = "${startDate}_$endDate"
+
+    private fun resolveContiguousHolidayStart(
+        currentStart: LocalDate,
+        searchStartBoundary: LocalDate,
+        holidayMap: Map<LocalDate, PublicHoliday>,
+    ): LocalDate {
+        var candidateStart = currentStart
+        var previousDate = candidateStart.minusDays(1)
+        while (!previousDate.isBefore(searchStartBoundary) && isHoliday(previousDate, holidayMap)) {
+            candidateStart = previousDate
+            previousDate = candidateStart.minusDays(1)
+        }
+        return candidateStart
+    }
+
+    private fun isHoliday(
+        date: LocalDate,
+        holidayMap: Map<LocalDate, PublicHoliday>,
+    ): Boolean = isWeekend(date) || holidayMap.containsKey(date)
+
+    private fun isWeekend(date: LocalDate): Boolean = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
 
     private fun buildRecommendationComparator(): Comparator<RecommendationPeriod> {
         val currentYear = LocalDate.now().year
