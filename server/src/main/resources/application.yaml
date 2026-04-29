@@ -1,60 +1,64 @@
 spring:
-  application:
-    name: oguri-api
+    application:
+        name: oguri-api
 
-  config:
-    import: "optional:application-local.yaml"
+    main:
+        lazy-initialization: ${SPRING_MAIN_LAZY_INITIALIZATION:true}
 
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/oguri}
-    username: ${SPRING_DATASOURCE_USERNAME:postgres}
-    password: ${SPRING_DATASOURCE_PASSWORD:password}
-    driver-class-name: org.postgresql.Driver
+    config:
+        import: "optional:application-local.yaml"
 
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-    show-sql: true
+    datasource:
+        url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/oguri}
+        username: ${SPRING_DATASOURCE_USERNAME:postgres}
+        password: ${SPRING_DATASOURCE_PASSWORD:password}
+        driver-class-name: org.postgresql.Driver
 
-  flyway:
-    enabled: true
-    baseline-on-migrate: true
+    jpa:
+        hibernate:
+            ddl-auto: validate
+        open-in-view: false
+        properties:
+            hibernate:
+                format_sql: false
+        show-sql: false
+
+    flyway:
+        enabled: true
+        baseline-on-migrate: true
 
 springdoc:
-  swagger-ui:
-    tags-sorter: alpha
-    operations-sorter: alpha
+    swagger-ui:
+        tags-sorter: alpha
+        operations-sorter: alpha
 
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health
+    endpoints:
+        web:
+            exposure:
+                include: health
 
 server:
-  port: ${PORT:8080}
+    address: 0.0.0.0
+    port: ${PORT:8080}
 
 jwt:
-  access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:1800}
-  refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
+    access-token-validity-seconds: ${JWT_ACCESS_TOKEN_VALIDITY_SECONDS:1800}
+    refresh-token-validity-seconds: ${JWT_REFRESH_TOKEN_VALIDITY_SECONDS:1209600}
 
 apple:
-  client-id: ${APPLE_CLIENT_ID:}
+    client-id: ${APPLE_CLIENT_ID:}
 
 google:
-  web-client-id: ${GOOGLE_WEB_CLIENT_ID:}
+    web-client-id: ${GOOGLE_WEB_CLIENT_ID:}
 
 auth:
-  http:
-    connect-timeout-millis: ${AUTH_HTTP_CONNECT_TIMEOUT_MILLIS:2000}
-    read-timeout-millis: ${AUTH_HTTP_READ_TIMEOUT_MILLIS:3000}
+    http:
+        connect-timeout-millis: ${AUTH_HTTP_CONNECT_TIMEOUT_MILLIS:2000}
+        read-timeout-millis: ${AUTH_HTTP_READ_TIMEOUT_MILLIS:3000}
 
 admin:
-  username: ${ADMIN_USERNAME:}
-  password: ${ADMIN_PASSWORD:}
-  session-secret: ${ADMIN_SESSION_SECRET:}
-  session-validity-seconds: ${ADMIN_SESSION_VALIDITY_SECONDS:28800}
+    username: ${ADMIN_USERNAME:}
+    password: ${ADMIN_PASSWORD:}
+    session-secret: ${ADMIN_SESSION_SECRET:}
+    session-validity-seconds: ${ADMIN_SESSION_VALIDITY_SECONDS:28800}
