@@ -26,12 +26,18 @@ class VacationRecommendationService {
             val currentYearMonth = startYearMonth.plusMonths(monthOffset.toLong())
             val startOfMonth = currentYearMonth.atDay(1)
             val endOfMonth = currentYearMonth.atEndOfMonth()
-            val daysInMonth = ChronoUnit.DAYS.between(startOfMonth, endOfMonth).toInt() + 1
-            val searchStartBoundary = startDateCutoff?.let { maxOf(startOfMonth, it) } ?: startOfMonth
+            val candidateSearchStart =
+                resolveCandidateSearchStart(
+                    startOfMonth = startOfMonth,
+                    searchWindow = searchWindow,
+                    startDateCutoff = startDateCutoff,
+                )
+            val candidateSearchEnd = resolveCandidateSearchEnd(endOfMonth = endOfMonth, searchWindow = searchWindow)
+            val searchDayCount = ChronoUnit.DAYS.between(candidateSearchStart, endOfMonth).toInt() + 1
             val monthlyCandidates = mutableListOf<RecommendationPeriod>()
 
-            for (dayIndex in 0 until daysInMonth) {
-                val currentStart = startOfMonth.plusDays(dayIndex.toLong())
+            for (dayIndex in 0 until searchDayCount) {
+                val currentStart = candidateSearchStart.plusDays(dayIndex.toLong())
                 if (startDateCutoff != null && currentStart.isBefore(startDateCutoff)) {
                     continue
                 }
@@ -39,7 +45,7 @@ class VacationRecommendationService {
                 val candidateStart =
                     resolveContiguousHolidayStart(
                         currentStart = currentStart,
-                        searchStartBoundary = searchStartBoundary,
+                        searchStartBoundary = candidateSearchStart,
                         holidayMap = holidayMap,
                     )
                 var usedDayOffCount = 0
@@ -50,7 +56,7 @@ class VacationRecommendationService {
                 val holidayDateDetails = linkedMapOf<LocalDate, CalendarHolidayDateResponse>()
 
                 val maxSearchEnd = candidateStart.plusDays((searchWindow - 1).toLong())
-                val searchEnd = if (maxSearchEnd.isBefore(endOfMonth)) maxSearchEnd else endOfMonth
+                val searchEnd = if (maxSearchEnd.isBefore(candidateSearchEnd)) maxSearchEnd else candidateSearchEnd
                 var date = candidateStart
                 while (!date.isAfter(searchEnd)) {
                     val matchedHoliday = holidayMap[date]
@@ -89,7 +95,15 @@ class VacationRecommendationService {
                 }
 
                 val totalDays = ChronoUnit.DAYS.between(candidateStart, currentEnd).toInt() + 1
-                if (totalDays >= MINIMUM_RECOMMENDATION_TOTAL_DAYS) {
+                if (
+                    totalDays >= MINIMUM_RECOMMENDATION_TOTAL_DAYS &&
+                    overlapsMonth(
+                        startDate = candidateStart,
+                        endDate = currentEnd,
+                        startOfMonth = startOfMonth,
+                        endOfMonth = endOfMonth,
+                    )
+                ) {
                     val summaryHolidayNames =
                         when {
                             actualHolidayNames.isNotEmpty() -> actualHolidayNames.toList()
@@ -138,6 +152,22 @@ class VacationRecommendationService {
         endDate: LocalDate,
     ): String = "${startDate}_$endDate"
 
+    private fun resolveCandidateSearchStart(
+        startOfMonth: LocalDate,
+        searchWindow: Int,
+        startDateCutoff: LocalDate?,
+    ): LocalDate {
+        val expandedStart = startOfMonth.minusDays((searchWindow - 1).toLong())
+        return startDateCutoff?.let { cutoffDate ->
+            if (expandedStart.isAfter(cutoffDate)) expandedStart else cutoffDate
+        } ?: expandedStart
+    }
+
+    private fun resolveCandidateSearchEnd(
+        endOfMonth: LocalDate,
+        searchWindow: Int,
+    ): LocalDate = endOfMonth.plusDays((searchWindow - 1).toLong())
+
     private fun resolveContiguousHolidayStart(
         currentStart: LocalDate,
         searchStartBoundary: LocalDate,
@@ -158,6 +188,13 @@ class VacationRecommendationService {
     ): Boolean = isWeekend(date) || holidayMap.containsKey(date)
 
     private fun isWeekend(date: LocalDate): Boolean = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+
+    private fun overlapsMonth(
+        startDate: LocalDate,
+        endDate: LocalDate,
+        startOfMonth: LocalDate,
+        endOfMonth: LocalDate,
+    ): Boolean = !startDate.isAfter(endOfMonth) && !endDate.isBefore(startOfMonth)
 
     private fun buildRecommendationComparator(): Comparator<RecommendationPeriod> {
         val currentYear = LocalDate.now().year
