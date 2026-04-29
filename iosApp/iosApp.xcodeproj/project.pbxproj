@@ -96,6 +96,7 @@
 				ADD1E76AFC8920FF7FC5975D /* Sources */,
 				74B0A8F51EC0B0BE2D922016 /* Frameworks */,
 				F7B2B97E0FEA35F3C03F9CCD /* Resources */,
+				8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */,
 			);
 			buildRules = (
 			);
@@ -142,6 +143,8 @@
 				en,
 				Base,
 				ko,
+				"zh-Hans",
+				ja,
 			);
 			mainGroup = 498123707EE9EF62D42083EE;
 			minimizedProjectReferenceProxies = 1;
@@ -190,6 +193,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
+		};
+		8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Localize InfoPlist Display Name";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  APP_DISPLAY_NAME_EN=\"Oguri Debug\"\n  APP_DISPLAY_NAME_KO=\"오구리 Debug\"\n  APP_DISPLAY_NAME_JA=\"オグリ Debug\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri Debug\"\nelse\n  APP_DISPLAY_NAME_EN=\"Oguri\"\n  APP_DISPLAY_NAME_KO=\"오구리\"\n  APP_DISPLAY_NAME_JA=\"オグリ\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri\"\nfi\n\nwrite_info_plist_strings() {\n  LOCALE_IDENTIFIER=\"$1\"\n  LOCALIZED_APP_DISPLAY_NAME=\"$2\"\n  LOCALE_RESOURCES_DIRECTORY=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/$LOCALE_IDENTIFIER.lproj\"\n  mkdir -p \"$LOCALE_RESOURCES_DIRECTORY\"\n  /usr/bin/printf 'CFBundleDisplayName = \"%s\";\\nCFBundleName = \"%s\";\\n' \"$LOCALIZED_APP_DISPLAY_NAME\" \"$LOCALIZED_APP_DISPLAY_NAME\" > \"$LOCALE_RESOURCES_DIRECTORY/InfoPlist.strings\"\n}\n\nwrite_info_plist_strings \"en\" \"$APP_DISPLAY_NAME_EN\"\nwrite_info_plist_strings \"ko\" \"$APP_DISPLAY_NAME_KO\"\nwrite_info_plist_strings \"ja\" \"$APP_DISPLAY_NAME_JA\"\nwrite_info_plist_strings \"zh-Hans\" \"$APP_DISPLAY_NAME_ZH_HANS\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
