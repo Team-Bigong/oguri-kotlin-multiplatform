@@ -3,6 +3,7 @@ package com.bigong.oguri.service
 import com.bigong.oguri.domain.SavedDestination
 import com.bigong.oguri.dto.response.ExperienceResponse
 import com.bigong.oguri.dto.response.PlaceDetailResponse
+import com.bigong.oguri.dto.response.PlaceRecommendPeriodResponse
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
@@ -76,6 +77,25 @@ class DestinationService(
         // 3. 마크다운 처리된 상세 설명
         val description = target.description?.let { processDescription(it) } ?: ""
 
+        // 3.1 추천 방문 시기 목록 구성
+        val recommendPeriods = mutableListOf<PlaceRecommendPeriodResponse>()
+        if (target.recommendStartMonth1 != null && target.recommendEndMonth1 != null) {
+            recommendPeriods.add(
+                PlaceRecommendPeriodResponse(
+                    startMonth = target.recommendStartMonth1!!,
+                    endMonth = target.recommendEndMonth1!!,
+                ),
+            )
+        }
+        if (target.recommendStartMonth2 != null && target.recommendEndMonth2 != null) {
+            recommendPeriods.add(
+                PlaceRecommendPeriodResponse(
+                    startMonth = target.recommendStartMonth2!!,
+                    endMonth = target.recommendEndMonth2!!,
+                ),
+            )
+        }
+
         // 4. 장소별 액티비티/즐길거리 조회
         val experiences =
             destinationExperienceRepository
@@ -135,6 +155,7 @@ class DestinationService(
             averageTemperature = selectedTemp,
             averagePrecipitation = selectedPrecip,
             description = description,
+            recommendPeriods = recommendPeriods,
             experiences = experiences,
             flightUrl = flightUrl,
             relevantPlaces = relevantPlaces,

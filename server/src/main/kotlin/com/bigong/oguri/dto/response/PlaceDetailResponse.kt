@@ -23,6 +23,8 @@ data class PlaceDetailResponse(
     val averagePrecipitation: Double?,
     @field:Schema(description = "장소 상세 설명")
     val description: String,
+    @field:Schema(description = "추천 방문 시기 목록")
+    val recommendPeriods: List<PlaceRecommendPeriodResponse>,
     @field:Schema(description = "장소별 액티비티/즐길거리 목록")
     val experiences: List<ExperienceResponse>,
     @field:Schema(description = "항공권 검색 링크")
@@ -40,4 +42,11 @@ data class ExperienceResponse(
     val thumbnailUrl: String,
     @field:Schema(description = "제휴/상세 페이지 이동 링크")
     val advertisementUrl: String,
+)
+
+data class PlaceRecommendPeriodResponse(
+    @field:Schema(description = "시작 월", example = "3")
+    val startMonth: Int,
+    @field:Schema(description = "종료 월", example = "5")
+    val endMonth: Int,
 )

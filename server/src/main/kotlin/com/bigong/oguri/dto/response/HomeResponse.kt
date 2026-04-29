@@ -5,7 +5,7 @@ import java.time.LocalDate
 /**
  * 홈 화면 및 추천 목록의 최상위 응답 객체
  */
-data class RecommendPeriodResponse(
+data class HomeRecommendPeriodResponse(
     val rank: Int,
     val isSaved: Boolean,
     val startDate: LocalDate,

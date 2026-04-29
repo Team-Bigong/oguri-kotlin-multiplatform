@@ -1,7 +1,7 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
-import com.bigong.oguri.dto.response.RecommendPeriodResponse
+import com.bigong.oguri.dto.response.HomeRecommendPeriodResponse
 import com.bigong.oguri.service.HomeService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -22,5 +22,5 @@ class HomeController(
     fun getHome(
         @RequestParam(defaultValue = "대한민국") userCountry: String,
         request: HttpServletRequest,
-    ): List<RecommendPeriodResponse> = homeService.getHomeData(userCountry, request.resolveMemberId())
+    ): List<HomeRecommendPeriodResponse> = homeService.getHomeData(userCountry, request.resolveMemberId())
 }

@@ -4,7 +4,7 @@ import com.bigong.oguri.domain.Destination
 import com.bigong.oguri.domain.PublicHoliday
 import com.bigong.oguri.dto.response.AdvertisementResponse
 import com.bigong.oguri.dto.response.PlaceResponse
-import com.bigong.oguri.dto.response.RecommendPeriodResponse
+import com.bigong.oguri.dto.response.HomeRecommendPeriodResponse
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.PublicHolidayRepository
@@ -69,7 +69,7 @@ class HomeService(
     fun getHomeData(
         userCountry: String,
         memberId: String,
-    ): List<RecommendPeriodResponse> {
+    ): List<HomeRecommendPeriodResponse> {
         refreshHolidayCacheIfNeeded()
 
         // 1. 사용자 정보 로드 (선호 연차 및 잔여 연차)
@@ -103,7 +103,7 @@ class HomeService(
             val advertisements = buildAdvertisementsFromPlaces(recommendedPlaces, destinationsById)
 
             val isSaved = savedPeriods.any { it.startDate == period.start && it.endDate == period.end }
-            RecommendPeriodResponse(
+            HomeRecommendPeriodResponse(
                 rank = index + 1,
                 isSaved = isSaved,
                 startDate = period.start,
