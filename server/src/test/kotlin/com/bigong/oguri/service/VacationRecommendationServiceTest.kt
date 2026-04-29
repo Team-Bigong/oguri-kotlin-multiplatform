@@ -2,6 +2,7 @@ package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.PublicHoliday
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -140,5 +141,73 @@ class VacationRecommendationServiceTest {
         assertEquals(1, targetPeriod?.usedDayOffCount)
         assertEquals(4, targetPeriod?.totalDays)
         assertTrue(targetPeriod?.holidayNames?.contains("다음달 공휴일") == true)
+    }
+
+    @Test
+    fun `공휴일이 포함된 추천은 주말을 요약 이름에 포함하지 않는다`() {
+        // given
+        val laborDay = LocalDate.of(2026, 5, 1)
+        val childrenDay = LocalDate.of(2026, 5, 5)
+        val holidayMap =
+            listOf(
+                PublicHoliday(
+                    holidayDate = laborDay,
+                    name = "노동절",
+                    isActualHoliday = true,
+                ),
+                PublicHoliday(
+                    holidayDate = childrenDay,
+                    name = "어린이날",
+                    isActualHoliday = true,
+                ),
+            ).associateBy { holiday -> holiday.holidayDate }
+
+        // when
+        val recommendedPeriods =
+            vacationRecommendationService.findRecommendedPeriods(
+                startYearMonth = YearMonth.of(2026, 5),
+                userDayOff = 1,
+                holidayMap = holidayMap,
+                monthRangeCount = 1,
+                periodLimitPerMonth = 100,
+            )
+
+        // then
+        val targetPeriod =
+            recommendedPeriods.firstOrNull { period ->
+                period.start.isEqual(laborDay) && period.end.isEqual(childrenDay)
+            }
+
+        assertNotNull(targetPeriod)
+        assertFalse(targetPeriod?.holidayNames?.contains("주말") == true)
+        assertTrue(targetPeriod?.holidayDateDetails?.any { holidayDate -> holidayDate.label == "주말" } == true)
+    }
+
+    @Test
+    fun `공휴일이 없는 추천은 주말을 요약 이름에 포함한다`() {
+        // given
+        val leaveDate = LocalDate.of(2026, 5, 15)
+        val weekendEndDate = LocalDate.of(2026, 5, 17)
+
+        // when
+        val recommendedPeriods =
+            vacationRecommendationService.findRecommendedPeriods(
+                startYearMonth = YearMonth.of(2026, 5),
+                userDayOff = 1,
+                holidayMap = emptyMap(),
+                monthRangeCount = 1,
+                periodLimitPerMonth = 100,
+            )
+
+        // then
+        val targetPeriod =
+            recommendedPeriods.firstOrNull { period ->
+                period.start.isEqual(leaveDate) && period.end.isEqual(weekendEndDate)
+            }
+
+        assertNotNull(targetPeriod)
+        assertEquals(listOf("주말"), targetPeriod?.holidayNames)
+        assertEquals(2, targetPeriod?.holidayCount)
+        assertEquals(1, targetPeriod?.usedDayOffCount)
     }
 }

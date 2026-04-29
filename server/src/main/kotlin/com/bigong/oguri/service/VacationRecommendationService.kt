@@ -51,6 +51,7 @@ class VacationRecommendationService {
                 var usedDayOffCount = 0
                 var currentEnd = candidateStart
                 var holidayCount = 0
+                var hasWeekend = false
                 val actualHolidayNames = linkedSetOf<String>()
                 val nonActualHolidayNames = linkedSetOf<String>()
                 val holidayDateDetails = linkedMapOf<LocalDate, CalendarHolidayDateResponse>()
@@ -66,6 +67,7 @@ class VacationRecommendationService {
 
                     if (isHoliday) {
                         holidayCount++
+                        hasWeekend = hasWeekend || isWeekend
                         matchedHoliday
                             ?.name
                             ?.takeIf { holidayName: String -> holidayName.isNotBlank() }
@@ -108,6 +110,7 @@ class VacationRecommendationService {
                         when {
                             actualHolidayNames.isNotEmpty() -> actualHolidayNames.toList()
                             nonActualHolidayNames.isNotEmpty() -> nonActualHolidayNames.toList()
+                            hasWeekend -> listOf(DEFAULT_HOLIDAY_NAME)
                             else -> emptyList()
                         }
                     monthlyCandidates.add(
