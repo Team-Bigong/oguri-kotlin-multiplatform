@@ -10,6 +10,10 @@ plugins {
 group = "com.bigong.oguri"
 version = "1.0.0"
 
+springBoot {
+    mainClass.set("com.bigong.oguri.ApplicationKt")
+}
+
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))

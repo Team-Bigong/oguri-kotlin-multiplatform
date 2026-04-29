@@ -16,13 +16,13 @@ COPY shared/build.gradle.kts shared/build.gradle.kts
 
 # Gradle 배포판과 서버 런타임 의존성을 먼저 받아 Docker 레이어 캐시를 활용합니다.
 RUN chmod +x ./gradlew
-RUN ./gradlew :server:dependencies --configuration runtimeClasspath
+RUN ./gradlew :server:dependencies --configuration runtimeClasspath --no-configuration-cache
 
 # 전체 소스 복사 (공통 모듈 shared가 필요하므로 전체 복사)
 COPY . .
 
 # 서버 모듈 빌드
-RUN ./gradlew :server:bootJar -x test
+RUN ./gradlew :server:bootJar -x test --no-configuration-cache
 
 # 2. Run Stage
 FROM eclipse-temurin:17-jre-jammy
