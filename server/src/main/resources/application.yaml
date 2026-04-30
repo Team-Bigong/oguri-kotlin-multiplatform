@@ -5,6 +5,14 @@ spring:
     main:
         lazy-initialization: ${SPRING_MAIN_LAZY_INITIALIZATION:true}
 
+    data:
+        jpa:
+            repositories:
+                bootstrap-mode: ${SPRING_DATA_JPA_REPOSITORIES_BOOTSTRAP_MODE:lazy}
+
+    jmx:
+        enabled: false
+
     config:
         import: "optional:application-local.yaml"
 
@@ -16,7 +24,7 @@ spring:
 
     jpa:
         hibernate:
-            ddl-auto: validate
+            ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
         open-in-view: false
         properties:
             hibernate:

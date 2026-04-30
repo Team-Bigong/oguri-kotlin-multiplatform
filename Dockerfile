@@ -22,17 +22,17 @@ RUN ./gradlew :server:dependencies --configuration runtimeClasspath --no-configu
 COPY . .
 
 # 서버 모듈 빌드
-RUN ./gradlew :server:bootJar -x test --no-configuration-cache
+RUN ./gradlew :server:clean :server:bootJar -x test --no-configuration-cache
 
 # 2. Run Stage
 FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # 빌드된 jar 파일만 복사
-COPY --from=build /app/server/build/libs/server-1.0.0.jar app.jar
+COPY --from=build /app/server/build/libs/app.jar app.jar
 
 # 포트 설정
-EXPOSE 8080
+EXPOSE 10000
 
 # 실행 (Render의 PORT 환경 변수를 셸에서 확장해 서버 포트에 반영)
-ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS:-} -Xmx${JAVA_MAX_HEAP:-512m} -Dserver.address=0.0.0.0 -Dserver.port=${PORT:-8080} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS:-} -Xmx${JAVA_MAX_HEAP:-512m} -Dserver.address=0.0.0.0 -Dserver.port=${PORT:-10000} -Dspring.jpa.hibernate.ddl-auto=${SPRING_JPA_HIBERNATE_DDL_AUTO:-none} -Dspring.data.jpa.repositories.bootstrap-mode=${SPRING_DATA_JPA_REPOSITORIES_BOOTSTRAP_MODE:-lazy} -jar app.jar"]
