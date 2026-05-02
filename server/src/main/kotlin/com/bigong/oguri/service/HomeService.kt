@@ -1,12 +1,12 @@
 package com.bigong.oguri.service
 
-import com.bigong.oguri.domain.Destination
 import com.bigong.oguri.domain.PublicHoliday
 import com.bigong.oguri.dto.response.*
 import com.bigong.oguri.repository.*
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.YearMonth
 
 /**
@@ -18,6 +18,7 @@ class HomeService(
     private val destinationRepository: DestinationRepository,
     private val publicHolidayRepository: PublicHolidayRepository,
     private val savedRecommendationRepository: SavedRecommendationRepository,
+    private val savedDestinationRepository: SavedDestinationRepository,
     private val memberService: MemberService,
     private val vacationRecommendationService: VacationRecommendationService,
     private val placeRecommendationService: PlaceRecommendationService,
@@ -31,6 +32,7 @@ class HomeService(
         private const val HOME_PERIOD_LIMIT_PER_MONTH = 6
         private const val HOME_TOP_RECOMMENDATION_LIMIT = 3
         private const val DEFAULT_HOLIDAY_NAME = "주말"
+        private const val WEEKLY_TOP_PLACES_LIMIT = 5
     }
 
     /**
@@ -88,6 +90,30 @@ class HomeService(
                 advertisements = advertisements,
             )
         }
+    }
+
+    /**
+     * 이번 주 인기 여행지 조회 API 로직
+     */
+    fun getWeeklyTopPlaces(): HomeWeeklyTopResponse {
+        val allDestinations = destinationRepository.findAllWithCountryAndImages()
+        val since = LocalDateTime.now().minusDays(7)
+        val topIds = savedDestinationRepository.findTopDestinationIdsByCountAndNameAsc(since, WEEKLY_TOP_PLACES_LIMIT)
+        val destinationsById = allDestinations.associateBy { it.id }
+
+        val weeklyTopPlaces = topIds.mapNotNull { id ->
+            destinationsById[id]?.let { dest ->
+                val thumbnailUrl = dest.images.find { it.isThumbnail }?.imageUrl ?: ""
+                HomeWeeklyTopPlaceResponse(
+                    id = dest.id.toLong(),
+                    country = dest.country?.name ?: "Unknown",
+                    city = dest.name,
+                    thumbnailUrl = thumbnailUrl,
+                )
+            }
+        }
+
+        return HomeWeeklyTopResponse(weeklyTopPlaces = weeklyTopPlaces)
     }
 
     private fun selectNonOverlappingTopPeriods(
