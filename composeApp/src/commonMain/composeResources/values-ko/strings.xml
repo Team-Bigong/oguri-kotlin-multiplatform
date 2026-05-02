@@ -61,6 +61,21 @@
     <string name="place_detail_menu_save">저장하기</string>
     <string name="place_detail_menu_unsave">저장 삭제하기</string>
     <string name="place_detail_experience_detail">자세히 보기</string>
+    <string name="place_detail_information_recommend_period">%1$d월~%2$d월에 가기 좋아요</string>
+    <string name="place_detail_information_weather">추천 기간 평균 기온 %1$d°C, %2$s</string>
+    <string name="place_detail_information_exchange_rate">%1$s원 / %2$d%3$s</string>
+    <string name="place_detail_information_cost_index">체감 물가 %1$s배</string>
+    <string name="place_detail_information_cost_index_source">빅맥 지수</string>
+    <string name="place_detail_precipitation_clear">항상 맑아요 ☀️</string>
+    <string name="place_detail_precipitation_mostly_clear">대체로 맑아요 🌤️</string>
+    <string name="place_detail_precipitation_sometimes_rain">때때로 비가 와요 🌦️</string>
+    <string name="place_detail_precipitation_frequent_rain">비가 자주 와요 🌧️</string>
+    <string name="place_detail_precipitation_heavy_rain">비가 꽤 많이 와요 ☔</string>
+    <string name="place_detail_precipitation_often_rainy_season">우기일 가능성이 높아요 🌧️</string>
+    <string name="place_detail_currency_code_usd">달러</string>
+    <string name="place_detail_currency_code_jpy">엔</string>
+    <string name="place_detail_currency_code_eur">유로</string>
+    <string name="place_detail_currency_code_default">%1$s</string>
 
     <string name="login_apple_with_account">애플 계정으로 로그인</string>
     <string name="login_google_with_account">구글 계정으로 로그인</string>

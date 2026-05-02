@@ -61,6 +61,21 @@
     <string name="place_detail_menu_save">保存</string>
     <string name="place_detail_menu_unsave">保存を削除</string>
     <string name="place_detail_experience_detail">詳しく見る</string>
+    <string name="place_detail_information_recommend_period">%1$d月〜%2$d月に行くのがおすすめです</string>
+    <string name="place_detail_information_weather">おすすめ期間の平均気温 %1$d°C、%2$s</string>
+    <string name="place_detail_information_exchange_rate">%1$sウォン / %2$d%3$s</string>
+    <string name="place_detail_information_cost_index">体感物価 %1$s倍</string>
+    <string name="place_detail_information_cost_index_source">ビッグマック指数</string>
+    <string name="place_detail_precipitation_clear">いつも晴れています ☀️</string>
+    <string name="place_detail_precipitation_mostly_clear">おおむね晴れています 🌤️</string>
+    <string name="place_detail_precipitation_sometimes_rain">時々雨が降ります 🌦️</string>
+    <string name="place_detail_precipitation_frequent_rain">雨がよく降ります 🌧️</string>
+    <string name="place_detail_precipitation_heavy_rain">雨がかなり多いです ☔</string>
+    <string name="place_detail_precipitation_often_rainy_season">雨季の可能性が高いです 🌧️</string>
+    <string name="place_detail_currency_code_usd">ドル</string>
+    <string name="place_detail_currency_code_jpy">円</string>
+    <string name="place_detail_currency_code_eur">ユーロ</string>
+    <string name="place_detail_currency_code_default">%1$s</string>
 
     <string name="login_apple_with_account">Appleアカウントでログイン</string>
     <string name="login_google_with_account">Googleアカウントでログイン</string>

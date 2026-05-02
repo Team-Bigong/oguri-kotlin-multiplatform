@@ -46,6 +46,7 @@ import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailImagePager
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailShareButton
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailSkeletonContent
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
+import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTravelInformationCard
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_binoculars
@@ -161,6 +162,13 @@ fun PlaceDetailScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         PlaceDetailDescriptionSection(
                             description = placeDetail.description,
+                            modifier = Modifier.padding(horizontal = 20.dp),
+                        )
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        PlaceDetailTravelInformationCard(
+                            travelInformation = placeDetail.travelInformation,
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }

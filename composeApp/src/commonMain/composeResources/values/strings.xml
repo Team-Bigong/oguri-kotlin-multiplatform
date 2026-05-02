@@ -61,6 +61,21 @@
     <string name="place_detail_menu_save">Save</string>
     <string name="place_detail_menu_unsave">Remove from saved</string>
     <string name="place_detail_experience_detail">See details</string>
+    <string name="place_detail_information_recommend_period">Good to visit from month %1$d to %2$d</string>
+    <string name="place_detail_information_weather">Average %1$d°C in the recommended period, %2$s</string>
+    <string name="place_detail_information_exchange_rate">%1$s KRW / %2$d %3$s</string>
+    <string name="place_detail_information_cost_index">Cost feels %1$sx</string>
+    <string name="place_detail_information_cost_index_source">Big Mac index</string>
+    <string name="place_detail_precipitation_clear">always sunny ☀️</string>
+    <string name="place_detail_precipitation_mostly_clear">mostly sunny 🌤️</string>
+    <string name="place_detail_precipitation_sometimes_rain">rain sometimes 🌦️</string>
+    <string name="place_detail_precipitation_frequent_rain">rain often 🌧️</string>
+    <string name="place_detail_precipitation_heavy_rain">quite rainy ☔</string>
+    <string name="place_detail_precipitation_often_rainy_season">likely rainy season 🌧️</string>
+    <string name="place_detail_currency_code_usd">dollar</string>
+    <string name="place_detail_currency_code_jpy">yen</string>
+    <string name="place_detail_currency_code_eur">euro</string>
+    <string name="place_detail_currency_code_default">%1$s</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_google_with_account">Sign in with Google account</string>
