@@ -116,6 +116,31 @@ class HomeService(
         return HomeWeeklyTopResponse(weeklyTopPlaces = weeklyTopPlaces)
     }
 
+    /**
+     * 이번 달 인기 추천 기간 조회 API 로직
+     */
+    fun getMonthlyTopPeriods(): List<HomeMonthlyTopPeriodResponse> {
+        refreshHolidayCacheIfNeeded()
+        val since = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0).withSecond(0).withNano(0)
+        val topPeriodsData = savedRecommendationRepository.findTopSavedPeriodsByCount(since, 3)
+
+        return topPeriodsData.map { data ->
+            val start = (data[0] as java.sql.Date).toLocalDate()
+            val end = (data[1] as java.sql.Date).toLocalDate()
+            val dayOff = (data[2] as Number).toInt()
+            val total = (data[3] as Number).toInt()
+            val holidayCount = total - dayOff
+
+            HomeMonthlyTopPeriodResponse(
+                startDate = start,
+                endDate = end,
+                totalTripCount = total,
+                holidayCount = holidayCount,
+                dayOffCount = dayOff,
+            )
+        }
+    }
+
     private fun selectNonOverlappingTopPeriods(
         periods: List<VacationRecommendationService.RecommendationPeriod>,
         limit: Int,

@@ -20,6 +20,17 @@ data class HomeWeeklyTopPlaceResponse(
 )
 
 /**
+ * 홈 화면 이번 달 인기 추천 기간 응답 객체 (경량화 버전)
+ */
+data class HomeMonthlyTopPeriodResponse(
+    val startDate: LocalDate,
+    val endDate: LocalDate,
+    val totalTripCount: Int,
+    val holidayCount: Int,
+    val dayOffCount: Int,
+)
+
+/**
  * 홈 화면 및 추천 목록의 최상위 응답 객체
  */
 data class HomeRecommendPeriodResponse(

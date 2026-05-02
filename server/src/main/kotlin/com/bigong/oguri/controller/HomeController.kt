@@ -1,6 +1,7 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
+import com.bigong.oguri.dto.response.HomeMonthlyTopPeriodResponse
 import com.bigong.oguri.dto.response.HomeRecommendPeriodResponse
 import com.bigong.oguri.dto.response.HomeWeeklyTopResponse
 import com.bigong.oguri.service.HomeService
@@ -31,4 +32,11 @@ class HomeController(
     )
     @GetMapping("/weekly-top")
     fun getWeeklyTopPlaces(): HomeWeeklyTopResponse = homeService.getWeeklyTopPlaces()
+
+    @Operation(
+        summary = "이번 달 인기 추천 기간 조회",
+        description = "이번 달 사용자들이 가장 많이 저장(찜)한 상위 3개의 추천 기간을 반환합니다. 동점일 경우 시작일이 빠른 순으로 정렬됩니다.",
+    )
+    @GetMapping("/monthly-top-periods")
+    fun getMonthlyTopPeriods(): List<HomeMonthlyTopPeriodResponse> = homeService.getMonthlyTopPeriods()
 }
