@@ -72,10 +72,6 @@
     <string name="place_detail_precipitation_frequent_rain">雨がよく降ります 🌧️</string>
     <string name="place_detail_precipitation_heavy_rain">雨がかなり多いです ☔</string>
     <string name="place_detail_precipitation_often_rainy_season">雨季の可能性が高いです 🌧️</string>
-    <string name="place_detail_currency_code_usd">ドル</string>
-    <string name="place_detail_currency_code_jpy">円</string>
-    <string name="place_detail_currency_code_eur">ユーロ</string>
-    <string name="place_detail_currency_code_default">%1$s</string>
 
     <string name="login_apple_with_account">Appleアカウントでログイン</string>
     <string name="login_google_with_account">Googleアカウントでログイン</string>

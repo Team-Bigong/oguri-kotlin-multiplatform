@@ -27,16 +27,13 @@ import com.bigong.oguri.core.designsystem.Mint60
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.toCurrencyDisplayName
 import com.bigong.oguri.domain.model.PlaceDetailTravelInformation
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_coin
 import oguri.composeapp.generated.resources.ic_hamburger
 import oguri.composeapp.generated.resources.ic_place_calendar
 import oguri.composeapp.generated.resources.ic_weather
-import oguri.composeapp.generated.resources.place_detail_currency_code_default
-import oguri.composeapp.generated.resources.place_detail_currency_code_eur
-import oguri.composeapp.generated.resources.place_detail_currency_code_jpy
-import oguri.composeapp.generated.resources.place_detail_currency_code_usd
 import oguri.composeapp.generated.resources.place_detail_information_cost_index
 import oguri.composeapp.generated.resources.place_detail_information_cost_index_source
 import oguri.composeapp.generated.resources.place_detail_information_exchange_rate
@@ -104,7 +101,7 @@ fun PlaceDetailTravelInformationCard(
                     Res.string.place_detail_information_exchange_rate,
                     formatIntegerWithThousandsSeparator(value = exchangeRateInformation.koreanWonAmount),
                     exchangeRateInformation.currencyUnit,
-                    currencyDisplayName(currencyCode = exchangeRateInformation.currencyCode),
+                    exchangeRateInformation.currencyCode.toCurrencyDisplayName(),
                 ),
             supportingText = formatIsoDate(date = exchangeRateInformation.date),
         )
@@ -178,15 +175,6 @@ private fun precipitationMessage(averagePrecipitation: Double): String =
         averagePrecipitation < FREQUENT_RAIN_PRECIPITATION_MAXIMUM -> stringResource(Res.string.place_detail_precipitation_frequent_rain)
         averagePrecipitation < HEAVY_RAIN_PRECIPITATION_MAXIMUM -> stringResource(Res.string.place_detail_precipitation_heavy_rain)
         else -> stringResource(Res.string.place_detail_precipitation_often_rainy_season)
-    }
-
-@Composable
-private fun currencyDisplayName(currencyCode: String): String =
-    when (currencyCode.uppercase()) {
-        "USD" -> stringResource(Res.string.place_detail_currency_code_usd)
-        "JPY" -> stringResource(Res.string.place_detail_currency_code_jpy)
-        "EUR" -> stringResource(Res.string.place_detail_currency_code_eur)
-        else -> stringResource(Res.string.place_detail_currency_code_default, currencyCode)
     }
 
 private fun formatIsoDate(date: String): String = date.replace(oldChar = '-', newChar = '.')

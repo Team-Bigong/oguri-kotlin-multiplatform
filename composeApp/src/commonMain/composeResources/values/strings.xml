@@ -72,10 +72,6 @@
     <string name="place_detail_precipitation_frequent_rain">rain often 🌧️</string>
     <string name="place_detail_precipitation_heavy_rain">quite rainy ☔</string>
     <string name="place_detail_precipitation_often_rainy_season">likely rainy season 🌧️</string>
-    <string name="place_detail_currency_code_usd">dollar</string>
-    <string name="place_detail_currency_code_jpy">yen</string>
-    <string name="place_detail_currency_code_eur">euro</string>
-    <string name="place_detail_currency_code_default">%1$s</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_google_with_account">Sign in with Google account</string>

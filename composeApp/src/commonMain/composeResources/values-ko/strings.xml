@@ -72,10 +72,6 @@
     <string name="place_detail_precipitation_frequent_rain">비가 자주 와요 🌧️</string>
     <string name="place_detail_precipitation_heavy_rain">비가 꽤 많이 와요 ☔</string>
     <string name="place_detail_precipitation_often_rainy_season">우기일 가능성이 높아요 🌧️</string>
-    <string name="place_detail_currency_code_usd">달러</string>
-    <string name="place_detail_currency_code_jpy">엔</string>
-    <string name="place_detail_currency_code_eur">유로</string>
-    <string name="place_detail_currency_code_default">%1$s</string>
 
     <string name="login_apple_with_account">애플 계정으로 로그인</string>
     <string name="login_google_with_account">구글 계정으로 로그인</string>

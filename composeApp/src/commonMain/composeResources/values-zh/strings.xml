@@ -72,10 +72,6 @@
     <string name="place_detail_precipitation_frequent_rain">经常下雨 🌧️</string>
     <string name="place_detail_precipitation_heavy_rain">雨量较多 ☔</string>
     <string name="place_detail_precipitation_often_rainy_season">很可能是雨季 🌧️</string>
-    <string name="place_detail_currency_code_usd">美元</string>
-    <string name="place_detail_currency_code_jpy">日元</string>
-    <string name="place_detail_currency_code_eur">欧元</string>
-    <string name="place_detail_currency_code_default">%1$s</string>
 
     <string name="login_apple_with_account">使用 Apple 账号登录</string>
     <string name="login_google_with_account">使用 Google 账号登录</string>
