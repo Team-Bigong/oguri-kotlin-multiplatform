@@ -25,6 +25,10 @@ data class AdminDestinationUpsertRequest(
     val recommendEndMonth2: Int?,
     val flightTimeMinutes: Int?,
     val flightUrl: String? = null,
+    val weatherTemp1: Int? = null,
+    val weatherPrecipitationMm1: Double? = null,
+    val weatherTemp2: Int? = null,
+    val weatherPrecipitationMm2: Double? = null,
     val images: List<AdminDestinationImageUpsertRequest>,
     val experiences: List<AdminDestinationExperienceUpsertRequest> = emptyList(),
 )
