@@ -1,6 +1,7 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.PublicHoliday
+import com.bigong.oguri.domain.SearchLog
 import com.bigong.oguri.dto.response.*
 import com.bigong.oguri.repository.*
 import org.springframework.stereotype.Service
@@ -19,6 +20,7 @@ class HomeService(
     private val publicHolidayRepository: PublicHolidayRepository,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
+    private val searchLogRepository: SearchLogRepository,
     private val memberService: MemberService,
     private val vacationRecommendationService: VacationRecommendationService,
     private val placeRecommendationService: PlaceRecommendationService,
@@ -33,6 +35,7 @@ class HomeService(
         private const val HOME_TOP_RECOMMENDATION_LIMIT = 3
         private const val DEFAULT_HOLIDAY_NAME = "주말"
         private const val WEEKLY_TOP_PLACES_LIMIT = 5
+        private const val TRENDING_SEARCH_TERMS_LIMIT = 7
     }
 
     /**
@@ -140,6 +143,23 @@ class HomeService(
                 dayOffCount = dayOff,
             )
         }
+    }
+
+    /**
+     * 검색어 로깅 로직
+     */
+    @Transactional
+    fun logSearchTerm(memberId: String, query: String) {
+        if (query.isBlank()) return
+        searchLogRepository.save(SearchLog(memberId = memberId, query = query.trim()))
+    }
+
+    /**
+     * 인기 검색어 조회 로직
+     */
+    fun getTrendingSearchTerms(): List<String> {
+        val since = LocalDateTime.now().minusDays(7)
+        return searchLogRepository.findTrendingSearchTerms(since, TRENDING_SEARCH_TERMS_LIMIT)
     }
 
     private fun selectNonOverlappingTopPeriods(
