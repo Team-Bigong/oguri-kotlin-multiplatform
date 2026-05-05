@@ -20,7 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint60
+import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral40
@@ -83,9 +83,9 @@ private fun WeeklyTopPlaceCard(
                     contentAlignment = Alignment.Center,
                     modifier =
                         Modifier
-                            .size(size = 28.dp)
+                            .size(size = 24.dp)
                             .background(
-                                color = Mint60,
+                                color = Mint70,
                                 shape = RoundedCornerShape(bottomEnd = 8.dp),
                             ),
                 ) {

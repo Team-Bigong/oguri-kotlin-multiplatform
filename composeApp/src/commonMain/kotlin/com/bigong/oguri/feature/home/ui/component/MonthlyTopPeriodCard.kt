@@ -1,5 +1,6 @@
 package com.bigong.oguri.feature.home.ui.component
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint60
@@ -27,19 +30,19 @@ import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.MonthlyTopPeriod
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.home_monthly_top_period_date
 import oguri.composeapp.generated.resources.home_monthly_top_period_summary
-import oguri.composeapp.generated.resources.ic_period_medal_first
-import oguri.composeapp.generated.resources.ic_period_medal_second
-import oguri.composeapp.generated.resources.ic_period_medal_third
 import oguri.composeapp.generated.resources.ic_right_arrow
-import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 @Composable
 fun MonthlyTopPeriodCard(
@@ -48,6 +51,17 @@ fun MonthlyTopPeriodCard(
     modifier: Modifier = Modifier,
 ) {
     val cardShape = RoundedCornerShape(size = 8.dp)
+    val currentYear =
+        Clock.System
+            .now()
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+            .year
+    val periodDateColor =
+        if (period.startDate.year > currentYear || period.endDate.year > currentYear) {
+            Orange50
+        } else {
+            Mint70
+        }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -59,7 +73,7 @@ fun MonthlyTopPeriodCard(
                 .border(width = 1.dp, color = Mint70, shape = cardShape)
                 .noRippleClickable(onClick = { onClick(period) })
                 .padding(start = 20.dp)
-                .padding(top = 18.dp, bottom = 18.dp),
+                .padding(vertical = 14.dp),
     ) {
         RankMedal(rank = period.rank)
         Spacer(modifier = Modifier.width(width = 18.dp))
@@ -75,7 +89,7 @@ fun MonthlyTopPeriodCard(
                         period.totalTripCount,
                     ),
                 style = OguriTheme.typography.cardSubtitle,
-                color = Mint70,
+                color = periodDateColor,
             )
             Spacer(modifier = Modifier.height(height = 8.dp))
             Text(
@@ -108,45 +122,94 @@ fun MonthlyTopPeriodCard(
 
 @Composable
 private fun RankMedal(rank: Int) {
-    val medalResource = rank.toMedalResource()
-    val medalHeight = if (rank == FIRST_RANK) 32.dp else 24.dp
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier
+                .width(width = 24.dp)
+                .height(height = 48.dp),
+    ) {
+        if (rank == FIRST_RANK) {
+            FirstRankMedal(rank = rank)
+        } else {
+            CircleRankMedal(rank = rank)
+        }
+    }
+}
 
+@Composable
+private fun FirstRankMedal(rank: Int) {
     Box(
         contentAlignment = Alignment.TopCenter,
         modifier =
             Modifier
                 .width(width = 24.dp)
-                .height(height = medalHeight),
+                .height(height = 32.dp),
     ) {
-        Image(
-            painter = painterResource(resource = medalResource),
-            contentDescription = null,
-            colorFilter = ColorFilter.tint(Mint60),
+        Canvas(
             modifier =
                 Modifier
-                    .width(width = 24.dp)
-                    .height(height = medalHeight),
-        )
+                    .width(width = 12.dp)
+                    .height(height = 14.dp)
+                    .align(alignment = Alignment.BottomCenter),
+        ) {
+            val ribbonPath =
+                Path().apply {
+                    moveTo(x = 0f, y = 0f)
+                    lineTo(x = size.width, y = 0f)
+                    lineTo(x = size.width, y = size.height)
+                    lineTo(x = size.width / 2f, y = size.height - FIRST_RANK_RIBBON_NOTCH_HEIGHT)
+                    lineTo(x = 0f, y = size.height)
+                    close()
+                }
+            drawPath(path = ribbonPath, color = Mint60)
+        }
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier =
+                Modifier
+                    .size(size = 24.dp)
+                    .background(color = Neutral0, shape = CircleShape)
+                    .border(width = 2.dp, color = Mint60, shape = CircleShape)
+                    .padding(all = 4.dp),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier =
+                    Modifier
+                        .size(size = 16.dp)
+                        .background(color = Mint60, shape = CircleShape),
+            ) {
+                Text(
+                    text = rank.toString(),
+                    style = OguriTheme.typography.labelMedium,
+                    color = Neutral0,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CircleRankMedal(rank: Int) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier =
+            Modifier
+                .size(size = 24.dp)
+                .background(color = Mint60, shape = CircleShape),
+    ) {
         Text(
             text = rank.toString(),
-            style = OguriTheme.typography.labelLarge,
+            style = OguriTheme.typography.labelMedium,
             color = Neutral0,
             textAlign = TextAlign.Center,
-            modifier =
-                Modifier
-                    .size(size = 24.dp),
         )
     }
 }
 
-private fun Int.toMedalResource(): DrawableResource =
-    when (this) {
-        FIRST_RANK -> Res.drawable.ic_period_medal_first
-        SECOND_RANK -> Res.drawable.ic_period_medal_second
-        else -> Res.drawable.ic_period_medal_third
-    }
-
 private fun LocalDate.toMonthDayText(): String = "${month.ordinal + 1}월 ${day}일"
 
 private const val FIRST_RANK = 1
-private const val SECOND_RANK = 2
+private const val FIRST_RANK_RIBBON_NOTCH_HEIGHT = 4f
