@@ -16,6 +16,7 @@ data class HomeWeeklyTopPlaceResponse(
     val id: Long,
     val country: String,
     val city: String,
+    val summary: String,
     val thumbnailUrl: String,
 )
 

@@ -108,6 +108,7 @@ class HomeService(
                     id = dest.id.toLong(),
                     country = dest.country?.name ?: "Unknown",
                     city = dest.name,
+                    summary = dest.summary ?: "",
                     thumbnailUrl = thumbnailUrl,
                 )
             }
