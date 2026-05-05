@@ -2,6 +2,7 @@ package com.bigong.oguri.domain
 
 import jakarta.persistence.*
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "saved_recommendations")
@@ -19,4 +20,6 @@ class SavedRecommendation(
     val dayOffCount: Int,
     @Column(nullable = false)
     val totalTripCount: Int,
+    @Column(nullable = false, updatable = false)
+    val createdAt: LocalDateTime = LocalDateTime.now(),
 )

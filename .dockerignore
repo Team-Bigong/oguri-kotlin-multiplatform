@@ -1,0 +1,16 @@
+.git
+.gradle
+.idea
+.kotlin
+**/build
+**/.gradle
+**/node_modules
+**/.DS_Store
+
+iosApp
+web/node_modules
+web/dist
+
+local.properties
+*.jks
+*.keystore
