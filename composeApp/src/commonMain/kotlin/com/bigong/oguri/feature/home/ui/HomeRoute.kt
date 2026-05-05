@@ -47,8 +47,9 @@ fun HomeRoute(
             ?.map { place ->
                 place.thumbnailUrl
             }.orEmpty()
+    val weeklyTopPlaceImageUrls = homeUiState.weeklyTopPlaces.map { place -> place.thumbnailUrl }
 
-    PreloadNetworkImages(imageUrls = currentPeriodPlacesImageUrls)
+    PreloadNetworkImages(imageUrls = currentPeriodPlacesImageUrls + weeklyTopPlaceImageUrls)
 
     LaunchedEffect(homeViewModel) {
         homeViewModel.sideEffect.collectLatest { sideEffect ->

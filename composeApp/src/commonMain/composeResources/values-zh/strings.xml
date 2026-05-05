@@ -31,6 +31,16 @@
     <string name="home_guide_match_places_highlight">很适合去的地方</string>
     <string name="home_hint_place_cards">点一点你喜欢的卡片</string>
 
+    <string name="home_guide_weekly_top_places">这是本周热门旅行地</string>
+    <string name="home_guide_weekly_top_places_highlight">热门旅行地</string>
+    <string name="home_hint_weekly_top_places">大家最近关注的地方</string>
+
+    <string name="home_guide_monthly_top_periods">这是本月热门行程</string>
+    <string name="home_guide_monthly_top_periods_highlight">热门行程</string>
+    <string name="home_hint_monthly_top_periods">照着安排也很好</string>
+    <string name="home_monthly_top_period_date">%1$s - %2$s (%3$d天)</string>
+    <string name="home_monthly_top_period_summary">假日 %1$d天・年假 %2$d天</string>
+
     <string name="home_guide_trip_products">我们带来了不想错过的实用信息</string>
     <string name="home_guide_trip_products_highlight">实用信息</string>
     <string name="home_hint_trip_products">看看这些不错的优惠</string>

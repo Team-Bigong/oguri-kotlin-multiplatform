@@ -31,6 +31,16 @@
     <string name="home_guide_match_places_highlight">perfect places</string>
     <string name="home_hint_place_cards">Tap a card you like</string>
 
+    <string name="home_guide_weekly_top_places">These are this week’s popular travel spots</string>
+    <string name="home_guide_weekly_top_places_highlight">popular travel spots</string>
+    <string name="home_hint_weekly_top_places">Places people have been noticing</string>
+
+    <string name="home_guide_monthly_top_periods">These are this month’s popular schedules</string>
+    <string name="home_guide_monthly_top_periods_highlight">popular schedules</string>
+    <string name="home_hint_monthly_top_periods">Good enough to follow as they are</string>
+    <string name="home_monthly_top_period_date">%1$s - %2$s (%3$d days)</string>
+    <string name="home_monthly_top_period_summary">Holiday %1$d days・Leave %2$d days</string>
+
     <string name="home_guide_trip_products">We brought useful info you won’t want to miss</string>
     <string name="home_guide_trip_products_highlight">useful info</string>
     <string name="home_hint_trip_products">Check out these great deals</string>

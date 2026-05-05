@@ -5,6 +5,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
+import com.bigong.oguri.domain.model.MonthlyTopPeriod
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.model.RecommendPeriod
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
@@ -13,6 +14,9 @@ import kotlinx.datetime.LocalDate
 @Preview(showBackground = true)
 @Composable
 private fun HomeScreenPreview() {
+    val previewThumbnailUrl =
+        "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg"
+
     OguriTheme {
         HomeScreen(
             homeUiState =
@@ -21,6 +25,64 @@ private fun HomeScreenPreview() {
                     isError = false,
                     selectedRank = 1,
                     savedRankSet = setOf(1),
+                    weeklyTopPlaces =
+                        listOf(
+                            Place(
+                                id = 10L,
+                                country = "필리핀",
+                                city = "보라카이",
+                                summary = "화이트 비치 물빛이 가장 또렷해지는 시기예요",
+                                thumbnailUrl = previewThumbnailUrl,
+                            ),
+                            Place(
+                                id = 11L,
+                                country = "스페인",
+                                city = "바르셀로나",
+                                summary = "가우디 건축과 바다 산책을 함께 즐기기 좋아요",
+                                thumbnailUrl = previewThumbnailUrl,
+                            ),
+                            Place(
+                                id = 12L,
+                                country = "미국",
+                                city = "샌프란시스코",
+                                summary = "언덕과 바다 풍경이 가장 또렷해지는 시기예요",
+                                thumbnailUrl = previewThumbnailUrl,
+                            ),
+                            Place(
+                                id = 13L,
+                                country = "호주",
+                                city = "시드니",
+                                summary = "바다와 도심을 함께 즐기기 좋아요",
+                                thumbnailUrl = previewThumbnailUrl,
+                            ),
+                        ),
+                    monthlyTopPeriods =
+                        listOf(
+                            MonthlyTopPeriod(
+                                rank = 1,
+                                startDate = LocalDate.parse("2026-02-28"),
+                                endDate = LocalDate.parse("2026-03-04"),
+                                totalTripCount = 5,
+                                holidayCount = 3,
+                                dayOffCount = 2,
+                            ),
+                            MonthlyTopPeriod(
+                                rank = 2,
+                                startDate = LocalDate.parse("2026-05-01"),
+                                endDate = LocalDate.parse("2026-05-05"),
+                                totalTripCount = 5,
+                                holidayCount = 3,
+                                dayOffCount = 2,
+                            ),
+                            MonthlyTopPeriod(
+                                rank = 3,
+                                startDate = LocalDate.parse("2026-10-03"),
+                                endDate = LocalDate.parse("2026-10-09"),
+                                totalTripCount = 7,
+                                holidayCount = 4,
+                                dayOffCount = 3,
+                            ),
+                        ),
                     recommendPeriods =
                         listOf(
                             RecommendPeriod(
@@ -38,21 +100,21 @@ private fun HomeScreenPreview() {
                                             country = "필리핀",
                                             city = "보라카이",
                                             summary = "화이트 비치 물빛이 가장 또렷해지는 시기예요",
-                                            thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
+                                            thumbnailUrl = previewThumbnailUrl,
                                         ),
                                         Place(
                                             id = 2L,
                                             country = "스페인",
                                             city = "바르셀로나",
                                             summary = "가우디 건축과 바다 산책을 함께 즐기기 좋아요",
-                                            thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
+                                            thumbnailUrl = previewThumbnailUrl,
                                         ),
                                         Place(
                                             id = 3L,
                                             country = "미국",
                                             city = "샌프란시스코",
                                             summary = "언덕과 바다 풍경이 가장 또렷해지는 시기예요",
-                                            thumbnailUrl = "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg",
+                                            thumbnailUrl = previewThumbnailUrl,
                                         ),
                                     ),
                                 advertisements =

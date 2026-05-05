@@ -31,6 +31,16 @@
     <string name="home_guide_match_places_highlight">딱 좋은 곳</string>
     <string name="home_hint_place_cards">마음에 드는 카드를 눌러보세요</string>
 
+    <string name="home_guide_weekly_top_places">이번 주 인기 여행지예요</string>
+    <string name="home_guide_weekly_top_places_highlight">인기 여행지</string>
+    <string name="home_hint_weekly_top_places">사람들이 눈여겨본 곳들이에요</string>
+
+    <string name="home_guide_monthly_top_periods">이번 달 인기 일정이에요</string>
+    <string name="home_guide_monthly_top_periods_highlight">인기 일정</string>
+    <string name="home_hint_monthly_top_periods">그대로 따라가도 좋아요</string>
+    <string name="home_monthly_top_period_date">%1$s - %2$s (%3$d일)</string>
+    <string name="home_monthly_top_period_summary">휴일 %1$d일・연차 %2$d일</string>
+
     <string name="home_guide_trip_products">놓치기 아쉬운 유용한 정보를 가져왔어요</string>
     <string name="home_guide_trip_products_highlight">유용한 정보</string>
     <string name="home_hint_trip_products">매력적인 혜택을 확인해보세요</string>

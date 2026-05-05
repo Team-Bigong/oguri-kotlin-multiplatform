@@ -31,6 +31,16 @@
     <string name="home_guide_match_places_highlight">ぴったりの場所</string>
     <string name="home_hint_place_cards">気になるカードをタップしてみましょう</string>
 
+    <string name="home_guide_weekly_top_places">今週の人気旅行先です</string>
+    <string name="home_guide_weekly_top_places_highlight">人気旅行先</string>
+    <string name="home_hint_weekly_top_places">みんなが注目した場所です</string>
+
+    <string name="home_guide_monthly_top_periods">今月の人気日程です</string>
+    <string name="home_guide_monthly_top_periods_highlight">人気日程</string>
+    <string name="home_hint_monthly_top_periods">そのまま真似してもいいですよ</string>
+    <string name="home_monthly_top_period_date">%1$s - %2$s (%3$d日)</string>
+    <string name="home_monthly_top_period_summary">休日 %1$d日・有休 %2$d日</string>
+
     <string name="home_guide_trip_products">見逃したくない便利な情報を集めました</string>
     <string name="home_guide_trip_products_highlight">便利な情報</string>
     <string name="home_hint_trip_products">魅力的な特典をチェックしましょう</string>
