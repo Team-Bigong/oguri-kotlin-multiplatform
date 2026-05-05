@@ -36,6 +36,7 @@ export const CountriesSection = ({
       <View style={styles.destinationEditorColumn}>
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>나라 추가/수정</Text>
+          <Text style={styles.helperText}>빅맥지수는 국가 기준으로 관리되며 장소 상세의 상대 물가 계산에 사용됩니다.</Text>
           <LabelInput
             label="국가명"
             value={countryFormState.name}
@@ -68,7 +69,7 @@ export const CountriesSection = ({
             value={countryListSearchKeyword}
             onChange={(event) => setCountryListSearchKeyword(event.target.value)}
             style={htmlFieldStyle}
-            placeholder="국가명/통화 코드 검색"
+            placeholder="국가명/통화 코드/빅맥지수 검색"
           />
           <ScrollView style={styles.destinationListScrollArea} contentContainerStyle={styles.destinationListContainer}>
             {filteredCountries.map((country) => (

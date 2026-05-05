@@ -191,7 +191,10 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
     return countries.filter((country) => {
       const normalizedName = country.name.toLowerCase()
       const normalizedCurrencyCode = (country.currencyCode ?? "").toLowerCase()
-      return normalizedName.includes(normalizedKeyword) || normalizedCurrencyCode.includes(normalizedKeyword)
+      const normalizedBigMacIndex = country.bigMacIndex == null ? "" : String(country.bigMacIndex)
+      return normalizedName.includes(normalizedKeyword) ||
+        normalizedCurrencyCode.includes(normalizedKeyword) ||
+        normalizedBigMacIndex.includes(normalizedKeyword)
     })
   }, [countries, countryListSearchKeyword])
 

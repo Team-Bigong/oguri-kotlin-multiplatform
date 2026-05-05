@@ -55,6 +55,13 @@ export const DestinationsSection = ({
   onLoadDestination,
   onDeleteDestination
 }: DestinationsSectionProps): React.JSX.Element => {
+  const formatWeatherText = (temperature: number | null, precipitationMillimeter: number | null): string => {
+    if (temperature == null || precipitationMillimeter == null) {
+      return "-"
+    }
+    return `${temperature}°C / ${precipitationMillimeter}mm`
+  }
+
   return (
     <View style={[styles.destinationsWorkspace, !isWideDesktopLayout && styles.destinationsWorkspaceStacked]}>
       <View style={styles.destinationEditorColumn}>
@@ -191,15 +198,20 @@ export const DestinationsSection = ({
             onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, flightUrl: value }))}
           />
 
+          <View style={styles.row}>
+            <Text style={styles.sectionTitle}>날씨 정보</Text>
+            <Text style={styles.helperText}>추천 기간 1/2에 맞춰 평균 온도와 월 강수량을 함께 입력합니다.</Text>
+          </View>
+
           <View style={styles.rowSplitContainer}>
             <LabelInput
-              label="날씨 온도 1 (°C)"
+              label="추천 기간 1 온도 (°C)"
               value={destinationFormState.weatherTemp1}
               keyboardType="numeric"
               onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherTemp1: value }))}
             />
             <LabelInput
-              label="강수량 1 (mm)"
+              label="추천 기간 1 강수량 (mm)"
               value={destinationFormState.weatherPrecipitationMm1}
               keyboardType="numeric"
               onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherPrecipitationMm1: value }))}
@@ -208,13 +220,13 @@ export const DestinationsSection = ({
 
           <View style={styles.rowSplitContainer}>
             <LabelInput
-              label="날씨 온도 2 (°C)"
+              label="추천 기간 2 온도 (°C)"
               value={destinationFormState.weatherTemp2}
               keyboardType="numeric"
               onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherTemp2: value }))}
             />
             <LabelInput
-              label="강수량 2 (mm)"
+              label="추천 기간 2 강수량 (mm)"
               value={destinationFormState.weatherPrecipitationMm2}
               keyboardType="numeric"
               onChangeText={(value) => setDestinationFormState((previousState) => ({ ...previousState, weatherPrecipitationMm2: value }))}
@@ -401,6 +413,12 @@ export const DestinationsSection = ({
               <View style={styles.listItemCard} key={destination.id}>
                 <Text style={styles.listItemTitle}>{destination.countryName} · {destination.name}</Text>
                 <Text style={styles.listItemDescription}>{destination.summary ?? "(요약 없음)"}</Text>
+                <Text style={styles.listItemDescription}>
+                  날씨 1: {formatWeatherText(destination.weatherTemp1, destination.weatherPrecipitationMm1)}
+                </Text>
+                <Text style={styles.listItemDescription}>
+                  날씨 2: {formatWeatherText(destination.weatherTemp2, destination.weatherPrecipitationMm2)}
+                </Text>
                 <Text style={styles.listItemDescription}>이미지 {destination.images.length}장</Text>
                 <Text style={styles.listItemDescription}>체험 {destination.experiences.length}건</Text>
                 <View style={styles.rowButtonContainer}>
