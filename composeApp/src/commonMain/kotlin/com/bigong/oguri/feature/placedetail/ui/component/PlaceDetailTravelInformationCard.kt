@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
@@ -64,6 +65,18 @@ fun PlaceDetailTravelInformationCard(
 ) {
     val recommendPeriod = travelInformation.recommendPeriod
     val exchangeRateInformation = travelInformation.exchangeRateInformation
+    val recommendPeriodText =
+        stringResource(
+            Res.string.place_detail_information_recommend_period,
+            recommendPeriod.startMonth,
+            recommendPeriod.endMonth,
+        )
+    val weatherText =
+        stringResource(
+            Res.string.place_detail_information_weather,
+            travelInformation.averageTemperature,
+            precipitationMessage(averagePrecipitation = travelInformation.averagePrecipitation),
+        )
 
     Column(
         modifier =
@@ -76,22 +89,18 @@ fun PlaceDetailTravelInformationCard(
     ) {
         TravelInformationRow(
             iconResource = Res.drawable.ic_place_calendar,
-            text =
-                stringResource(
-                    Res.string.place_detail_information_recommend_period,
-                    recommendPeriod.startMonth,
-                    recommendPeriod.endMonth,
+            text = recommendPeriodText,
+            highlightedText =
+                recommendPeriodText.findMonthRangeText(
+                    startMonth = recommendPeriod.startMonth,
+                    endMonth = recommendPeriod.endMonth,
                 ),
         )
 
         TravelInformationRow(
             iconResource = Res.drawable.ic_weather,
-            text =
-                stringResource(
-                    Res.string.place_detail_information_weather,
-                    travelInformation.averageTemperature,
-                    precipitationMessage(averagePrecipitation = travelInformation.averagePrecipitation),
-                ),
+            text = weatherText,
+            highlightedText = "${travelInformation.averageTemperature}°C",
         )
 
         TravelInformationRow(
@@ -123,9 +132,11 @@ private fun TravelInformationRow(
     iconResource: DrawableResource,
     text: String,
     supportingText: String? = null,
+    highlightedText: String? = null,
 ) {
     val bodyStyle = OguriTheme.typography.bodyMedium
     val supportingStyle = OguriTheme.typography.labelSmall
+    val highlightedStyle = SpanStyle(fontWeight = FontWeight.SemiBold)
 
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 24.dp),
@@ -143,7 +154,11 @@ private fun TravelInformationRow(
                 buildAnnotatedString {
                     withStyle(style = ParagraphStyle(lineHeight = bodyStyle.lineHeight)) {
                         withStyle(style = bodyStyle.toSpanStyle()) {
-                            append(text)
+                            appendWithHighlight(
+                                text = text,
+                                highlightedText = highlightedText,
+                                highlightedStyle = highlightedStyle,
+                            )
                         }
                         if (supportingText != null) {
                             append(" ")
@@ -164,6 +179,44 @@ private fun TravelInformationRow(
             color = Neutral100,
         )
     }
+}
+
+private fun String.findMonthRangeText(
+    startMonth: Int,
+    endMonth: Int,
+): String? {
+    val startIndex = indexOf(string = startMonth.toString())
+    if (startIndex == -1) return null
+
+    val endText = endMonth.toString()
+    val endIndex = indexOf(string = endText, startIndex = startIndex)
+    if (endIndex == -1) return null
+
+    return substring(startIndex = startIndex, endIndex = endIndex + endText.length)
+}
+
+private fun androidx.compose.ui.text.AnnotatedString.Builder.appendWithHighlight(
+    text: String,
+    highlightedText: String?,
+    highlightedStyle: SpanStyle,
+) {
+    if (highlightedText.isNullOrEmpty()) {
+        append(text)
+        return
+    }
+
+    val highlightedStartIndex = text.indexOf(string = highlightedText)
+    if (highlightedStartIndex == -1) {
+        append(text)
+        return
+    }
+
+    val highlightedEndIndex = highlightedStartIndex + highlightedText.length
+    append(text.substring(startIndex = 0, endIndex = highlightedStartIndex))
+    withStyle(style = highlightedStyle) {
+        append(text.substring(startIndex = highlightedStartIndex, endIndex = highlightedEndIndex))
+    }
+    append(text.substring(startIndex = highlightedEndIndex))
 }
 
 @Composable
