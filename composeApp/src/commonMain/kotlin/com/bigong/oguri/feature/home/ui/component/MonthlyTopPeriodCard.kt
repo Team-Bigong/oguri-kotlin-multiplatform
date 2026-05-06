@@ -19,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.style.TextAlign
@@ -68,7 +67,6 @@ fun MonthlyTopPeriodCard(
         modifier =
             modifier
                 .fillMaxWidth()
-                .shadow(elevation = 2.dp, shape = cardShape)
                 .background(color = Neutral0, shape = cardShape)
                 .border(width = 1.dp, color = Mint70, shape = cardShape)
                 .noRippleClickable(onClick = { onClick(period) })

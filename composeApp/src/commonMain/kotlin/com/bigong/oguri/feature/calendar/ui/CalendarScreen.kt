@@ -34,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -52,6 +51,7 @@ import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.oguriElevation
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarPeriodBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarSkeletonContent
@@ -240,7 +240,7 @@ fun CalendarScreen(
                 modifier =
                     Modifier
                         .size(SCROLL_TOP_BUTTON_SIZE)
-                        .shadow(elevation = 8.dp, shape = CircleShape)
+                        .oguriElevation(elevation = 8.dp, shape = CircleShape)
                         .background(color = Neutral0.copy(alpha = 0.92f), shape = CircleShape)
                         .noRippleClickable(
                             onClick = {
