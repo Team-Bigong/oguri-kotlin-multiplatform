@@ -68,6 +68,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 private val SCROLL_TOP_BUTTON_SIZE: Dp = 48.dp
+private const val CALENDAR_RECOMMENDATION_CARD_FIRST_ITEM_INDEX: Int = 2
 
 @Composable
 fun CalendarScreen(
@@ -101,10 +102,42 @@ fun CalendarScreen(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    var restoredExpandedPeriodId by remember { mutableStateOf<Long?>(null) }
     LaunchedEffect(scrollToTopTrigger) {
         if (scrollToTopTrigger > 0) {
             listState.animateScrollToItem(index = 0)
+            restoredExpandedPeriodId = null
         }
+    }
+    LaunchedEffect(
+        calendarUiState.expandedPeriodId,
+        pagedPeriodCards.itemCount,
+        pagedPeriodCards.loadState.refresh,
+    ) {
+        val expandedPeriodId = calendarUiState.expandedPeriodId ?: return@LaunchedEffect
+        if (restoredExpandedPeriodId == expandedPeriodId || pagedPeriodCards.loadState.refresh is LoadState.Loading) {
+            return@LaunchedEffect
+        }
+
+        val expandedPeriodIndex =
+            pagedPeriodCards.itemSnapshotList.items.indexOfFirst { periodCard ->
+                periodCard.id == expandedPeriodId
+            }
+        if (expandedPeriodIndex < 0) {
+            return@LaunchedEffect
+        }
+
+        val lazyColumnItemIndex = CALENDAR_RECOMMENDATION_CARD_FIRST_ITEM_INDEX + expandedPeriodIndex
+        val isExpandedPeriodVisible =
+            listState.layoutInfo.visibleItemsInfo.any { visibleItem ->
+                visibleItem.index == lazyColumnItemIndex
+            }
+        val isListRestoredToTop =
+            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+        if (isListRestoredToTop && !isExpandedPeriodVisible) {
+            listState.scrollToItem(index = lazyColumnItemIndex)
+        }
+        restoredExpandedPeriodId = expandedPeriodId
     }
     var listViewportBottomInWindow by remember { mutableStateOf(0f) }
     val shouldShowScrollTopButton by remember {
