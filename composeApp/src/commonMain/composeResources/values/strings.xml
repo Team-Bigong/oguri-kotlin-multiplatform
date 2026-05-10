@@ -13,10 +13,13 @@
     <string name="search_hint_place">Search for a place you want to visit</string>
     <string name="search_section_recent">Recent searches</string>
     <string name="search_section_popular">Popular searches</string>
-    <string name="search_section_recommended_month">Recommended places this month</string>
+    <string name="search_section_recommended_week">Recommended places this week</string>
     <string name="search_content_description_back">Back</string>
     <string name="search_content_description_search">Search</string>
     <string name="search_content_description_delete_recent">Delete recent search</string>
+    <string name="search_empty_recent_keyword">No recently searched destinations yet.</string>
+    <string name="search_empty_result_message">We couldn’t find that destination</string>
+    <string name="search_suggest_destination_button">Suggest a destination</string>
 
     <string name="home_tab_rank_one">1st</string>
     <string name="home_tab_rank_two">2nd</string>
@@ -72,6 +75,7 @@
     <string name="place_detail_menu_unsave">Remove from saved</string>
     <string name="place_detail_experience_detail">See details</string>
     <string name="place_detail_information_recommend_period">Good to visit from month %1$d to %2$d</string>
+    <string name="place_detail_information_recommend_period_highlight">month %1$d to %2$d</string>
     <string name="place_detail_information_weather">Average %1$d°C in the recommended period, %2$s</string>
     <string name="place_detail_information_exchange_rate">%1$s KRW / %2$d %3$s</string>
     <string name="place_detail_information_cost_index">Cost feels %1$sx</string>

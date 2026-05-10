@@ -39,6 +39,7 @@ import oguri.composeapp.generated.resources.place_detail_information_cost_index
 import oguri.composeapp.generated.resources.place_detail_information_cost_index_source
 import oguri.composeapp.generated.resources.place_detail_information_exchange_rate
 import oguri.composeapp.generated.resources.place_detail_information_recommend_period
+import oguri.composeapp.generated.resources.place_detail_information_recommend_period_highlight
 import oguri.composeapp.generated.resources.place_detail_information_weather
 import oguri.composeapp.generated.resources.place_detail_precipitation_clear
 import oguri.composeapp.generated.resources.place_detail_precipitation_frequent_rain
@@ -71,6 +72,12 @@ fun PlaceDetailTravelInformationCard(
             recommendPeriod.startMonth,
             recommendPeriod.endMonth,
         )
+    val recommendPeriodHighlightedText =
+        stringResource(
+            Res.string.place_detail_information_recommend_period_highlight,
+            recommendPeriod.startMonth,
+            recommendPeriod.endMonth,
+        )
     val weatherText =
         stringResource(
             Res.string.place_detail_information_weather,
@@ -90,11 +97,7 @@ fun PlaceDetailTravelInformationCard(
         TravelInformationRow(
             iconResource = Res.drawable.ic_place_calendar,
             text = recommendPeriodText,
-            highlightedText =
-                recommendPeriodText.findMonthRangeText(
-                    startMonth = recommendPeriod.startMonth,
-                    endMonth = recommendPeriod.endMonth,
-                ),
+            highlightedText = recommendPeriodHighlightedText,
         )
 
         TravelInformationRow(
@@ -179,20 +182,6 @@ private fun TravelInformationRow(
             color = Neutral100,
         )
     }
-}
-
-private fun String.findMonthRangeText(
-    startMonth: Int,
-    endMonth: Int,
-): String? {
-    val startIndex = indexOf(string = startMonth.toString())
-    if (startIndex == -1) return null
-
-    val endText = endMonth.toString()
-    val endIndex = indexOf(string = endText, startIndex = startIndex)
-    if (endIndex == -1) return null
-
-    return substring(startIndex = startIndex, endIndex = endIndex + endText.length)
 }
 
 private fun androidx.compose.ui.text.AnnotatedString.Builder.appendWithHighlight(

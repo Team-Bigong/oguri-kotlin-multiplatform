@@ -165,6 +165,7 @@ fun MainNavHost(
         }
         composable<RouteModel.Search> {
             SearchRoute(
+                searchViewModelProvider = appGraph.searchViewModelProvider,
                 onBackClick = { navigator.popBackStack() },
                 onSearchClick = {},
                 onPlaceClick = { placeId ->
@@ -174,6 +175,7 @@ fun MainNavHost(
                         endDate = null,
                     )
                 },
+                onSuggestionClick = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
             )
         }
         composable<RouteModel.Calendar> {

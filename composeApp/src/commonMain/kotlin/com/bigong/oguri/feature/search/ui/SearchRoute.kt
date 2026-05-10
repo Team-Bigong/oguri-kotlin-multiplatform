@@ -1,30 +1,36 @@
 package com.bigong.oguri.feature.search.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import com.bigong.oguri.domain.model.Place
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.platform.PlatformBackHandler
+import dev.zacsweers.metro.Provider
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.search_content_description_back
 import oguri.composeapp.generated.resources.search_content_description_delete_recent
 import oguri.composeapp.generated.resources.search_content_description_search
+import oguri.composeapp.generated.resources.search_empty_recent_keyword
+import oguri.composeapp.generated.resources.search_empty_result_message
 import oguri.composeapp.generated.resources.search_hint_place
 import oguri.composeapp.generated.resources.search_section_popular
 import oguri.composeapp.generated.resources.search_section_recent
-import oguri.composeapp.generated.resources.search_section_recommended_month
+import oguri.composeapp.generated.resources.search_section_recommended_week
+import oguri.composeapp.generated.resources.search_suggest_destination_button
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun SearchRoute(
+    searchViewModelProvider: Provider<SearchViewModel>,
     onBackClick: () -> Unit,
     onSearchClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onSuggestionClick: () -> Unit,
 ) {
-    var searchQueryText by remember { mutableStateOf("") }
-    val thumbnailImageUrl: String = DUMMY_PLACE_IMAGE_URL
-    val recentSearchKeywords: List<String> = listOf("보라카이", "멜버른", "바르셀로나")
+    val searchViewModel =
+        remember {
+            searchViewModelProvider()
+        }
+    val searchUiState = searchViewModel.uiState.collectAsStateWithLifecycle().value
     val popularSearchKeywords: List<String> =
         listOf(
             "보라카이",
@@ -34,55 +40,62 @@ fun SearchRoute(
             "샌프란시스코",
             "니스",
         )
-    val recommendedPlaces: List<Place> =
-        listOf(
-            Place(
-                id = 1L,
-                country = "필리핀",
-                city = "보라카이",
-                summary = "화이트 비치 물빛이 가장 또렷해지는 시기예요",
-                thumbnailUrl = thumbnailImageUrl,
-            ),
-            Place(
-                id = 2L,
-                country = "스페인",
-                city = "바르셀로나",
-                summary = "가우디 건축과 바다 산책을 함께 즐기기 좋아요",
-                thumbnailUrl = thumbnailImageUrl,
-            ),
-            Place(
-                id = 3L,
-                country = "미국",
-                city = "샌프란시스코",
-                summary = "언덕과 바다 풍경이 가장 또렷해지는 시기예요",
-                thumbnailUrl = thumbnailImageUrl,
-            ),
-        )
+
+    PlatformBackHandler(
+        enabled = searchUiState.searchQueryText.isNotBlank(),
+        onBack = searchViewModel::clearSearchQueryText,
+    )
 
     SearchScreen(
         searchHintText = stringResource(Res.string.search_hint_place),
         recentSearchTitleText = stringResource(Res.string.search_section_recent),
+        emptyRecentSearchText = stringResource(Res.string.search_empty_recent_keyword),
         popularSearchTitleText = stringResource(Res.string.search_section_popular),
-        recommendedPlaceTitleText = stringResource(Res.string.search_section_recommended_month),
-        recentSearchKeywords = recentSearchKeywords,
+        recommendedPlaceTitleText = stringResource(Res.string.search_section_recommended_week),
+        recentSearchKeywords = searchUiState.recentSearchKeywords,
         popularSearchKeywords = popularSearchKeywords,
-        recommendedPlaces = recommendedPlaces,
+        recommendedPlaces = searchUiState.recommendedPlaces,
+        searchResults = searchUiState.searchResults,
+        isSearchLoading = searchUiState.isSearchLoading,
+        isSearchError = searchUiState.isSearchError,
+        emptyResultMessageText = stringResource(Res.string.search_empty_result_message),
+        suggestDestinationText = stringResource(Res.string.search_suggest_destination_button),
         backContentDescriptionText = stringResource(Res.string.search_content_description_back),
         searchContentDescriptionText = stringResource(Res.string.search_content_description_search),
         deleteRecentSearchContentDescriptionText =
             stringResource(Res.string.search_content_description_delete_recent),
-        searchQueryText = searchQueryText,
-        onBackClick = onBackClick,
-        onSearchQueryTextChange = { searchQueryText = it },
-        onSearchClick = onSearchClick,
-        onRecentSearchKeywordClick = {},
-        onRecentSearchDeleteClick = {},
-        onPopularSearchKeywordClick = {},
+        searchQueryText = searchUiState.searchQueryText,
+        onBackClick = {
+            if (searchUiState.searchQueryText.isNotBlank()) {
+                searchViewModel.clearSearchQueryText()
+            } else {
+                onBackClick()
+            }
+        },
+        onSearchQueryTextChange = searchViewModel::changeSearchQueryText,
+        onSearchClick = {
+            searchViewModel.retrySearch()
+            onSearchClick()
+        },
+        onSearchRetryClick = searchViewModel::retrySearch,
+        onSuggestionClick = onSuggestionClick,
+        onSearchResultClick = { searchResult ->
+            searchViewModel.addRecentSearchKeyword(keyword = searchResult.destinationName) {
+                onPlaceClick(searchResult.id)
+            }
+        },
+        onRecentSearchKeywordClick = { keyword ->
+            searchViewModel.changeSearchQueryText(searchQueryText = keyword)
+            searchViewModel.addRecentSearchKeyword(keyword = keyword)
+        },
+        onRecentSearchDeleteClick = searchViewModel::deleteRecentSearchKeyword,
+        onPopularSearchKeywordClick = { keyword ->
+            searchViewModel.changeSearchQueryText(searchQueryText = keyword)
+        },
         onPlaceClick = { place ->
-            onPlaceClick(place.id)
+            searchViewModel.addRecentSearchKeyword(keyword = place.city) {
+                onPlaceClick(place.id)
+            }
         },
     )
 }
-
-private const val DUMMY_PLACE_IMAGE_URL: String =
-    "https://media.triple.guide/triple-cms/c_limit,f_auto,h_1024,w_1024/74fdd210-d312-4aec-99de-d7900f4b95c0.jpeg"

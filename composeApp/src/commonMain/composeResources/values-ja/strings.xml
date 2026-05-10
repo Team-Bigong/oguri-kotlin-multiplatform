@@ -13,10 +13,13 @@
     <string name="search_hint_place">行きたい場所を検索してみましょう</string>
     <string name="search_section_recent">最近の検索</string>
     <string name="search_section_popular">人気の検索</string>
-    <string name="search_section_recommended_month">今月のおすすめスポット</string>
+    <string name="search_section_recommended_week">今週のおすすめスポット</string>
     <string name="search_content_description_back">戻る</string>
     <string name="search_content_description_search">検索</string>
     <string name="search_content_description_delete_recent">最近の検索を削除</string>
+    <string name="search_empty_recent_keyword">最近検索した旅行先はまだありません。</string>
+    <string name="search_empty_result_message">該当する旅行先が見つかりませんでした</string>
+    <string name="search_suggest_destination_button">旅行先を提案する</string>
 
     <string name="home_tab_rank_one">1位</string>
     <string name="home_tab_rank_two">2位</string>
@@ -72,6 +75,7 @@
     <string name="place_detail_menu_unsave">保存を削除</string>
     <string name="place_detail_experience_detail">詳しく見る</string>
     <string name="place_detail_information_recommend_period">%1$d月〜%2$d月に行くのがおすすめです</string>
+    <string name="place_detail_information_recommend_period_highlight">%1$d月〜%2$d月</string>
     <string name="place_detail_information_weather">おすすめ期間の平均気温 %1$d°C、%2$s</string>
     <string name="place_detail_information_exchange_rate">%1$sウォン / %2$d%3$s</string>
     <string name="place_detail_information_cost_index">体感物価 %1$s倍</string>
