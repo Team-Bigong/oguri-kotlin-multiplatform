@@ -15,7 +15,7 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # 빌드된 jar 파일만 복사
-COPY --from=build /app/server/build/libs/server-1.0.0.jar app.jar
+COPY --from=build /app/server/build/libs/*.jar app.jar
 
 # 포트 설정
 EXPOSE 8080
