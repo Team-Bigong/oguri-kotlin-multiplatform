@@ -11,7 +11,7 @@ group = "com.bigong.oguri"
 version = "1.0.0"
 
 springBoot {
-    mainClass.set("com.bigong.oguri.ApplicationKt")
+    mainClass.set("com.bigong.oguri.Application")
 }
 
 java {
