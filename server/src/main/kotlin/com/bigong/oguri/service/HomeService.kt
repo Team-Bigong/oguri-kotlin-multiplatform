@@ -4,6 +4,7 @@ import com.bigong.oguri.domain.PublicHoliday
 import com.bigong.oguri.domain.SearchLog
 import com.bigong.oguri.dto.response.*
 import com.bigong.oguri.repository.*
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
@@ -160,6 +161,24 @@ class HomeService(
     fun getTrendingSearchTerms(): List<String> {
         val since = LocalDateTime.now().minusDays(7)
         return searchLogRepository.findTrendingSearchTerms(since, TRENDING_SEARCH_TERMS_LIMIT)
+    }
+
+    /**
+     * 검색 자동완성 추천 로직
+     */
+    fun getAutocompleteSuggestions(query: String): List<SearchAutocompleteItemResponse> {
+        if (query.isBlank()) return emptyList()
+
+        val pageable = PageRequest.of(0, 10)
+        val destinations = destinationRepository.findAutocompleteSuggestions(query.trim(), pageable)
+
+        return destinations.map { dest ->
+            SearchAutocompleteItemResponse(
+                id = dest.id.toLong(),
+                destinationName = dest.name,
+                countryName = dest.country?.name ?: "Unknown",
+            )
+        }
     }
 
     private fun selectNonOverlappingTopPeriods(

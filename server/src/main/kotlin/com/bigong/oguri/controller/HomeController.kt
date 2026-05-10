@@ -4,6 +4,7 @@ import com.bigong.oguri.config.resolveMemberId
 import com.bigong.oguri.dto.response.HomeMonthlyTopPeriodResponse
 import com.bigong.oguri.dto.response.HomeRecommendPeriodResponse
 import com.bigong.oguri.dto.response.HomeWeeklyTopResponse
+import com.bigong.oguri.dto.response.SearchAutocompleteItemResponse
 import com.bigong.oguri.service.HomeService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -58,4 +59,13 @@ class HomeController(
     )
     @GetMapping("/trending-searches")
     fun getTrendingSearchTerms(): List<String> = homeService.getTrendingSearchTerms()
+
+    @Operation(
+        summary = "검색 자동완성 추천",
+        description = "사용자가 입력한 키워드를 바탕으로 여행지명 또는 국가명이 일치하는 검색어 추천 목록을 반환합니다. (최대 10개)",
+    )
+    @GetMapping("/search/autocomplete")
+    fun getAutocompleteSuggestions(
+        @RequestParam query: String,
+    ): List<SearchAutocompleteItemResponse> = homeService.getAutocompleteSuggestions(query)
 }
