@@ -22,6 +22,7 @@ private fun OnboardingScreenTermsPreview() {
             onRemainingDayOffCommit = {},
             onPreferredDayOffChange = {},
             onPreferredDayOffCommit = {},
+            onSkipClick = {},
             onCompleteClick = {},
         )
     }
@@ -50,6 +51,37 @@ private fun OnboardingScreenLeaveDaysPreview() {
             onRemainingDayOffCommit = {},
             onPreferredDayOffChange = {},
             onPreferredDayOffCommit = {},
+            onSkipClick = {},
+            onCompleteClick = {},
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 780)
+@Composable
+private fun OnboardingScreenLeaveDaysSubmittingPreview() {
+    OguriTheme {
+        OnboardingScreen(
+            onboardingUiState =
+                OnboardingUiState(
+                    step = OnboardingStep.LEAVE_DAYS,
+                    remainingDayOffInput = "17",
+                    preferredDayOffInput = "2",
+                    isRemainingDayOffConfirmed = true,
+                    isPreferredDayOffConfirmed = true,
+                    isSubmitting = true,
+                ),
+            onBackClick = {},
+            onServiceTermsToggle = {},
+            onPrivacyPolicyToggle = {},
+            onServiceTermsOpen = {},
+            onPrivacyPolicyOpen = {},
+            onAgreeAllClick = {},
+            onRemainingDayOffChange = {},
+            onRemainingDayOffCommit = {},
+            onPreferredDayOffChange = {},
+            onPreferredDayOffCommit = {},
+            onSkipClick = {},
             onCompleteClick = {},
         )
     }

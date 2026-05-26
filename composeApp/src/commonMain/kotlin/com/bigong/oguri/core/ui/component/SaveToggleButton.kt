@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
 import oguri.composeapp.generated.resources.Res
@@ -28,13 +28,13 @@ fun SaveToggleButton(
     Box(
         modifier =
             modifier
-                .size(48.dp)
+                .size(32.dp)
                 .noRippleClickable(
                     onClick = {
                         HapticType.Selection.perform()
                         onCheckedChange(!checked)
                     },
-                ).padding(14.dp),
+                ).padding(6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Image(

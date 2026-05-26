@@ -24,3 +24,5 @@ fun String.getStyledText(
             }
         }
     }
+
+expect fun String.toCurrencyDisplayName(): String

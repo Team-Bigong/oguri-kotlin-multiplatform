@@ -4,7 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.domain.usecase.DeleteRecommendationUseCase
+import com.bigong.oguri.domain.usecase.GetMonthlyTopPeriodListUseCase
 import com.bigong.oguri.domain.usecase.GetRecommendPeriodListUseCase
+import com.bigong.oguri.domain.usecase.GetWeeklyTopPlaceListUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
 import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
@@ -23,6 +25,8 @@ private const val DEFAULT_HOME_USER_COUNTRY = "대한민국"
 @Inject
 class HomeViewModel(
     private val getRecommendPeriodsUseCase: GetRecommendPeriodListUseCase,
+    private val getWeeklyTopPlacesUseCase: GetWeeklyTopPlaceListUseCase,
+    private val getMonthlyTopPeriodsUseCase: GetMonthlyTopPeriodListUseCase,
     private val saveRecommendationUseCase: SaveRecommendationUseCase,
     private val deleteRecommendationUseCase: DeleteRecommendationUseCase,
 ) : ViewModel() {
@@ -33,6 +37,8 @@ class HomeViewModel(
 
     init {
         loadRecommendPeriods()
+        loadWeeklyTopPlaces()
+        loadMonthlyTopPeriods()
     }
 
     fun loadRecommendPeriods() {
@@ -41,6 +47,34 @@ class HomeViewModel(
 
     fun refreshRecommendPeriods() {
         fetchRecommendPeriods(showLoading = false)
+    }
+
+    fun loadWeeklyTopPlaces() {
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    getWeeklyTopPlacesUseCase()
+                }
+            }.onSuccess { weeklyTopPlaces ->
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(weeklyTopPlaces = weeklyTopPlaces)
+                }
+            }
+        }
+    }
+
+    fun loadMonthlyTopPeriods() {
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Default) {
+                    getMonthlyTopPeriodsUseCase()
+                }
+            }.onSuccess { monthlyTopPeriods ->
+                _uiState.update { currentUiState ->
+                    currentUiState.copy(monthlyTopPeriods = monthlyTopPeriods)
+                }
+            }
+        }
     }
 
     private fun fetchRecommendPeriods(showLoading: Boolean) {

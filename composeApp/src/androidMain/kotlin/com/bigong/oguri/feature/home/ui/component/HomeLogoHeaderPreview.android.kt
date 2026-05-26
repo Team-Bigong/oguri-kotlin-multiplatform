@@ -8,6 +8,6 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 @Composable
 private fun HomeLogoHeaderPreview() {
     OguriTheme {
-        HomeLogoHeader()
+        HomeLogoHeader(onSearchClick = {})
     }
 }

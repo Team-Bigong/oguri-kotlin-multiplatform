@@ -10,6 +10,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,7 +34,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
@@ -47,7 +48,10 @@ import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
+import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
+import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.oguriElevation
 import com.bigong.oguri.feature.calendar.ui.component.CalendarLeaveDaysBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarPeriodBottomSheet
 import com.bigong.oguri.feature.calendar.ui.component.CalendarSkeletonContent
@@ -64,6 +68,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
 private val SCROLL_TOP_BUTTON_SIZE: Dp = 48.dp
+private const val CALENDAR_RECOMMENDATION_CARD_FIRST_ITEM_INDEX: Int = 2
 
 @Composable
 fun CalendarScreen(
@@ -97,20 +102,52 @@ fun CalendarScreen(
 
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    var restoredExpandedPeriodId by remember { mutableStateOf<Long?>(null) }
     LaunchedEffect(scrollToTopTrigger) {
         if (scrollToTopTrigger > 0) {
             listState.animateScrollToItem(index = 0)
+            restoredExpandedPeriodId = null
         }
+    }
+    LaunchedEffect(
+        calendarUiState.expandedPeriodId,
+        pagedPeriodCards.itemCount,
+        pagedPeriodCards.loadState.refresh,
+    ) {
+        val expandedPeriodId = calendarUiState.expandedPeriodId ?: return@LaunchedEffect
+        if (restoredExpandedPeriodId == expandedPeriodId || pagedPeriodCards.loadState.refresh is LoadState.Loading) {
+            return@LaunchedEffect
+        }
+
+        val expandedPeriodIndex =
+            pagedPeriodCards.itemSnapshotList.items.indexOfFirst { periodCard ->
+                periodCard.id == expandedPeriodId
+            }
+        if (expandedPeriodIndex < 0) {
+            return@LaunchedEffect
+        }
+
+        val lazyColumnItemIndex = CALENDAR_RECOMMENDATION_CARD_FIRST_ITEM_INDEX + expandedPeriodIndex
+        val isExpandedPeriodVisible =
+            listState.layoutInfo.visibleItemsInfo.any { visibleItem ->
+                visibleItem.index == lazyColumnItemIndex
+            }
+        val isListRestoredToTop =
+            listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+        if (isListRestoredToTop && !isExpandedPeriodVisible) {
+            listState.scrollToItem(index = lazyColumnItemIndex)
+        }
+        restoredExpandedPeriodId = expandedPeriodId
     }
     var listViewportBottomInWindow by remember { mutableStateOf(0f) }
     val shouldShowScrollTopButton by remember {
-        androidx.compose.runtime.derivedStateOf {
+        derivedStateOf {
             listState.firstVisibleItemIndex > 1 ||
                 (listState.firstVisibleItemIndex == 1 && listState.firstVisibleItemScrollOffset > 280)
         }
     }
     val shouldShowEndHint by remember(listState.isScrollInProgress, pagedPeriodCards.loadState.append, pagedPeriodCards.itemCount) {
-        androidx.compose.runtime.derivedStateOf {
+        derivedStateOf {
             !listState.canScrollForward &&
                 listState.isScrollInProgress &&
                 pagedPeriodCards.loadState.append is LoadState.NotLoading &&
@@ -130,6 +167,14 @@ fun CalendarScreen(
                     .onGloballyPositioned { coordinates ->
                         listViewportBottomInWindow = coordinates.positionInWindow().y + coordinates.size.height
                     },
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        calculateFloatingBottomNavigationAdditionalBottomPadding(
+                            hasFloatingBottomNavigation = true,
+                            baseBottomPadding = 16.dp,
+                        ),
+                ),
         ) {
             item {
                 Spacer(modifier = Modifier.height(20.dp))
@@ -189,7 +234,9 @@ fun CalendarScreen(
             )
 
             item(key = "calendar_recommendation_bottom_spacing") {
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(
+                    modifier = Modifier.height(28.dp),
+                )
             }
         }
 
@@ -217,13 +264,16 @@ fun CalendarScreen(
                 Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = 20.dp, bottom = 20.dp)
-                    .navigationBarsPadding(),
+                    .floatingNavigationBarsPadding(
+                        hasFloatingBottomNavigation = true,
+                        baseBottomPadding = 72.dp,
+                    ).navigationBarsPadding(),
         ) {
             Box(
                 modifier =
                     Modifier
                         .size(SCROLL_TOP_BUTTON_SIZE)
-                        .shadow(elevation = 8.dp, shape = CircleShape)
+                        .oguriElevation(elevation = 8.dp, shape = CircleShape)
                         .background(color = Neutral0.copy(alpha = 0.92f), shape = CircleShape)
                         .noRippleClickable(
                             onClick = {

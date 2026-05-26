@@ -1,11 +1,5 @@
-import SwiftUI
 import UIKit
-import Foundation
-import ComposeApp
-import KakaoSDKCommon
 import GoogleMobileAds
-import FirebaseCore
-import FirebaseCrashlytics
 
 #if DEBUG
 private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
@@ -14,56 +8,7 @@ private let iosAppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023"
 private let iosBannerAdUnitId = "ca-app-pub-9643550840413935/1095385664"
 private let iosAppOpenAdUnitId = "ca-app-pub-9643550840413935/1058191792"
 #endif
-#if DEBUG
-private let firebaseConfigurationPlistName = "GoogleService-Info-Debug"
-#else
-private let firebaseConfigurationPlistName = "GoogleService-Info-Release"
-#endif
 private let iosTestDeviceIdentifier = "8ca04675fef46ae5bc7a3764ddea6526"
-
-@main
-struct iOSApp: App {
-    init() {
-        configureFirebase()
-        if let kakaoAppKey = Bundle.main.object(forInfoDictionaryKey: "KEY_KAKAO") as? String, !kakaoAppKey.isEmpty {
-            KakaoSDK.initSDK(appKey: kakaoAppKey)
-        }
-        AmplitudeBridge.shared.startObserving()
-        KakaoShareDispatcher.shared.startObserving()
-        OguriAdMobBridge.shared.startObserving()
-    }
-
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .onOpenURL { url in
-                    let urlText = url.absoluteString
-                    if urlText.hasPrefix("kakao"), urlText.contains("://oauth") {
-                        KakaoAuthProvider_iosKt.handleKakaoLoginOpenUrl(url: urlText)
-                    } else {
-                        DeepLinkStoreProviderKt.handleIncomingAppUrl(urlText: urlText)
-                    }
-                }
-        }
-    }
-
-    private func configureFirebase() {
-        if FirebaseApp.app() != nil {
-            return
-        }
-        guard let filePath = Bundle.main.path(forResource: firebaseConfigurationPlistName, ofType: "plist"),
-              let options = FirebaseOptions(contentsOfFile: filePath) else {
-            assertionFailure("Firebase plist not found: \(firebaseConfigurationPlistName).plist")
-            return
-        }
-        FirebaseApp.configure(options: options)
-        #if DEBUG
-        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(false)
-        #else
-        Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
-        #endif
-    }
-}
 
 @objc(OguriAdMobBridge)
 final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
@@ -202,7 +147,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
 
         let measuredContainerWidth = max(containerView.bounds.width, UIScreen.main.bounds.width - 40)
         let adWidth = max(measuredContainerWidth, 320)
-        let adSize = currentOrientationAnchoredAdaptiveBanner(width: adWidth)
+        let adSize = largeAnchoredAdaptiveBanner(width: adWidth)
         let bannerView = BannerView(adSize: adSize)
         bannerView.translatesAutoresizingMaskIntoConstraints = false
         bannerView.adUnitID = resolveBannerAdUnitId(placementKey: placementKey)
