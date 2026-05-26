@@ -1,8 +1,8 @@
 package com.bigong.oguri.controller
 
-import com.bigong.oguri.dto.AdminMemberCreateRequest
-import com.bigong.oguri.dto.AdminMemberResponse
-import com.bigong.oguri.dto.AdminMemberUpdateRequest
+import com.bigong.oguri.dto.request.AdminMemberCreateRequest
+import com.bigong.oguri.dto.response.AdminMemberResponse
+import com.bigong.oguri.dto.request.AdminMemberUpdateRequest
 import com.bigong.oguri.service.AdminMemberService
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.http.HttpStatus

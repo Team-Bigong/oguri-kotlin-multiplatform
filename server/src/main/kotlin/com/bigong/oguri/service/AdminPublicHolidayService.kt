@@ -1,8 +1,8 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.PublicHoliday
-import com.bigong.oguri.dto.AdminPublicHolidayResponse
-import com.bigong.oguri.dto.AdminPublicHolidayUpsertRequest
+import com.bigong.oguri.dto.response.AdminPublicHolidayResponse
+import com.bigong.oguri.dto.request.AdminPublicHolidayUpsertRequest
 import com.bigong.oguri.repository.PublicHolidayRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service

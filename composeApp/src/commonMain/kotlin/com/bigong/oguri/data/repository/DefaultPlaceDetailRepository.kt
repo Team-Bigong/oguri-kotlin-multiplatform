@@ -2,11 +2,16 @@ package com.bigong.oguri.data.repository
 
 import com.bigong.oguri.data.remote.PlaceDetailRemoteDataSource
 import com.bigong.oguri.data.remote.model.response.ExperienceResponse
+import com.bigong.oguri.data.remote.model.response.PlaceDetailExchangeRateInfoResponse
+import com.bigong.oguri.data.remote.model.response.PlaceDetailRecommendPeriodResponse
 import com.bigong.oguri.data.remote.model.response.PlaceDetailResponse
 import com.bigong.oguri.data.remote.model.response.PlaceResponse
 import com.bigong.oguri.domain.model.Experience
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.model.PlaceDetail
+import com.bigong.oguri.domain.model.PlaceDetailExchangeRateInformation
+import com.bigong.oguri.domain.model.PlaceDetailRecommendPeriod
+import com.bigong.oguri.domain.model.PlaceDetailTravelInformation
 import com.bigong.oguri.domain.repository.PlaceDetailRepository
 import dev.zacsweers.metro.Inject
 
@@ -44,10 +49,32 @@ private fun PlaceDetailResponse.toDomain(): PlaceDetail =
         city = city,
         thumbnailUrls = thumbnailUrls,
         isSaved = isSaved,
+        travelInformation =
+            PlaceDetailTravelInformation(
+                exchangeRateInformation = exchangeRateInfo.toDomain(),
+                relativeCostIndex = relativeCostIndex,
+                averageTemperature = averageTemperature,
+                averagePrecipitation = averagePrecipitation,
+                recommendPeriod = recommendPeriod.toDomain(),
+            ),
         description = description,
         experiences = experiences.map { experienceResponse -> experienceResponse.toDomain() },
         flightUrl = flightUrl,
         relevantPlaces = relevantPlaces.map { placeResponse -> placeResponse.toDomain() },
+    )
+
+private fun PlaceDetailExchangeRateInfoResponse.toDomain(): PlaceDetailExchangeRateInformation =
+    PlaceDetailExchangeRateInformation(
+        koreanWonAmount = krwAmount,
+        currencyUnit = currencyUnit,
+        currencyCode = currencyCode,
+        date = date,
+    )
+
+private fun PlaceDetailRecommendPeriodResponse.toDomain(): PlaceDetailRecommendPeriod =
+    PlaceDetailRecommendPeriod(
+        startMonth = startMonth,
+        endMonth = endMonth,
     )
 
 private fun ExperienceResponse.toDomain(): Experience =

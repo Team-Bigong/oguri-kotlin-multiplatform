@@ -15,3 +15,7 @@
 
 # Keep source and line number info for Crashlytics symbolication.
 -keepattributes SourceFile,LineNumberTable
+
+# Broader safeguard: Kakao common model enums are used by reflective enum serializers.
+# Keep enum field names in the package to reduce release-only reflection crashes.
+-keepclassmembers enum com.kakao.sdk.common.model.** { *; }

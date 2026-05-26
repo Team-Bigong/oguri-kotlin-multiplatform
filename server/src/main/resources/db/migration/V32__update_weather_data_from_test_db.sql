@@ -1,0 +1,26 @@
+-- 25개 여행지에 대한 날씨 데이터 업데이트
+UPDATE destinations SET weather_temp_1 = 15, weather_precipitation_mm_1 = 120, weather_temp_2 = 18, weather_precipitation_mm_2 = 150 WHERE id = 3;
+UPDATE destinations SET weather_temp_1 = 28, weather_precipitation_mm_1 = 143.2, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 5;
+UPDATE destinations SET weather_temp_1 = 29, weather_precipitation_mm_1 = 120.6, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 6;
+UPDATE destinations SET weather_temp_1 = 21, weather_precipitation_mm_1 = 47, weather_temp_2 = 23, weather_precipitation_mm_2 = 93.5 WHERE id = 10;
+UPDATE destinations SET weather_temp_1 = 20, weather_precipitation_mm_1 = 18.3, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 12;
+UPDATE destinations SET weather_temp_1 = 20, weather_precipitation_mm_1 = 109.3, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 7;
+UPDATE destinations SET weather_temp_1 = 20, weather_precipitation_mm_1 = 126.6, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 2;
+UPDATE destinations SET weather_temp_1 = 21, weather_precipitation_mm_1 = 118.6, weather_temp_2 = 16, weather_precipitation_mm_2 = 91 WHERE id = 13;
+UPDATE destinations SET weather_temp_1 = 26, weather_precipitation_mm_1 = 127, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 9;
+UPDATE destinations SET weather_temp_1 = 28, weather_precipitation_mm_1 = 46.3, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 8;
+UPDATE destinations SET weather_temp_1 = 22, weather_precipitation_mm_1 = 13, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 14;
+UPDATE destinations SET weather_temp_1 = 24, weather_precipitation_mm_1 = 40, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 11;
+UPDATE destinations SET weather_temp_1 = 16, weather_precipitation_mm_1 = 70.5, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 1;
+UPDATE destinations SET weather_temp_1 = 28, weather_precipitation_mm_1 = 150, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 4;
+UPDATE destinations SET weather_temp_1 = 23, weather_precipitation_mm_1 = 136.3, weather_temp_2 = 0, weather_precipitation_mm_2 = 75.3 WHERE id = 22;
+UPDATE destinations SET weather_temp_1 = 22, weather_precipitation_mm_1 = 143.25, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 25;
+UPDATE destinations SET weather_temp_1 = 25, weather_precipitation_mm_1 = 48.25, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 21;
+UPDATE destinations SET weather_temp_1 = 18, weather_precipitation_mm_1 = 70.6, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 23;
+UPDATE destinations SET weather_temp_1 = 26, weather_precipitation_mm_1 = 79, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 17;
+UPDATE destinations SET weather_temp_1 = 19, weather_precipitation_mm_1 = 63, weather_temp_2 = 19, weather_precipitation_mm_2 = 59.5 WHERE id = 20;
+UPDATE destinations SET weather_temp_1 = 33, weather_precipitation_mm_1 = 33, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 16;
+UPDATE destinations SET weather_temp_1 = 21, weather_precipitation_mm_1 = 141.3, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 24;
+UPDATE destinations SET weather_temp_1 = 21, weather_precipitation_mm_1 = 64.3, weather_temp_2 = 25, weather_precipitation_mm_2 = 72 WHERE id = 18;
+UPDATE destinations SET weather_temp_1 = 29, weather_precipitation_mm_1 = 106.25, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 15;
+UPDATE destinations SET weather_temp_1 = 23, weather_precipitation_mm_1 = 56.3, weather_temp_2 = NULL, weather_precipitation_mm_2 = NULL WHERE id = 19;

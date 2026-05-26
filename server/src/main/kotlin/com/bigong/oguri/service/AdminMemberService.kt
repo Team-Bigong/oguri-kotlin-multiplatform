@@ -1,9 +1,9 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.Member
-import com.bigong.oguri.dto.AdminMemberCreateRequest
-import com.bigong.oguri.dto.AdminMemberResponse
-import com.bigong.oguri.dto.AdminMemberUpdateRequest
+import com.bigong.oguri.dto.request.AdminMemberCreateRequest
+import com.bigong.oguri.dto.response.AdminMemberResponse
+import com.bigong.oguri.dto.request.AdminMemberUpdateRequest
 import com.bigong.oguri.repository.MemberRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service

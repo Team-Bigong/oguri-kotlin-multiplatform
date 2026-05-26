@@ -6,7 +6,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import com.bigong.oguri.core.platform.OguriPlatformContextHolder
-import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.HapticType
 
 actual fun HapticType.perform() {
     val applicationContext = OguriPlatformContextHolder.applicationContext ?: return

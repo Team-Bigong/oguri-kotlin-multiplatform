@@ -1,13 +1,15 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.SavedDestination
-import com.bigong.oguri.dto.ExperienceResponse
-import com.bigong.oguri.dto.PlaceDetailResponse
+import com.bigong.oguri.dto.response.ExperienceResponse
+import com.bigong.oguri.dto.response.PlaceDetailResponse
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -20,8 +22,13 @@ class DestinationService(
     private val destinationRepository: DestinationRepository,
     private val destinationExperienceRepository: DestinationExperienceRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
-    private val homeService: HomeService,
+    private val exchangeService: ExchangeService,
+    private val countryRepository: com.bigong.oguri.repository.CountryRepository,
+    private val placeRecommendationService: PlaceRecommendationService,
 ) {
+    // 대한민국의 빅맥 지수를 캐싱 (성능 최적화)
+    private var koreaBigMacIndex: BigDecimal? = null
+
     /**
      * 마음에 드는 여행지 저장하기
      */
@@ -69,6 +76,18 @@ class DestinationService(
         // 3. 마크다운 처리된 상세 설명
         val description = target.description?.let { processDescription(it) } ?: ""
 
+        // 3.1 최적의 추천 방문 시기 선택 및 그에 따른 날씨 결정
+        val selectedPeriodInfo = selectBestRecommendPeriodInfo(target, startDate)
+        val recommendPeriod = selectedPeriodInfo?.let {
+            com.bigong.oguri.dto.response.PlaceRecommendPeriodResponse(it.first, it.second)
+        }
+
+        // 9. 선택된 추천 기간에 맞는 날씨 정보 사용 (1차 vs 2차)
+        val (selectedTemp, selectedPrecip) = when (selectedPeriodInfo?.third) {
+            2 -> target.weatherTemp2 to target.weatherPrecipitationMm2
+            else -> target.weatherTemp1 to target.weatherPrecipitationMm1
+        }
+
         // 4. 장소별 액티비티/즐길거리 조회
         val experiences =
             destinationExperienceRepository
@@ -88,7 +107,7 @@ class DestinationService(
         val relevantPlaces =
             if (startDate != null && endDate != null) {
                 val totalDays = ChronoUnit.DAYS.between(startDate, endDate).toInt() + 1
-                homeService
+                placeRecommendationService
                     .calculateRecommendedPlaces(startDate, destinations, userCountry, totalDays)
                     .filter { it.id != id.toLong() }
                     .map { it.copy(isSaved = savedDestinationIds.contains(it.id.toInt())) }
@@ -99,17 +118,97 @@ class DestinationService(
         // 6. 스카이스캐너 검색 링크 생성
         val flightUrl = target.flightUrl ?: "https://www.skyscanner.co.kr/transport/flights/sel/${target.name}"
 
+        // 7. 실시간 환율 정보 (해당 국가의 통화 코드 사용)
+        val exchangeRateInfo = exchangeService.getExchangeRateInfo(target.country?.currencyCode)
+
+        // 8. 체감 물가 계산 (해당 국가 BMI / 대한민국 BMI)
+        val relativeCostIndex = calculateRelativeCostIndex(target.country?.bigMacIndex)
+
         return PlaceDetailResponse(
             id = target.id.toLong(),
             country = target.country?.name ?: "Unknown",
             city = target.name,
             thumbnailUrls = thumbnailUrls,
             isSaved = isSaved,
+            exchangeRateInfo = exchangeRateInfo,
+            relativeCostIndex = relativeCostIndex,
+            averageTemperature = selectedTemp,
+            averagePrecipitation = selectedPrecip,
             description = description,
+            recommendPeriod = recommendPeriod,
             experiences = experiences,
             flightUrl = flightUrl,
             relevantPlaces = relevantPlaces,
         )
+    }
+
+    /**
+     * 입력받은 날짜 또는 현재 날짜를 기준으로 가장 적합한 추천 기간 하나를 선택합니다.
+     * 반환값: Triple(시작월, 종료월, 기간인덱스(1 or 2))
+     */
+    private fun selectBestRecommendPeriodInfo(
+        target: com.bigong.oguri.domain.Destination,
+        startDate: LocalDate?,
+    ): Triple<Int, Int, Int>? {
+        val periods = mutableListOf<Triple<Int, Int, Int>>() // start, end, index
+        if (target.recommendStartMonth1 != null && target.recommendEndMonth1 != null) {
+            periods.add(Triple(target.recommendStartMonth1!!, target.recommendEndMonth1!!, 1))
+        }
+        if (target.recommendStartMonth2 != null && target.recommendEndMonth2 != null) {
+            periods.add(Triple(target.recommendStartMonth2!!, target.recommendEndMonth2!!, 2))
+        }
+
+        if (periods.isEmpty()) return null
+
+        // 1. 기준 월 결정 (입력받은 날짜가 있으면 그 월, 없으면 오늘 기준 월)
+        val baseMonth = startDate?.monthValue ?: LocalDate.now().monthValue
+
+        // 2. 해당 월이 포함된 기간이 있는지 확인
+        val matchingPeriod = periods.find { isMonthInRange(baseMonth, it.first, it.second) }
+        if (matchingPeriod != null) {
+            return matchingPeriod
+        }
+
+        // 3. 포함된 기간이 없다면, 기준 월에서 가장 가까운 미래에 시작하는 기간 선택
+        val bestPeriod = periods.minBy { getCircularMonthDistance(baseMonth, it.first) }
+        return bestPeriod
+    }
+
+    /**
+     * 두 월 사이의 거리를 계산합니다. (미래 방향으로만 계산)
+     * 예: 현재 12월, 시작 1월 -> 거리 1
+     */
+    private fun getCircularMonthDistance(from: Int, to: Int): Int = (to - from + 12) % 12
+
+    /**
+     * 특정 월이 추천 기간 범위 내에 있는지 확인합니다.
+     */
+    private fun isMonthInRange(month: Int, start: Int?, end: Int?): Boolean {
+        if (start == null || end == null) return false
+        return if (start <= end) {
+            month in start..end
+        } else {
+            // 해를 넘기는 경우 (예: 11월 ~ 2월)
+            month >= start || month <= end
+        }
+    }
+
+    /**
+     * 대한민국의 빅맥 지수를 기준으로 상대적인 물가 지수를 계산합니다.
+     */
+    private fun calculateRelativeCostIndex(targetBmi: BigDecimal?): Double? {
+        if (targetBmi == null) return null
+
+        // 캐싱된 대한민국 BMI가 없으면 조회 (최초 1회)
+        if (koreaBigMacIndex == null) {
+            koreaBigMacIndex = countryRepository.findByName("대한민국")?.bigMacIndex
+        }
+
+        val baseBmi = koreaBigMacIndex ?: return null
+        if (baseBmi.compareTo(BigDecimal.ZERO) == 0) return null
+
+        // 상대 지수 = 대상 국가 BMI / 대한민국 BMI (소수점 둘째자리까지)
+        return targetBmi.divide(baseBmi, 2, RoundingMode.HALF_UP).toDouble()
     }
 
     /**

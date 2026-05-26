@@ -22,9 +22,11 @@ class ValidateOnboardingLeaveDaysUseCase {
         val preferredDayOffError =
             when {
                 preferredDayOff != null && preferredDayOff < MIN_DAY_OFF -> OnboardingLeaveDaysValidationError.DAY_OFF_MUST_BE_POSITIVE
+
                 remainingDayOff != null &&
                     preferredDayOff != null &&
                     preferredDayOff > remainingDayOff -> OnboardingLeaveDaysValidationError.PREFERRED_DAY_OFF_EXCEEDS_REMAINING
+
                 else -> null
             }
 
@@ -32,5 +34,10 @@ class ValidateOnboardingLeaveDaysUseCase {
             remainingDayOffError = remainingDayOffError,
             preferredDayOffError = preferredDayOffError,
         )
+    }
+
+    companion object {
+        const val DEFAULT_REMAINING_DAY_OFF: Int = 17
+        const val DEFAULT_PREFERRED_DAY_OFF: Int = 2
     }
 }
