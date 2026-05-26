@@ -1,6 +1,6 @@
 import { DestinationExperienceRequest, DestinationImageRequest } from "../../../types/admin"
 
-export type AdminTab = "destinations" | "members" | "holidays"
+export type AdminTab = "destinations" | "members" | "holidays" | "countries"
 
 export type DestinationFormState = {
   selectedId: number | null
@@ -17,6 +17,10 @@ export type DestinationFormState = {
   recommendEndMonth2: string
   flightTime: string
   flightUrl: string
+  weatherTemp1: string
+  weatherPrecipitationMm1: string
+  weatherTemp2: string
+  weatherPrecipitationMm2: string
   images: DestinationImageRequest[]
   experiences: DestinationExperienceRequest[]
   existingImageUrls: string[]
@@ -39,6 +43,13 @@ export type HolidayFormState = {
   holidayDate: string
   name: string
   isActualHoliday: boolean
+}
+
+export type CountryFormState = {
+  selectedId: number | null
+  name: string
+  currencyCode: string
+  bigMacIndex: string
 }
 
 export type DestinationImageApiResponse = {
@@ -71,6 +82,10 @@ export type DestinationApiResponse = {
   recommendEndMonth2: number | null
   flightTimeMinutes: number | null
   flightUrl: string | null
+  weatherTemp1: number | null
+  weatherPrecipitationMm1: number | null
+  weatherTemp2: number | null
+  weatherPrecipitationMm2: number | null
   images: DestinationImageApiResponse[]
   experiences: DestinationExperienceApiResponse[]
 }

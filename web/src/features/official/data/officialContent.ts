@@ -2,7 +2,7 @@ import { webEnvironment } from "../../../config/env"
 
 export const playStoreUrl = webEnvironment.playStoreUrl.trim().length > 0
   ? webEnvironment.playStoreUrl
-  : "https://play.google.com/store/apps"
+  : "https://play.google.com/store/apps/details?id=com.bigong.oguri"
 
 export const appStoreUrl = webEnvironment.appStoreUrl.trim().length > 0
   ? webEnvironment.appStoreUrl
@@ -56,6 +56,6 @@ export const frequentlyAskedQuestions = [
   },
   {
     question: "어디서 설치할 수 있나요?",
-    answer: "App Store에서 설치할 수 있고, Google Play 출시도 준비 중이에요."
+    answer: "App Store와 Google Play에서 설치할 수 있어요."
   }
 ]
