@@ -1,6 +1,6 @@
 package com.bigong.oguri.feature.calendar.ui.component
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,16 +8,17 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.OguriTheme
@@ -40,6 +41,8 @@ import oguri.composeapp.generated.resources.calendar_day_tue
 import oguri.composeapp.generated.resources.calendar_day_wed
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
+
+private const val DAYS_IN_WEEK = 7
 
 @Composable
 fun CalendarMonthGrid(
@@ -83,69 +86,63 @@ fun CalendarMonthGrid(
         Spacer(modifier = Modifier.height(12.dp))
 
         visibleWeeks.forEachIndexed { weekIndex, weekDays ->
-            Row(modifier = Modifier.fillMaxWidth()) {
-                weekDays.forEachIndexed { dayIndex, date ->
-                    val isRecommendedDate = date in periodCard.startDate..periodCard.endDate
-                    val isHoliday = holidayByDate[date] != null
-                    val isTodayDate = date == todayDate
-                    val isWeekendDate =
-                        date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
-                    val hasSamePeriodLeft = dayIndex > 0 && weekDays[dayIndex - 1] in periodCard.startDate..periodCard.endDate
-                    val hasSamePeriodRight =
-                        dayIndex < weekDays.lastIndex && weekDays[dayIndex + 1] in periodCard.startDate..periodCard.endDate
+            val highlightRanges = weekDays.highlightRanges(startDate = periodCard.startDate, endDate = periodCard.endDate)
 
-                    Column(
-                        modifier =
-                            Modifier
-                                .weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Box(
-                            modifier =
-                                Modifier
-                                    .fillMaxWidth()
-                                    .height(20.dp)
-                                    .padding(
-                                        start = if (isRecommendedDate && !hasSamePeriodLeft) 4.dp else 0.dp,
-                                        end = if (isRecommendedDate && !hasSamePeriodRight) 4.dp else 0.dp,
-                                    ).background(
-                                        color = if (isRecommendedDate) Mint50.copy(alpha = 0.5f) else Neutral0,
-                                        shape =
-                                            when {
-                                                !isRecommendedDate -> RoundedCornerShape(0.dp)
-                                                !hasSamePeriodLeft && !hasSamePeriodRight -> RoundedCornerShape(999.dp)
-                                                !hasSamePeriodLeft -> RoundedCornerShape(topStart = 999.dp, bottomStart = 999.dp)
-                                                !hasSamePeriodRight -> RoundedCornerShape(topEnd = 999.dp, bottomEnd = 999.dp)
-                                                else -> RoundedCornerShape(0.dp)
-                                            },
-                                    ),
-                            contentAlignment = Alignment.Center,
+            Box(modifier = Modifier.fillMaxWidth()) {
+                CalendarWeekHighlightBackground(
+                    highlightRanges = highlightRanges,
+                    modifier = Modifier.matchParentSize(),
+                )
+
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    weekDays.forEach { date ->
+                        val isRecommendedDate = date in periodCard.startDate..periodCard.endDate
+                        val isHoliday = holidayByDate[date] != null
+                        val isTodayDate = date == todayDate
+                        val isWeekendDate =
+                            date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            Text(
-                                text = date.toDateLabel(dominantYearMonth = dominantYearMonth),
-                                style = OguriTheme.typography.labelSmall,
-                                color =
-                                    when {
-                                        isTodayDate -> Mint70
-                                        isWeekendDate || isHoliday -> Orange50
-                                        isRecommendedDate -> Neutral70
-                                        else -> Neutral50
-                                    },
-                                textDecoration = if (isTodayDate) androidx.compose.ui.text.style.TextDecoration.Underline else null,
-                            )
-                        }
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(20.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = date.toDateLabel(dominantYearMonth = dominantYearMonth),
+                                    style = OguriTheme.typography.labelSmall,
+                                    color =
+                                        when {
+                                            isTodayDate -> Mint70
+                                            isWeekendDate || isHoliday -> Orange50
+                                            isRecommendedDate -> Neutral70
+                                            else -> Neutral50
+                                        },
+                                    textDecoration = if (isTodayDate) androidx.compose.ui.text.style.TextDecoration.Underline else null,
+                                )
+                            }
 
-                        val holidayName = holidayByDate[date]?.takeUnless { holiday -> hasPublicHoliday && !holiday.publicHoliday }?.name
-                        if (isRecommendedDate && !holidayName.isNullOrBlank()) {
-                            Text(
-                                text = holidayName,
-                                style = OguriTheme.typography.labelSmall,
-                                color = Orange50,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 4.dp),
-                            )
-                        } else {
-                            Spacer(modifier = Modifier.height(18.dp))
+                            val holidayName =
+                                holidayByDate[date]
+                                    ?.takeUnless { holiday ->
+                                        hasPublicHoliday && !holiday.publicHoliday
+                                    }?.name
+                            if (isRecommendedDate && !holidayName.isNullOrBlank()) {
+                                Text(
+                                    text = holidayName,
+                                    style = OguriTheme.typography.labelSmall,
+                                    color = Orange50,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(top = 4.dp),
+                                )
+                            } else {
+                                Spacer(modifier = Modifier.height(18.dp))
+                            }
                         }
                     }
                 }
@@ -153,6 +150,36 @@ fun CalendarMonthGrid(
             if (weekIndex < visibleWeeks.lastIndex) {
                 Spacer(modifier = Modifier.height(8.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun CalendarWeekHighlightBackground(
+    highlightRanges: List<WeekHighlightRange>,
+    modifier: Modifier = Modifier,
+) {
+    Canvas(modifier = modifier) {
+        if (highlightRanges.isEmpty()) {
+            return@Canvas
+        }
+
+        val dateColumnWidth = size.width / DAYS_IN_WEEK
+        val horizontalInset = 4.dp.toPx()
+        val highlightHeight = 20.dp.toPx()
+        val cornerRadius = CornerRadius(x = highlightHeight / 2f, y = highlightHeight / 2f)
+        val highlightColor = Mint50.copy(alpha = 0.5f)
+
+        highlightRanges.forEach { range ->
+            val startX = (range.startIndex * dateColumnWidth) + horizontalInset
+            val endX = ((range.endIndex + 1) * dateColumnWidth) - horizontalInset
+            val highlightWidth = (endX - startX).coerceAtLeast(0f)
+            drawRoundRect(
+                color = highlightColor,
+                topLeft = Offset(x = startX, y = 0f),
+                size = Size(width = highlightWidth, height = highlightHeight),
+                cornerRadius = cornerRadius,
+            )
         }
     }
 }
@@ -168,6 +195,34 @@ private data class YearMonth(
     val year: Int,
     val month: Int,
 )
+
+private data class WeekHighlightRange(
+    val startIndex: Int,
+    val endIndex: Int,
+)
+
+private fun List<LocalDate>.highlightRanges(
+    startDate: LocalDate,
+    endDate: LocalDate,
+): List<WeekHighlightRange> {
+    val ranges = mutableListOf<WeekHighlightRange>()
+    var rangeStartIndex: Int? = null
+
+    forEachIndexed { index, date ->
+        val isInRange = date in startDate..endDate
+        if (isInRange && rangeStartIndex == null) {
+            rangeStartIndex = index
+        }
+        val resolvedStartIndex = rangeStartIndex
+        if ((!isInRange || index == lastIndex) && resolvedStartIndex != null) {
+            val resolvedEndIndex = if (isInRange) index else index - 1
+            ranges += WeekHighlightRange(startIndex = resolvedStartIndex, endIndex = resolvedEndIndex)
+            rangeStartIndex = null
+        }
+    }
+
+    return ranges
+}
 
 private fun dominantYearMonth(
     startDate: LocalDate,

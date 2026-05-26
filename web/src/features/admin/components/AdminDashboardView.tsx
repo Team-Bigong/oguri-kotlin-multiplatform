@@ -2,6 +2,7 @@ import React from "react"
 import { ActivityIndicator, ScrollView, Text, View } from "react-native"
 import { Country, Destination, Member, PublicHoliday } from "../../../types/admin"
 import { ActionButton } from "./ActionButton"
+import { CountriesSection } from "./CountriesSection"
 import { DestinationsSection } from "./DestinationsSection"
 import { HolidaysSection } from "./HolidaysSection"
 import { MembersSection } from "./MembersSection"
@@ -12,10 +13,11 @@ import {
   DestinationFormState,
   HolidayFormState,
   MemberFormState,
+  CountryFormState,
   StorageCountryOption,
   UploadStage
 } from "../types/adminLocalTypes"
-import { createInitialHolidayFormState, createInitialMemberFormState, parseFlightTimeMinutes } from "../utils/adminHelpers"
+import { createInitialCountryFormState, createInitialHolidayFormState, createInitialMemberFormState, parseFlightTimeMinutes } from "../utils/adminHelpers"
 
 type AdminDashboardViewProps = {
   isWideDesktopLayout: boolean
@@ -51,6 +53,11 @@ type AdminDashboardViewProps = {
   holidayListSearchKeyword: string
   setHolidayListSearchKeyword: React.Dispatch<React.SetStateAction<string>>
   filteredPublicHolidays: PublicHoliday[]
+  countryFormState: CountryFormState
+  setCountryFormState: React.Dispatch<React.SetStateAction<CountryFormState>>
+  countryListSearchKeyword: string
+  setCountryListSearchKeyword: React.Dispatch<React.SetStateAction<string>>
+  filteredCountries: Country[]
   handleImageFileSelection: (event: React.ChangeEvent<HTMLInputElement>) => void
   handleRemoveDestinationImage: (destinationImageIndex: number) => void
   addExperienceItem: () => void
@@ -68,6 +75,9 @@ type AdminDashboardViewProps = {
   onDeleteMember: (memberId: string) => void
   onSubmitHoliday: () => void
   onDeleteHoliday: (holidayId: number) => void
+  onSubmitCountry: () => void
+  onDeleteCountry: (countryId: number) => void
+  onLoadCountry: (country: Country) => void
 }
 
 export const AdminDashboardView = ({
@@ -104,6 +114,11 @@ export const AdminDashboardView = ({
   holidayListSearchKeyword,
   setHolidayListSearchKeyword,
   filteredPublicHolidays,
+  countryFormState,
+  setCountryFormState,
+  countryListSearchKeyword,
+  setCountryListSearchKeyword,
+  filteredCountries,
   handleImageFileSelection,
   handleRemoveDestinationImage,
   addExperienceItem,
@@ -117,13 +132,18 @@ export const AdminDashboardView = ({
   onSubmitMember,
   onDeleteMember,
   onSubmitHoliday,
-  onDeleteHoliday
+  onDeleteHoliday,
+  onSubmitCountry,
+  onDeleteCountry,
+  onLoadCountry
 }: AdminDashboardViewProps): React.JSX.Element => {
   const activeTitle = activeTab === "destinations"
     ? "장소 DB 관리"
     : activeTab === "members"
       ? "사용자 DB 관리"
-      : "공휴일 DB 관리"
+      : activeTab === "holidays"
+        ? "공휴일 DB 관리"
+        : "나라 DB 관리"
 
   const totalDestinationImageCount = destinations.reduce((totalCount, destination) => {
     return totalCount + destination.images.length
@@ -148,6 +168,7 @@ export const AdminDashboardView = ({
             <TabButton label="장소 관리" selected={activeTab === "destinations"} onPress={() => onChangeTab("destinations")} />
             <TabButton label="사용자 관리" selected={activeTab === "members"} onPress={() => onChangeTab("members")} />
             <TabButton label="공휴일 관리" selected={activeTab === "holidays"} onPress={() => onChangeTab("holidays")} />
+            <TabButton label="나라 관리" selected={activeTab === "countries"} onPress={() => onChangeTab("countries")} />
           </View>
         </View>
 
@@ -245,6 +266,21 @@ export const AdminDashboardView = ({
                   onSubmitHoliday={onSubmitHoliday}
                   onDeleteHoliday={onDeleteHoliday}
                   onResetHolidayForm={() => setHolidayFormState(createInitialHolidayFormState())}
+                />
+              )}
+
+              {activeTab === "countries" && (
+                <CountriesSection
+                  isWideDesktopLayout={isWideDesktopLayout}
+                  countryFormState={countryFormState}
+                  setCountryFormState={setCountryFormState}
+                  filteredCountries={filteredCountries}
+                  countryListSearchKeyword={countryListSearchKeyword}
+                  setCountryListSearchKeyword={setCountryListSearchKeyword}
+                  onSubmitCountry={onSubmitCountry}
+                  onDeleteCountry={onDeleteCountry}
+                  onLoadCountry={onLoadCountry}
+                  onResetCountryForm={() => setCountryFormState(createInitialCountryFormState())}
                 />
               )}
             </ScrollView>
