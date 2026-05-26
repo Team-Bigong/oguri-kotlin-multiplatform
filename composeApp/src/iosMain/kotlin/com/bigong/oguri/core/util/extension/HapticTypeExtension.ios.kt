@@ -1,6 +1,6 @@
 package com.bigong.oguri.core.util.extension
 
-import com.bigong.oguri.core.util.HapticType
+import com.bigong.oguri.core.util.extension.HapticType
 import platform.UIKit.UISelectionFeedbackGenerator
 
 actual fun HapticType.perform() {

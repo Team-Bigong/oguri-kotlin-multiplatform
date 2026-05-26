@@ -31,6 +31,7 @@ fun HomeRoute(
     onPlaceClick: (Long, String?, String?) -> Unit,
     onPeriodClick: (String, String) -> Unit,
     onMoveToCalendarClick: () -> Unit,
+    onSearchClick: () -> Unit = {},
     onLoginRequired: () -> Unit,
 ) {
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
@@ -46,8 +47,9 @@ fun HomeRoute(
             ?.map { place ->
                 place.thumbnailUrl
             }.orEmpty()
+    val weeklyTopPlaceImageUrls = homeUiState.weeklyTopPlaces.map { place -> place.thumbnailUrl }
 
-    PreloadNetworkImages(imageUrls = currentPeriodPlacesImageUrls)
+    PreloadNetworkImages(imageUrls = currentPeriodPlacesImageUrls + weeklyTopPlaceImageUrls)
 
     LaunchedEffect(homeViewModel) {
         homeViewModel.sideEffect.collectLatest { sideEffect ->
@@ -102,6 +104,7 @@ fun HomeRoute(
         onPlaceClick = onPlaceClick,
         onPeriodClick = onPeriodClick,
         onMoveToCalendarClick = onMoveToCalendarClick,
+        onSearchClick = onSearchClick,
         scrollToTopTrigger = scrollToTopTrigger,
     )
 
