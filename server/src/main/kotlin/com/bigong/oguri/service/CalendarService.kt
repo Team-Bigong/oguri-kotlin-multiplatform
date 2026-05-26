@@ -76,7 +76,13 @@ class CalendarService(
 
         // 4. 해당 기간에 최적화된 추천 장소 전체 계산 후 페이지 단위로 분할
         val allDestinations = destinationRepository.findAllWithCountryAndImages()
-        val allRecommendedPlaces = placeRecommendationService.calculateRecommendedPlacesAll(startDate, allDestinations, userCountry, totalTripCount)
+        val allRecommendedPlaces =
+            placeRecommendationService.calculateRecommendedPlacesAll(
+                startDate,
+                allDestinations,
+                userCountry,
+                totalTripCount,
+            )
         val offset = normalizedPage * normalizedSize
         val pagedPlaces = allRecommendedPlaces.drop(offset).take(normalizedSize)
         val hasNext = offset + pagedPlaces.size < allRecommendedPlaces.size
@@ -144,6 +150,12 @@ class CalendarService(
         val targetDayOff = (dayOffCount ?: memberService.getPreferredDayOff(memberId)).coerceAtLeast(1)
         val normalizedPage = page.coerceAtLeast(0)
         val normalizedSize = size.coerceIn(MIN_PAGE_SIZE, MAX_PAGE_SIZE)
+        val periodLimitPerMonth =
+            resolvePeriodLimitPerMonth(
+                month = month,
+                page = normalizedPage,
+                size = normalizedSize,
+            )
         val allHolidays = publicHolidayRepository.findAll()
         val holidayMap = allHolidays.associateBy { it.holidayDate }
         val savedPeriodKeys =
@@ -162,7 +174,7 @@ class CalendarService(
                 userDayOff = targetDayOff,
                 holidayMap = holidayMap,
                 monthRangeCount = monthRangeCount,
-                periodLimitPerMonth = PERIOD_LIMIT_PER_MONTH,
+                periodLimitPerMonth = periodLimitPerMonth,
                 startDateCutoff = currentDate,
             )
 
@@ -263,12 +275,28 @@ class CalendarService(
         return MONTH_MAX_VALUE - startMonth + 1
     }
 
+    private fun resolvePeriodLimitPerMonth(
+        month: Int?,
+        page: Int,
+        size: Int,
+    ): Int {
+        if (month == null) {
+            return PERIOD_LIMIT_PER_MONTH
+        }
+        val requestedItemCount = (page + 1L) * size + NEXT_PAGE_LOOKAHEAD_COUNT
+        return requestedItemCount
+            .coerceAtLeast(PERIOD_LIMIT_PER_MONTH.toLong())
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
+    }
+
     private companion object {
         private const val MINIMUM_SUPPORTED_YEAR = 1
         private const val MONTH_MIN_VALUE = 1
         private const val MONTH_MAX_VALUE = 12
         private const val SINGLE_MONTH_RANGE = 1
         private const val PERIOD_LIMIT_PER_MONTH = 6
+        private const val NEXT_PAGE_LOOKAHEAD_COUNT = 1
         private const val MIN_PAGE_SIZE = 1
         private const val MAX_PAGE_SIZE = 50
         private const val DEFAULT_HOLIDAY_NAME = "주말"
