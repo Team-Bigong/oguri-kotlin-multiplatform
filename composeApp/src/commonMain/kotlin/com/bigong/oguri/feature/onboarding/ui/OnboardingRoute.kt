@@ -76,6 +76,7 @@ fun OnboardingRoute(
         onRemainingDayOffCommit = onboardingViewModel::commitRemainingDayOffInput,
         onPreferredDayOffChange = onboardingViewModel::updatePreferredDayOffInput,
         onPreferredDayOffCommit = onboardingViewModel::commitPreferredDayOffInput,
+        onSkipClick = onboardingViewModel::skipOnboardingLeaveDays,
         onCompleteClick = onboardingViewModel::completeOnboarding,
     )
 }

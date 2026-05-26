@@ -103,6 +103,12 @@ class MainNavigator(
         }
     }
 
+    fun navigateToSearch() {
+        navHostController.navigate(RouteModel.Search) {
+            launchSingleTop = true
+        }
+    }
+
     fun navigateToPlaceDetail(
         placeId: Long,
         startDate: String?,
@@ -145,6 +151,10 @@ class MainNavigator(
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
+    fun navigateToDisplaySettings() {
+        navHostController.navigate(RouteModel.DisplaySettings)
+    }
+
     fun navigateToRouteModel(routeModel: RouteModel) {
         when (routeModel) {
             is RouteModel.PlaceDetail -> {
@@ -175,8 +185,10 @@ class MainNavigator(
 
             RouteModel.Onboarding,
             RouteModel.Home,
+            RouteModel.Search,
             RouteModel.Calendar,
             RouteModel.MyPage,
+            RouteModel.DisplaySettings,
             RouteModel.Login,
             RouteModel.Splash,
             -> {

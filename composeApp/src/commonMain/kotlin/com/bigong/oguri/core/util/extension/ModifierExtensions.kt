@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,10 +20,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -30,11 +33,17 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral20
+import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.platform.isFloatingBottomNavigationEnabled
+
+private val FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING = 142.dp
 
 @Composable
 fun Modifier.dismissKeyboardOnOutsideTouch(): Modifier {
@@ -60,6 +69,26 @@ fun Modifier.noRippleClickable(
         enabled = enabled,
         onClick = onClick,
     )
+
+@Composable
+fun Modifier.oguriElevation(
+    elevation: Dp = 2.dp,
+    shape: Shape = RoundedCornerShape(8.dp),
+    color: Color = Color.Black,
+): Modifier {
+    if (elevation <= 0.dp) {
+        return this
+    }
+
+    val shadows =
+        if (OguriTheme.isDarkTheme) {
+            darkModeShadows(elevation = elevation, color = color)
+        } else {
+            lightModeShadows(elevation = elevation, color = color)
+        }
+
+    return oguriElevation(shadows = shadows, shape = shape)
+}
 
 fun Modifier.skeletonShimmer(
     shape: Shape = RoundedCornerShape(8.dp),
@@ -102,6 +131,32 @@ fun Modifier.skeletonShimmer(
             }
     }
 
+fun Modifier.floatingNavigationBarsPadding(
+    hasFloatingBottomNavigation: Boolean,
+    baseBottomPadding: Dp = 0.dp,
+): Modifier {
+    val additionalBottomPadding =
+        calculateFloatingBottomNavigationAdditionalBottomPadding(
+            hasFloatingBottomNavigation = hasFloatingBottomNavigation,
+            baseBottomPadding = baseBottomPadding,
+        )
+    if (additionalBottomPadding <= 0.dp) {
+        return this
+    }
+    return this.padding(bottom = additionalBottomPadding)
+}
+
+fun calculateFloatingBottomNavigationAdditionalBottomPadding(
+    hasFloatingBottomNavigation: Boolean,
+    baseBottomPadding: Dp = 0.dp,
+): Dp {
+    val shouldApplyFloatingBottomPadding = hasFloatingBottomNavigation && isFloatingBottomNavigationEnabled()
+    if (!shouldApplyFloatingBottomPadding) {
+        return 0.dp
+    }
+    return (FLOATING_BOTTOM_NAVIGATION_SNACKBAR_RESERVED_PADDING - baseBottomPadding).coerceAtLeast(0.dp)
+}
+
 @Composable
 fun Modifier.consumeVerticalDragForBottomSheetContent(): Modifier {
     val nestedScrollConnection =
@@ -127,3 +182,59 @@ fun Modifier.consumeVerticalDragForBottomSheetContent(): Modifier {
 
     return this.nestedScroll(nestedScrollConnection)
 }
+
+private fun Modifier.oguriElevation(
+    shadows: List<Shadow>,
+    shape: Shape,
+): Modifier {
+    var modifier = this
+    shadows.forEach { shadow ->
+        modifier = modifier.dropShadow(shape = shape, shadow = shadow)
+    }
+    return modifier
+}
+
+private fun lightModeShadows(
+    elevation: Dp,
+    color: Color,
+): List<Shadow> =
+    listOf(
+        oguriShadow(
+            radius = elevation * 1.2f,
+            offsetY = elevation * 0.4f,
+            alpha = 0.09f,
+            color = color,
+        ),
+        oguriShadow(
+            radius = elevation * 7f,
+            offsetY = elevation * 1.2f,
+            alpha = 0.045f,
+            color = color,
+        ),
+    )
+
+private fun darkModeShadows(
+    elevation: Dp,
+    color: Color,
+): List<Shadow> =
+    listOf(
+        oguriShadow(
+            radius = elevation * 1.2f,
+            offsetY = elevation * 0.4f,
+            alpha = 0.12f,
+            color = color,
+        ),
+    )
+
+private fun oguriShadow(
+    radius: Dp,
+    offsetY: Dp = 0.dp,
+    alpha: Float,
+    color: Color,
+): Shadow =
+    Shadow(
+        radius = radius,
+        color = color,
+        offset = DpOffset(x = 0.dp, y = offsetY),
+        alpha = alpha,
+    )

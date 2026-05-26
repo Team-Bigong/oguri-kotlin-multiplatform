@@ -3,10 +3,12 @@ package com.bigong.oguri.data.repository
 import com.bigong.oguri.data.remote.HomeRemoteDataSource
 import com.bigong.oguri.data.remote.model.request.ManageSavedRecommendationRequest
 import com.bigong.oguri.data.remote.model.response.AdvertisementResponse
+import com.bigong.oguri.data.remote.model.response.MonthlyTopPeriodResponse
 import com.bigong.oguri.data.remote.model.response.PlaceResponse
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
+import com.bigong.oguri.domain.model.MonthlyTopPeriod
 import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.domain.model.RecommendPeriod
 import com.bigong.oguri.domain.model.RecommendationSavedChange
@@ -27,6 +29,19 @@ class DefaultHomeRepository(
         homeRemoteDataSource.getRecommendPeriodResponses(userCountry = userCountry).map { recommendPeriodResponse ->
             recommendPeriodResponse.toDomain()
         }
+
+    override suspend fun getWeeklyTopPlaces(): List<Place> =
+        homeRemoteDataSource
+            .getWeeklyTopPlacesResponse()
+            .weeklyTopPlaces
+            .map { placeResponse -> placeResponse.toDomain() }
+
+    override suspend fun getMonthlyTopPeriods(): List<MonthlyTopPeriod> =
+        homeRemoteDataSource
+            .getMonthlyTopPeriodResponses()
+            .mapIndexed { index, monthlyTopPeriodResponse ->
+                monthlyTopPeriodResponse.toDomain(rank = index + 1)
+            }
 
     override fun observeRecommendationSavedChanges(): Flow<RecommendationSavedChange> = recommendationSavedChangeFlow.asSharedFlow()
 
@@ -100,6 +115,16 @@ private fun PlaceResponse.toDomain(): Place =
         summary = summary,
         thumbnailUrl = thumbnailUrl,
         isSaved = saved,
+    )
+
+private fun MonthlyTopPeriodResponse.toDomain(rank: Int): MonthlyTopPeriod =
+    MonthlyTopPeriod(
+        rank = rank,
+        startDate = LocalDate.parse(startDate),
+        endDate = LocalDate.parse(endDate),
+        totalTripCount = totalTripCount,
+        holidayCount = holidayCount,
+        dayOffCount = dayOffCount,
     )
 
 private fun AdvertisementResponse.toDomain(): Advertisement =

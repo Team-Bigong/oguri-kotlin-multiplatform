@@ -47,6 +47,8 @@ fun PlaceDetailSkeletonContent() {
                 SkeletonBox(modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(18.dp))
                 Spacer(modifier = Modifier.height(6.dp))
             }
+            Spacer(modifier = Modifier.height(18.dp))
+            SkeletonBox(modifier = Modifier.padding(horizontal = 20.dp).fillMaxWidth().height(126.dp))
         }
         item {
             Spacer(modifier = Modifier.height(24.dp))

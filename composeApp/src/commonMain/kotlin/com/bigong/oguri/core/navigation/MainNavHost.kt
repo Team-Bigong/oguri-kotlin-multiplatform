@@ -15,17 +15,20 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.bigong.oguri.core.di.AppGraph
+import com.bigong.oguri.domain.model.DisplayThemeMode
 import com.bigong.oguri.feature.calendar.ui.CalendarRoute
 import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
 import com.bigong.oguri.feature.home.ui.HomeRoute
 import com.bigong.oguri.feature.home.ui.HomeViewModel
 import com.bigong.oguri.feature.login.ui.LoginRoute
+import com.bigong.oguri.feature.mypage.ui.DisplaySettingsRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageRoute
 import com.bigong.oguri.feature.mypage.ui.MyPageViewModel
 import com.bigong.oguri.feature.onboarding.ui.OnboardingRoute
 import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailRoute
 import com.bigong.oguri.feature.photodetail.ui.PhotoDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
+import com.bigong.oguri.feature.search.ui.SearchRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 
@@ -47,6 +50,8 @@ fun MainNavHost(
     onLoginSucceeded: () -> Unit,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
+    currentDisplayThemeMode: DisplayThemeMode,
+    onDisplayThemeModeChange: (DisplayThemeMode) -> Unit,
 ) {
     NavHost(
         navController = navigator.navHostController,
@@ -154,7 +159,23 @@ fun MainNavHost(
                         }
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
+                onSearchClick = navigator::navigateToSearch,
                 onLoginRequired = navigator::navigateToLogin,
+            )
+        }
+        composable<RouteModel.Search> {
+            SearchRoute(
+                searchViewModelProvider = appGraph.searchViewModelProvider,
+                onBackClick = { navigator.popBackStack() },
+                onSearchClick = {},
+                onPlaceClick = { placeId ->
+                    navigator.navigateToPlaceDetail(
+                        placeId = placeId,
+                        startDate = null,
+                        endDate = null,
+                    )
+                },
+                onSuggestionClick = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
             )
         }
         composable<RouteModel.Calendar> {
@@ -174,6 +195,7 @@ fun MainNavHost(
                 onOpenSuggestion = { navigator.navigateToWebDocument(WebDocumentType.SUGGESTION) },
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
+                onOpenDisplaySettings = navigator::navigateToDisplaySettings,
                 onLoggedOut = onLoggedOut,
                 onWithdrawCompleted = onWithdrawCompleted,
                 onLoginRequired = navigator::navigateToLogin,
@@ -185,6 +207,13 @@ fun MainNavHost(
                         endDate = null,
                     )
                 },
+            )
+        }
+        composable<RouteModel.DisplaySettings> {
+            DisplaySettingsRoute(
+                currentDisplayThemeMode = currentDisplayThemeMode,
+                onDisplayThemeModeChange = onDisplayThemeModeChange,
+                onBackClick = { navigator.popBackStack() },
             )
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->

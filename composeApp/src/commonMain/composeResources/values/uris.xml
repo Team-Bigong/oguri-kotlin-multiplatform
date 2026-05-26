@@ -4,14 +4,4 @@
     <string name="uri_privacy_policy">https://wealthy-clematis-4a5.notion.site/31d5bca0ac2280269bbcd799cdc73997?source=copy_link</string>
     <string name="uri_android_store">https://play.google.com/store/apps/details?id=com.bigong.oguri</string>
     <string name="uri_ios_store">https://apps.apple.com/kr/search?term=%EC%98%A4%EA%B5%AC%EB%A6%AC</string>
-
-    <string name="url_hotel_1">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisements%2Fhome%2Fimg_hotel_1.jpg?alt=media&amp;token=c82b5272-861a-4079-b7c2-7480c0aa608f</string>
-    <string name="url_hotel_2">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisements%2Fhome%2Fimg_hotel_2.jpg?alt=media&amp;token=ef90320e-5caf-4acf-9dc2-9a39518a2acd</string>
-
-    <string name="url_plane_1">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisements%2Fhome%2Fimg_plane_1.jpg?alt=media&amp;token=3abd3b31-2893-4efa-8ac0-37f5b44ea012</string>
-    <string name="url_plane_2">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisements%2Fhome%2Fimg_plane_2.jpg?alt=media&amp;token=46fb018d-b902-4ee8-829c-640e0b88b48c</string>
-
-    <string name="url_activity_1">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisements%2Fhome%2Fimg_activity_1.jpg?alt=media&amp;token=4fd2db96-0f49-4c3c-8859-6c024a12e204</string>
-    <string name="url_activity_2">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisements%2Fhome%2Fimg_activity_2.jpg?alt=media&amp;token=edd5c52b-0055-4992-a329-bf8f10ff729e</string>
-    <string name="url_activity_3">https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/advertisements%2Fhome%2Fimg_activity_3.jpg?alt=media&amp;token=a935773e-be40-44a5-8caa-e045a0359536</string>
 </resources>

@@ -14,7 +14,9 @@ actual suspend fun loginWithKakao(): Result<String> =
         val applicationContext =
             OguriPlatformContextHolder.applicationContext
                 ?: error("Application context is not initialized for Kakao login.")
-        performKakaoLogin(context = applicationContext)
+        val currentActivity = OguriPlatformContextHolder.currentActivity
+        val loginContext = currentActivity ?: applicationContext
+        performKakaoLogin(context = loginContext)
     }
 
 private suspend fun performKakaoLogin(context: Context): String {

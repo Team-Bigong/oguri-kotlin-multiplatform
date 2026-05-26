@@ -140,6 +140,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            freeCompilerArgs += "-Xbinary=bundleId=com.bigong.oguri.composeapp"
         }
     }
 

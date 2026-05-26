@@ -9,6 +9,17 @@
 
     <string name="home_greeting_name">Only Oguri knew this combination.</string>
     <string name="home_greeting_question">How about taking a break like this?</string>
+    <string name="home_button_search">Search</string>
+    <string name="search_hint_place">Search for a place you want to visit</string>
+    <string name="search_section_recent">Recent searches</string>
+    <string name="search_section_popular">Popular searches</string>
+    <string name="search_section_recommended_week">Recommended places this week</string>
+    <string name="search_content_description_back">Back</string>
+    <string name="search_content_description_search">Search</string>
+    <string name="search_content_description_delete_recent">Delete recent search</string>
+    <string name="search_empty_recent_keyword">No recently searched destinations yet.</string>
+    <string name="search_empty_result_message">We couldn’t find that destination</string>
+    <string name="search_suggest_destination_button">Suggest a destination</string>
 
     <string name="home_tab_rank_one">1st</string>
     <string name="home_tab_rank_two">2nd</string>
@@ -22,6 +33,16 @@
     <string name="home_guide_match_places">These are perfect places to visit at that time</string>
     <string name="home_guide_match_places_highlight">perfect places</string>
     <string name="home_hint_place_cards">Tap a card you like</string>
+
+    <string name="home_guide_weekly_top_places">These are this week’s popular travel spots</string>
+    <string name="home_guide_weekly_top_places_highlight">popular travel spots</string>
+    <string name="home_hint_weekly_top_places">Places people have been noticing</string>
+
+    <string name="home_guide_monthly_top_periods">These are this month’s popular schedules</string>
+    <string name="home_guide_monthly_top_periods_highlight">popular schedules</string>
+    <string name="home_hint_monthly_top_periods">Good enough to follow as they are</string>
+    <string name="home_monthly_top_period_date">%1$s - %2$s (%3$d days)</string>
+    <string name="home_monthly_top_period_summary">Holiday %1$d days・Leave %2$d days</string>
 
     <string name="home_guide_trip_products">We brought useful info you won’t want to miss</string>
     <string name="home_guide_trip_products_highlight">useful info</string>
@@ -53,6 +74,18 @@
     <string name="place_detail_menu_save">Save</string>
     <string name="place_detail_menu_unsave">Remove from saved</string>
     <string name="place_detail_experience_detail">See details</string>
+    <string name="place_detail_information_recommend_period">Good to visit from month %1$d to %2$d</string>
+    <string name="place_detail_information_recommend_period_highlight">month %1$d to %2$d</string>
+    <string name="place_detail_information_weather">Average %1$d°C in the recommended period, %2$s</string>
+    <string name="place_detail_information_exchange_rate">%1$s KRW / %2$d %3$s</string>
+    <string name="place_detail_information_cost_index">Cost feels %1$sx</string>
+    <string name="place_detail_information_cost_index_source">Big Mac index</string>
+    <string name="place_detail_precipitation_clear">always sunny ☀️</string>
+    <string name="place_detail_precipitation_mostly_clear">mostly sunny 🌤️</string>
+    <string name="place_detail_precipitation_sometimes_rain">rain sometimes 🌦️</string>
+    <string name="place_detail_precipitation_frequent_rain">rain often 🌧️</string>
+    <string name="place_detail_precipitation_heavy_rain">quite rainy ☔</string>
+    <string name="place_detail_precipitation_often_rainy_season">likely rainy season 🌧️</string>
 
     <string name="login_apple_with_account">Sign in with Apple account</string>
     <string name="login_google_with_account">Sign in with Google account</string>
@@ -78,6 +111,7 @@
     <string name="onboarding_day_off_field_remaining">Remaining leave days</string>
     <string name="onboarding_day_off_field_preferred">Preferred leave days</string>
     <string name="onboarding_day_off_unit">days</string>
+    <string name="onboarding_day_off_skip">Skip</string>
     <string name="onboarding_day_off_done">Done</string>
     <string name="onboarding_day_off_error_positive">Please enter at least 1 day.</string>
     <string name="onboarding_day_off_error_max_remaining">Remaining leave days must be 40 or less.</string>
@@ -104,7 +138,7 @@
     <string name="share_period_description">With %1$d leave days, you can rest for %2$d days.\nTake a look.</string>
     <string name="share_button_open_in_app">View in app</string>
     <string name="share_default_fallback_message">This is a great time to take a break.\nWant to take a look?</string>
-    <string name="share_default_fallback_url">https://www.oguri.com</string>
+    <string name="share_default_fallback_url">https://www.oguri.kr</string>
 
     <string name="calendar_header_title">How many leave days can you use?</string>
     <string name="calendar_header_subtitle">Adjust your leave days to find the best combinations</string>
@@ -157,6 +191,7 @@
     <string name="mypage_selected_period_information">Holiday %1$d days · Leave %2$d days</string>
     <string name="mypage_empty_selected_period">No saved vacation period.</string>
     <string name="mypage_empty_saved_place">No saved place.</string>
+    <string name="mypage_menu_display_settings">Display Settings</string>
     <string name="mypage_menu_suggest">Send feedback</string>
     <string name="mypage_menu_terms_of_service">Terms of Service</string>
     <string name="mypage_menu_privacy_policy">Privacy Policy</string>
@@ -180,4 +215,7 @@
     <string name="mypage_leave_days_field_remaining">Remaining leave days</string>
     <string name="mypage_leave_days_field_preferred">Preferred leave days</string>
     <string name="mypage_leave_days_unit">days</string>
+    <string name="display_settings_follow_system">Follow system setting</string>
+    <string name="display_settings_light_mode">Light mode</string>
+    <string name="display_settings_dark_mode">Dark mode</string>
 </resources>

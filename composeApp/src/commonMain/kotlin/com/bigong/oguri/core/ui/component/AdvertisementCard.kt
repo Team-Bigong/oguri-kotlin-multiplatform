@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,13 +39,14 @@ import oguri.composeapp.generated.resources.home_ad_hotel_title_highlight
 import oguri.composeapp.generated.resources.home_ad_plane_title
 import oguri.composeapp.generated.resources.home_ad_plane_title_highlight
 import oguri.composeapp.generated.resources.ic_advertisement
-import oguri.composeapp.generated.resources.url_activity_1
-import oguri.composeapp.generated.resources.url_activity_2
-import oguri.composeapp.generated.resources.url_activity_3
-import oguri.composeapp.generated.resources.url_hotel_1
-import oguri.composeapp.generated.resources.url_hotel_2
-import oguri.composeapp.generated.resources.url_plane_1
-import oguri.composeapp.generated.resources.url_plane_2
+import oguri.composeapp.generated.resources.img_advertisement_activity_1
+import oguri.composeapp.generated.resources.img_advertisement_activity_2
+import oguri.composeapp.generated.resources.img_advertisement_activity_3
+import oguri.composeapp.generated.resources.img_advertisement_hotel_1
+import oguri.composeapp.generated.resources.img_advertisement_hotel_2
+import oguri.composeapp.generated.resources.img_advertisement_plane_1
+import oguri.composeapp.generated.resources.img_advertisement_plane_2
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -57,9 +59,9 @@ fun AdvertisementCard(
     highlightedColor: Color? = null,
     onClick: (String) -> Unit = {},
 ) {
-    val imageUrls = advertisementImageUrls(advertisement = advertisement)
-    val stableImageIndex = advertisementStableImageIndex(advertisement = advertisement, candidateSize = imageUrls.size)
-    val imageUrl = imageUrls.getOrNull(stableImageIndex).orEmpty()
+    val imageResources = advertisementImageResources(advertisement = advertisement)
+    val stableImageIndex = advertisementStableImageIndex(advertisement = advertisement, candidateSize = imageResources.size)
+    val imageResource = imageResources.getOrNull(stableImageIndex)
     val resolvedTitleText = titleText ?: advertisementDefaultTitleText(advertisement = advertisement)
     val resolvedHighlightedText = highlightedText ?: advertisementDefaultHighlightedText(advertisement = advertisement)
     val resolvedHighlightColor = highlightedColor ?: advertisementDefaultHighlightColor(advertisement = advertisement)
@@ -81,18 +83,22 @@ fun AdvertisementCard(
                     .fillMaxWidth()
                     .height(height = 128.dp),
         ) {
-            NetworkImage(
-                imageUrl = imageUrl,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .clip(
-                            RoundedCornerShape(
-                                topStart = 8.dp,
-                                topEnd = 8.dp,
+            if (imageResource != null) {
+                Image(
+                    painter = painterResource(imageResource),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .clip(
+                                RoundedCornerShape(
+                                    topStart = 8.dp,
+                                    topEnd = 8.dp,
+                                ),
                             ),
-                        ),
-            )
+                )
+            }
             Image(
                 painter = painterResource(Res.drawable.ic_advertisement),
                 contentDescription = null,
@@ -133,27 +139,27 @@ private fun advertisementDefaultHighlightedText(advertisement: Advertisement): S
     }
 
 @Composable
-private fun advertisementImageUrls(advertisement: Advertisement): List<String> =
+private fun advertisementImageResources(advertisement: Advertisement): List<DrawableResource> =
     when (advertisement.platform) {
         AdvertisementPlatform.AGODA -> {
             listOf(
-                stringResource(Res.string.url_hotel_1),
-                stringResource(Res.string.url_hotel_2),
+                Res.drawable.img_advertisement_hotel_1,
+                Res.drawable.img_advertisement_hotel_2,
             )
         }
 
         AdvertisementPlatform.SKYSCANNER -> {
             listOf(
-                stringResource(Res.string.url_plane_1),
-                stringResource(Res.string.url_plane_2),
+                Res.drawable.img_advertisement_plane_1,
+                Res.drawable.img_advertisement_plane_2,
             )
         }
 
         AdvertisementPlatform.KLOOK -> {
             listOf(
-                stringResource(Res.string.url_activity_1),
-                stringResource(Res.string.url_activity_2),
-                stringResource(Res.string.url_activity_3),
+                Res.drawable.img_advertisement_activity_1,
+                Res.drawable.img_advertisement_activity_2,
+                Res.drawable.img_advertisement_activity_3,
             )
         }
 

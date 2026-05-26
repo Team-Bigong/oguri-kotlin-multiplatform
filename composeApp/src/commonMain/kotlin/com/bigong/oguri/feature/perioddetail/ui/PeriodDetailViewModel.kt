@@ -46,6 +46,7 @@ class PeriodDetailViewModel(
     val uiState = _uiState.asStateFlow()
     private val _sideEffect = MutableSharedFlow<PeriodDetailSideEffect>(extraBufferCapacity = 1)
     val sideEffect = _sideEffect.asSharedFlow()
+    private var currentRequestKey: PeriodDetailRequestKey? = null
 
     private val queryFlow = MutableStateFlow(PeriodDetailPagingQuery())
     private var lastResolvedPeriodDetail: CalendarPeriodDetail? = null
@@ -84,16 +85,32 @@ class PeriodDetailViewModel(
         startDate: String,
         endDate: String,
     ) {
-        _uiState.update { currentUiState ->
-            currentUiState.copy(
-                isLoading = true,
-                isError = false,
-                periodDetail = null,
-                isSaved = false,
-                dDay = 0,
-            )
+        val requestKey = PeriodDetailRequestKey(startDate = startDate, endDate = endDate)
+        currentRequestKey = requestKey
+        val cachedState = PERIOD_DETAIL_CACHE[requestKey]
+
+        if (cachedState == null) {
+            _uiState.update { currentUiState ->
+                currentUiState.copy(
+                    isLoading = true,
+                    isError = false,
+                    periodDetail = null,
+                    isSaved = false,
+                    dDay = 0,
+                )
+            }
+        } else {
+            _uiState.update { currentUiState ->
+                currentUiState.copy(
+                    isLoading = false,
+                    isError = false,
+                    periodDetail = cachedState.periodDetail,
+                    isSaved = cachedState.isSaved,
+                    dDay = cachedState.dDay,
+                )
+            }
         }
-        lastResolvedPeriodDetail = null
+        lastResolvedPeriodDetail = cachedState?.periodDetail
         val query: PeriodDetailPagingQuery = queryFlow.value
         queryFlow.value =
             query.copy(
@@ -121,6 +138,15 @@ class PeriodDetailViewModel(
 
         _uiState.update { currentUiState ->
             currentUiState.copy(isSaved = nextSavedState)
+        }
+        val requestKey = currentRequestKey
+        if (requestKey != null) {
+            PERIOD_DETAIL_CACHE[requestKey]?.let { cachedState ->
+                PERIOD_DETAIL_CACHE[requestKey] =
+                    cachedState.copy(
+                        isSaved = nextSavedState,
+                    )
+            }
         }
 
         viewModelScope.launch {
@@ -153,6 +179,14 @@ class PeriodDetailViewModel(
             }.onFailure {
                 _uiState.update { currentUiState ->
                     currentUiState.copy(isSaved = previousSavedState)
+                }
+                if (requestKey != null) {
+                    PERIOD_DETAIL_CACHE[requestKey]?.let { cachedState ->
+                        PERIOD_DETAIL_CACHE[requestKey] =
+                            cachedState.copy(
+                                isSaved = previousSavedState,
+                            )
+                    }
                 }
                 if (it.isUnauthorized()) {
                     _sideEffect.tryEmit(PeriodDetailSideEffect.LoginRequired)
@@ -189,8 +223,29 @@ class PeriodDetailViewModel(
                     dDay = calculateDDayUseCase(todayDate = todayDate, targetDate = periodDetail.startDate),
                 )
             }
+            val latestUiState = uiState.value
+            val requestKey = currentRequestKey
+            if (requestKey != null && latestUiState.periodDetail != null) {
+                PERIOD_DETAIL_CACHE[requestKey] =
+                    CachedPeriodDetailState(
+                        periodDetail = latestUiState.periodDetail,
+                        isSaved = latestUiState.isSaved,
+                        dDay = latestUiState.dDay,
+                    )
+            }
         }
     }
+
+    private data class PeriodDetailRequestKey(
+        val startDate: String,
+        val endDate: String,
+    )
+
+    private data class CachedPeriodDetailState(
+        val periodDetail: CalendarPeriodDetail,
+        val isSaved: Boolean,
+        val dDay: Int,
+    )
 
     private data class PeriodDetailPagingQuery(
         val startDate: String = "",
@@ -200,5 +255,6 @@ class PeriodDetailViewModel(
 
     private companion object {
         private const val PERIOD_DETAIL_PAGE_SIZE = 10
+        private val PERIOD_DETAIL_CACHE: MutableMap<PeriodDetailRequestKey, CachedPeriodDetailState> = mutableMapOf()
     }
 }
