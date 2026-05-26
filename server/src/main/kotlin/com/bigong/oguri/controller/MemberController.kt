@@ -1,9 +1,9 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
-import com.bigong.oguri.dto.MemberDayOffRequest
-import com.bigong.oguri.dto.MemberMeResponse
-import com.bigong.oguri.dto.SaveRecommendationRequest
+import com.bigong.oguri.dto.request.MemberDayOffRequest
+import com.bigong.oguri.dto.response.MemberMeResponse
+import com.bigong.oguri.dto.request.SaveRecommendationRequest
 import com.bigong.oguri.service.DestinationService
 import com.bigong.oguri.service.MemberService
 import com.bigong.oguri.service.SavedRecommendationService
@@ -18,38 +18,34 @@ import org.springframework.web.bind.annotation.*
 class MemberController(
     private val memberService: MemberService,
     private val savedRecommendationService: SavedRecommendationService,
-    private val destinationService: DestinationService
+    private val destinationService: DestinationService,
 ) {
     @Operation(summary = "내 정보 조회", description = "현재 로그인된 유저의 프로필 및 연차 설정 정보를 조회합니다.")
     @GetMapping("/me")
-    fun getMyInfo(
-        request: HttpServletRequest
-    ): MemberMeResponse {
-        return memberService.getMyInfo(request.resolveMemberId())
-    }
+    fun getMyInfo(request: HttpServletRequest): MemberMeResponse = memberService.getMyInfo(request.resolveMemberId())
 
     @Operation(summary = "연차 정보 수정", description = "사용자의 선호 연차 및 잔여 연차 정보를 업데이트합니다.")
     @PostMapping("/day-off")
     fun updateDayOffInfo(
         @RequestBody request: MemberDayOffRequest,
-        httpServletRequest: HttpServletRequest
+        httpServletRequest: HttpServletRequest,
     ) {
         memberService.updateDayOffInfo(httpServletRequest.resolveMemberId(), request.preferredDayOff, request.remainingDayOff)
     }
 
     @Operation(
         summary = "온보딩 완료 처리",
-        description = "온보딩에서 선호 연차와 남은 연차를 저장하고 온보딩 완료 상태로 전환합니다. 선호 연차는 남은 연차를 초과할 수 없고, 남은 연차는 최대 40일까지 입력할 수 있습니다."
+        description = "온보딩에서 선호 연차와 남은 연차를 저장하고 온보딩 완료 상태로 전환합니다. 선호 연차는 남은 연차를 초과할 수 없고, 남은 연차는 최대 40일까지 입력할 수 있습니다.",
     )
     @PostMapping("/onboarding")
     fun completeOnboarding(
         @RequestBody request: MemberDayOffRequest,
-        httpServletRequest: HttpServletRequest
+        httpServletRequest: HttpServletRequest,
     ) {
         memberService.completeOnboarding(
             memberId = httpServletRequest.resolveMemberId(),
             preferred = request.preferredDayOff,
-            remaining = request.remainingDayOff
+            remaining = request.remainingDayOff,
         )
     }
 
@@ -57,7 +53,7 @@ class MemberController(
     @PostMapping("/saved-recommendations")
     fun saveRecommendation(
         @RequestBody request: SaveRecommendationRequest,
-        httpServletRequest: HttpServletRequest
+        httpServletRequest: HttpServletRequest,
     ) {
         savedRecommendationService.save(request, httpServletRequest.resolveMemberId())
     }
@@ -66,7 +62,7 @@ class MemberController(
     @DeleteMapping("/saved-recommendations")
     fun deleteRecommendation(
         @RequestBody request: SaveRecommendationRequest,
-        httpServletRequest: HttpServletRequest
+        httpServletRequest: HttpServletRequest,
     ) {
         savedRecommendationService.delete(request, httpServletRequest.resolveMemberId())
     }
@@ -75,7 +71,7 @@ class MemberController(
     @PostMapping("/saved-destinations/{id}")
     fun saveDestination(
         @PathVariable id: Int,
-        request: HttpServletRequest
+        request: HttpServletRequest,
     ) {
         destinationService.saveDestination(id, request.resolveMemberId())
     }
@@ -84,16 +80,14 @@ class MemberController(
     @DeleteMapping("/saved-destinations/{id}")
     fun deleteDestination(
         @PathVariable id: Int,
-        request: HttpServletRequest
+        request: HttpServletRequest,
     ) {
         destinationService.deleteDestination(id, request.resolveMemberId())
     }
 
     @Operation(summary = "회원 탈퇴", description = "현재 로그인한 회원의 계정과 저장 데이터를 삭제합니다.")
     @DeleteMapping("/me")
-    fun withdraw(
-        request: HttpServletRequest
-    ) {
+    fun withdraw(request: HttpServletRequest) {
         memberService.withdraw(request.resolveMemberId())
     }
 }

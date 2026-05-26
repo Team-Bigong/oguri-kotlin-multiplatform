@@ -157,10 +157,40 @@ class OnboardingViewModel(
             }
             return
         }
+        completeOnboardingWithDayOff(
+            remainingDayOff = remainingDayOff,
+            preferredDayOff = preferredDayOff,
+        )
+    }
+
+    fun skipOnboardingLeaveDays() {
+        if (uiState.value.isSubmitting) {
+            return
+        }
+        _uiState.update { currentUiState ->
+            currentUiState.copy(
+                remainingDayOffInput = ValidateOnboardingLeaveDaysUseCase.DEFAULT_REMAINING_DAY_OFF.toString(),
+                preferredDayOffInput = ValidateOnboardingLeaveDaysUseCase.DEFAULT_PREFERRED_DAY_OFF.toString(),
+                isRemainingDayOffConfirmed = true,
+                isPreferredDayOffConfirmed = true,
+                remainingDayOffError = null,
+                preferredDayOffError = null,
+            )
+        }
+        completeOnboardingWithDayOff(
+            remainingDayOff = ValidateOnboardingLeaveDaysUseCase.DEFAULT_REMAINING_DAY_OFF,
+            preferredDayOff = ValidateOnboardingLeaveDaysUseCase.DEFAULT_PREFERRED_DAY_OFF,
+        )
+    }
+
+    private fun completeOnboardingWithDayOff(
+        remainingDayOff: Int,
+        preferredDayOff: Int,
+    ) {
+        if (!startSubmitting()) {
+            return
+        }
         viewModelScope.launch {
-            _uiState.update { currentUiState ->
-                currentUiState.copy(isSubmitting = true)
-            }
             runCatching {
                 completeOnboardingUseCase(
                     preferredDayOff = preferredDayOff,
@@ -176,6 +206,19 @@ class OnboardingViewModel(
                 }
             }
         }
+    }
+
+    private fun startSubmitting(): Boolean {
+        var canSubmit = false
+        _uiState.update { currentUiState ->
+            if (currentUiState.isSubmitting) {
+                currentUiState
+            } else {
+                canSubmit = true
+                currentUiState.copy(isSubmitting = true)
+            }
+        }
+        return canSubmit
     }
 
     private fun sanitizeDayOffInput(inputText: String): String = inputText.filter { character -> character.isDigit() }.take(2)

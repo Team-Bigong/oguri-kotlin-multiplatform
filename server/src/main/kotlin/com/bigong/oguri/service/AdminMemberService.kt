@@ -1,9 +1,9 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.Member
-import com.bigong.oguri.dto.AdminMemberCreateRequest
-import com.bigong.oguri.dto.AdminMemberResponse
-import com.bigong.oguri.dto.AdminMemberUpdateRequest
+import com.bigong.oguri.dto.request.AdminMemberCreateRequest
+import com.bigong.oguri.dto.response.AdminMemberResponse
+import com.bigong.oguri.dto.request.AdminMemberUpdateRequest
 import com.bigong.oguri.repository.MemberRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -13,14 +13,13 @@ import org.springframework.web.server.ResponseStatusException
 @Service
 @Transactional
 class AdminMemberService(
-    private val memberRepository: MemberRepository
+    private val memberRepository: MemberRepository,
 ) {
     @Transactional(readOnly = true)
-    fun getMemberList(): List<AdminMemberResponse> {
-        return memberRepository.findAllByOrderByUpdatedAtDesc().map { member ->
+    fun getMemberList(): List<AdminMemberResponse> =
+        memberRepository.findAllByOrderByUpdatedAtDesc().map { member ->
             member.toAdminResponse()
         }
-    }
 
     fun createMember(request: AdminMemberCreateRequest): AdminMemberResponse {
         if (request.id.isBlank()) {
@@ -32,25 +31,30 @@ class AdminMemberService(
 
         validateDayOff(request.preferredDayOff, request.remainingDayOff)
 
-        val member = memberRepository.save(
-            Member(
-                id = request.id.trim(),
-                nickname = normalizeNullableText(request.nickname),
-                preferredDayOff = request.preferredDayOff,
-                remainingDayOff = request.remainingDayOff,
-                onboardingCompleted = request.onboardingCompleted
+        val member =
+            memberRepository.save(
+                Member(
+                    id = request.id.trim(),
+                    nickname = normalizeNullableText(request.nickname),
+                    preferredDayOff = request.preferredDayOff,
+                    remainingDayOff = request.remainingDayOff,
+                    onboardingCompleted = request.onboardingCompleted,
+                ),
             )
-        )
 
         return member.toAdminResponse()
     }
 
-    fun updateMember(memberId: String, request: AdminMemberUpdateRequest): AdminMemberResponse {
+    fun updateMember(
+        memberId: String,
+        request: AdminMemberUpdateRequest,
+    ): AdminMemberResponse {
         validateDayOff(request.preferredDayOff, request.remainingDayOff)
 
-        val member = memberRepository.findById(memberId).orElseThrow {
-            ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다. id=$memberId")
-        }
+        val member =
+            memberRepository.findById(memberId).orElseThrow {
+                ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다. id=$memberId")
+            }
 
         member.nickname = normalizeNullableText(request.nickname)
         member.completeOnboarding(request.preferredDayOff, request.remainingDayOff)
@@ -68,7 +72,10 @@ class AdminMemberService(
         memberRepository.deleteById(memberId)
     }
 
-    private fun validateDayOff(preferredDayOff: Int, remainingDayOff: Int) {
+    private fun validateDayOff(
+        preferredDayOff: Int,
+        remainingDayOff: Int,
+    ) {
         if (remainingDayOff < MINIMUM_DAY_OFF) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "남은 연차는 0 이상이어야 합니다.")
         }
@@ -88,16 +95,15 @@ class AdminMemberService(
         return if (trimmedValue.isBlank()) null else trimmedValue
     }
 
-    private fun Member.toAdminResponse(): AdminMemberResponse {
-        return AdminMemberResponse(
+    private fun Member.toAdminResponse(): AdminMemberResponse =
+        AdminMemberResponse(
             id = id,
             nickname = nickname,
             preferredDayOff = preferredDayOff,
             remainingDayOff = remainingDayOff,
             onboardingCompleted = onboardingCompleted,
-            updatedAt = updatedAt.toString()
+            updatedAt = updatedAt.toString(),
         )
-    }
 
     private companion object {
         private const val MINIMUM_DAY_OFF = 0

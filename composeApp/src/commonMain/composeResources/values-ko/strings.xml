@@ -9,6 +9,17 @@
 
     <string name="home_greeting_name">이 조합, 오구리만 알고 있었어요</string>
     <string name="home_greeting_question">이번엔 이렇게 쉬어볼까요?</string>
+    <string name="home_button_search">검색</string>
+    <string name="search_hint_place">가고 싶은 장소를 검색해보세요</string>
+    <string name="search_section_recent">최근 검색어</string>
+    <string name="search_section_popular">인기 검색어</string>
+    <string name="search_section_recommended_week">이번 주의 추천 장소</string>
+    <string name="search_content_description_back">뒤로가기</string>
+    <string name="search_content_description_search">검색</string>
+    <string name="search_content_description_delete_recent">최근 검색어 삭제</string>
+    <string name="search_empty_recent_keyword">아직 최근 검색한 여행지가 없어요.</string>
+    <string name="search_empty_result_message">해당 여행지를 찾지 못했어요</string>
+    <string name="search_suggest_destination_button">여행지 건의하기</string>
 
     <string name="home_tab_rank_one">1순위</string>
     <string name="home_tab_rank_two">2순위</string>
@@ -22,6 +33,16 @@
     <string name="home_guide_match_places">이때 가면 딱 좋은 곳들이에요</string>
     <string name="home_guide_match_places_highlight">딱 좋은 곳</string>
     <string name="home_hint_place_cards">마음에 드는 카드를 눌러보세요</string>
+
+    <string name="home_guide_weekly_top_places">이번 주 인기 여행지예요</string>
+    <string name="home_guide_weekly_top_places_highlight">인기 여행지</string>
+    <string name="home_hint_weekly_top_places">사람들이 눈여겨본 곳들이에요</string>
+
+    <string name="home_guide_monthly_top_periods">이번 달 인기 일정이에요</string>
+    <string name="home_guide_monthly_top_periods_highlight">인기 일정</string>
+    <string name="home_hint_monthly_top_periods">그대로 따라가도 좋아요</string>
+    <string name="home_monthly_top_period_date">%1$s - %2$s (%3$d일)</string>
+    <string name="home_monthly_top_period_summary">휴일 %1$d일・연차 %2$d일</string>
 
     <string name="home_guide_trip_products">놓치기 아쉬운 유용한 정보를 가져왔어요</string>
     <string name="home_guide_trip_products_highlight">유용한 정보</string>
@@ -53,6 +74,18 @@
     <string name="place_detail_menu_save">저장하기</string>
     <string name="place_detail_menu_unsave">저장 삭제하기</string>
     <string name="place_detail_experience_detail">자세히 보기</string>
+    <string name="place_detail_information_recommend_period">%1$d월~%2$d월에 가기 좋아요</string>
+    <string name="place_detail_information_recommend_period_highlight">%1$d월~%2$d월</string>
+    <string name="place_detail_information_weather">추천 기간 평균 기온 %1$d°C, %2$s</string>
+    <string name="place_detail_information_exchange_rate">%1$s원 / %2$d%3$s</string>
+    <string name="place_detail_information_cost_index">체감 물가 %1$s배</string>
+    <string name="place_detail_information_cost_index_source">빅맥 지수</string>
+    <string name="place_detail_precipitation_clear">항상 맑아요 ☀️</string>
+    <string name="place_detail_precipitation_mostly_clear">대체로 맑아요 🌤️</string>
+    <string name="place_detail_precipitation_sometimes_rain">때때로 비가 와요 🌦️</string>
+    <string name="place_detail_precipitation_frequent_rain">비가 자주 와요 🌧️</string>
+    <string name="place_detail_precipitation_heavy_rain">비가 꽤 많이 와요 ☔</string>
+    <string name="place_detail_precipitation_often_rainy_season">우기일 가능성이 높아요 🌧️</string>
 
     <string name="login_apple_with_account">애플 계정으로 로그인</string>
     <string name="login_google_with_account">구글 계정으로 로그인</string>
@@ -78,6 +111,7 @@
     <string name="onboarding_day_off_field_remaining">남은 연차</string>
     <string name="onboarding_day_off_field_preferred">선호 연차</string>
     <string name="onboarding_day_off_unit">일</string>
+    <string name="onboarding_day_off_skip">건너뛰기</string>
     <string name="onboarding_day_off_done">완료</string>
     <string name="onboarding_day_off_error_positive">1일 이상 입력해 주세요.</string>
     <string name="onboarding_day_off_error_max_remaining">남은 연차는 40일 이하로 입력해 주세요.</string>
@@ -104,7 +138,7 @@
     <string name="share_period_description">연차 %1$d일로 %2$d일이나 쉴 수 있어요\n한번 확인해보세요</string>
     <string name="share_button_open_in_app">앱에서 보기</string>
     <string name="share_default_fallback_message">지금 쉬기 좋은 타이밍이에요\n한번 구경해볼까요?</string>
-    <string name="share_default_fallback_url">https://www.oguri.com</string>
+    <string name="share_default_fallback_url">https://www.oguri.kr</string>
 
     <string name="calendar_header_title">연차 몇 일 써볼까요?</string>
     <string name="calendar_header_subtitle">연차를 바꿔보면서 가장 알찬 조합을 찾아보세요</string>
@@ -157,6 +191,7 @@
     <string name="mypage_selected_period_information">휴일 %1$d일 · 연차 %2$d일</string>
     <string name="mypage_empty_selected_period">아직 골라둔 휴가 일정이 없어요.</string>
     <string name="mypage_empty_saved_place">아직 담아둔 여행지가 없어요.</string>
+    <string name="mypage_menu_display_settings">디스플레이 설정</string>
     <string name="mypage_menu_suggest">건의하기</string>
     <string name="mypage_menu_terms_of_service">서비스 이용약관</string>
     <string name="mypage_menu_privacy_policy">개인정보 처리방침</string>
@@ -180,4 +215,7 @@
     <string name="mypage_leave_days_field_remaining">남은 연차</string>
     <string name="mypage_leave_days_field_preferred">선호하는 연차</string>
     <string name="mypage_leave_days_unit">일</string>
+    <string name="display_settings_follow_system">시스템 설정에 따름</string>
+    <string name="display_settings_light_mode">라이트 모드</string>
+    <string name="display_settings_dark_mode">다크 모드</string>
 </resources>

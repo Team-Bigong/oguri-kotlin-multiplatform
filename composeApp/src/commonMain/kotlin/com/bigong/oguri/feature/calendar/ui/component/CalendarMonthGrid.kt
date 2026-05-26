@@ -52,6 +52,7 @@ fun CalendarMonthGrid(
             .toLocalDateTime(TimeZone.currentSystemDefault())
             .date
     val holidayByDate = periodCard.holidays.associateBy { holiday -> holiday.date }
+    val hasPublicHoliday = periodCard.holidays.any { holiday -> holiday.publicHoliday }
     val dominantYearMonth = dominantYearMonth(periodCard.startDate, periodCard.endDate)
     val visibleWeeks = displayWeeks(periodCard = periodCard, dominantYearMonth = dominantYearMonth)
 
@@ -134,7 +135,7 @@ fun CalendarMonthGrid(
                             )
                         }
 
-                        val holidayName = holidayByDate[date]?.name
+                        val holidayName = holidayByDate[date]?.takeUnless { holiday -> hasPublicHoliday && !holiday.publicHoliday }?.name
                         if (isRecommendedDate && !holidayName.isNullOrBlank()) {
                             Text(
                                 text = holidayName,

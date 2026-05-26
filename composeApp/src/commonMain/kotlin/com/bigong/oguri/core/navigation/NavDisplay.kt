@@ -1,22 +1,14 @@
 package com.bigong.oguri.core.navigation
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -26,19 +18,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
 import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
 import com.bigong.oguri.core.analytics.initializeOguriAnalytics
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
-import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
@@ -48,21 +37,26 @@ import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.core.network.provideOguriHttpClient
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
+import com.bigong.oguri.core.platform.applyPlatformThemeMode
+import com.bigong.oguri.core.platform.floatingBottomNavigationSelectionFlow
+import com.bigong.oguri.core.platform.isFloatingBottomNavigationEnabled
+import com.bigong.oguri.core.platform.notifyFloatingBottomNavigationState
 import com.bigong.oguri.core.ui.component.OguriSnackBarHost
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
-import com.bigong.oguri.core.util.HapticType
-import com.bigong.oguri.core.util.extension.noRippleClickable
-import com.bigong.oguri.core.util.extension.perform
+import com.bigong.oguri.data.local.provideDisplayThemeModeLocalDataSource
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
+import com.bigong.oguri.domain.model.DisplayThemeMode
 import dev.zacsweers.metro.createGraphFactory
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.bottom_navigation_calendar
+import oguri.composeapp.generated.resources.bottom_navigation_home
+import oguri.composeapp.generated.resources.bottom_navigation_my
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 import oguri.composeapp.generated.resources.snackbar_login_success
 import oguri.composeapp.generated.resources.snackbar_logout_completed
 import oguri.composeapp.generated.resources.snackbar_withdraw_completed
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
@@ -75,7 +69,22 @@ fun NavDisplay(
     snackbarHostState: SnackbarHostState,
     onExitApp: () -> Unit = {},
 ) {
-    OguriTheme {
+    val displayThemeModeLocalDataSource = remember { provideDisplayThemeModeLocalDataSource() }
+    val initialDisplayThemeMode =
+        remember(displayThemeModeLocalDataSource) {
+            displayThemeModeLocalDataSource.initialize()
+            displayThemeModeLocalDataSource.readDisplayThemeMode() ?: DisplayThemeMode.SYSTEM
+        }
+    var currentDisplayThemeMode by remember { mutableStateOf(initialDisplayThemeMode) }
+    val isSystemDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme =
+        when (currentDisplayThemeMode) {
+            DisplayThemeMode.SYSTEM -> isSystemDarkTheme
+            DisplayThemeMode.LIGHT -> false
+            DisplayThemeMode.DARK -> true
+        }
+
+    OguriTheme(darkTheme = isDarkTheme) {
         val navigator = rememberMainNavigator()
         val currentDestination = navigator.currentDestination()
         var authSessionVersion by remember { mutableIntStateOf(0) }
@@ -112,21 +121,60 @@ fun NavDisplay(
         val loginSuccessMessage = stringResource(Res.string.snackbar_login_success)
         val logoutCompletedMessage = stringResource(Res.string.snackbar_logout_completed)
         val withdrawCompletedMessage = stringResource(Res.string.snackbar_withdraw_completed)
+        val homeTabLabel = stringResource(Res.string.bottom_navigation_home)
+        val calendarTabLabel = stringResource(Res.string.bottom_navigation_calendar)
+        val myPageTabLabel = stringResource(Res.string.bottom_navigation_my)
         val incomingDeepLinkUrl =
             appGraph.deepLinkStore.incomingUrl
                 .collectAsState()
                 .value
+        val lifecycleOwner = LocalLifecycleOwner.current
         var previousRouteText by remember { mutableStateOf<String?>(null) }
-        var hasShownLaunchAppOpenAd by remember { mutableStateOf(false) }
+        var hasHandledFirstForegroundStart by remember { mutableStateOf(false) }
+        var hasCompletedInitialMainTabEntry by remember { mutableStateOf(false) }
+        var hasShownAppOpenAdInCurrentForegroundSession by remember { mutableStateOf(false) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
         var myPageTabReselectTrigger by remember { mutableIntStateOf(0) }
+        val floatingBottomNavigationEnabled = isFloatingBottomNavigationEnabled()
+        val hasPreviousBackStackEntry = navigator.navHostController.previousBackStackEntry != null
         val shouldShowBottomNavigation =
-            bottomNavigationDestinations.any { destination ->
-                isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
-            }
+            !floatingBottomNavigationEnabled &&
+                bottomNavigationDestinations.any { destination ->
+                    isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
+                }
+        val shouldShowFloatingBottomNavigation =
+            floatingBottomNavigationEnabled &&
+                bottomNavigationDestinations.any { destination ->
+                    isBottomNavigationDestinationSelected(currentDestination = currentDestination, destination = destination)
+                }
+        val selectedBottomNavigationTabIndex = resolveSelectedBottomNavigationTabIndex(currentDestination)
+        val selectedBottomNavigationColorArgb = colorToArgbLong(Neutral90)
+        val unselectedBottomNavigationColorArgb = colorToArgbLong(Neutral40)
+        val floatingBottomNavigationBackgroundColorArgb = colorToArgbLong(Neutral5.copy(alpha = 0.9f))
         val isOnMainTabRoot = isMainTabRootDestination(currentDestination)
+        val isOnLoginRoute = isLoginRoute(currentDestination?.route)
+        val shouldHandleDoubleBackToExit = isOnMainTabRoot || (isOnLoginRoute && !hasPreviousBackStackEntry)
+        val onBottomNavigationReselected: (BottomNavigationDestination) -> Unit = { destination ->
+            when (destination.routeModel) {
+                RouteModel.Home -> {
+                    homeTabReselectTrigger += 1
+                }
+
+                RouteModel.Calendar -> {
+                    calendarTabReselectTrigger += 1
+                }
+
+                RouteModel.MyPage -> {
+                    myPageTabReselectTrigger += 1
+                }
+
+                else -> {
+                    Unit
+                }
+            }
+        }
 
         LaunchedEffect(incomingDeepLinkUrl) {
             val deepLinkUrl = incomingDeepLinkUrl ?: return@LaunchedEffect
@@ -140,16 +188,59 @@ fun NavDisplay(
             initializeAdMob()
             preloadAppOpenAd()
         }
+        LaunchedEffect(currentDisplayThemeMode, isDarkTheme) {
+            applyPlatformThemeMode(
+                isDarkThemeEnabled = isDarkTheme,
+                shouldFollowSystemTheme = currentDisplayThemeMode == DisplayThemeMode.SYSTEM,
+            )
+        }
+        DisposableEffect(lifecycleOwner) {
+            val observer =
+                LifecycleEventObserver { _, event ->
+                    if (event != Lifecycle.Event.ON_START) {
+                        return@LifecycleEventObserver
+                    }
+
+                    preloadAppOpenAd()
+                    if (!hasHandledFirstForegroundStart) {
+                        hasHandledFirstForegroundStart = true
+                        return@LifecycleEventObserver
+                    }
+
+                    hasShownAppOpenAdInCurrentForegroundSession = false
+                }
+            lifecycleOwner.lifecycle.addObserver(observer)
+            onDispose {
+                lifecycleOwner.lifecycle.removeObserver(observer)
+            }
+        }
         LaunchedEffect(currentDestination?.route) {
             val currentRouteText = currentDestination?.route
             val previousRoute = previousRouteText
+
+            fun isMainTabRoute(routeText: String): Boolean =
+                isHomeRoute(routeText) || isCalendarRoute(routeText) || isMyPageRoute(routeText)
+
+            fun tryShowAppOpenAdAfterScreenMove() {
+                if (hasShownAppOpenAdInCurrentForegroundSession) {
+                    return
+                }
+
+                val hasShownAppOpenAd = showAppOpenAdIfAvailable()
+                if (hasShownAppOpenAd) {
+                    hasShownAppOpenAdInCurrentForegroundSession = true
+                }
+            }
             if (currentRouteText != null && previousRoute != null) {
+                if (!hasCompletedInitialMainTabEntry && isMainTabRoute(currentRouteText)) {
+                    hasCompletedInitialMainTabEntry = true
+                } else if (hasCompletedInitialMainTabEntry && previousRoute != currentRouteText) {
+                    tryShowAppOpenAdAfterScreenMove()
+                }
+
                 if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
                     if (homeViewModelLazy.isInitialized()) {
                         homeViewModelLazy.value.refreshRecommendPeriods()
-                    }
-                    if (!isOnboardingRoute(previousRoute) && !hasShownLaunchAppOpenAd) {
-                        hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
                     }
                 }
                 if (isMyPageRoute(currentRouteText) && !isMyPageRoute(previousRoute)) {
@@ -165,16 +256,57 @@ fun NavDisplay(
                         calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
                     }
                 }
-            } else if (currentRouteText != null && previousRoute == null && isHomeRoute(currentRouteText)) {
-                if (!hasShownLaunchAppOpenAd) {
-                    hasShownLaunchAppOpenAd = showAppOpenAdIfAvailable()
-                }
+            }
+            if (currentRouteText != null && previousRoute == null && isMainTabRoute(currentRouteText)) {
+                hasCompletedInitialMainTabEntry = true
             }
             previousRouteText = currentRouteText
         }
+        LaunchedEffect(
+            shouldShowFloatingBottomNavigation,
+            selectedBottomNavigationTabIndex,
+            selectedBottomNavigationColorArgb,
+            unselectedBottomNavigationColorArgb,
+            floatingBottomNavigationBackgroundColorArgb,
+            homeTabLabel,
+            calendarTabLabel,
+            myPageTabLabel,
+        ) {
+            if (!floatingBottomNavigationEnabled) {
+                return@LaunchedEffect
+            }
+            notifyFloatingBottomNavigationState(
+                isVisible = shouldShowFloatingBottomNavigation,
+                selectedTabIndex = selectedBottomNavigationTabIndex,
+                selectedColorArgb = selectedBottomNavigationColorArgb,
+                unselectedColorArgb = unselectedBottomNavigationColorArgb,
+                backgroundColorArgb = floatingBottomNavigationBackgroundColorArgb,
+                homeTabLabel = homeTabLabel,
+                calendarTabLabel = calendarTabLabel,
+                myPageTabLabel = myPageTabLabel,
+            )
+        }
+        LaunchedEffect(floatingBottomNavigationEnabled, currentDestination?.route) {
+            if (!floatingBottomNavigationEnabled) {
+                return@LaunchedEffect
+            }
+            floatingBottomNavigationSelectionFlow().collect { tabIndex ->
+                val destination = bottomNavigationDestinations.getOrNull(tabIndex) ?: return@collect
+                val isReselected =
+                    isBottomNavigationDestinationSelected(
+                        currentDestination = currentDestination,
+                        destination = destination,
+                    )
+                if (isReselected) {
+                    onBottomNavigationReselected(destination)
+                    return@collect
+                }
+                navigator.navigateToBottomNavigationDestination(destination)
+            }
+        }
 
         PlatformBackGestureContainer(
-            enabled = !isOnMainTabRoot,
+            enabled = !shouldHandleDoubleBackToExit,
             onBack = { navigator.popBackStack() },
         ) {
             Box(
@@ -193,21 +325,7 @@ fun NavDisplay(
                                 currentDestination = currentDestination,
                                 onDestinationClick = { destination, isReselected ->
                                     if (isReselected) {
-                                        when (destination.routeModel) {
-                                            RouteModel.Home -> {
-                                                homeTabReselectTrigger += 1
-                                            }
-
-                                            RouteModel.Calendar -> {
-                                                calendarTabReselectTrigger += 1
-                                            }
-
-                                            RouteModel.MyPage -> {
-                                                myPageTabReselectTrigger += 1
-                                            }
-
-                                            else -> Unit
-                                        }
+                                        onBottomNavigationReselected(destination)
                                         return@BottomNavigationBar
                                     }
                                     navigator.navigateToBottomNavigationDestination(destination)
@@ -218,7 +336,7 @@ fun NavDisplay(
                     snackbarHost = {
                         OguriSnackBarHost(
                             hostState = snackbarHostState,
-                            hasBottomNavigation = shouldShowBottomNavigation,
+                            hasBottomNavigation = shouldShowBottomNavigation || shouldShowFloatingBottomNavigation,
                         )
                     },
                 ) { contentPaddingValues ->
@@ -261,13 +379,18 @@ fun NavDisplay(
                                 )
                             }
                         },
+                        currentDisplayThemeMode = currentDisplayThemeMode,
+                        onDisplayThemeModeChange = { displayThemeMode ->
+                            currentDisplayThemeMode = displayThemeMode
+                            displayThemeModeLocalDataSource.writeDisplayThemeMode(displayThemeMode)
+                        },
                     )
                 }
             }
         }
 
-        key(currentDestination?.route, isOnMainTabRoot) {
-            PlatformBackHandler(enabled = isOnMainTabRoot) {
+        key(currentDestination?.route, shouldHandleDoubleBackToExit) {
+            PlatformBackHandler(enabled = shouldHandleDoubleBackToExit) {
                 val nowMark = TimeSource.Monotonic.markNow()
                 val previousMark = lastMainBackPressedMark
                 val isWithinExitWindow = previousMark != null && previousMark.elapsedNow() < EXIT_BACK_PRESS_WINDOW
@@ -287,114 +410,4 @@ fun NavDisplay(
             }
         }
     }
-}
-
-private fun isBottomNavigationDestinationSelected(
-    currentDestination: NavDestination?,
-    destination: BottomNavigationDestination,
-): Boolean {
-    return currentDestination?.hierarchy?.any { navDestination ->
-        val routeText = navDestination.route ?: return@any false
-        routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
-    } == true
-}
-
-@Composable
-private fun BottomNavigationBar(
-    currentDestination: NavDestination?,
-    onDestinationClick: (BottomNavigationDestination, Boolean) -> Unit,
-) {
-    Column {
-        HorizontalDivider(thickness = 1.dp, color = Neutral20)
-        Row(
-            modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .background(Neutral5)
-                    .padding(top = 2.dp)
-                    .padding(horizontal = 18.dp)
-                    .navigationBarsPadding(),
-            horizontalArrangement = Arrangement.SpaceAround,
-        ) {
-            bottomNavigationDestinations.forEach { destination ->
-                val isSelected =
-                    currentDestination?.hierarchy?.any { navDestination ->
-                        val routeText = navDestination.route ?: return@any false
-                        routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
-                    } == true
-
-                val tintColor =
-                    if (isSelected) {
-                        Neutral90
-                    } else {
-                        Neutral40
-                    }
-
-                Column(
-                    modifier =
-                        Modifier
-                            .noRippleClickable(
-                                onClick = {
-                                    HapticType.Selection.perform()
-                                    onDestinationClick(destination, isSelected)
-                                },
-                            ).padding(horizontal = 18.dp, vertical = 10.dp)
-                            .weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Image(
-                        painter = painterResource(destination.iconResource),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp),
-                        colorFilter = ColorFilter.tint(tintColor),
-                    )
-                    Text(
-                        text = stringResource(destination.labelResource),
-                        color = tintColor,
-                        style = OguriTheme.typography.labelSmall,
-                    )
-                }
-            }
-        }
-    }
-}
-
-private fun isMainTabRootDestination(currentDestination: NavDestination?): Boolean {
-    val currentRouteText = currentDestination?.route ?: return false
-    return bottomNavigationDestinations.any { destination ->
-        currentRouteText == destination.routeSerialName
-    }
-}
-
-private fun isHomeRoute(routeText: String): Boolean {
-    val homeRouteSerialName =
-        RouteModel.Home
-            .serializer()
-            .descriptor.serialName
-    return routeText == homeRouteSerialName || routeText.startsWith(homeRouteSerialName)
-}
-
-private fun isMyPageRoute(routeText: String): Boolean {
-    val myPageRouteSerialName =
-        RouteModel.MyPage
-            .serializer()
-            .descriptor.serialName
-    return routeText == myPageRouteSerialName || routeText.startsWith(myPageRouteSerialName)
-}
-
-private fun isCalendarRoute(routeText: String): Boolean {
-    val calendarRouteSerialName =
-        RouteModel.Calendar
-            .serializer()
-            .descriptor.serialName
-    return routeText == calendarRouteSerialName || routeText.startsWith(calendarRouteSerialName)
-}
-
-private fun isOnboardingRoute(routeText: String): Boolean {
-    val onboardingRouteSerialName =
-        RouteModel.Onboarding
-            .serializer()
-            .descriptor.serialName
-    return routeText == onboardingRouteSerialName || routeText.startsWith(onboardingRouteSerialName)
 }

@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.mypage.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
+import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestProfileSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageGuestSection
 import com.bigong.oguri.feature.mypage.ui.component.MyPageLeaveDaysBottomSheet
@@ -44,6 +46,7 @@ import oguri.composeapp.generated.resources.mypage_dialog_cancel
 import oguri.composeapp.generated.resources.mypage_dialog_confirm
 import oguri.composeapp.generated.resources.mypage_guest_name
 import oguri.composeapp.generated.resources.mypage_logout_dialog_title
+import oguri.composeapp.generated.resources.mypage_menu_display_settings
 import oguri.composeapp.generated.resources.mypage_menu_logout
 import oguri.composeapp.generated.resources.mypage_menu_privacy_policy
 import oguri.composeapp.generated.resources.mypage_menu_suggest
@@ -51,6 +54,10 @@ import oguri.composeapp.generated.resources.mypage_menu_terms_of_service
 import oguri.composeapp.generated.resources.mypage_menu_withdraw
 import oguri.composeapp.generated.resources.mypage_withdraw_dialog_phrase
 import org.jetbrains.compose.resources.stringResource
+
+private val MYPAGE_BOTTOM_BANNER_HEIGHT = 60.dp
+private val MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT = 24.dp
+private val MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING = MYPAGE_BOTTOM_BANNER_HEIGHT + MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT
 
 @Composable
 fun MyPageScreen(
@@ -69,6 +76,7 @@ fun MyPageScreen(
     onDismissDeleteSavedPlaceDialog: () -> Unit,
     onConfirmDeleteSavedPlace: () -> Unit,
     onSuggestClick: () -> Unit,
+    onDisplaySettingsClick: () -> Unit,
     onTermsOfServiceClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onWithdrawClick: () -> Unit,
@@ -108,6 +116,14 @@ fun MyPageScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f),
+                contentPadding =
+                    PaddingValues(
+                        bottom =
+                            calculateFloatingBottomNavigationAdditionalBottomPadding(
+                                hasFloatingBottomNavigation = true,
+                                baseBottomPadding = MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING,
+                            ),
+                    ),
             ) {
                 item {
                     Column(
@@ -135,6 +151,10 @@ fun MyPageScreen(
                     MyPageMenuSection(
                         menuItems =
                             listOf(
+                                MyPageMenuItem(
+                                    label = stringResource(Res.string.mypage_menu_display_settings),
+                                    onClick = onDisplaySettingsClick,
+                                ),
                                 MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
                                 MyPageMenuItem(
                                     label = stringResource(Res.string.mypage_menu_terms_of_service),
@@ -148,7 +168,9 @@ fun MyPageScreen(
                                 MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onGuestLoginClick),
                             ),
                     )
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(
+                        modifier = Modifier.height(MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT),
+                    )
                 }
             }
             MyPageBottomBanner()
@@ -172,6 +194,14 @@ fun MyPageScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(1f),
+            contentPadding =
+                PaddingValues(
+                    bottom =
+                        calculateFloatingBottomNavigationAdditionalBottomPadding(
+                            hasFloatingBottomNavigation = true,
+                            baseBottomPadding = MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING,
+                        ),
+                ),
         ) {
             item {
                 Column(
@@ -213,6 +243,10 @@ fun MyPageScreen(
                 MyPageMenuSection(
                     menuItems =
                         listOf(
+                            MyPageMenuItem(
+                                label = stringResource(Res.string.mypage_menu_display_settings),
+                                onClick = onDisplaySettingsClick,
+                            ),
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_suggest), onClick = onSuggestClick),
                             MyPageMenuItem(
                                 label = stringResource(Res.string.mypage_menu_terms_of_service),
@@ -223,7 +257,9 @@ fun MyPageScreen(
                             MyPageMenuItem(label = stringResource(Res.string.mypage_menu_logout), onClick = onLogoutClick),
                         ),
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(
+                    modifier = Modifier.height(MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT),
+                )
             }
         }
         MyPageBottomBanner()
@@ -302,6 +338,6 @@ private fun MyPageBottomBanner() {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .height(60.dp),
+                .height(MYPAGE_BOTTOM_BANNER_HEIGHT),
     )
 }
