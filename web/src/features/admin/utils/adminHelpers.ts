@@ -8,6 +8,7 @@ import {
   DestinationFormState,
   HolidayFormState,
   MemberFormState,
+  CountryFormState,
   PublicHolidayApiResponse
 } from "../types/adminLocalTypes"
 
@@ -36,6 +37,10 @@ export const createInitialDestinationFormState = (): DestinationFormState => ({
   recommendEndMonth2: "",
   flightTime: "",
   flightUrl: "",
+  weatherTemp1: "",
+  weatherPrecipitationMm1: "",
+  weatherTemp2: "",
+  weatherPrecipitationMm2: "",
   images: [],
   experiences: [],
   existingImageUrls: [],
@@ -58,6 +63,13 @@ export const createInitialHolidayFormState = (): HolidayFormState => ({
   holidayDate: "",
   name: "",
   isActualHoliday: true
+})
+
+export const createInitialCountryFormState = (): CountryFormState => ({
+  selectedId: null,
+  name: "",
+  currencyCode: "",
+  bigMacIndex: ""
 })
 
 export const normalizePublicHoliday = (holiday: PublicHolidayApiResponse): PublicHoliday => {
