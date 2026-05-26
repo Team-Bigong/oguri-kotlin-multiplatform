@@ -2,7 +2,9 @@ package com.bigong.oguri.data.remote
 
 import com.bigong.oguri.core.network.BASE_URL
 import com.bigong.oguri.data.remote.model.request.ManageSavedRecommendationRequest
+import com.bigong.oguri.data.remote.model.response.MonthlyTopPeriodResponse
 import com.bigong.oguri.data.remote.model.response.RecommendPeriodResponse
+import com.bigong.oguri.data.remote.model.response.WeeklyTopPlacesResponse
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -30,6 +32,20 @@ class KtorHomeRemoteDataSource(
         }
     }
 
+    override suspend fun getWeeklyTopPlacesResponse(): WeeklyTopPlacesResponse {
+        val requestUrl = "$BASE_URL$HOME_WEEKLY_TOP_API_PATH"
+        return authRequestExecutor.execute {
+            httpClient.get(requestUrl).body()
+        }
+    }
+
+    override suspend fun getMonthlyTopPeriodResponses(): List<MonthlyTopPeriodResponse> {
+        val requestUrl = "$BASE_URL$HOME_MONTHLY_TOP_PERIODS_API_PATH"
+        return authRequestExecutor.execute {
+            httpClient.get(requestUrl).body()
+        }
+    }
+
     override suspend fun saveRecommendation(request: ManageSavedRecommendationRequest) {
         val requestUrl = "$BASE_URL$MEMBER_SAVED_RECOMMENDATIONS_API_PATH"
         authRequestExecutor.execute {
@@ -52,6 +68,8 @@ class KtorHomeRemoteDataSource(
 
     private companion object {
         private const val HOME_API_PATH = "/api/v1/home"
+        private const val HOME_WEEKLY_TOP_API_PATH = "/api/v1/home/weekly-top"
+        private const val HOME_MONTHLY_TOP_PERIODS_API_PATH = "/api/v1/home/monthly-top-periods"
         private const val MEMBER_SAVED_RECOMMENDATIONS_API_PATH = "/api/v1/members/saved-recommendations"
         private const val HOME_USER_COUNTRY_QUERY_NAME = "userCountry"
     }

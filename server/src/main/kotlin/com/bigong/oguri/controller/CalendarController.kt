@@ -1,7 +1,8 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
-import com.bigong.oguri.dto.CalendarResponse
+import com.bigong.oguri.dto.response.CalendarResponse
+import com.bigong.oguri.dto.response.PeriodDetailResponse
 import com.bigong.oguri.service.CalendarService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -60,7 +61,7 @@ class CalendarController(
         @Parameter(description = "페이지 크기(1~50)", example = "10")
         @RequestParam(defaultValue = "10") size: Int,
         request: HttpServletRequest,
-    ): com.bigong.oguri.dto.PeriodDetailResponse =
+    ): PeriodDetailResponse =
         calendarService.getPeriodDetail(
             startDate = startDate,
             endDate = endDate,

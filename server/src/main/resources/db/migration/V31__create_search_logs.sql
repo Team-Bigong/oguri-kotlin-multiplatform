@@ -1,0 +1,6 @@
+CREATE TABLE search_logs (
+    id SERIAL PRIMARY KEY,
+    member_id VARCHAR(255) NOT NULL,
+    query VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);

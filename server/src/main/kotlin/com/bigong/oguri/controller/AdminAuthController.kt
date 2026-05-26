@@ -1,7 +1,7 @@
 package com.bigong.oguri.controller
 
-import com.bigong.oguri.dto.AdminLoginRequest
-import com.bigong.oguri.dto.AdminLoginResponse
+import com.bigong.oguri.dto.request.AdminLoginRequest
+import com.bigong.oguri.dto.response.AdminLoginResponse
 import com.bigong.oguri.service.AdminAuthService
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.web.bind.annotation.PostMapping

@@ -1,7 +1,7 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
-import com.bigong.oguri.dto.PlaceDetailResponse
+import com.bigong.oguri.dto.response.PlaceDetailResponse
 import com.bigong.oguri.service.DestinationService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag

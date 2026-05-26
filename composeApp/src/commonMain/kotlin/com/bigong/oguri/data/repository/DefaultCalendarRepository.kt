@@ -81,6 +81,8 @@ private fun CalendarHolidayResponse.toDomain(): CalendarHoliday =
     CalendarHoliday(
         date = LocalDate.parse(date),
         name = label,
+        weekend = weekend,
+        publicHoliday = publicHoliday,
     )
 
 private fun CalendarPeriodDetailResponse.toDomain(): CalendarPeriodDetail =

@@ -123,7 +123,7 @@ fun LazyListScope.calendarRecommendationSection(
                     Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp)
-                        .height(120.dp),
+                        .height(90.dp),
             )
             Spacer(modifier = Modifier.height(18.dp))
         }

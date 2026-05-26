@@ -1,7 +1,7 @@
 package com.bigong.oguri.controller
 
-import com.bigong.oguri.dto.AdminPublicHolidayResponse
-import com.bigong.oguri.dto.AdminPublicHolidayUpsertRequest
+import com.bigong.oguri.dto.response.AdminPublicHolidayResponse
+import com.bigong.oguri.dto.request.AdminPublicHolidayUpsertRequest
 import com.bigong.oguri.service.AdminPublicHolidayService
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.http.HttpStatus
