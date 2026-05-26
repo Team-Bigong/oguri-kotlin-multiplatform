@@ -4,6 +4,7 @@ import { deleteImageFromFirebaseStorageByUrl } from "../../../lib/firebase"
 import {
   AdminLoginResponse,
   Country,
+  CountryUpsertRequest,
   Destination,
   DestinationUpsertRequest,
   Member,
@@ -18,11 +19,13 @@ import {
   DestinationFormState,
   HolidayFormState,
   MemberFormState,
+  CountryFormState,
   PublicHolidayApiResponse,
   StorageCountryOption
 } from "../types/adminLocalTypes"
 import {
   createInitialDestinationFormState,
+  createInitialCountryFormState,
   createInitialHolidayFormState,
   createInitialMemberFormState,
   normalizeDestination,
@@ -48,23 +51,28 @@ type UseAdminDataManagementResult = {
   destinationListSearchKeyword: string
   memberListSearchKeyword: string
   holidayListSearchKeyword: string
+  countryListSearchKeyword: string
   destinationFormState: DestinationFormState
   memberFormState: MemberFormState
   holidayFormState: HolidayFormState
+  countryFormState: CountryFormState
   storageCountryOptions: StorageCountryOption[]
   selectedStorageCountryOption: StorageCountryOption | undefined
   filteredDestinations: Destination[]
   filteredMembers: Member[]
   filteredPublicHolidays: PublicHoliday[]
+  filteredCountries: Country[]
   setLoginUsername: React.Dispatch<React.SetStateAction<string>>
   setLoginPassword: React.Dispatch<React.SetStateAction<string>>
   setActiveTab: React.Dispatch<React.SetStateAction<AdminTab>>
   setDestinationListSearchKeyword: React.Dispatch<React.SetStateAction<string>>
   setMemberListSearchKeyword: React.Dispatch<React.SetStateAction<string>>
   setHolidayListSearchKeyword: React.Dispatch<React.SetStateAction<string>>
+  setCountryListSearchKeyword: React.Dispatch<React.SetStateAction<string>>
   setDestinationFormState: React.Dispatch<React.SetStateAction<DestinationFormState>>
   setMemberFormState: React.Dispatch<React.SetStateAction<MemberFormState>>
   setHolidayFormState: React.Dispatch<React.SetStateAction<HolidayFormState>>
+  setCountryFormState: React.Dispatch<React.SetStateAction<CountryFormState>>
   setNoticeMessage: React.Dispatch<React.SetStateAction<string>>
   setErrorMessage: React.Dispatch<React.SetStateAction<string>>
   loadAll: () => Promise<void>
@@ -76,8 +84,11 @@ type UseAdminDataManagementResult = {
   deleteMember: (memberId: string) => Promise<void>
   submitHoliday: () => Promise<void>
   deleteHoliday: (holidayId: number) => Promise<void>
+  submitCountry: () => Promise<void>
+  deleteCountry: (countryId: number) => Promise<void>
   resetDestinationFormWithCleanup: () => void
   loadDestinationToForm: (destination: Destination) => void
+  loadCountryToForm: (country: Country) => void
 }
 
 export const useAdminDataManagement = (): UseAdminDataManagementResult => {
@@ -99,10 +110,12 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
   const [destinationListSearchKeyword, setDestinationListSearchKeyword] = useState<string>("")
   const [memberListSearchKeyword, setMemberListSearchKeyword] = useState<string>("")
   const [holidayListSearchKeyword, setHolidayListSearchKeyword] = useState<string>("")
+  const [countryListSearchKeyword, setCountryListSearchKeyword] = useState<string>("")
 
   const [destinationFormState, setDestinationFormState] = useState<DestinationFormState>(createInitialDestinationFormState)
   const [memberFormState, setMemberFormState] = useState<MemberFormState>(createInitialMemberFormState)
   const [holidayFormState, setHolidayFormState] = useState<HolidayFormState>(createInitialHolidayFormState)
+  const [countryFormState, setCountryFormState] = useState<CountryFormState>(createInitialCountryFormState)
 
   const storageCountryOptions = useMemo<StorageCountryOption[]>(() => {
     const countryCityMap = new Map<string, Set<string>>()
@@ -169,6 +182,21 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
       return normalizedName.includes(normalizedKeyword) || normalizedDate.includes(normalizedKeyword)
     })
   }, [holidayListSearchKeyword, publicHolidays])
+
+  const filteredCountries = useMemo<Country[]>(() => {
+    const normalizedKeyword = countryListSearchKeyword.trim().toLowerCase()
+    if (normalizedKeyword.length === 0) {
+      return countries
+    }
+    return countries.filter((country) => {
+      const normalizedName = country.name.toLowerCase()
+      const normalizedCurrencyCode = (country.currencyCode ?? "").toLowerCase()
+      const normalizedBigMacIndex = country.bigMacIndex == null ? "" : String(country.bigMacIndex)
+      return normalizedName.includes(normalizedKeyword) ||
+        normalizedCurrencyCode.includes(normalizedKeyword) ||
+        normalizedBigMacIndex.includes(normalizedKeyword)
+    })
+  }, [countries, countryListSearchKeyword])
 
   const loadAll = useCallback(async () => {
     if (!isAuthenticated) {
@@ -257,6 +285,28 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
       const parsedValue = Number(value)
       return Number.isNaN(parsedValue) ? null : parsedValue
     }
+    const parseOptionalInteger = (value: string): number | null => {
+      const trimmedValue = value.trim()
+      if (trimmedValue.length === 0) {
+        return null
+      }
+      const parsedValue = Number(trimmedValue)
+      if (!Number.isFinite(parsedValue) || !Number.isInteger(parsedValue)) {
+        throw new Error("날씨 온도는 정수로 입력해주세요.")
+      }
+      return parsedValue
+    }
+    const parseOptionalDecimal = (value: string): number | null => {
+      const trimmedValue = value.trim()
+      if (trimmedValue.length === 0) {
+        return null
+      }
+      const parsedValue = Number(trimmedValue)
+      if (!Number.isFinite(parsedValue)) {
+        throw new Error("강수량은 숫자로 입력해주세요.")
+      }
+      return parsedValue
+    }
 
     const flightTimeMinutes = parseFlightTimeMinutes(state.flightTime)
     const trimmedCountryName = state.countryName.trim()
@@ -278,6 +328,10 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
       recommendEndMonth2: parseMonth(state.recommendEndMonth2),
       flightTimeMinutes: flightTimeMinutes.length > 0 ? Number(flightTimeMinutes) : null,
       flightUrl: state.flightUrl.trim().length > 0 ? state.flightUrl.trim() : null,
+      weatherTemp1: parseOptionalInteger(state.weatherTemp1),
+      weatherPrecipitationMm1: parseOptionalDecimal(state.weatherPrecipitationMm1),
+      weatherTemp2: parseOptionalInteger(state.weatherTemp2),
+      weatherPrecipitationMm2: parseOptionalDecimal(state.weatherPrecipitationMm2),
       images: state.images.map((image) => ({
         imageUrl: image.imageUrl,
         sortOrder: image.sortOrder,
@@ -472,6 +526,52 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
     }
   }, [loadAll])
 
+  const submitCountry = useCallback(async () => {
+    setErrorMessage("")
+    setNoticeMessage("")
+
+    try {
+      const payload: CountryUpsertRequest = {
+        name: countryFormState.name.trim(),
+        currencyCode: countryFormState.currencyCode.trim().length > 0 ? countryFormState.currencyCode.trim().toUpperCase() : null,
+        bigMacIndex: countryFormState.bigMacIndex.trim().length > 0 ? Number(countryFormState.bigMacIndex.trim()) : null
+      }
+
+      if (payload.name.length === 0) {
+        throw new Error("국가 이름을 입력해주세요.")
+      }
+      if (payload.bigMacIndex != null && Number.isNaN(payload.bigMacIndex)) {
+        throw new Error("빅맥 지수는 숫자로 입력해주세요.")
+      }
+
+      if (countryFormState.selectedId == null) {
+        await adminApiClient.post<Country>("/api/admin/v1/countries", payload)
+        setNoticeMessage("국가가 생성되었습니다.")
+      } else {
+        await adminApiClient.put<Country>(`/api/admin/v1/countries/${countryFormState.selectedId}`, payload)
+        setNoticeMessage("국가가 수정되었습니다.")
+      }
+
+      setCountryFormState(createInitialCountryFormState())
+      await loadAll()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "국가 저장에 실패했습니다.")
+    }
+  }, [countryFormState.bigMacIndex, countryFormState.currencyCode, countryFormState.name, countryFormState.selectedId, loadAll])
+
+  const deleteCountry = useCallback(async (countryId: number) => {
+    setErrorMessage("")
+    setNoticeMessage("")
+
+    try {
+      await adminApiClient.delete<void>(`/api/admin/v1/countries/${countryId}`)
+      setNoticeMessage("국가가 삭제되었습니다.")
+      await loadAll()
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "국가 삭제에 실패했습니다.")
+    }
+  }, [loadAll])
+
   const resetDestinationFormWithCleanup = useCallback((): void => {
     void (async () => {
       await cleanupPendingUploadedImages(
@@ -503,6 +603,10 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
         recommendEndMonth2: destination.recommendEndMonth2 == null ? "" : String(destination.recommendEndMonth2),
         flightTime: destination.flightTimeMinutes == null ? "" : String(destination.flightTimeMinutes),
         flightUrl: destination.flightUrl ?? "",
+        weatherTemp1: destination.weatherTemp1 == null ? "" : String(destination.weatherTemp1),
+        weatherPrecipitationMm1: destination.weatherPrecipitationMm1 == null ? "" : String(destination.weatherPrecipitationMm1),
+        weatherTemp2: destination.weatherTemp2 == null ? "" : String(destination.weatherTemp2),
+        weatherPrecipitationMm2: destination.weatherPrecipitationMm2 == null ? "" : String(destination.weatherPrecipitationMm2),
         images: destination.images.map((image) => ({
           imageUrl: image.imageUrl,
           isThumbnail: image.isThumbnail,
@@ -523,6 +627,15 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
     })()
   }, [cleanupPendingUploadedImages, destinationFormState.newlyUploadedExperienceThumbnailUrls, destinationFormState.newlyUploadedImageUrls])
 
+  const loadCountryToForm = useCallback((country: Country): void => {
+    setCountryFormState({
+      selectedId: country.id,
+      name: country.name,
+      currencyCode: country.currencyCode ?? "",
+      bigMacIndex: country.bigMacIndex == null ? "" : String(country.bigMacIndex)
+    })
+  }, [])
+
   return {
     isAuthenticated,
     loginUsername,
@@ -539,23 +652,28 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
     destinationListSearchKeyword,
     memberListSearchKeyword,
     holidayListSearchKeyword,
+    countryListSearchKeyword,
     destinationFormState,
     memberFormState,
     holidayFormState,
+    countryFormState,
     storageCountryOptions,
     selectedStorageCountryOption,
     filteredDestinations,
     filteredMembers,
     filteredPublicHolidays,
+    filteredCountries,
     setLoginUsername,
     setLoginPassword,
     setActiveTab,
     setDestinationListSearchKeyword,
     setMemberListSearchKeyword,
     setHolidayListSearchKeyword,
+    setCountryListSearchKeyword,
     setDestinationFormState,
     setMemberFormState,
     setHolidayFormState,
+    setCountryFormState,
     setNoticeMessage,
     setErrorMessage,
     loadAll,
@@ -567,7 +685,10 @@ export const useAdminDataManagement = (): UseAdminDataManagementResult => {
     deleteMember,
     submitHoliday,
     deleteHoliday,
+    submitCountry,
+    deleteCountry,
     resetDestinationFormWithCleanup,
-    loadDestinationToForm
+    loadDestinationToForm,
+    loadCountryToForm
   }
 }

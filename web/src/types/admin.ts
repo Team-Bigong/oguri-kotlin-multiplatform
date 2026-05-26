@@ -1,6 +1,8 @@
 export type Country = {
   id: number
   name: string
+  currencyCode: string | null
+  bigMacIndex: number | null
 }
 
 export type DestinationImage = {
@@ -23,6 +25,10 @@ export type Destination = {
   recommendEndMonth2: number | null
   flightTimeMinutes: number | null
   flightUrl: string | null
+  weatherTemp1: number | null
+  weatherPrecipitationMm1: number | null
+  weatherTemp2: number | null
+  weatherPrecipitationMm2: number | null
   images: DestinationImage[]
   experiences: DestinationExperience[]
 }
@@ -53,8 +59,18 @@ export type DestinationUpsertRequest = {
   recommendEndMonth2: number | null
   flightTimeMinutes: number | null
   flightUrl: string | null
+  weatherTemp1: number | null
+  weatherPrecipitationMm1: number | null
+  weatherTemp2: number | null
+  weatherPrecipitationMm2: number | null
   images: DestinationImageRequest[]
   experiences: DestinationExperienceRequest[]
+}
+
+export type CountryUpsertRequest = {
+  name: string
+  currencyCode: string | null
+  bigMacIndex: number | null
 }
 
 export type DestinationExperienceRequest = {

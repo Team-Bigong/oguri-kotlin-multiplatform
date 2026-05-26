@@ -28,23 +28,28 @@ export const AdminApp = (): React.JSX.Element => {
     destinationListSearchKeyword,
     memberListSearchKeyword,
     holidayListSearchKeyword,
+    countryListSearchKeyword,
     destinationFormState,
     memberFormState,
     holidayFormState,
+    countryFormState,
     storageCountryOptions,
     selectedStorageCountryOption,
     filteredDestinations,
     filteredMembers,
     filteredPublicHolidays,
+    filteredCountries,
     setLoginUsername,
     setLoginPassword,
     setActiveTab,
     setDestinationListSearchKeyword,
     setMemberListSearchKeyword,
     setHolidayListSearchKeyword,
+    setCountryListSearchKeyword,
     setDestinationFormState,
     setMemberFormState,
     setHolidayFormState,
+    setCountryFormState,
     setNoticeMessage,
     setErrorMessage,
     loadAll,
@@ -56,8 +61,11 @@ export const AdminApp = (): React.JSX.Element => {
     deleteMember,
     submitHoliday,
     deleteHoliday,
+    submitCountry,
+    deleteCountry,
     resetDestinationFormWithCleanup,
-    loadDestinationToForm
+    loadDestinationToForm,
+    loadCountryToForm
   } = useAdminDataManagement()
 
   const {
@@ -156,6 +164,11 @@ export const AdminApp = (): React.JSX.Element => {
         holidayListSearchKeyword={holidayListSearchKeyword}
         setHolidayListSearchKeyword={setHolidayListSearchKeyword}
         filteredPublicHolidays={filteredPublicHolidays}
+        countryFormState={countryFormState}
+        setCountryFormState={setCountryFormState}
+        countryListSearchKeyword={countryListSearchKeyword}
+        setCountryListSearchKeyword={setCountryListSearchKeyword}
+        filteredCountries={filteredCountries}
         handleImageFileSelection={handleImageFileSelection}
         handleRemoveDestinationImage={handleRemoveDestinationImage}
         addExperienceItem={addExperienceItem}
@@ -182,6 +195,13 @@ export const AdminApp = (): React.JSX.Element => {
         onDeleteHoliday={(holidayId) => {
           void deleteHoliday(holidayId)
         }}
+        onSubmitCountry={() => {
+          void submitCountry()
+        }}
+        onDeleteCountry={(countryId) => {
+          void deleteCountry(countryId)
+        }}
+        onLoadCountry={loadCountryToForm}
       />
 
       {cropSessionState != null && cropSessionItem != null && cropImageRenderMetrics != null && (
