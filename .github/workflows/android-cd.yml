@@ -89,22 +89,46 @@ jobs:
             -Pandroid.injected.signing.key.password="${ANDROID_SIGNING_KEY_PASSWORD}" \
             --stacktrace
 
-      - name: Prepare Korean release notes from version file
+      - name: Prepare release notes from version file
         run: |
-          VERSION_NAME="$(sed -n 's/.*versionName = \"\\(.*\\)\".*/\\1/p' composeApp/build.gradle.kts | head -n 1)"
+          VERSION_NAME="$(awk -F '=' '$1 ~ /^[[:space:]]*MARKETING_VERSION[[:space:]]*$/ { gsub(/[[:space:]]/, "", $2); print $2; exit }' version.properties)"
           if [ -z "${VERSION_NAME}" ]; then
-            echo "Failed to resolve versionName from composeApp/build.gradle.kts"
-            exit 1
-          fi
-
-          KOREAN_RELEASE_NOTE_FILE_PATH="release-notes/android/ko-KR/${VERSION_NAME}.txt"
-          if [ ! -f "${KOREAN_RELEASE_NOTE_FILE_PATH}" ]; then
-            echo "Release note file not found: ${KOREAN_RELEASE_NOTE_FILE_PATH}"
+            echo "Failed to resolve MARKETING_VERSION from version.properties"
             exit 1
           fi
 
           mkdir -p "${RUNNER_TEMP}/whatsnew"
-          cp "${KOREAN_RELEASE_NOTE_FILE_PATH}" "${RUNNER_TEMP}/whatsnew/whatsnew-ko-KR"
+
+          prepare_release_note() {
+            RELEASE_NOTE_LOCALE="$1"
+            RELEASE_NOTE_LANGUAGE_NAME="$2"
+            RELEASE_NOTE_DIRECTORY_PATH="release-notes/android/${RELEASE_NOTE_LOCALE}"
+            RELEASE_NOTE_FILE_PATH="${RELEASE_NOTE_DIRECTORY_PATH}/${VERSION_NAME}.txt"
+
+            if [ ! -f "${RELEASE_NOTE_FILE_PATH}" ]; then
+              echo "${RELEASE_NOTE_LANGUAGE_NAME} release note file not found for ${VERSION_NAME}: ${RELEASE_NOTE_FILE_PATH}"
+              if [ -d "${RELEASE_NOTE_DIRECTORY_PATH}" ]; then
+                RELEASE_NOTE_FILE_PATH="$(
+                  find "${RELEASE_NOTE_DIRECTORY_PATH}" -maxdepth 1 -type f -name '*.txt' \
+                    | sort --version-sort \
+                    | tail -n 1
+                )"
+              else
+                RELEASE_NOTE_FILE_PATH=""
+              fi
+            fi
+
+            if [ -z "${RELEASE_NOTE_FILE_PATH}" ]; then
+              echo "No ${RELEASE_NOTE_LANGUAGE_NAME} release note files found in ${RELEASE_NOTE_DIRECTORY_PATH}"
+              exit 1
+            fi
+
+            echo "Using ${RELEASE_NOTE_LANGUAGE_NAME} release note: ${RELEASE_NOTE_FILE_PATH}"
+            cp "${RELEASE_NOTE_FILE_PATH}" "${RUNNER_TEMP}/whatsnew/whatsnew-${RELEASE_NOTE_LOCALE}"
+          }
+
+          prepare_release_note "ko-KR" "Korean"
+          prepare_release_note "en-US" "English"
 
       - name: Upload to Google Play production
         uses: r0adkll/upload-google-play@v1
