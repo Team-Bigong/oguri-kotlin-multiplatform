@@ -45,9 +45,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="oguri-kotlin-multiplatform-wezq.onrender.com"
-                    android:pathPrefix="/open"
-                    android:scheme="https" />
+                    android:host="kakaolink"
+                    android:scheme="kakao${kakaoNativeAppKey}" />
             </intent-filter>
 
             <intent-filter>

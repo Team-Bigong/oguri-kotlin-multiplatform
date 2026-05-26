@@ -1,9 +1,9 @@
 package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.PublicHoliday
-import com.bigong.oguri.dto.CalendarPeriodRecommendationResponse
-import com.bigong.oguri.dto.CalendarResponse
-import com.bigong.oguri.dto.PeriodDetailResponse
+import com.bigong.oguri.dto.response.CalendarPeriodRecommendationResponse
+import com.bigong.oguri.dto.response.CalendarResponse
+import com.bigong.oguri.dto.response.PeriodDetailResponse
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.PublicHolidayRepository
 import com.bigong.oguri.repository.SavedRecommendationRepository
@@ -26,7 +26,7 @@ class CalendarService(
     private val publicHolidayRepository: PublicHolidayRepository,
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val destinationRepository: DestinationRepository,
-    private val homeService: HomeService,
+    private val placeRecommendationService: PlaceRecommendationService,
     private val vacationRecommendationService: VacationRecommendationService,
 ) {
     /**
@@ -76,7 +76,7 @@ class CalendarService(
 
         // 4. 해당 기간에 최적화된 추천 장소 전체 계산 후 페이지 단위로 분할
         val allDestinations = destinationRepository.findAllWithCountryAndImages()
-        val allRecommendedPlaces = homeService.calculateRecommendedPlacesAll(startDate, allDestinations, userCountry, totalTripCount)
+        val allRecommendedPlaces = placeRecommendationService.calculateRecommendedPlacesAll(startDate, allDestinations, userCountry, totalTripCount)
         val offset = normalizedPage * normalizedSize
         val pagedPlaces = allRecommendedPlaces.drop(offset).take(normalizedSize)
         val hasNext = offset + pagedPlaces.size < allRecommendedPlaces.size

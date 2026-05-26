@@ -27,6 +27,7 @@ import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.ui.component.PlaceCard
@@ -37,6 +38,8 @@ import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailSkeletonCo
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_d_day_after
 import oguri.composeapp.generated.resources.calendar_d_day_before
@@ -46,6 +49,7 @@ import oguri.composeapp.generated.resources.home_guide_match_places
 import oguri.composeapp.generated.resources.home_guide_match_places_highlight
 import oguri.composeapp.generated.resources.home_strategy_day_off_hint
 import oguri.composeapp.generated.resources.home_strategy_holiday_with
+import oguri.composeapp.generated.resources.home_strategy_holiday_with_next_year
 import oguri.composeapp.generated.resources.ic_plane
 import oguri.composeapp.generated.resources.img_oguri_parasol
 import oguri.composeapp.generated.resources.period_detail_empty_places_hint
@@ -53,6 +57,7 @@ import oguri.composeapp.generated.resources.period_detail_holiday_fallback
 import oguri.composeapp.generated.resources.period_detail_title
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+import kotlin.time.Clock
 
 @Composable
 fun PeriodDetailScreen(
@@ -111,11 +116,27 @@ fun PeriodDetailScreen(
                 val startDateText = periodDetail.startDate.toMonthDayText()
                 val endDateText = periodDetail.endDate.toMonthDayText()
                 val periodText = stringResource(Res.string.calendar_period_range, startDateText, endDateText)
+                val currentYear =
+                    Clock.System
+                        .now()
+                        .toLocalDateTime(TimeZone.currentSystemDefault())
+                        .year
+                val isNextYearPeriod = periodDetail.startDate.year > currentYear || periodDetail.endDate.year > currentYear
                 val holidayText =
                     periodDetail.holiday.joinToString(separator = ", ").ifBlank {
                         stringResource(Res.string.period_detail_holiday_fallback)
                     }
-                val holidayDescriptionText = stringResource(Res.string.home_strategy_holiday_with, holidayText)
+                val holidayHighlightText =
+                    if (isNextYearPeriod) {
+                        stringResource(
+                            Res.string.home_strategy_holiday_with_next_year,
+                            holidayText,
+                        )
+                    } else {
+                        holidayText
+                    }
+                val holidayHighlightColor = if (isNextYearPeriod) Orange50 else Mint70
+                val holidayDescriptionText = stringResource(Res.string.home_strategy_holiday_with, holidayHighlightText)
                 val leaveDayHintText =
                     stringResource(Res.string.home_strategy_day_off_hint, periodDetail.dayOffCount, periodDetail.totalTripCount)
                 val dDayText =
@@ -124,6 +145,7 @@ fun PeriodDetailScreen(
                     } else {
                         stringResource(Res.string.calendar_d_day_after, -periodDetailUiState.dDay)
                     }
+                val dDayColor = if (isNextYearPeriod) Orange50 else Mint70
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(count = 2),
@@ -151,7 +173,7 @@ fun PeriodDetailScreen(
                                 Text(
                                     text = dDayText,
                                     style = OguriTheme.typography.labelMedium,
-                                    color = Mint70,
+                                    color = dDayColor,
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
                                 Text(
@@ -159,10 +181,10 @@ fun PeriodDetailScreen(
                                         holidayDescriptionText.getStyledText(
                                             style =
                                                 OguriTheme.typography.cardSubtitle.copy(
-                                                    color = Mint70,
+                                                    color = holidayHighlightColor,
                                                     fontWeight = FontWeight.Bold,
                                                 ),
-                                            holidayText,
+                                            holidayHighlightText,
                                         ),
                                     style = OguriTheme.typography.cardSubtitle,
                                     color = Neutral100,

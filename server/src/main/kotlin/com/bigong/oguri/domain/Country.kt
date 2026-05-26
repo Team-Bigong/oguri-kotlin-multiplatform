@@ -9,10 +9,10 @@ class Country(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Int = 0,
-
     @Column(nullable = false, length = 50)
     var name: String,
-
+    @Column(name = "currency_code", length = 3)
+    var currencyCode: String? = null,
     @Column(name = "big_mac_index", precision = 4, scale = 2)
-    var bigMacIndex: BigDecimal? = null
+    var bigMacIndex: BigDecimal? = null,
 )

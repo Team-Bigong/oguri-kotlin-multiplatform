@@ -96,6 +96,7 @@
 				ADD1E76AFC8920FF7FC5975D /* Sources */,
 				74B0A8F51EC0B0BE2D922016 /* Frameworks */,
 				F7B2B97E0FEA35F3C03F9CCD /* Resources */,
+				8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */,
 			);
 			buildRules = (
 			);
@@ -128,7 +129,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					3613D143AFDFE6E71B58CBAF = {
 						CreatedOnToolsVersion = 16.2;
@@ -142,6 +143,8 @@
 				en,
 				Base,
 				ko,
+				"zh-Hans",
+				ja,
 			);
 			mainGroup = 498123707EE9EF62D42083EE;
 			minimizedProjectReferenceProxies = 1;
@@ -191,6 +194,25 @@
 			shellPath = /bin/sh;
 			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
 		};
+		8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Localize InfoPlist Display Name";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  APP_DISPLAY_NAME_EN=\"Oguri Debug\"\n  APP_DISPLAY_NAME_KO=\"오구리 Debug\"\n  APP_DISPLAY_NAME_JA=\"オグリ Debug\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri Debug\"\nelse\n  APP_DISPLAY_NAME_EN=\"Oguri\"\n  APP_DISPLAY_NAME_KO=\"오구리\"\n  APP_DISPLAY_NAME_JA=\"オグリ\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri\"\nfi\n\nwrite_info_plist_strings() {\n  LOCALE_IDENTIFIER=\"$1\"\n  LOCALIZED_APP_DISPLAY_NAME=\"$2\"\n  LOCALE_RESOURCES_DIRECTORY=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/$LOCALE_IDENTIFIER.lproj\"\n  mkdir -p \"$LOCALE_RESOURCES_DIRECTORY\"\n  /usr/bin/printf 'CFBundleDisplayName = \"%s\";\\nCFBundleName = \"%s\";\\n' \"$LOCALIZED_APP_DISPLAY_NAME\" \"$LOCALIZED_APP_DISPLAY_NAME\" > \"$LOCALE_RESOURCES_DIRECTORY/InfoPlist.strings\"\n}\n\nwrite_info_plist_strings \"en\" \"$APP_DISPLAY_NAME_EN\"\nwrite_info_plist_strings \"ko\" \"$APP_DISPLAY_NAME_KO\"\nwrite_info_plist_strings \"ja\" \"$APP_DISPLAY_NAME_JA\"\nwrite_info_plist_strings \"zh-Hans\" \"$APP_DISPLAY_NAME_ZH_HANS\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -211,6 +233,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -239,7 +262,8 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				COPY_PHASE_STRIP = NO;
+				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = XF8RTA3858;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -258,6 +282,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -268,7 +293,6 @@
 			baseConfigurationReferenceAnchor = D6FE5EC32799B5A539CFAE23 /* Configuration */;
 			baseConfigurationReferenceRelativePath = Debug.xcconfig;
 			buildSettings = {
-				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDebug;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
@@ -309,12 +333,13 @@
 			baseConfigurationReferenceAnchor = D6FE5EC32799B5A539CFAE23 /* Configuration */;
 			baseConfigurationReferenceRelativePath = Release.xcconfig;
 			buildSettings = {
-				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				DEVELOPMENT_TEAM = "$(TEAM_ID)";
 				ENABLE_PREVIEWS = YES;
@@ -352,6 +377,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -406,6 +432,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};

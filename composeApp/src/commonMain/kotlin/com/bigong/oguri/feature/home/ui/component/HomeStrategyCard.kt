@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -17,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Mint70
@@ -83,65 +86,79 @@ fun HomeStrategyCard(
                 .fillMaxWidth()
                 .background(color = Mint10, shape = RoundedCornerShape(size = 12.dp)),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Spacer(modifier = Modifier.width(12.dp))
-            RankSegmentedToggle(
-                selectedRank = selectedRank,
-                onRankSelected = onRankSelected,
-                rankLabels = rankLabels,
-                modifier = Modifier.weight(weight = 1f),
-            )
-            Spacer(modifier = Modifier.weight(weight = 1f))
-            SaveToggleButton(
-                checked = selectedRank in savedRankSet,
-                onCheckedChange = onSavedChanged,
-            )
-        }
-
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxSize()) {
             Column(
-                modifier = Modifier.align(alignment = Alignment.TopCenter),
-                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .align(alignment = Alignment.TopStart)
+                        .padding(horizontal = 12.dp)
+                        .padding(top = 12.dp, bottom = 24.dp),
+                horizontalAlignment = Alignment.Start,
             ) {
-                Spacer(modifier = Modifier.height(48.dp))
-                Text(
-                    text =
-                        stringResource(
-                            Res.string.home_strategy_period,
-                            formatMonthDay(localDate = currentPeriod.startDate),
-                            formatMonthDay(localDate = currentPeriod.endDate),
-                        ),
-                    style = OguriTheme.typography.heroTitle,
-                    color = periodTextColor,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text =
-                        holidayDescriptionText.getStyledText(
-                            style =
-                                TextStyle(
-                                    color = holidayHighlightColor,
-                                    fontWeight = FontWeight.Bold,
-                                ),
-                            holidayHighlightText,
-                        ),
-                    style = OguriTheme.typography.cardSubtitle,
-                    color = Neutral90,
+                RankSegmentedToggle(
+                    selectedRank = selectedRank,
+                    onRankSelected = onRankSelected,
+                    rankLabels = rankLabels,
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text =
-                        stringResource(
-                            Res.string.home_strategy_day_off_hint,
-                            currentPeriod.dayOffCount,
-                            currentPeriod.totalTripCount,
-                        ),
-                    style = OguriTheme.typography.caption,
-                    color = Neutral50,
-                )
-                Spacer(modifier = Modifier.height(24.dp))
+                Column(
+                    modifier = Modifier.padding(start = 4.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text =
+                                stringResource(
+                                    Res.string.home_strategy_period,
+                                    formatMonthDay(localDate = currentPeriod.startDate),
+                                    formatMonthDay(localDate = currentPeriod.endDate),
+                                ),
+                            style = OguriTheme.typography.heroTitle,
+                            color = periodTextColor,
+                        )
+                        Spacer(modifier = Modifier.weight(weight = 1f))
+                        SaveToggleButton(
+                            checked = selectedRank in savedRankSet,
+                            onCheckedChange = onSavedChanged,
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(end = 18.dp),
+                        horizontalAlignment = Alignment.Start,
+                    ) {
+                        Text(
+                            text =
+                                holidayDescriptionText.getStyledText(
+                                    style =
+                                        TextStyle(
+                                            color = holidayHighlightColor,
+                                            fontWeight = FontWeight.Bold,
+                                        ),
+                                    holidayHighlightText,
+                                ),
+                            style = OguriTheme.typography.cardSubtitle,
+                            color = Neutral90,
+                            textAlign = TextAlign.Start,
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text =
+                                stringResource(
+                                    Res.string.home_strategy_day_off_hint,
+                                    currentPeriod.dayOffCount,
+                                    currentPeriod.totalTripCount,
+                                ),
+                            style = OguriTheme.typography.caption,
+                            color = Neutral50,
+                            textAlign = TextAlign.Start,
+                        )
+                    }
+                }
             }
 
             Image(

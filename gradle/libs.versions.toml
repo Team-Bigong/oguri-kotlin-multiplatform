@@ -30,7 +30,9 @@ metro = "0.9.4"
 coil = "3.3.0"
 kotlinx-datetime = "0.7.1"
 jjwt = "0.12.6"
-google-api-client = "2.8.1"
+googleApiClient = "2.7.0"
+googleOAuthClient = "1.36.0"
+googleHttpClient = "1.45.0"
 kakao = "2.23.3"
 androidx-paging = "3.4.2"
 google-mobile-ads = "25.1.0"
@@ -98,7 +100,10 @@ springdoc-openapi = { module = "org.springdoc:springdoc-openapi-starter-webmvc-u
 jjwt-api = { module = "io.jsonwebtoken:jjwt-api", version.ref = "jjwt" }
 jjwt-impl = { module = "io.jsonwebtoken:jjwt-impl", version.ref = "jjwt" }
 jjwt-jackson = { module = "io.jsonwebtoken:jjwt-jackson", version.ref = "jjwt" }
-google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "google-api-client" }
+google-api-client = { module = "com.google.api-client:google-api-client", version.ref = "googleApiClient" }
+google-oauth-client = { module = "com.google.oauth-client:google-oauth-client", version.ref = "googleOAuthClient" }
+google-http-client = { module = "com.google.http-client:google-http-client", version.ref = "googleHttpClient" }
+google-http-client-gson = { module = "com.google.http-client:google-http-client-gson", version.ref = "googleHttpClient" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

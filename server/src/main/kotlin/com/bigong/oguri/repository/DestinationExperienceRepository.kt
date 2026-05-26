@@ -7,7 +7,10 @@ import org.springframework.stereotype.Repository
 @Repository
 interface DestinationExperienceRepository : JpaRepository<DestinationExperience, Int> {
     fun findAllByDestinationIdOrderBySortOrderAscIdAsc(destinationId: Int): List<DestinationExperience>
+
     fun findAllByDestinationIdInOrderByDestinationIdAscSortOrderAscIdAsc(destinationIds: Collection<Int>): List<DestinationExperience>
+
     fun findAllByOrderByDestinationIdAscSortOrderAscIdAsc(): List<DestinationExperience>
+
     fun deleteAllByDestinationId(destinationId: Int)
 }

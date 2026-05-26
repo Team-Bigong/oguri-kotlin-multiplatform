@@ -1,10 +1,7 @@
 import React from "react"
 import { OfficialHomePage } from "./features/official/OfficialHomePage"
 import { AdminApp } from "./features/admin/AdminApp"
-
-const resolveIsAdminPath = (): boolean => {
-  return window.location.pathname.startsWith("/admin") || window.location.hash.startsWith("#/admin")
-}
+import { resolveIsAdminPath } from "./features/routing/pathResolver"
 
 export const App = (): React.JSX.Element => {
   const [isAdminPath, setIsAdminPath] = React.useState<boolean>(resolveIsAdminPath())

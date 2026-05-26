@@ -11,6 +11,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 object OguriTheme {
+    val isDarkTheme: Boolean
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalIsDarkTheme.current
     val typography: OguriTypographySystem
         @Composable
         @ReadOnlyComposable
@@ -25,6 +29,8 @@ private val LocalTypography =
     staticCompositionLocalOf<OguriTypographySystem> { error("No typography provided") }
 private val LocalColorPalette =
     staticCompositionLocalOf<OguriColorPalette> { error("No colors provided") }
+private val LocalIsDarkTheme =
+    staticCompositionLocalOf<Boolean> { false }
 
 val LightOguriMaterialColorScheme =
     lightColorScheme(
@@ -96,6 +102,7 @@ fun OguriTheme(
     val colorPalette = if (darkTheme) DarkOguriColorPalette else LightOguriColorPalette
     val colorScheme = if (darkTheme) DarkOguriMaterialColorScheme else LightOguriMaterialColorScheme
     CompositionLocalProvider(
+        LocalIsDarkTheme provides darkTheme,
         LocalTypography provides typographySystem,
         LocalColorPalette provides colorPalette,
     ) {

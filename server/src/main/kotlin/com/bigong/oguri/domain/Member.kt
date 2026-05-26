@@ -9,32 +9,32 @@ class Member(
     @Id
     @Column(name = "id", length = 100)
     val id: String,
-
     @Column(unique = true, length = 100)
     var nickname: String? = null,
-
     @Column(columnDefinition = "TEXT")
     var refreshToken: String? = null,
-
     @Column(nullable = false)
     var preferredDayOff: Int = 3,
-
     @Column(nullable = false)
     var remainingDayOff: Int = 3,
-
     @Column(nullable = false)
     var onboardingCompleted: Boolean = false,
-
     @Column(nullable = false)
-    var updatedAt: LocalDateTime = LocalDateTime.now()
+    var updatedAt: LocalDateTime = LocalDateTime.now(),
 ) {
-    fun updateDayOffInfo(preferred: Int, remaining: Int) {
+    fun updateDayOffInfo(
+        preferred: Int,
+        remaining: Int,
+    ) {
         this.preferredDayOff = preferred
         this.remainingDayOff = remaining
         this.updatedAt = LocalDateTime.now()
     }
 
-    fun completeOnboarding(preferred: Int, remaining: Int) {
+    fun completeOnboarding(
+        preferred: Int,
+        remaining: Int,
+    ) {
         this.preferredDayOff = preferred
         this.remainingDayOff = remaining
         this.onboardingCompleted = true
