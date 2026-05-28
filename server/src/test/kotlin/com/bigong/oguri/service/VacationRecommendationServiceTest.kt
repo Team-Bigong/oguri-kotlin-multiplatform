@@ -210,4 +210,56 @@ class VacationRecommendationServiceTest {
         assertEquals(2, targetPeriod?.holidayCount)
         assertEquals(1, targetPeriod?.usedDayOffCount)
     }
+
+    @Test
+    fun `주말과 연차 하루가 포함된 추천을 반환한다`() {
+        // given
+        val leaveDate = LocalDate.of(2026, 5, 15)
+        val weekendEndDate = LocalDate.of(2026, 5, 17)
+
+        // when
+        val recommendedPeriods =
+            vacationRecommendationService.findRecommendedPeriods(
+                startYearMonth = YearMonth.of(2026, 5),
+                userDayOff = 1,
+                holidayMap = emptyMap(),
+                monthRangeCount = 1,
+                periodLimitPerMonth = 100,
+            )
+
+        // then
+        val targetPeriod =
+            recommendedPeriods.firstOrNull { period ->
+                period.start.isEqual(leaveDate) && period.end.isEqual(weekendEndDate)
+            }
+
+        assertNotNull(targetPeriod)
+        assertEquals(3, targetPeriod?.totalDays)
+        assertEquals(2, targetPeriod?.holidayCount)
+        assertEquals(1, targetPeriod?.usedDayOffCount)
+        assertEquals(listOf("주말"), targetPeriod?.holidayNames)
+    }
+
+    @Test
+    fun `추천 기간은 휴일이 최소 하루 이상 포함된 기간만 반환한다`() {
+        // when
+        val recommendedPeriods =
+            vacationRecommendationService.findRecommendedPeriods(
+                startYearMonth = YearMonth.of(2026, 5),
+                userDayOff = 3,
+                holidayMap = emptyMap(),
+                monthRangeCount = 1,
+                periodLimitPerMonth = 100,
+            )
+
+        // then
+        assertTrue(recommendedPeriods.isNotEmpty())
+        assertTrue(recommendedPeriods.all { period -> period.holidayCount > 0 })
+        assertTrue(
+            recommendedPeriods.none { period ->
+                period.start.isEqual(LocalDate.of(2026, 5, 4)) &&
+                    period.end.isEqual(LocalDate.of(2026, 5, 6))
+            },
+        )
+    }
 }
