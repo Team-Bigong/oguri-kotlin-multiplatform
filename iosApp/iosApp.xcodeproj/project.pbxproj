@@ -192,7 +192,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\n\nif [ -z \"$JAVA_HOME\" ]; then\n  if JAVA_HOME_CANDIDATE=$(/usr/libexec/java_home -v 17 2>/dev/null); then\n    export JAVA_HOME=\"$JAVA_HOME_CANDIDATE\"\n  elif [ -d \"/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\" ]; then\n    export JAVA_HOME=\"/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\"\n  elif [ -d \"/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\" ]; then\n    export JAVA_HOME=\"/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\"\n  else\n    echo \"Java 17 runtime is required to build the Kotlin framework.\" >&2\n    exit 1\n  fi\nfi\n\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\njava -version\n\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
 		};
 		8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */ = {
 			isa = PBXShellScriptBuildPhase;
