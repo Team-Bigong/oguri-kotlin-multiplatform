@@ -4,15 +4,6 @@ on:
   push:
     branches:
       - release-web
-    paths:
-      - "web/**"
-      - ".github/workflows/web-ci.yml"
-  pull_request:
-    branches:
-      - release-web
-    paths:
-      - "web/**"
-      - ".github/workflows/web-ci.yml"
 
 jobs:
   build:
