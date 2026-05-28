@@ -154,6 +154,7 @@ fun PlaceDetailScreen(
                                 SaveToggleButton(
                                     checked = placeDetailUiState.isSaved,
                                     onCheckedChange = { onSaveToggleClick() },
+                                    modifier = Modifier.padding(end = 12.dp),
                                 )
                             }
                         }
