@@ -25,6 +25,8 @@
 	</array>
 	<key>GADApplicationIdentifier</key>
 	<string>$(GAD_APPLICATION_ID)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>KEY_KAKAO</key>
 	<string>$(KEY_KAKAO)</string>
 	<key>LSApplicationQueriesSchemes</key>

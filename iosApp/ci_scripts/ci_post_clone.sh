@@ -20,6 +20,53 @@ require_environment_value() {
   printf "%s" "${ENVIRONMENT_VALUE}"
 }
 
+ensure_java_runtime() {
+  if /usr/libexec/java_home -v 17 >/dev/null 2>&1; then
+    JAVA_HOME_VALUE="$(/usr/libexec/java_home -v 17)"
+    echo "Found Java runtime for Xcode Cloud at ${JAVA_HOME_VALUE}"
+    return
+  fi
+
+  for JAVA_HOME_VALUE in \
+    "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" \
+    "/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+  do
+    if [ -x "${JAVA_HOME_VALUE}/bin/java" ]; then
+      echo "Found Java runtime for Xcode Cloud at ${JAVA_HOME_VALUE}"
+      return
+    fi
+  done
+
+  if ! command -v brew >/dev/null 2>&1; then
+    echo "Java 17 runtime is missing and Homebrew is not available." >&2
+    exit 1
+  fi
+
+  echo "Installing Java 17 runtime for Xcode Cloud"
+  brew install openjdk@17
+
+  if /usr/libexec/java_home -v 17 >/dev/null 2>&1; then
+    JAVA_HOME_VALUE="$(/usr/libexec/java_home -v 17)"
+    echo "Installed Java runtime for Xcode Cloud at ${JAVA_HOME_VALUE}"
+    return
+  fi
+
+  for JAVA_HOME_VALUE in \
+    "/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home" \
+    "/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home"
+  do
+    if [ -x "${JAVA_HOME_VALUE}/bin/java" ]; then
+      echo "Installed Java runtime for Xcode Cloud at ${JAVA_HOME_VALUE}"
+      return
+    fi
+  done
+
+  echo "Java 17 runtime installation finished, but no usable Java runtime was found." >&2
+  exit 1
+}
+
+ensure_java_runtime
+
 DEBUG_BASE_URL_VALUE="$(require_environment_value "OGURI_DEBUG_BASE_URL")"
 RELEASE_BASE_URL_VALUE="$(require_environment_value "OGURI_RELEASE_BASE_URL")"
 KAKAO_KEY_VALUE="$(require_environment_value "OGURI_KAKAO_KEY")"

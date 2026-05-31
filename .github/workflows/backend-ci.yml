@@ -4,27 +4,6 @@ on:
   push:
     branches:
       - release-backend
-    paths:
-      - "server/**"
-      - "shared/**"
-      - "gradle/**"
-      - "gradlew"
-      - "gradlew.bat"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - ".github/workflows/backend-ci.yml"
-  pull_request:
-    branches:
-      - release-backend
-    paths:
-      - "server/**"
-      - "shared/**"
-      - "gradle/**"
-      - "gradlew"
-      - "gradlew.bat"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - ".github/workflows/backend-ci.yml"
 
 jobs:
   build:
