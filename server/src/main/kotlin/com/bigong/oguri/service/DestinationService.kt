@@ -3,11 +3,14 @@ package com.bigong.oguri.service
 import com.bigong.oguri.domain.SavedDestination
 import com.bigong.oguri.dto.response.ExperienceResponse
 import com.bigong.oguri.dto.response.PlaceDetailResponse
+import com.bigong.oguri.dto.response.PlaceRecommendPeriodResponse
 import com.bigong.oguri.repository.DestinationExperienceRepository
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.SavedDestinationRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
@@ -17,7 +20,6 @@ import java.time.temporal.ChronoUnit
  * 여행지 상세 정보 및 저장(찜) 관련 기능을 담당하는 서비스
  */
 @Service
-@Transactional(readOnly = true)
 class DestinationService(
     private val destinationRepository: DestinationRepository,
     private val destinationExperienceRepository: DestinationExperienceRepository,
@@ -25,6 +27,7 @@ class DestinationService(
     private val exchangeService: ExchangeService,
     private val countryRepository: com.bigong.oguri.repository.CountryRepository,
     private val placeRecommendationService: PlaceRecommendationService,
+    private val transactionManager: PlatformTransactionManager,
 ) {
     // 대한민국의 빅맥 지수를 캐싱 (성능 최적화)
     private var koreaBigMacIndex: BigDecimal? = null
@@ -63,11 +66,32 @@ class DestinationService(
         userCountry: String,
         memberId: String,
     ): PlaceDetailResponse {
+        val detailData =
+            readOnlyTransactionTemplate().execute {
+                getDestinationDetailData(id, startDate, endDate, userCountry, memberId)
+            } ?: throw IllegalStateException("장소 상세 조회 트랜잭션 처리에 실패했습니다.")
+
+        val exchangeRateInfo = exchangeService.getExchangeRateInfo(detailData.currencyCode)
+        return detailData.response.copy(exchangeRateInfo = exchangeRateInfo)
+    }
+
+    private fun getDestinationDetailData(
+        id: Int,
+        startDate: LocalDate?,
+        endDate: LocalDate?,
+        userCountry: String,
+        memberId: String,
+    ): DestinationDetailData {
         // 1. 여행지 및 국가, 이미지 통합 조회
         val target =
             destinationRepository.findByIdWithCountryAndImages(id)
                 ?: throw IllegalArgumentException("장소를 찾을 수 없습니다. ID: $id")
-        val destinations = destinationRepository.findAllWithCountryAndImages()
+        val destinations =
+            if (startDate != null && endDate != null) {
+                destinationRepository.findAllWithCountryAndImages()
+            } else {
+                emptyList()
+            }
 
         // 2. 이미지 리스트 및 찜 여부 확인
         val thumbnailUrls = target.images.sortedBy { it.sortOrder }.map { it.imageUrl }
@@ -78,15 +102,17 @@ class DestinationService(
 
         // 3.1 최적의 추천 방문 시기 선택 및 그에 따른 날씨 결정
         val selectedPeriodInfo = selectBestRecommendPeriodInfo(target, startDate)
-        val recommendPeriod = selectedPeriodInfo?.let {
-            com.bigong.oguri.dto.response.PlaceRecommendPeriodResponse(it.first, it.second)
-        }
+        val recommendPeriod =
+            selectedPeriodInfo?.let {
+                PlaceRecommendPeriodResponse(it.first, it.second)
+            }
 
         // 9. 선택된 추천 기간에 맞는 날씨 정보 사용 (1차 vs 2차)
-        val (selectedTemp, selectedPrecip) = when (selectedPeriodInfo?.third) {
-            2 -> target.weatherTemp2 to target.weatherPrecipitationMm2
-            else -> target.weatherTemp1 to target.weatherPrecipitationMm1
-        }
+        val (selectedTemp, selectedPrecip) =
+            when (selectedPeriodInfo?.third) {
+                2 -> target.weatherTemp2 to target.weatherPrecipitationMm2
+                else -> target.weatherTemp1 to target.weatherPrecipitationMm1
+            }
 
         // 4. 장소별 액티비티/즐길거리 조회
         val experiences =
@@ -118,27 +144,28 @@ class DestinationService(
         // 6. 스카이스캐너 검색 링크 생성
         val flightUrl = target.flightUrl ?: "https://www.skyscanner.co.kr/transport/flights/sel/${target.name}"
 
-        // 7. 실시간 환율 정보 (해당 국가의 통화 코드 사용)
-        val exchangeRateInfo = exchangeService.getExchangeRateInfo(target.country?.currencyCode)
-
         // 8. 체감 물가 계산 (해당 국가 BMI / 대한민국 BMI)
         val relativeCostIndex = calculateRelativeCostIndex(target.country?.bigMacIndex)
 
-        return PlaceDetailResponse(
-            id = target.id.toLong(),
-            country = target.country?.name ?: "Unknown",
-            city = target.name,
-            thumbnailUrls = thumbnailUrls,
-            isSaved = isSaved,
-            exchangeRateInfo = exchangeRateInfo,
-            relativeCostIndex = relativeCostIndex,
-            averageTemperature = selectedTemp,
-            averagePrecipitation = selectedPrecip,
-            description = description,
-            recommendPeriod = recommendPeriod,
-            experiences = experiences,
-            flightUrl = flightUrl,
-            relevantPlaces = relevantPlaces,
+        return DestinationDetailData(
+            currencyCode = target.country?.currencyCode,
+            response =
+                PlaceDetailResponse(
+                    id = target.id.toLong(),
+                    country = target.country?.name ?: "Unknown",
+                    city = target.name,
+                    thumbnailUrls = thumbnailUrls,
+                    isSaved = isSaved,
+                    exchangeRateInfo = null,
+                    relativeCostIndex = relativeCostIndex,
+                    averageTemperature = selectedTemp,
+                    averagePrecipitation = selectedPrecip,
+                    description = description,
+                    recommendPeriod = recommendPeriod,
+                    experiences = experiences,
+                    flightUrl = flightUrl,
+                    relevantPlaces = relevantPlaces,
+                ),
         )
     }
 
@@ -178,12 +205,19 @@ class DestinationService(
      * 두 월 사이의 거리를 계산합니다. (미래 방향으로만 계산)
      * 예: 현재 12월, 시작 1월 -> 거리 1
      */
-    private fun getCircularMonthDistance(from: Int, to: Int): Int = (to - from + 12) % 12
+    private fun getCircularMonthDistance(
+        from: Int,
+        to: Int,
+    ): Int = (to - from + 12) % 12
 
     /**
      * 특정 월이 추천 기간 범위 내에 있는지 확인합니다.
      */
-    private fun isMonthInRange(month: Int, start: Int?, end: Int?): Boolean {
+    private fun isMonthInRange(
+        month: Int,
+        start: Int?,
+        end: Int?,
+    ): Boolean {
         if (start == null || end == null) return false
         return if (start <= end) {
             month in start..end
@@ -215,4 +249,14 @@ class DestinationService(
      * 설명문 마크다운 변환 (볼드 처리)
      */
     private fun processDescription(text: String): String = if (text.contains("**")) text else text.replace("추천", "**추천**")
+
+    private fun readOnlyTransactionTemplate(): TransactionTemplate =
+        TransactionTemplate(transactionManager).apply {
+            isReadOnly = true
+        }
+
+    private data class DestinationDetailData(
+        val currencyCode: String?,
+        val response: PlaceDetailResponse,
+    )
 }
