@@ -213,25 +213,6 @@
 			shellPath = /bin/sh;
 			shellScript = "if [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  APP_DISPLAY_NAME_EN=\"Oguri Debug\"\n  APP_DISPLAY_NAME_KO=\"오구리 Debug\"\n  APP_DISPLAY_NAME_JA=\"オグリ Debug\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri Debug\"\nelse\n  APP_DISPLAY_NAME_EN=\"Oguri\"\n  APP_DISPLAY_NAME_KO=\"오구리\"\n  APP_DISPLAY_NAME_JA=\"オグリ\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri\"\nfi\n\nwrite_info_plist_strings() {\n  LOCALE_IDENTIFIER=\"$1\"\n  LOCALIZED_APP_DISPLAY_NAME=\"$2\"\n  LOCALE_RESOURCES_DIRECTORY=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/$LOCALE_IDENTIFIER.lproj\"\n  mkdir -p \"$LOCALE_RESOURCES_DIRECTORY\"\n  /usr/bin/printf 'CFBundleDisplayName = \"%s\";\\nCFBundleName = \"%s\";\\n' \"$LOCALIZED_APP_DISPLAY_NAME\" \"$LOCALIZED_APP_DISPLAY_NAME\" > \"$LOCALE_RESOURCES_DIRECTORY/InfoPlist.strings\"\n}\n\nwrite_info_plist_strings \"en\" \"$APP_DISPLAY_NAME_EN\"\nwrite_info_plist_strings \"ko\" \"$APP_DISPLAY_NAME_KO\"\nwrite_info_plist_strings \"ja\" \"$APP_DISPLAY_NAME_JA\"\nwrite_info_plist_strings \"zh-Hans\" \"$APP_DISPLAY_NAME_ZH_HANS\"\n";
 		};
-		8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Localize InfoPlist Display Name";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  APP_DISPLAY_NAME_EN=\"Oguri Debug\"\n  APP_DISPLAY_NAME_KO=\"오구리 Debug\"\n  APP_DISPLAY_NAME_JA=\"オグリ Debug\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri Debug\"\nelse\n  APP_DISPLAY_NAME_EN=\"Oguri\"\n  APP_DISPLAY_NAME_KO=\"오구리\"\n  APP_DISPLAY_NAME_JA=\"オグリ\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri\"\nfi\n\nwrite_info_plist_strings() {\n  LOCALE_IDENTIFIER=\"$1\"\n  LOCALIZED_APP_DISPLAY_NAME=\"$2\"\n  LOCALE_RESOURCES_DIRECTORY=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/$LOCALE_IDENTIFIER.lproj\"\n  mkdir -p \"$LOCALE_RESOURCES_DIRECTORY\"\n  /usr/bin/printf 'CFBundleDisplayName = \"%s\";\\nCFBundleName = \"%s\";\\n' \"$LOCALIZED_APP_DISPLAY_NAME\" \"$LOCALIZED_APP_DISPLAY_NAME\" > \"$LOCALE_RESOURCES_DIRECTORY/InfoPlist.strings\"\n}\n\nwrite_info_plist_strings \"en\" \"$APP_DISPLAY_NAME_EN\"\nwrite_info_plist_strings \"ko\" \"$APP_DISPLAY_NAME_KO\"\nwrite_info_plist_strings \"ja\" \"$APP_DISPLAY_NAME_JA\"\nwrite_info_plist_strings \"zh-Hans\" \"$APP_DISPLAY_NAME_ZH_HANS\"\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
