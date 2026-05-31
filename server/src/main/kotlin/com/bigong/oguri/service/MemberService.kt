@@ -24,6 +24,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.server.ResponseStatusException
 import java.util.Locale
@@ -33,7 +34,6 @@ import kotlin.random.Random
  * 멤버 정보 및 인증, 마이페이지 데이터를 담당하는 서비스
  */
 @Service
-@Transactional
 class MemberService(
     private val memberRepository: MemberRepository,
     private val adjectiveRepository: AdjectiveRepository,
@@ -45,6 +45,7 @@ class MemberService(
     private val savedRecommendationRepository: SavedRecommendationRepository,
     private val savedDestinationRepository: SavedDestinationRepository,
     private val destinationRepository: DestinationRepository,
+    private val transactionTemplate: TransactionTemplate,
 ) {
     /**
      * 카카오 로그인 및 가입
@@ -53,8 +54,7 @@ class MemberService(
         val startedAt = System.currentTimeMillis()
         val kakaoUserInfo = getKakaoUserInfo(accessToken)
         val kakaoId = "KAKAO_${kakaoUserInfo.id}"
-        val member = findOrCreateMember(kakaoId)
-        val response = issueLoginTokens(member)
+        val response = createLoginResponse(kakaoId)
         logger.info("Kakao login completed. memberId={}, elapsedMs={}", kakaoId, System.currentTimeMillis() - startedAt)
         return response
     }
@@ -66,8 +66,7 @@ class MemberService(
         val startedAt = System.currentTimeMillis()
         val appleSubject = appleIdentityTokenVerifier.extractAppleSubject(identityToken)
         val appleMemberId = "APPLE_$appleSubject"
-        val member = findOrCreateMember(appleMemberId)
-        val response = issueLoginTokens(member)
+        val response = createLoginResponse(appleMemberId)
         logger.info("Apple login completed. memberId={}, elapsedMs={}", appleMemberId, System.currentTimeMillis() - startedAt)
         return response
     }
@@ -79,8 +78,7 @@ class MemberService(
         val startedAt = System.currentTimeMillis()
         val googleSubject = googleIdentityTokenVerifier.extractGoogleSubject(identityToken)
         val googleMemberId = "GOOGLE_$googleSubject"
-        val member = findOrCreateMember(googleMemberId)
-        val response = issueLoginTokens(member)
+        val response = createLoginResponse(googleMemberId)
         logger.info("Google login completed. memberId={}, elapsedMs={}", googleMemberId, System.currentTimeMillis() - startedAt)
         return response
     }
@@ -90,13 +88,13 @@ class MemberService(
      */
     fun loginWithMock(mockId: String): LoginResponse {
         val memberId = "MOCK_$mockId"
-        val member = findOrCreateMember(memberId)
-        return issueLoginTokens(member)
+        return createLoginResponse(memberId)
     }
 
     /**
      * 내 정보 및 저장된 데이터 전체 조회
      */
+    @Transactional
     fun getMyInfo(memberId: String): MemberMeResponse {
         val member =
             memberRepository.findById(memberId).orElseGet {
@@ -145,6 +143,7 @@ class MemberService(
     /**
      * 토큰 재발급
      */
+    @Transactional
     fun refreshAccessToken(refreshToken: String): TokenRefreshResponse {
         if (refreshToken.isBlank()) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "리프레시 토큰이 비어 있습니다.")
@@ -191,6 +190,12 @@ class MemberService(
         return kakaoResponse
     }
 
+    private fun createLoginResponse(memberId: String): LoginResponse =
+        transactionTemplate.execute {
+            val member = findOrCreateMember(memberId)
+            issueLoginTokens(member)
+        } ?: throw IllegalStateException("로그인 트랜잭션 처리에 실패했습니다.")
+
     private fun findOrCreateMember(memberId: String): Member =
         memberRepository.findById(memberId).orElseGet {
             val newMember = Member(id = memberId)
@@ -211,6 +216,7 @@ class MemberService(
         )
     }
 
+    @Transactional
     fun updateDayOffInfo(
         memberId: String,
         preferred: Int,
@@ -225,6 +231,7 @@ class MemberService(
         memberRepository.save(member)
     }
 
+    @Transactional
     fun completeOnboarding(
         memberId: String,
         preferred: Int,
@@ -239,6 +246,7 @@ class MemberService(
         memberRepository.save(member)
     }
 
+    @Transactional
     fun withdraw(memberId: String) {
         if (!memberRepository.existsById(memberId)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.")
