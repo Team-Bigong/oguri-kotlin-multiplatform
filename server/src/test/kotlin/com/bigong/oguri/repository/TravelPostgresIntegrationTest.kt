@@ -21,6 +21,7 @@ class TravelPostgresIntegrationTest {
     private lateinit var jdbc: JdbcClient
     private lateinit var changes: TravelCollaborationRepository
     private lateinit var legacy: Fixture
+    private var legacyExperienceId: Int = 0
 
     @BeforeAll
     fun migrateExistingAndNewTravelData() {
@@ -42,6 +43,14 @@ class TravelPostgresIntegrationTest {
         dataSource.setConnectionProperties(Properties().apply { setProperty("currentSchema", schema) })
         jdbc = JdbcClient.create(dataSource)
         legacy = fixture()
+        legacyExperienceId =
+            jdbc
+                .sql(
+                    """INSERT INTO destination_experiences (destination_id, title, description, thumbnail_url, link)
+                VALUES ((SELECT id FROM destinations ORDER BY id LIMIT 1), 'Legacy experience', 'Description', 'image', 'link')
+                RETURNING id""",
+                ).query(Int::class.javaObjectType)
+                .single()
         jdbc
             .sql(
                 """INSERT INTO travel_plan_changes (travel_plan_id, revision, actor_id, day_number, kind)
@@ -80,6 +89,14 @@ class TravelPostgresIntegrationTest {
         assertNull(history.visitId)
         assertNotNull(history.occurredAt)
         assertEquals(history.occurredAt, changes.lastModifiedAt(legacy.plan))
+        assertEquals(
+            "Legacy experience",
+            jdbc
+                .sql("SELECT title FROM destination_experiences WHERE id = :id")
+                .param("id", legacyExperienceId)
+                .query(String::class.java)
+                .single(),
+        )
     }
 
     @Test
