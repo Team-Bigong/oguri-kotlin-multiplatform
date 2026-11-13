@@ -125,4 +125,21 @@
     <string name="travel_undo_visit">直前の削除・移動を元に戻す</string>
     <string name="travel_undo_unavailable">訪問予定の削除や移動は元に戻せません。</string>
     <string name="travel_change_visit_undone">訪問予定の変更を取り消し</string>
+    <string name="travel_my_reminder">自分のリマインダー</string>
+    <string name="travel_reminder_explanation">出発前にこの端末へ1回通知します。旅行期間を変更すると予約は解除されます。</string>
+    <string name="travel_reminder_off">オフ</string>
+    <string name="travel_reminder_scheduled">%1$s · %2$s</string>
+    <string name="travel_reminder_pending">予約済み</string>
+    <string name="travel_reminder_sending">送信中</string>
+    <string name="travel_reminder_sent">送信済み</string>
+    <string name="travel_reminder_failed">配信できませんでした。新しい時刻で再予約できます。</string>
+    <string name="travel_reminder_turn_off">リマインダーを解除</string>
+    <string name="travel_reminder_date">通知日 (YYYY-MM-DD)</string>
+    <string name="travel_reminder_time">通知時刻 (HH:mm)</string>
+    <string name="travel_reminder_before_departure">%2$sの%1$sが始まる前の、未来の時刻を選んでください。</string>
+    <string name="travel_reminder_invalid_time">日付・時刻・タイムゾーンを確認してください。現在より後、出発日より前の時刻が必要です。</string>
+    <string name="travel_reminder_not_available">現在予約できないか、旅行がすでに始まっています。</string>
+    <string name="travel_reminder_permission_denied">通知が無効です。端末の設定で許可できます。旅行の計画は引き続き利用できます。</string>
+    <string name="travel_reminder_save">通知を予約</string>
+    <string name="travel_manage">その他</string>
 </resources>

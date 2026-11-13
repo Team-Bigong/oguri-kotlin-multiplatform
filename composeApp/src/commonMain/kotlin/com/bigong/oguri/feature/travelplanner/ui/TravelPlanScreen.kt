@@ -67,12 +67,12 @@ import oguri.composeapp.generated.resources.travel_empty_day
 import oguri.composeapp.generated.resources.travel_find_next_holiday
 import oguri.composeapp.generated.resources.travel_has_note
 import oguri.composeapp.generated.resources.travel_list
+import oguri.composeapp.generated.resources.travel_manage
 import oguri.composeapp.generated.resources.travel_map_fit
 import oguri.composeapp.generated.resources.travel_map_hide
 import oguri.composeapp.generated.resources.travel_map_sequence
 import oguri.composeapp.generated.resources.travel_map_show
 import oguri.composeapp.generated.resources.travel_map_unavailable
-import oguri.composeapp.generated.resources.travel_members
 import oguri.composeapp.generated.resources.travel_move_down
 import oguri.composeapp.generated.resources.travel_move_up
 import oguri.composeapp.generated.resources.travel_move_visit
@@ -122,7 +122,7 @@ internal fun TravelPlanScreen(
         actions = {
             if (plan != null) {
                 TextButton(onClick = onMembers, enabled = !state.isSaving && !state.canRetrySave) {
-                    Text(stringResource(Res.string.travel_members))
+                    Text(stringResource(Res.string.travel_manage))
                 }
             }
         },

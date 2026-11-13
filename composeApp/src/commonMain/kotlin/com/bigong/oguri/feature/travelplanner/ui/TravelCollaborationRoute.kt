@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,6 +29,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelReminderDialog
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.travel_accept_ownership
 import oguri.composeapp.generated.resources.travel_apply
@@ -46,8 +48,10 @@ import oguri.composeapp.generated.resources.travel_invited_by
 import oguri.composeapp.generated.resources.travel_join_trip
 import oguri.composeapp.generated.resources.travel_leave_explanation
 import oguri.composeapp.generated.resources.travel_leave_trip
+import oguri.composeapp.generated.resources.travel_manage
 import oguri.composeapp.generated.resources.travel_member
 import oguri.composeapp.generated.resources.travel_members
+import oguri.composeapp.generated.resources.travel_my_reminder
 import oguri.composeapp.generated.resources.travel_offer_ownership
 import oguri.composeapp.generated.resources.travel_owner_name
 import oguri.composeapp.generated.resources.travel_ownership_pending
@@ -61,24 +65,28 @@ import org.jetbrains.compose.resources.stringResource
 internal fun TravelMembersRoute(
     planId: String,
     viewModel: TravelCollaborationViewModel,
+    reminderViewModel: TravelReminderViewModel,
     onBack: () -> Unit,
     onClosed: () -> Unit,
     onSelectDay: (Int) -> Unit,
     dates: TravelDates,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val reminderState by reminderViewModel.state.collectAsStateWithLifecycle()
+    var showReminder by remember(planId) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
     var copied by remember(state.invite) { mutableStateOf(false) }
     var confirmation by remember { mutableStateOf<(() -> Unit)?>(null) }
     LaunchedEffect(viewModel, planId) { viewModel.members(planId) }
     LaunchedEffect(state.closed) { if (state.closed) onClosed() }
-    TravelPlannerPage(stringResource(Res.string.travel_members), onBack, state.busy) {
+    TravelPlannerPage(stringResource(Res.string.travel_manage), onBack, state.busy) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (state.detailsPlan == null) {
                 state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.members(planId) }) }
             }
             val members = state.members
             if (members != null) {
+                Text(stringResource(Res.string.travel_members))
                 members.members.forEach { member ->
                     Text(
                         if (member.owner) {
@@ -106,6 +114,12 @@ internal fun TravelMembersRoute(
                 TextButton(enabled = !state.busy, onClick = { viewModel.recentChanges(planId) }) {
                     Text(stringResource(Res.string.travel_recent_changes))
                 }
+                HorizontalDivider()
+                TextButton(enabled = !state.busy, onClick = {
+                    showReminder = true
+                    reminderViewModel.load(planId)
+                }) { Text(stringResource(Res.string.travel_my_reminder)) }
+                HorizontalDivider()
                 if (members.isOwner) {
                     TextButton(enabled = !state.busy, onClick = { viewModel.loadDetails(planId) }) {
                         Text(stringResource(Res.string.travel_edit_trip))
@@ -142,6 +156,15 @@ internal fun TravelMembersRoute(
                 }
             }
         }
+    }
+    if (showReminder) {
+        TravelReminderDialog(
+            state = reminderState,
+            onSchedule = { reminderViewModel.schedule(planId, it) },
+            onCancel = { reminderViewModel.cancel(planId) },
+            onReload = { reminderViewModel.load(planId) },
+            onDismiss = { showReminder = false },
+        )
     }
     state.detailsPlan?.let { plan ->
         TravelDetailsDialog(

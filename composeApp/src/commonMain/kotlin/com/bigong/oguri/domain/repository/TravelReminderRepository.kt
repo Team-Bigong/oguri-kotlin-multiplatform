@@ -5,6 +5,8 @@ import com.bigong.oguri.domain.model.TravelReminderSettings
 import com.bigong.oguri.domain.model.TravelReminderTime
 
 interface TravelReminderRepository {
+    suspend fun syncDevice()
+
     suspend fun settings(planId: String): TravelReminderSettings
 
     suspend fun schedule(
@@ -13,7 +15,10 @@ interface TravelReminderRepository {
         time: TravelReminderTime,
     ): TravelReminder
 
-    suspend fun cancel(planId: String, reminderId: String)
+    suspend fun cancel(
+        planId: String,
+        reminderId: String,
+    )
 
     suspend fun open(reminderId: String): String
 }

@@ -58,35 +58,44 @@ class DefaultTravelReminderRepository(
         planId: String,
         settings: TravelReminderSettings,
         time: TravelReminderTime,
-    ): TravelReminder =
-        request { token ->
+    ): TravelReminder {
+        val requestId = newRequestId()
+        return request { token ->
             val account = AuthTokenStore.currentSession().accountKey ?: throw AuthSessionChangedException()
+            val device =
+                deviceMutex.withLock {
+                    checkSession()
+                    syncDeviceAccount(account)
+                    val state = readState()
+                    state.device ?: newDevice(account).also { writeState(state.copy(device = it)) }
+                }
+            val body =
+                ScheduleReminderRequest(
+                    requestId = requestId,
+                    localDateTime = time.localDateTime.toString(),
+                    timeZone = time.timeZone.id,
+                    expectedStartDate = settings.dates.start.toString(),
+                    expectedEndDate = settings.dates.endInclusive.toString(),
+                    expectedTripTimeZone = settings.tripTimeZone.id,
+                    deviceId = device.id,
+                )
             val pushToken = travelReminderPushToken() ?: throw TravelPlanException(TravelPlanFailure.CONNECTION)
-            val device = deviceMutex.withLock {
-                checkSession()
-                syncDeviceAccount(account)
-                val state = readState()
-                state.device ?: newDevice(account).also { writeState(state.copy(device = it)) }
-            }
-            val body = ScheduleReminderRequest(
-                requestId = newRequestId(),
-                localDateTime = time.localDateTime.toString(),
-                timeZone = time.timeZone.id,
-                expectedStartDate = settings.dates.start.toString(),
-                expectedEndDate = settings.dates.endInclusive.toString(),
-                expectedTripTimeZone = settings.tripTimeZone.id,
-                deviceId = device.id,
-            )
             checkSession()
             register(token, device, pushToken)
             checkSession()
-            client.put("$BASE_URL/api/v1/trips/$planId/reminder") {
-                authorize(token)
-                jsonBody(body)
-            }.body<ReminderResponse>().toDomain()
+            client
+                .put("$BASE_URL/api/v1/trips/$planId/reminder") {
+                    authorize(token)
+                    jsonBody(body)
+                }.body<ReminderResponse>()
+                .toDomain()
         }
+    }
 
-    override suspend fun cancel(planId: String, reminderId: String) {
+    override suspend fun cancel(
+        planId: String,
+        reminderId: String,
+    ) {
         request { token -> client.delete("$BASE_URL/api/v1/trips/$planId/reminder/$reminderId") { authorize(token) } }
     }
 
@@ -95,14 +104,16 @@ class DefaultTravelReminderRepository(
             client.get("$BASE_URL/api/v1/travel-reminders/$reminderId") { authorize(token) }.body<OpenReminderResponse>().planId
         }
 
-    internal suspend fun syncDevice() {
+    override suspend fun syncDevice() {
+        checkSession()
         val session = AuthTokenStore.currentSession()
         val account = session.accountKey.takeIf { session.tokens != null }
-        val device = deviceMutex.withLock {
-            if (session.version != AuthTokenStore.currentSession().version) return
-            syncDeviceAccount(account)
-            readState().device
-        }
+        val device =
+            deviceMutex.withLock {
+                checkSession()
+                syncDeviceAccount(account)
+                readState().device
+            }
         if (device != null && account != null) {
             val pushToken = travelReminderPushToken() ?: return
             request { token -> register(token, device, pushToken) }
@@ -112,31 +123,37 @@ class DefaultTravelReminderRepository(
     private suspend fun syncDeviceAccount(account: String?) {
         val stored = readState()
         val active = stored.device
-        val state = if (active != null && active.account != account) {
-            stored.copy(device = null, revocations = stored.revocations + active).also {
-                writeState(it)
-                clearTravelReminderPushToken()
-            }
-        } else {
-            stored
-        }
-        val remaining = state.revocations.filterNot { device ->
-            try {
-                client.post("$BASE_URL/api/v1/travel-reminder-devices/${device.id}/revoke") {
-                    attributes.put(OmitAuthentication, true)
-                    jsonBody(RevokeDeviceRequest(device.secret))
+        val state =
+            if (active != null && active.account != account) {
+                stored.copy(device = null, revocations = stored.revocations + active).also {
+                    writeState(it)
+                    clearTravelReminderPushToken()
                 }
-                true
-            } catch (cancelled: CancellationException) {
-                throw cancelled
-            } catch (_: Exception) {
-                false
+            } else {
+                stored
             }
-        }
+        val remaining =
+            state.revocations.filterNot { device ->
+                try {
+                    client.post("$BASE_URL/api/v1/travel-reminder-devices/${device.id}/revoke") {
+                        attributes.put(OmitAuthentication, true)
+                        jsonBody(RevokeDeviceRequest(device.secret))
+                    }
+                    true
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    false
+                }
+            }
         if (remaining != state.revocations) writeState(state.copy(revocations = remaining))
     }
 
-    private suspend fun register(token: String, device: ReminderDevice, pushToken: String) {
+    private suspend fun register(
+        token: String,
+        device: ReminderDevice,
+        pushToken: String,
+    ) {
         client.put("$BASE_URL/api/v1/travel-reminder-devices/${device.id}") {
             authorize(token)
             jsonBody(RegisterDeviceRequest(device.secret, pushToken))
@@ -157,13 +174,14 @@ class DefaultTravelReminderRepository(
         } catch (failure: AuthSessionChangedException) {
             throw TravelPlanException(TravelPlanFailure.SIGN_IN_REQUIRED, failure)
         } catch (failure: ClientRequestException) {
-            val reason = when (failure.response.status) {
-                HttpStatusCode.Unauthorized -> TravelPlanFailure.SIGN_IN_REQUIRED
-                HttpStatusCode.NotFound, HttpStatusCode.Forbidden -> TravelPlanFailure.UNAVAILABLE
-                HttpStatusCode.BadRequest -> TravelPlanFailure.INVALID
-                HttpStatusCode.Conflict -> TravelPlanFailure.CONFLICT
-                else -> TravelPlanFailure.CONNECTION
-            }
+            val reason =
+                when (failure.response.status) {
+                    HttpStatusCode.Unauthorized -> TravelPlanFailure.SIGN_IN_REQUIRED
+                    HttpStatusCode.NotFound, HttpStatusCode.Forbidden -> TravelPlanFailure.UNAVAILABLE
+                    HttpStatusCode.BadRequest -> TravelPlanFailure.INVALID
+                    HttpStatusCode.Conflict -> TravelPlanFailure.CONFLICT
+                    else -> TravelPlanFailure.CONNECTION
+                }
             throw TravelPlanException(reason, failure)
         } catch (failure: Exception) {
             throw TravelPlanException(TravelPlanFailure.CONNECTION, failure)
@@ -193,16 +211,28 @@ class DefaultTravelReminderRepository(
 }
 
 @Serializable
-private data class ReminderDeviceState(val device: ReminderDevice? = null, val revocations: List<ReminderDevice> = emptyList())
+private data class ReminderDeviceState(
+    val device: ReminderDevice? = null,
+    val revocations: List<ReminderDevice> = emptyList(),
+)
 
 @Serializable
-private data class ReminderDevice(val id: String, val account: String, val secret: String)
+private data class ReminderDevice(
+    val id: String,
+    val account: String,
+    val secret: String,
+)
 
 @Serializable
-private data class RegisterDeviceRequest(val revokeSecret: String, val pushToken: String)
+private data class RegisterDeviceRequest(
+    val revokeSecret: String,
+    val pushToken: String,
+)
 
 @Serializable
-private data class RevokeDeviceRequest(val secret: String)
+private data class RevokeDeviceRequest(
+    val secret: String,
+)
 
 @Serializable
 private data class ScheduleReminderRequest(
@@ -216,7 +246,9 @@ private data class ScheduleReminderRequest(
 )
 
 @Serializable
-private data class OpenReminderResponse(val planId: String)
+private data class OpenReminderResponse(
+    val planId: String,
+)
 
 @Serializable
 private data class ReminderSettingsResponse(
