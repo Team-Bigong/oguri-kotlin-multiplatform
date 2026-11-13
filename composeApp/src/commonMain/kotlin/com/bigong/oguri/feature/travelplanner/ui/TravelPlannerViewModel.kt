@@ -26,6 +26,8 @@ import com.bigong.oguri.feature.travelplanner.ui.model.withRefreshedPlan
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -36,6 +38,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Clock
 import kotlin.time.Duration.Companion.minutes
@@ -58,7 +61,7 @@ class TravelPlannerViewModel(
     private var searchJob: Job? = null
     private var pendingSave: TravelPendingSave? = null
     private var pendingPlanId: String? = null
-    private val draftWriteMutex: Mutex = Mutex()
+    private val recoveryWriteMutex: Mutex = Mutex()
     private var draftWrite: Job? = null
     private var addedPlaceForSave: TravelPlace? = null
 
@@ -92,8 +95,11 @@ class TravelPlannerViewModel(
     ) {
         try {
             repository.recordView(planId, dayNumber)
-        } catch (_: TravelPlanException) {
-            // The itinerary remains usable when the optional view record cannot be saved.
+        } catch (exception: TravelPlanException) {
+            if (exception.failure == TravelPlanFailure.UNAVAILABLE) {
+                forgetUnavailablePlan(planId)
+            }
+            // Optional view-record failures do not interrupt an otherwise accessible itinerary.
         }
     }
 
@@ -190,13 +196,15 @@ class TravelPlannerViewModel(
         rebaseDraft: Boolean = false,
     ) {
         load(allowPending = true) {
+            val generation = mutationGeneration
             val wasLoaded = state.value.plan != null
             val stored = if (!wasLoaded || state.value.isOffline) recoverSafely { recovery.load(planId) } else null
             val plan =
                 try {
                     repository.get(planId)
                 } catch (exception: TravelPlanException) {
-                    if (exception.failure == TravelPlanFailure.UNAVAILABLE) recoverSafely { recovery.forget(planId) }
+                    if (generation != mutationGeneration) return@load
+                    if (exception.failure == TravelPlanFailure.UNAVAILABLE) forgetUnavailablePlan(planId)
                     val cached =
                         stored?.confirmedPlan
                             ?: state.value.plan?.takeIf { verifiedAt?.elapsedNow()?.let { age -> age <= OFFLINE_PLAN_TTL } == true }
@@ -225,8 +233,8 @@ class TravelPlannerViewModel(
                     }
                     return@load
                 }
+            if (!rememberCurrentPlan(plan, generation)) return@load
             verifiedAt = TimeSource.Monotonic.markNow()
-            recoverSafely { recovery.rememberPlan(plan) }
             if (stored?.pending is TravelPendingSave.Visit) {
                 pendingPlanId = planId
                 pendingSave = stored.pending
@@ -304,10 +312,8 @@ class TravelPlannerViewModel(
         try {
             val updated = repository.get(planId)
             currentCoroutineContext().ensureActive()
-            if (generation == mutationGeneration) {
-                verifiedAt = TimeSource.Monotonic.markNow()
-                recoverSafely { recovery.rememberPlan(updated) }
-            }
+            if (!rememberCurrentPlan(updated, generation)) return
+            verifiedAt = TimeSource.Monotonic.markNow()
             mutableState.update { current ->
                 if (generation != mutationGeneration || current.plan == null || updated.revision <= current.plan.revision) {
                     current
@@ -319,9 +325,12 @@ class TravelPlannerViewModel(
             currentCoroutineContext().ensureActive()
             if (generation != mutationGeneration) return
             if (exception.failure == TravelPlanFailure.UNAVAILABLE || exception.failure == TravelPlanFailure.SIGN_IN_REQUIRED) {
-                pendingSave = null
-                applyFailure(exception.failure)
-                if (exception.failure == TravelPlanFailure.UNAVAILABLE) recoverSafely { recovery.forget(planId) }
+                if (exception.failure == TravelPlanFailure.UNAVAILABLE) {
+                    forgetUnavailablePlan(planId)
+                } else {
+                    pendingSave = null
+                    applyFailure(exception.failure)
+                }
             } else if (exception.failure == TravelPlanFailure.CONNECTION) {
                 mutableState.update { it.copy(isOffline = true) }
             }
@@ -374,7 +383,7 @@ class TravelPlannerViewModel(
         } catch (exception: TravelPlanException) {
             currentCoroutineContext().ensureActive()
             if (exception.failure == TravelPlanFailure.SIGN_IN_REQUIRED || exception.failure == TravelPlanFailure.UNAVAILABLE) {
-                applyFailure(exception.failure)
+                if (exception.failure == TravelPlanFailure.UNAVAILABLE) forgetUnavailablePlan(planId) else applyFailure(exception.failure)
             } else {
                 mutableState.update { it.copy(isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
             }
@@ -416,7 +425,13 @@ class TravelPlannerViewModel(
                 } catch (exception: TravelPlanException) {
                     currentCoroutineContext().ensureActive()
                     if (exception.failure == TravelPlanFailure.SIGN_IN_REQUIRED || exception.failure == TravelPlanFailure.UNAVAILABLE) {
-                        applyFailure(exception.failure)
+                        if (exception.failure ==
+                            TravelPlanFailure.UNAVAILABLE
+                        ) {
+                            forgetUnavailablePlan(planId)
+                        } else {
+                            applyFailure(exception.failure)
+                        }
                     } else {
                         mutableState.update { it.copy(placeSearch = it.placeSearch?.copy(failure = exception.failure, isLoading = false)) }
                     }
@@ -471,7 +486,7 @@ class TravelPlannerViewModel(
     }
 
     internal fun openVisit(visit: TravelVisit?) {
-        if (state.value.isSaving || pendingSave != null) return
+        if (state.value.plan == null || state.value.isSaving || pendingSave != null) return
         mutableState.update {
             it.copy(
                 visitDraft =
@@ -490,6 +505,10 @@ class TravelPlannerViewModel(
 
     internal fun updateVisitDraft(draft: TravelVisitDraft?) {
         if (state.value.isSaving || pendingSave != null) return
+        val planId =
+            state.value.plan
+                ?.summary
+                ?.id ?: return
         mutableState.update {
             if (draft == null && it.failure == TravelPlanFailure.VISIT_REMOVED) {
                 it.copy(visitDraft = null, failure = null, needsLatestPlan = false)
@@ -497,15 +516,18 @@ class TravelPlannerViewModel(
                 it.copy(visitDraft = draft)
             }
         }
-        val planId =
-            state.value.plan
-                ?.summary
-                ?.id ?: return
+        val generation = mutationGeneration
         draftWrite?.cancel()
         draftWrite =
             viewModelScope.launch {
-                draftWriteMutex.withLock {
-                    recoverSafely { recovery.saveDraft(planId, draft?.forRecovery()) }
+                recoveryWriteMutex.withLock {
+                    if (generation == mutationGeneration &&
+                        state.value.plan
+                            ?.summary
+                            ?.id == planId
+                    ) {
+                        recoverSafely { recovery.saveDraft(planId, draft?.forRecovery()) }
+                    }
                 }
             }
     }
@@ -662,33 +684,41 @@ class TravelPlannerViewModel(
         pendingPlanId = planId
         pendingSave = request
         mutationGeneration++
+        val generation = mutationGeneration
         mutableState.update { it.copy(isSaving = true, failure = null, canRetrySave = false) }
         viewModelScope.launch {
             try {
                 draftWrite?.join()
-                recovery.saveRequest(planId, request, state.value.visitDraft?.forRecovery())
+                val canSubmit =
+                    recoveryWriteMutex.withLock {
+                        if (generation != mutationGeneration) return@withLock false
+                        recovery.saveRequest(planId, request, state.value.visitDraft?.forRecovery())
+                        generation == mutationGeneration
+                    }
+                if (!canSubmit) return@launch
                 when (request) {
                     is TravelPendingSave.Create -> {
                         val created = repository.create(request.requestId, request.details)
+                        if (generation != mutationGeneration) return@launch
                         mutableState.update { it.copy(createdPlanId = created.id) }
                     }
                     is TravelPendingSave.Visit -> {
                         val id = requireNotNull(planId)
                         if (verifyAccess) repository.get(id)
                         val updated = repository.changeVisit(id, request.requestId, request.change)
+                        if (!rememberCurrentPlan(updated, generation)) return@launch
                         verifiedAt = TimeSource.Monotonic.markNow()
-                        recoverSafely { recovery.rememberPlan(updated) }
                         applySavedVisit(updated, request)
                     }
                 }
                 pendingSave = null
                 recoverSafely { recovery.finishRequest(planId, clearDraft = true) }
             } catch (exception: TravelPlanException) {
+                if (generation != mutationGeneration) return@launch
                 when (exception.failure) {
                     TravelPlanFailure.CONNECTION, TravelPlanFailure.SIGN_IN_REQUIRED -> Unit
                     TravelPlanFailure.UNAVAILABLE -> {
-                        pendingSave = null
-                        planId?.let { recoverSafely { recovery.forget(it) } }
+                        planId?.let { forgetUnavailablePlan(it) }
                     }
                     else -> {
                         pendingSave = null
@@ -703,6 +733,29 @@ class TravelPlannerViewModel(
             } finally {
                 mutableState.update { it.copy(isSaving = false) }
             }
+        }
+    }
+
+    private suspend fun rememberCurrentPlan(
+        plan: TravelPlan,
+        generation: Long,
+    ): Boolean =
+        recoveryWriteMutex.withLock {
+            if (generation != mutationGeneration) return@withLock false
+            recoverSafely { recovery.rememberPlan(plan) }
+            generation == mutationGeneration
+        }
+
+    private suspend fun forgetUnavailablePlan(planId: String) {
+        mutationGeneration++
+        pendingSave = null
+        pendingPlanId = null
+        applyFailure(TravelPlanFailure.UNAVAILABLE)
+        val writing = draftWrite
+        draftWrite = null
+        withContext(NonCancellable) {
+            writing?.cancelAndJoin()
+            recoveryWriteMutex.withLock { recoverSafely { recovery.forget(planId) } }
         }
     }
 

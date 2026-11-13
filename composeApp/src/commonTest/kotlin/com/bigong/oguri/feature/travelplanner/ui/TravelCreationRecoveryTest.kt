@@ -2,7 +2,6 @@ package com.bigong.oguri.feature.travelplanner.ui
 
 import com.bigong.oguri.domain.model.*
 import com.bigong.oguri.domain.repository.*
-import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,7 +44,7 @@ class TravelCreationRecoveryTest {
             val plans = CreationPlans()
             val pending = TravelPendingSave.Create("original-request", details)
             val recovery = CreationRecovery(pending).apply { barrier = CompletableDeferred() }
-            val viewModel = createViewModel(plans, recovery)
+            val viewModel = createTravelPlannerTestViewModel(plans, recovery)
             launch { viewModel.recoverCreation() }
             runCurrent()
             viewModel.create(details.copy(title = "Another trip"))
@@ -66,7 +65,7 @@ class TravelCreationRecoveryTest {
     fun creationRetryAfterAnUncertainNetworkResultKeepsItsRequestId() =
         runTest {
             val plans = CreationPlans().apply { failNext = true }
-            val viewModel = createViewModel(plans, CreationRecovery())
+            val viewModel = createTravelPlannerTestViewModel(plans, CreationRecovery())
             viewModel.recoverCreation()
             viewModel.create(details)
             advanceUntilIdle()
@@ -83,7 +82,7 @@ class TravelCreationRecoveryTest {
         runTest {
             val plans = CreationPlans()
             val recovery = CreationRecovery().apply { failLoad = true }
-            val viewModel = createViewModel(plans, recovery)
+            val viewModel = createTravelPlannerTestViewModel(plans, recovery)
             viewModel.recoverCreation()
             viewModel.create(details)
             advanceUntilIdle()
@@ -101,7 +100,7 @@ class TravelCreationRecoveryTest {
     fun repeatedCreationTapsSubmitOnlyOneRequest() =
         runTest {
             val plans = CreationPlans()
-            val viewModel = createViewModel(plans, CreationRecovery())
+            val viewModel = createTravelPlannerTestViewModel(plans, CreationRecovery())
             viewModel.recoverCreation()
             repeat(3) { viewModel.create(details) }
             advanceUntilIdle()
@@ -109,49 +108,6 @@ class TravelCreationRecoveryTest {
             advanceUntilIdle()
             assertEquals(1, plans.requests.size)
         }
-
-    private fun createViewModel(
-        plans: CreationPlans,
-        recovery: CreationRecovery,
-    ): TravelPlannerViewModel =
-        TravelPlannerViewModel(
-            plans,
-            object : TravelPlaceRepository {
-                override suspend fun cities(
-                    query: String,
-                    language: String,
-                ): List<TravelCitySuggestion> = error("Unused")
-
-                override suspend fun cityTimeZone(placeId: String): String? = error("Unused")
-
-                override suspend fun search(
-                    planId: String,
-                    query: String,
-                    language: String,
-                ): List<TravelPlace> = error("Unused")
-
-                override suspend fun forDay(
-                    planId: String,
-                    dayNumber: Int,
-                    language: String,
-                ): TravelDayPlaces = error("Unused")
-            },
-            GetPlaceDetailUseCase(
-                object : PlaceDetailRepository {
-                    override suspend fun getPlaceDetail(
-                        placeId: Long,
-                        startDate: String?,
-                        endDate: String?,
-                        userCountry: String,
-                    ): PlaceDetail = error("Unused")
-
-                    override suspend fun saveDestination(placeId: Long): Unit = error("Unused")
-
-                    override suspend fun deleteSavedDestination(placeId: Long): Unit = error("Unused")
-                },
-            ),
-            recovery,
-        )
 }
 
 private class CreationPlans : TravelPlanRepository {
