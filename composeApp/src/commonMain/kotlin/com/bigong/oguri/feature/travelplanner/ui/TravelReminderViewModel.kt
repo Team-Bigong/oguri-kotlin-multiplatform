@@ -97,7 +97,13 @@ class TravelReminderViewModel(
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: TravelPlanException) {
-                mutableState.update { it.copy(failure = failure.failure) }
+                mutableState.update {
+                    if (failure.failure == TravelPlanFailure.UNAVAILABLE || failure.failure == TravelPlanFailure.SIGN_IN_REQUIRED) {
+                        TravelReminderUiState(failure = failure.failure)
+                    } else {
+                        it.copy(failure = failure.failure)
+                    }
+                }
             } catch (_: Exception) {
                 mutableState.update { it.copy(failure = TravelPlanFailure.CONNECTION) }
             } finally {

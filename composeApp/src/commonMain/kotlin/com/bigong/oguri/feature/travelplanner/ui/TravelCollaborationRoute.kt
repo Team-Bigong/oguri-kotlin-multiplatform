@@ -79,6 +79,9 @@ internal fun TravelMembersRoute(
     var confirmation by remember { mutableStateOf<(() -> Unit)?>(null) }
     LaunchedEffect(viewModel, planId) { viewModel.members(planId) }
     LaunchedEffect(state.closed) { if (state.closed) onClosed() }
+    LaunchedEffect(reminderState.failure) {
+        reminderState.failure?.let(viewModel::applyAccessFailure)
+    }
     TravelPlannerPage(stringResource(Res.string.travel_manage), onBack, state.busy) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (state.detailsPlan == null) {
