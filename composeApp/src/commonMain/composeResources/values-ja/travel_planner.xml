@@ -146,4 +146,5 @@
     <string name="travel_change_removed_now">この訪問は現在削除されています。</string>
     <string name="travel_change_moved_now">現在は%1$sにあります。</string>
     <string name="travel_change_open_day">%1$sを開く</string>
+    <string name="travel_day_outside_trip">%1$d日目 · 現在の旅行期間外</string>
 </resources>

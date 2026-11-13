@@ -146,4 +146,5 @@
     <string name="travel_change_removed_now">이 방문은 현재 삭제된 상태예요.</string>
     <string name="travel_change_moved_now">현재 %1$s에 있어요.</string>
     <string name="travel_change_open_day">%1$s 열기</string>
+    <string name="travel_day_outside_trip">%1$d일차 · 현재 여행 기간 밖</string>
 </resources>

@@ -146,4 +146,5 @@
     <string name="travel_change_removed_now">此行程地点现已删除。</string>
     <string name="travel_change_moved_now">现位于%1$s。</string>
     <string name="travel_change_open_day">打开%1$s</string>
+    <string name="travel_day_outside_trip">第%1$d天 · 不在当前旅行日期内</string>
 </resources>

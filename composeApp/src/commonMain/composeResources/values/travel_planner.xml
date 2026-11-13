@@ -146,4 +146,5 @@
     <string name="travel_change_removed_now">This visit has been deleted.</string>
     <string name="travel_change_moved_now">Now in %1$s</string>
     <string name="travel_change_open_day">Open %1$s</string>
+    <string name="travel_day_outside_trip">Day %1$d · outside current trip dates</string>
 </resources>

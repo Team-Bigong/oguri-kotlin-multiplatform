@@ -22,6 +22,7 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitUndoAction
 import com.bigong.oguri.feature.travelplanner.ui.model.toVisitDraft
+import com.bigong.oguri.feature.travelplanner.ui.model.withRefreshedPlan
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -263,6 +264,7 @@ class TravelPlannerViewModel(
                             )
                         }
                     }
+                val changedStructure = nextDraft?.let { it.structureRevision != plan.structureRevision } == true
                 current.copy(
                     plan = plan,
                     isOffline = false,
@@ -276,11 +278,12 @@ class TravelPlannerViewModel(
                             current.selectedDay.takeIf { it in 0..dates.dayCount } ?: initialDay
                         },
                     visitDraft = nextDraft,
-                    needsLatestPlan = pendingSave == null && (wasRemoved || (!rebaseDraft && current.needsLatestPlan)),
+                    needsLatestPlan = pendingSave == null && (wasRemoved || changedStructure || (!rebaseDraft && current.needsLatestPlan)),
                     failure =
                         when {
                             pendingSave != null -> TravelPlanFailure.CONNECTION
                             wasRemoved -> TravelPlanFailure.VISIT_REMOVED
+                            changedStructure -> TravelPlanFailure.CONFLICT
                             !rebaseDraft && current.needsLatestPlan -> TravelPlanFailure.CONFLICT
                             else -> null
                         },
@@ -309,11 +312,7 @@ class TravelPlannerViewModel(
                 if (generation != mutationGeneration || current.plan == null || updated.revision <= current.plan.revision) {
                     current
                 } else {
-                    current.copy(
-                        plan = updated,
-                        selectedDay =
-                            current.selectedDay.takeIf { it <= updated.summary.details.dates.dayCount } ?: 1,
-                    )
+                    current.withRefreshedPlan(updated)
                 }
             }
         } catch (exception: TravelPlanException) {

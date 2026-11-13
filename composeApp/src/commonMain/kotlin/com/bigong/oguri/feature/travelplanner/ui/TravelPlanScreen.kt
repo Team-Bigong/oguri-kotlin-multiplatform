@@ -63,6 +63,7 @@ import oguri.composeapp.generated.resources.common_retry_button
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_day
+import oguri.composeapp.generated.resources.travel_day_outside_trip
 import oguri.composeapp.generated.resources.travel_empty_day
 import oguri.composeapp.generated.resources.travel_find_next_holiday
 import oguri.composeapp.generated.resources.travel_has_note
@@ -501,6 +502,8 @@ internal fun travelDayLabel(
 ): String =
     if (dayNumber == TravelPlan.UNASSIGNED_DAY) {
         stringResource(Res.string.travel_unassigned)
-    } else {
+    } else if (dayNumber in 1..dates.dayCount) {
         stringResource(Res.string.travel_day, dayNumber, dates.dateOn(dayNumber).toString())
+    } else {
+        stringResource(Res.string.travel_day_outside_trip, dayNumber)
     }

@@ -45,7 +45,6 @@ import oguri.composeapp.generated.resources.travel_change_visit_undone
 import oguri.composeapp.generated.resources.travel_changed_place
 import oguri.composeapp.generated.resources.travel_choose_time_zone
 import oguri.composeapp.generated.resources.travel_city
-import oguri.composeapp.generated.resources.travel_day
 import oguri.composeapp.generated.resources.travel_details_keep_local_times
 import oguri.composeapp.generated.resources.travel_details_move_unassigned
 import oguri.composeapp.generated.resources.travel_edit_trip
@@ -150,17 +149,7 @@ internal fun TravelRecentChangesDialog(
                                 Text(changes.timeZone?.let { instant.toLocalDateTime(it).toString() + " · " + it.id } ?: instant.toString())
                             }
                             if (entry.visitId != null) Text(entry.visitName ?: stringResource(Res.string.travel_changed_place))
-                            entry.dayNumber?.let { day ->
-                                Text(
-                                    if (day in
-                                        0..currentDates.dayCount
-                                    ) {
-                                        travelDayLabel(currentDates, day)
-                                    } else {
-                                        stringResource(Res.string.travel_day, day)
-                                    },
-                                )
-                            }
+                            entry.dayNumber?.let { day -> Text(travelDayLabel(currentDates, day)) }
                             if (entry.isVisitRemoved) {
                                 Text(stringResource(Res.string.travel_change_removed_now))
                             } else if (destination != null) {
