@@ -14,7 +14,7 @@
 
 | 범위 | 주요 근거 |
 | --- | --- |
-| 제품·화면 | [MVP_WIREFRAME.md](./MVP_WIREFRAME.md), [TRAVEL_PLANNER_SPEC.md](./TRAVEL_PLANNER_SPEC.md), [TRAVEL_PLANNER_REVIEW.md](./TRAVEL_PLANNER_REVIEW.md) |
+| 제품·화면 | [MVP_WIREFRAME.md](./MVP_WIREFRAME.md), [TRAVEL_PLANNER_SPEC.md](./TRAVEL_PLANNER_SPEC.md) |
 | 모바일 색·테마·서체 | [Color.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Color.kt), [Theme.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Theme.kt), [Typography.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Typography.kt) |
 | 모바일 구현 계약 | [MOBILE_CONVENTIONS.md](./MOBILE_CONVENTIONS.md), [MOBILE_CODE_STYLE.md](./MOBILE_CODE_STYLE.md), [MOBILE_PROJECT_STRUCTURE.md](./MOBILE_PROJECT_STRUCTURE.md) |
 | 웹·서버 범위 | [WEB_OFFICIAL_SITE.md](./WEB_OFFICIAL_SITE.md), [WEB_ADMIN_SETUP.md](./WEB_ADMIN_SETUP.md), [GEMINI.md](./GEMINI.md) |
@@ -42,7 +42,7 @@
 | D02 · 기존 표현 유지 | 민트·주황, 밝은 중립색, Pretendard와 기존 캐릭터 활용 | 기존 화면과 연결된다. Color·Typography 및 공용 UI |
 | D03 · 문맥 이어가기 | 추천 기간과 실제 여행 날짜를 구별하고 선택한 여행·일차를 보존 | 반복 입력과 잘못된 날짜 해석을 줄인다. 여행 플래너 명세 |
 | D04 · 저장을 설명 | 저장 중·저장됨·실패·충돌을 구별 | 화면에 보이는 변경과 서버 확정을 혼동하지 않는다. 여행 플래너 명세 |
-| D05 · 작업 공간 확보 | 지도·목록을 우선하고 캐릭터는 빈 상태·안내에 제한 | 장소·순서·메모가 잘 읽힌다. 여행 플래너 명세 11장 |
+| D05 · 작업 공간 확보 | 지도·목록을 우선하고 캐릭터는 빈 상태·안내에 제한 | 장소·순서·메모가 잘 읽힌다. 여행 플래너 명세 3·6장 |
 
 ### Principles
 
@@ -258,8 +258,8 @@ sRGB 상대 휘도로 계산한 정적 토큰 비교다. 아래의 충족·미�
 | 방문 편집 시트 | 시각·메모·날짜 이동·삭제, 적용 | 공유 메모임을 명시. 변경 중 입력과 저장 확정 상태 구분 |
 | 순서 변경 | 손잡이 드래그 + 위로·아래로 메뉴 | 드래그 없이도 같은 결과. 시각만으로 자동 재정렬 금지 |
 | 저장 상태 | 저장 중 / 저장됨 / 저장하지 못함 | 서버 확인 전 저장됨 금지. 충돌 시 최신 내용과 내 입력 보존 |
-| 초대·변경 요약 | 참여 확정·유효성 확인, 날짜별 새 변경 | 링크 열기만으로 참여 처리 금지. 일정 내용은 권한 확인 뒤 노출 |
-| 이어보기·다음 행동 | 여행명·기간과 새 변경 또는 다음 행동 한 개 | 타인의 수정 때문에 대상 여행을 계속 바꾸지 않음. 빈 날짜를 미완료로 표시하지 않음 |
+| 초대·변경 요약 | 멤버 버튼에서 참여·유효성 확인, 수정 시점·더보기에서 최근 변경 확인 | 링크 열기만으로 참여 처리 금지. 일정 내용은 권한 확인 뒤 노출. 요약 자동 팝업·미확인 개수 배지 없음 |
+| 이어보기 | 여행명·기간과 계획을 여는 행동 | 타인의 수정 때문에 대상 여행을 계속 바꾸지 않음. 다음 할 일 자동 제안·빈 날짜 미완료 표시 없음 |
 
 ### 화면 상태와 동시성 계약
 
@@ -290,7 +290,7 @@ sRGB 상대 휘도로 계산한 정적 토큰 비교다. 아래의 충족·미�
 - 날짜·저장 상태·장소 추가는 목록 중심 상태에서도 접근 가능하게 한다. 지도 장애 때도 방문 목록·메모를 유지한다.
 - 로그인·초대·외부 지도에서 돌아오면 원래 여행·일차·입력을 복원한다. 다른 멤버의 변경 때문에 현재 편집 포커스·지도 시점을 빼앗지 않는다.
 - 플래너 진입·내부 편집·초대·로그인 복귀에 작업을 끊는 광고를 넣지 않는 방향이다. 현재 공통 광고 트리거의 제외 처리는 신규 요구사항이다.
-- 출발 전 확인 알림은 멤버 본인이 선택한 예약당 1회다. 거절해도 계획 기능을 사용할 수 있고, 잠금 화면에는 여행 제목·상세 일정·동행자·메모를 기본 노출하지 않는다. 기간 변경·나가기·삭제 시 기존 예약을 취소한다.
+- 출발 전 확인 알림은 기본 꺼짐이며 더보기에서 멤버 본인이 선택한 예약당 1회다. 생성·초대·편집 완료 때 신청을 자동 제안하지 않는다. 거절해도 계획 기능을 사용할 수 있고, 잠금 화면에는 여행 제목·상세 일정·동행자·메모를 기본 노출하지 않는다. 기간 변경·나가기·삭제 시 기존 예약을 취소한다.
 
 ### 폭·글자 확대 검증
 
