@@ -42,6 +42,7 @@ google-services-plugin = "4.4.4"
 firebase-crashlytics-gradle = "3.0.6"
 firebase-crashlytics-ktx = "19.4.4"
 firebase-analytics-ktx = "22.5.0"
+firebase-messaging = "24.1.2"
 
 googleMapsAndroid = "20.0.0"
 
@@ -89,6 +90,7 @@ androidx-credentials = { module = "androidx.credentials:credentials", version.re
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
 google-android-googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 firebase-crashlytics-ktx = { module = "com.google.firebase:firebase-crashlytics-ktx", version.ref = "firebase-crashlytics-ktx" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx", version.ref = "firebase-analytics-ktx" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 plugin-session-replay-android = { module = "com.amplitude:plugin-session-replay-android", version.ref = "pluginSessionReplayAndroid" }

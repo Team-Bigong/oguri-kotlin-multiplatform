@@ -161,6 +161,7 @@ kotlin {
             implementation(libs.play.services.maps)
             implementation(libs.firebase.crashlytics.ktx)
             implementation(libs.firebase.analytics.ktx)
+            implementation(libs.firebase.messaging)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.analytics.android)
             implementation(libs.plugin.session.replay.android)

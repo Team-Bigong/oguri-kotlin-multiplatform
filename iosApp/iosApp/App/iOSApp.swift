@@ -13,6 +13,7 @@ private let firebaseConfigurationPlistName = "GoogleService-Info-Release"
 
 @main
 struct iOSApp: App {
+    @UIApplicationDelegateAdaptor(TravelReminderPushDelegate.self) private var reminderDelegate
     init() {
         configureFirebase()
         if let key = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_MAPS_IOS_API_KEY") as? String,
