@@ -181,7 +181,13 @@ class TravelCollaborationService(
     ): TravelRecentChanges {
         planService.requireMember(memberId)
         val plan = planService.accessiblePlan(memberId, planId)
-        return TravelRecentChanges(plan.revision, collaboration.recentChanges(planId, memberId, plan.revision))
+        return TravelRecentChanges(
+            plan.revision,
+            collaboration.recentChanges(planId, memberId, plan.revision),
+            plan.startDate.toString(),
+            plan.endDate.toString(),
+            plan.timeZone,
+        )
     }
 
     @Transactional
@@ -295,6 +301,9 @@ class TravelInviteException(
 data class TravelRecentChanges(
     val throughRevision: Long,
     val changes: List<TravelChangeRow>,
+    val startDate: String,
+    val endDate: String,
+    val timeZone: String,
 )
 
 @JvmRecord

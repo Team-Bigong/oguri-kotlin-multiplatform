@@ -203,7 +203,26 @@ class DefaultTravelPlanRepository internal constructor(
     override suspend fun recentChanges(planId: String): TravelRecentChanges =
         request {
             val response = remote.recentChanges(planId)
-            TravelRecentChanges(response.throughRevision, response.changes.map { TravelChange(it.revision, it.dayNumber, it.kind) })
+            TravelRecentChanges(
+                throughRevision = response.throughRevision,
+                changes =
+                    response.changes.map {
+                        TravelChange(
+                            it.revision,
+                            it.dayNumber,
+                            it.kind,
+                            it.visitId,
+                            it.occurredAt?.let(kotlin.time.Instant::parse),
+                            it.currentDayNumber,
+                            it.visitName,
+                        )
+                    },
+                dates =
+                    response.startDate?.let { start ->
+                        response.endDate?.let { end -> TravelDates(LocalDate.parse(start), LocalDate.parse(end)) }
+                    },
+                timeZone = response.timeZone?.let(TimeZone::of),
+            )
         }
 
     override suspend fun markChangesSeen(

@@ -142,4 +142,8 @@
     <string name="travel_reminder_permission_denied">通知が無効です。端末の設定で許可できます。旅行の計画は引き続き利用できます。</string>
     <string name="travel_reminder_save">通知を予約</string>
     <string name="travel_manage">その他</string>
+    <string name="travel_changed_place">変更された場所</string>
+    <string name="travel_change_removed_now">この訪問は現在削除されています。</string>
+    <string name="travel_change_moved_now">現在は%1$sにあります。</string>
+    <string name="travel_change_open_day">%1$sを開く</string>
 </resources>

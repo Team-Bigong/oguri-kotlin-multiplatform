@@ -39,10 +39,17 @@ internal data class TravelChangeResponse(
     val revision: Long,
     val dayNumber: Int?,
     val kind: String,
+    val visitId: String? = null,
+    val occurredAt: String? = null,
+    val currentDayNumber: Int? = null,
+    val visitName: String? = null,
 )
 
 @Serializable
 internal data class TravelRecentChangesResponse(
     val throughRevision: Long,
     val changes: List<TravelChangeResponse>,
+    val startDate: String? = null,
+    val endDate: String? = null,
+    val timeZone: String? = null,
 )

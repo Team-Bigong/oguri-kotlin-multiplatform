@@ -178,11 +178,14 @@ class TravelCollaborationRepository(
     ): List<TravelChangeRow> =
         jdbc
             .sql(
-                """SELECT revision, day_number, kind FROM travel_plan_changes
-               WHERE travel_plan_id = :plan AND actor_id IS DISTINCT FROM :member AND revision <= :through
-               AND revision > COALESCE((SELECT seen_revision FROM travel_plan_views
+                """SELECT change.revision, change.day_number, change.kind, change.visit_id, change.occurred_at,
+                   visit.day_number AS current_day_number, visit.name AS visit_name
+               FROM travel_plan_changes change
+               LEFT JOIN travel_visits visit ON visit.travel_plan_id = change.travel_plan_id AND visit.id = change.visit_id
+               WHERE change.travel_plan_id = :plan AND change.actor_id IS DISTINCT FROM :member AND change.revision <= :through
+               AND change.revision > COALESCE((SELECT seen_revision FROM travel_plan_views
                    WHERE travel_plan_id = :plan AND member_id = :member), 0)
-               ORDER BY revision DESC LIMIT 100""",
+               ORDER BY change.revision DESC LIMIT 100""",
             ).param("plan", planId)
             .param("member", memberId)
             .param("through", throughRevision)
@@ -190,7 +193,15 @@ class TravelCollaborationRepository(
                 row,
                 _,
                 ->
-                TravelChangeRow(row.getLong("revision"), row.getObject("day_number", Int::class.javaObjectType), row.getString("kind"))
+                TravelChangeRow(
+                    revision = row.getLong("revision"),
+                    dayNumber = row.getObject("day_number", Int::class.javaObjectType),
+                    kind = row.getString("kind"),
+                    visitId = row.getObject("visit_id", UUID::class.java),
+                    occurredAt = row.getObject("occurred_at", OffsetDateTime::class.java),
+                    currentDayNumber = row.getObject("current_day_number", Int::class.javaObjectType),
+                    visitName = row.getString("visit_name"),
+                )
             }.list()
 
     fun markChangesSeen(
@@ -258,15 +269,18 @@ class TravelCollaborationRepository(
         revision: Long,
         dayNumber: Int?,
         kind: String,
+        visitId: UUID? = null,
     ) {
         jdbc
             .sql(
-                "INSERT INTO travel_plan_changes (travel_plan_id, revision, actor_id, day_number, kind) VALUES (:plan, :revision, :actor, :day, :kind)",
+                """INSERT INTO travel_plan_changes (travel_plan_id, revision, actor_id, day_number, kind, visit_id)
+                   VALUES (:plan, :revision, :actor, :day, :kind, :visit)""",
             ).param("plan", planId)
             .param("revision", revision)
             .param("actor", memberId)
             .param("day", dayNumber)
             .param("kind", kind)
+            .param("visit", visitId, java.sql.Types.OTHER)
             .update()
     }
 }
@@ -288,4 +302,8 @@ data class TravelChangeRow(
     val revision: Long,
     val dayNumber: Int?,
     val kind: String,
+    val visitId: UUID? = null,
+    val occurredAt: OffsetDateTime? = null,
+    val currentDayNumber: Int? = null,
+    val visitName: String? = null,
 )

@@ -239,6 +239,14 @@ class TravelPlanService(
                 is TravelPlanCommand.RemoveVisit -> "VISIT_REMOVED"
                 is TravelPlanCommand.UndoVisit -> "VISIT_UNDONE"
             },
+            visitId =
+                when (command) {
+                    is TravelPlanCommand.AddVisit -> plan.orderedVisits().single { it.revision == plan.revision }.id
+                    is TravelPlanCommand.EditVisit -> command.visitId
+                    is TravelPlanCommand.RemoveVisit -> command.visitId
+                    is TravelPlanCommand.UndoVisit -> undo?.second?.id
+                    is TravelPlanCommand.ReorderDay -> null
+                },
         )
         return plan.toResponse()
     }

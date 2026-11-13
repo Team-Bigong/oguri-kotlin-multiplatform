@@ -142,4 +142,8 @@
     <string name="travel_reminder_permission_denied">Notifications are off. You can allow them in system settings. Your trip is still available.</string>
     <string name="travel_reminder_save">Schedule reminder</string>
     <string name="travel_manage">More</string>
+    <string name="travel_changed_place">Changed place</string>
+    <string name="travel_change_removed_now">This visit has been deleted.</string>
+    <string name="travel_change_moved_now">Now in %1$s</string>
+    <string name="travel_change_open_day">Open %1$s</string>
 </resources>
