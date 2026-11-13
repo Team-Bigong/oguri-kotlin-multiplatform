@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelOverviewSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlaceSearchSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
@@ -106,6 +107,8 @@ internal fun TravelPlanRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val changesState by collaborationViewModel.state.collectAsStateWithLifecycle()
+    var showOverview by remember(planId) { mutableStateOf(false) }
+    var overviewRetry by remember(planId) { mutableIntStateOf(0) }
     var showChanges by remember(planId) { mutableStateOf(false) }
     LaunchedEffect(viewModel, planId, changesState.failure) {
         if (changesState.failure == TravelPlanFailure.UNAVAILABLE) viewModel.forgetUnavailablePlan(planId)
@@ -148,6 +151,15 @@ internal fun TravelPlanRoute(
     LaunchedEffect(viewModel, planId, state.selectedDay, language, placeIds, detailsRetry) {
         viewModel.loadDayPlaces(planId, state.selectedDay, language, hasPlaces = placeIds.isNotEmpty())
     }
+    val overviewPlaceIds =
+        plan
+            ?.visits
+            .orEmpty()
+            .mapNotNull { it.details.googlePlaceId }
+            .toSet()
+    LaunchedEffect(viewModel, planId, overviewPlaceIds, showOverview, language, overviewRetry) {
+        if (showOverview) viewModel.loadOverviewPlaces(planId, language) else viewModel.closeOverview()
+    }
     TravelPlanScreen(
         state = state,
         onBack = onBack,
@@ -155,6 +167,7 @@ internal fun TravelPlanRoute(
         onRetrySave = viewModel::retrySave,
         onUndoVisit = viewModel::undoVisit,
         onSelectDay = viewModel::selectDay,
+        onOverview = { showOverview = true },
         onOpenVisit = viewModel::openVisit,
         onMoveVisit = viewModel::moveVisit,
         onReorderVisits = viewModel::reorderVisits,
@@ -179,6 +192,30 @@ internal fun TravelPlanRoute(
         onSignIn = onSignIn,
         onRetryPlaces = { detailsRetry++ },
     )
+    if (plan != null && showOverview) {
+        state.overview?.let { overview ->
+            TravelOverviewSheet(
+                plan = plan,
+                state = overview,
+                canAdd = !state.isSaving && !state.isLoading && !state.canRetrySave && !state.needsLatestPlan && !state.isOffline,
+                onDismiss = {
+                    showOverview = false
+                    viewModel.closeOverview()
+                },
+                onRetry = { overviewRetry++ },
+                onSelectVisit = { id ->
+                    showOverview = false
+                    viewModel.selectOverviewVisit(id)
+                },
+                onAdd = { day ->
+                    showOverview = false
+                    viewModel.closeOverview()
+                    viewModel.selectDay(day)
+                    viewModel.openPlaceSearch()
+                },
+            )
+        }
+    }
     if (plan != null && showChanges) {
         val dismissChanges = {
             if (!changesState.busy) changesState.recentChanges?.let { collaborationViewModel.dismissChanges(planId, it.throughRevision) }

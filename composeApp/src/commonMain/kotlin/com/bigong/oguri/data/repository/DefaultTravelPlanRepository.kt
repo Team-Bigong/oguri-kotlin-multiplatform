@@ -139,6 +139,15 @@ class DefaultTravelPlanRepository internal constructor(
         language: String,
     ): List<TravelPlace> = request { remote.searchPlaces(planId, query, language).map { it.toDomain() } }
 
+    override suspend fun forPlan(
+        planId: String,
+        language: String,
+    ): TravelDayPlaces =
+        request {
+            val response = remote.planPlaces(planId, language)
+            TravelDayPlaces(response.places.associate { it.id to it.toDomain() }, response.incomplete)
+        }
+
     override suspend fun forDay(
         planId: String,
         dayNumber: Int,

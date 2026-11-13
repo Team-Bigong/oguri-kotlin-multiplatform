@@ -99,6 +99,16 @@ class TravelPlanController(
             travelPlacesService.dayPlaces(request.resolveMemberId(), tripId, dayNumber, language),
         )
 
+    @GetMapping("/{tripId}/places")
+    fun planPlaces(
+        request: HttpServletRequest,
+        @PathVariable tripId: UUID,
+        @RequestParam(defaultValue = "en") language: String,
+    ): ResponseEntity<TravelDayPlacesResponse> =
+        ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(
+            travelPlacesService.planPlaces(request.resolveMemberId(), tripId, language),
+        )
+
     @ExceptionHandler(IllegalArgumentException::class, HttpMessageNotReadableException::class)
     fun invalidRequest(): ResponseEntity<TravelPlanErrorResponse> =
         ResponseEntity.badRequest().cacheControl(CacheControl.noStore()).body(TravelPlanErrorResponse("INVALID_TRAVEL_PLAN_REQUEST"))

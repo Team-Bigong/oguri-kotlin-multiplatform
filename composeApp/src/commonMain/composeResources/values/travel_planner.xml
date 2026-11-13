@@ -161,4 +161,7 @@
     <string name="travel_visit_day">Date</string>
     <string name="travel_visit_note_shared">Everyone in this trip can read this note.</string>
     <string name="travel_visit_time_order">This time differs from the visit order. Applying it keeps the current order.</string>
+    <string name="travel_overview">All dates</string>
+    <string name="travel_overview_legend">Pin numbers indicate trip days; – means no date. Select a visit to open its day.</string>
+    <string name="travel_choose_day">Choose a date to add a place</string>
 </resources>

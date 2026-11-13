@@ -23,6 +23,18 @@ class TravelPlanCollaborationTest {
     private val details = TravelVisitDetails("Museum", "Address", null, "Original")
 
     @Test
+    fun `전체 날짜 장소 조회는 미배정과 재방문을 포함하되 외부 조회값은 중복하지 않는다`() {
+        val plan = plan()
+        plan.addVisit(1, details.copy(name = null, location = null, googlePlaceId = "same"))
+        plan.addVisit(2, details.copy(name = null, location = null, googlePlaceId = "same"))
+        plan.addVisit(0, details.copy(name = null, location = null, googlePlaceId = "undated"))
+        plan.addVisit(3, details)
+        assertEquals(setOf("same", "undated"), plan.googlePlaceIds().toSet())
+        assertEquals(2, plan.googlePlaceIds().size)
+        assertEquals(4, plan.orderedVisits().size)
+    }
+
+    @Test
     fun `같은 방문의 독립 필드 수정은 서로 덮어쓰지 않는다`() {
         val plan = plan()
         plan.addVisit(1, details)

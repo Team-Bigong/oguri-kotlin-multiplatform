@@ -67,8 +67,19 @@ class TravelPlacesService(
         tripId: UUID,
         dayNumber: Int,
         language: String,
+    ): TravelDayPlacesResponse = details(memberId, plans.placeIdsForDay(memberId, tripId, dayNumber), language)
+
+    fun planPlaces(
+        memberId: String,
+        tripId: UUID,
+        language: String,
+    ): TravelDayPlacesResponse = details(memberId, plans.placeIdsForPlan(memberId, tripId), language)
+
+    private fun details(
+        memberId: String,
+        placeIds: List<String>,
+        language: String,
     ): TravelDayPlacesResponse {
-        val placeIds = plans.placeIdsForDay(memberId, tripId, dayNumber)
         if (placeIds.isEmpty()) return TravelDayPlacesResponse(emptyList(), false)
         reserve(memberId, placeIds.size)
         val locale = supportedLanguage(language)
@@ -76,7 +87,7 @@ class TravelPlacesService(
             placeIds
                 .map { google.details(it, locale).handle { place, error -> place to (error != null) } }
                 .map { it.join() }
-        return TravelDayPlacesResponse(results.mapNotNull { it.first }, results.any { it.second })
+        return TravelDayPlacesResponse(results.mapNotNull { it.first }, results.any { it.first == null || it.second })
     }
 
     @Synchronized

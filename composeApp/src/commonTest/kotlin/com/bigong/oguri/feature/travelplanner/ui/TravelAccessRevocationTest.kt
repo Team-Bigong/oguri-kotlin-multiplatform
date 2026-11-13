@@ -91,6 +91,113 @@ class TravelAccessRevocationTest {
             assertNull(recovery.confirmed)
             assertEquals(TravelPlanFailure.UNAVAILABLE, viewModel.state.value.failure)
         }
+
+    @Test
+    fun loadedOverviewUsesSeparatePlacesAndDoesNotChangeTheSelectedDay() =
+        runTest {
+            val withPlace = plan.copy(visits = listOf(TravelVisit("visit", 2, TravelVisitDetails(null, null, null, null, "place"), 1)))
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(withPlace), AccessRecovery(), OverviewPlaces())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            val selectedDay = viewModel.state.value.selectedDay
+            viewModel.loadOverviewPlaces("plan", "ko")
+            val overview = requireNotNull(viewModel.state.value.overview)
+            assertEquals("Museum", overview.places["place"]?.name)
+            assertFalse(overview.loading)
+            assertFalse(overview.incomplete)
+            assertTrue(
+                viewModel.state.value.dayPlaces
+                    .isEmpty(),
+            )
+            assertEquals(selectedDay, viewModel.state.value.selectedDay)
+        }
+
+    @Test
+    fun lateOverviewResponseCannotRestoreDataAfterAccessIsRevoked() =
+        runTest {
+            val barrier = CompletableDeferred<Unit>()
+            val recovery = AccessRecovery()
+            val withPlace = plan.copy(visits = listOf(TravelVisit("visit", 2, TravelVisitDetails(null, null, null, null, "place"), 1)))
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(withPlace), recovery, OverviewPlaces(barrier))
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            launch { viewModel.loadOverviewPlaces("plan", "ko") }
+            runCurrent()
+            viewModel.forgetUnavailablePlan("plan")
+            barrier.complete(Unit)
+            advanceUntilIdle()
+            assertNull(viewModel.state.value.plan)
+            assertNull(viewModel.state.value.overview)
+            assertTrue(recovery.forgotten)
+        }
+
+    @Test
+    fun overviewAccessDenialErasesBothOverviewAndConfirmedPlan() =
+        runTest {
+            val recovery = AccessRecovery()
+            val withPlace = plan.copy(visits = listOf(TravelVisit("visit", 2, TravelVisitDetails(null, null, null, null, "place"), 1)))
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(withPlace), recovery, DeniedPlaces())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.loadOverviewPlaces("plan", "ko")
+            assertNull(viewModel.state.value.plan)
+            assertNull(viewModel.state.value.overview)
+            assertTrue(recovery.forgotten)
+        }
+
+    @Test
+    fun lateOverviewResponseCannotReopenAClosedSheet() =
+        runTest {
+            val barrier = CompletableDeferred<Unit>()
+            val places = OverviewPlaces(barrier)
+            val withPlace = plan.copy(visits = listOf(TravelVisit("visit", 2, TravelVisitDetails(null, null, null, null, "place"), 1)))
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(withPlace), AccessRecovery(), places)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            launch { viewModel.loadOverviewPlaces("plan", "ko") }
+            runCurrent()
+            assertNotNull(viewModel.state.value.overview)
+            viewModel.closeOverview()
+            barrier.complete(Unit)
+            advanceUntilIdle()
+            assertNull(viewModel.state.value.overview)
+            assertEquals(withPlace, viewModel.state.value.plan)
+        }
+
+    @Test
+    fun overviewSelectionReturnsToTheActualDayWithoutOpeningTheEditor() =
+        runTest {
+            val visits =
+                listOf(
+                    TravelVisit("second-day", 2, TravelVisitDetails("Museum", null, null, null), 1),
+                    TravelVisit("undated", 0, TravelVisitDetails("Park", null, null, null), 1),
+                )
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan.copy(visits = visits)), AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.selectOverviewVisit("second-day")
+            assertEquals(2, viewModel.state.value.selectedDay)
+            assertEquals("second-day", viewModel.state.value.selectedVisitId)
+            assertEquals("second-day", viewModel.state.value.mapFocusedVisitId)
+            assertNull(viewModel.state.value.visitDraft)
+            viewModel.selectOverviewVisit("undated")
+            assertEquals(0, viewModel.state.value.selectedDay)
+            assertEquals("undated", viewModel.state.value.selectedVisitId)
+            assertNull(viewModel.state.value.visitDraft)
+        }
+
+    @Test
+    fun overviewProviderFailureKeepsThePlanAndMakesTheOverviewRetryable() =
+        runTest {
+            val withPlace = plan.copy(visits = listOf(TravelVisit("visit", 2, TravelVisitDetails(null, null, null, null, "place"), 1)))
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(withPlace), AccessRecovery(), OverviewPlaces(fail = true))
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.loadOverviewPlaces("plan", "ko")
+            assertEquals(withPlace, viewModel.state.value.plan)
+            assertTrue(requireNotNull(viewModel.state.value.overview).incomplete)
+            assertFalse(requireNotNull(viewModel.state.value.overview).loading)
+        }
 }
 
 private class AccessPlans(
@@ -169,6 +276,11 @@ private class AccessRecovery : TravelRecoveryRepository {
 }
 
 private class DeniedPlaces : TravelPlaceRepository {
+    override suspend fun forPlan(
+        planId: String,
+        language: String,
+    ): TravelDayPlaces = throw TravelPlanException(TravelPlanFailure.UNAVAILABLE)
+
     override suspend fun forDay(
         planId: String,
         dayNumber: Int,
@@ -187,4 +299,18 @@ private class DeniedPlaces : TravelPlaceRepository {
         query: String,
         language: String,
     ): List<TravelPlace> = error("Unused")
+}
+
+private class OverviewPlaces(
+    private val barrier: CompletableDeferred<Unit>? = null,
+    private val fail: Boolean = false,
+) : TravelPlaceRepository by DeniedPlaces() {
+    override suspend fun forPlan(
+        planId: String,
+        language: String,
+    ): TravelDayPlaces {
+        withContext(NonCancellable) { barrier?.await() }
+        if (fail) throw TravelPlanException(TravelPlanFailure.CONNECTION)
+        return TravelDayPlaces(mapOf("place" to TravelPlace("place", "Museum", null, TravelCoordinates(37.5, 127.0), emptyList())), false)
+    }
 }

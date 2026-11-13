@@ -142,6 +142,15 @@ class TravelPlanService(
     }
 
     @Transactional
+    fun placeIdsForPlan(
+        memberId: String,
+        planId: UUID,
+    ): List<String> {
+        requireMember(memberId)
+        return accessiblePlan(memberId, planId).googlePlaceIds()
+    }
+
+    @Transactional
     fun execute(
         memberId: String,
         planId: UUID,

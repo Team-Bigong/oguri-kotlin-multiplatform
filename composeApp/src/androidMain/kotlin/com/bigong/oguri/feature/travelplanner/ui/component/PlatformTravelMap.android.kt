@@ -181,7 +181,7 @@ private fun TravelMapMarker.bitmap(density: Float): Bitmap {
     val middle = size / 2f
     paint.color = android.graphics.Color.WHITE
     canvas.drawCircle(middle, middle, middle, paint)
-    paint.color = if (selected) MAP_SELECTED_COLOR else MAP_LINE_COLOR
+    paint.color = colorArgb
     canvas.drawCircle(middle, middle, middle * 0.86f, paint)
     label?.let {
         paint.color = android.graphics.Color.WHITE
@@ -193,4 +193,3 @@ private fun TravelMapMarker.bitmap(density: Float): Bitmap {
 }
 
 private const val MAP_LINE_COLOR: Int = 0xff007d69.toInt()
-private const val MAP_SELECTED_COLOR: Int = 0xff244da5.toInt()

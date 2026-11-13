@@ -22,6 +22,7 @@ class TravelAuthenticationTest {
                 "GET" to "/api/v1/trips",
                 "POST" to "/api/v1/trips",
                 "GET" to "/api/v1/trips/trip",
+                "GET" to "/api/v1/trips/trip/places",
                 "POST" to "/api/v1/trips/trip/commands",
                 "POST" to "/api/v1/travel-places/cities/search",
                 "POST" to "/api/v1/travel-places/cities/time-zone",

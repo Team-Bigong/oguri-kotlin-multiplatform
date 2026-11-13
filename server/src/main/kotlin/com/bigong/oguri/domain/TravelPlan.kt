@@ -157,6 +157,8 @@ class TravelPlan(
             .toList()
     }
 
+    fun googlePlaceIds(): List<String> = visits.mapNotNull(TravelVisit::googlePlaceId).distinct()
+
     fun dayOrderRevisions(): Map<Int, Long> = dayRevisions.toMap()
 
     fun hasApplied(

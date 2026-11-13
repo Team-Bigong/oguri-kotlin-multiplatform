@@ -109,6 +109,18 @@ internal class KtorTravelPlanRemoteDataSource(
                 }.body()
         }
 
+    suspend fun planPlaces(
+        planId: String,
+        language: String,
+    ): TravelDayPlacesResponse =
+        authRequestExecutor.executeForSession(sessionVersion) { token ->
+            httpClient
+                .get("$BASE_URL$TRIPS_PATH/$planId/places") {
+                    attributes.put(RequestAccessToken, token)
+                    parameter("language", language)
+                }.body()
+        }
+
     suspend fun dayPlaces(
         planId: String,
         dayNumber: Int,

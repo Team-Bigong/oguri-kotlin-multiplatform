@@ -57,7 +57,7 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         }
         for pin in scene.markers {
             let marker = GMSMarker(position: pin.coordinates.coordinate)
-            marker.icon = makeIcon(label: pin.label, selected: pin.selected)
+            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb)
             marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
             marker.zIndex = pin.selected ? 1 : 0
             marker.userData = pin.id
@@ -119,12 +119,18 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         surface.removeFromSuperview()
     }
 
-    private func makeIcon(label: String?, selected: Bool) -> UIImage {
+    private func makeIcon(label: String?, colorArgb: Int32) -> UIImage {
         let size = CGSize(width: 34, height: 34)
         return UIGraphicsImageRenderer(size: size).image { _ in
             UIColor.white.setFill()
             UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
-            (selected ? UIColor.systemBlue : .travelRoute).setFill()
+            let color = UInt32(bitPattern: colorArgb)
+            UIColor(
+                red: CGFloat((color >> 16) & 0xff) / 255,
+                green: CGFloat((color >> 8) & 0xff) / 255,
+                blue: CGFloat(color & 0xff) / 255,
+                alpha: 1
+            ).setFill()
             UIBezierPath(ovalIn: CGRect(x: 2, y: 2, width: 30, height: 30)).fill()
             guard let label else { return }
             let attributes: [NSAttributedString.Key: Any] = [

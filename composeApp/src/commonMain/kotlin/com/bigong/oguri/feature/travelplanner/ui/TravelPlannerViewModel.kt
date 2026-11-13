@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.model.TravelCitySuggestion
+import com.bigong.oguri.domain.model.TravelDayPlaces
 import com.bigong.oguri.domain.model.TravelPendingSave
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
@@ -17,6 +18,7 @@ import com.bigong.oguri.domain.repository.TravelPlanRepository
 import com.bigong.oguri.domain.repository.TravelRecoveryRepository
 import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCitySearchState
+import com.bigong.oguri.feature.travelplanner.ui.model.TravelOverviewState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlaceSearchState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
@@ -394,6 +396,73 @@ class TravelPlannerViewModel(
             } else {
                 mutableState.update { it.copy(isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
             }
+        }
+    }
+
+    internal suspend fun loadOverviewPlaces(
+        planId: String,
+        language: String,
+    ) {
+        val plan = state.value.plan?.takeIf { it.summary.id == planId } ?: return
+        val generation = mutationGeneration
+        val placeIds = plan.visits.mapNotNull { it.details.googlePlaceId }.toSet()
+        mutableState.update {
+            it.copy(overview = TravelOverviewState((it.overview?.places.orEmpty() + it.dayPlaces).filterKeys { id -> id in placeIds }))
+        }
+        try {
+            val result =
+                if (placeIds.isEmpty()) {
+                    TravelDayPlaces(emptyMap(), false)
+                } else {
+                    placeRepository.forPlan(planId, language)
+                }
+            currentCoroutineContext().ensureActive()
+            mutableState.update {
+                if (generation != mutationGeneration ||
+                    it.overview == null ||
+                    it.plan?.summary?.id != planId
+                ) {
+                    it
+                } else {
+                    it.copy(overview = TravelOverviewState(result.places, loading = false, incomplete = result.incomplete))
+                }
+            }
+        } catch (exception: TravelPlanException) {
+            currentCoroutineContext().ensureActive()
+            if (generation != mutationGeneration ||
+                state.value.overview == null ||
+                state.value.plan
+                    ?.summary
+                    ?.id != planId
+            ) {
+                return
+            }
+            when (exception.failure) {
+                TravelPlanFailure.UNAVAILABLE -> forgetUnavailablePlan(planId)
+                TravelPlanFailure.SIGN_IN_REQUIRED -> applyFailure(exception.failure)
+                else -> mutableState.update { it.copy(overview = it.overview?.copy(loading = false, incomplete = true)) }
+            }
+        }
+    }
+
+    internal fun closeOverview() {
+        mutableState.update { it.copy(overview = null) }
+    }
+
+    internal fun selectOverviewVisit(visitId: String) {
+        val visit =
+            state.value.plan
+                ?.visits
+                ?.firstOrNull { it.id == visitId } ?: return
+        selectDay(visit.dayNumber)
+        mutableState.update {
+            it.copy(
+                selectedVisitId = visit.id,
+                mapFocusedVisitId = visit.id,
+                listFocusRequest = it.listFocusRequest + 1,
+                viewportRequest = it.viewportRequest + 1,
+                overview = null,
+            )
         }
     }
 

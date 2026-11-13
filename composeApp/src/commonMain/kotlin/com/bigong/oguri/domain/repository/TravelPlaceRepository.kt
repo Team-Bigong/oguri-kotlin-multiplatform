@@ -18,6 +18,11 @@ interface TravelPlaceRepository {
         language: String,
     ): List<TravelPlace>
 
+    suspend fun forPlan(
+        planId: String,
+        language: String,
+    ): TravelDayPlaces
+
     suspend fun forDay(
         planId: String,
         dayNumber: Int,

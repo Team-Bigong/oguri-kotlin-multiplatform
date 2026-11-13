@@ -35,6 +35,7 @@ internal data class TravelPlannerUiState(
     val createdPlanId: String? = null,
     val visitDraft: TravelVisitDraft? = null,
     val placeSearch: TravelPlaceSearchState? = null,
+    val overview: TravelOverviewState? = null,
     val dayPlaces: Map<String, TravelPlace> = emptyMap(),
     val isLoadingDayPlaces: Boolean = false,
     val dayPlacesIncomplete: Boolean = false,
@@ -214,3 +215,9 @@ internal fun TravelDraft.toVisitDraft(): TravelVisitDraft =
     )
 
 internal enum class TravelVisitField { DAY, NAME, LOCATION, TIME, NOTE }
+
+internal data class TravelOverviewState(
+    val places: Map<String, TravelPlace> = emptyMap(),
+    val loading: Boolean = true,
+    val incomplete: Boolean = false,
+)

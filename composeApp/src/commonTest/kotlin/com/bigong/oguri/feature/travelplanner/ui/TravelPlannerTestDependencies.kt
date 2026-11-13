@@ -25,6 +25,11 @@ internal fun createTravelPlannerTestViewModel(
                 language: String,
             ): List<TravelPlace> = error("Unused")
 
+            override suspend fun forPlan(
+                planId: String,
+                language: String,
+            ): TravelDayPlaces = error("Unused")
+
             override suspend fun forDay(
                 planId: String,
                 dayNumber: Int,

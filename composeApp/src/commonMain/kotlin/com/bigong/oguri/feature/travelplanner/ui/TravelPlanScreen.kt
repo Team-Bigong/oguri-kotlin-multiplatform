@@ -81,6 +81,7 @@ import oguri.composeapp.generated.resources.travel_move_up
 import oguri.composeapp.generated.resources.travel_move_visit
 import oguri.composeapp.generated.resources.travel_offline_snapshot
 import oguri.composeapp.generated.resources.travel_overlapping_visits
+import oguri.composeapp.generated.resources.travel_overview
 import oguri.composeapp.generated.resources.travel_place_details_unavailable
 import oguri.composeapp.generated.resources.travel_reload
 import oguri.composeapp.generated.resources.travel_sign_in
@@ -101,6 +102,7 @@ internal fun TravelPlanScreen(
     onRetrySave: () -> Unit,
     onUndoVisit: () -> Unit,
     onSelectDay: (Int) -> Unit,
+    onOverview: () -> Unit,
     onOpenVisit: (TravelVisit?) -> Unit,
     onMoveVisit: (TravelVisit, Int) -> Unit,
     onReorderVisits: (List<String>) -> Unit,
@@ -160,7 +162,7 @@ internal fun TravelPlanScreen(
         }
         val dayListState = rememberLazyListState()
         LaunchedEffect(state.selectedDay) {
-            val index = if (state.selectedDay == TravelPlan.UNASSIGNED_DAY) dates.dayCount else state.selectedDay - 1
+            val index = if (state.selectedDay == TravelPlan.UNASSIGNED_DAY) dates.dayCount + 1 else state.selectedDay
             if (dayListState.layoutInfo.visibleItemsInfo.none { it.index == index }) dayListState.scrollToItem(index)
         }
 
@@ -170,6 +172,11 @@ internal fun TravelPlanScreen(
             contentPadding = PaddingValues(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            item {
+                TextButton(onClick = onOverview, enabled = !state.isSaving && !state.canRetrySave) {
+                    Text(stringResource(Res.string.travel_overview))
+                }
+            }
             items(dates.dayCount) { index ->
                 val dayNumber = index + 1
                 FilterChip(

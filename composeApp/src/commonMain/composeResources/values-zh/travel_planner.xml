@@ -161,4 +161,7 @@
     <string name="travel_visit_day">日期</string>
     <string name="travel_visit_note_shared">此备注对所有旅行成员可见。</string>
     <string name="travel_visit_time_order">此时间与到访顺序不一致。应用后仍保留当前顺序。</string>
+    <string name="travel_overview">查看所有日期</string>
+    <string name="travel_overview_legend">图钉数字表示旅行天数，–表示未定日期。选择到访地点即可打开对应日期。</string>
+    <string name="travel_choose_day">选择添加地点的日期</string>
 </resources>

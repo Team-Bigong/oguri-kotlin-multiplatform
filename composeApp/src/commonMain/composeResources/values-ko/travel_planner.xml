@@ -161,4 +161,7 @@
     <string name="travel_visit_day">날짜</string>
     <string name="travel_visit_note_shared">이 메모는 여행 멤버 모두에게 보여요.</string>
     <string name="travel_visit_time_order">방문 순서와 시각이 맞지 않아요. 적용해도 현재 순서는 유지돼요.</string>
+    <string name="travel_overview">전체 날짜 보기</string>
+    <string name="travel_overview_legend">핀 숫자는 여행 일차, –는 날짜 없음을 뜻해요. 방문을 선택하면 해당 날짜로 이동해요.</string>
+    <string name="travel_choose_day">장소를 추가할 날짜 선택</string>
 </resources>

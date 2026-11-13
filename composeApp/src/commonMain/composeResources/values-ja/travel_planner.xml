@@ -161,4 +161,7 @@
     <string name="travel_visit_day">日付</string>
     <string name="travel_visit_note_shared">このメモは旅行のメンバー全員に共有されます。</string>
     <string name="travel_visit_time_order">訪問順と時刻が一致していません。適用しても現在の順序は変わりません。</string>
+    <string name="travel_overview">すべての日程</string>
+    <string name="travel_overview_legend">ピンの数字は旅行の日数、–は日付未定です。訪問先を選ぶとその日程に移動します。</string>
+    <string name="travel_choose_day">場所を追加する日付を選択</string>
 </resources>

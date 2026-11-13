@@ -48,6 +48,30 @@ class TravelMapSceneTest {
         assertTrue(scene.lines.isEmpty())
     }
 
+    @Test
+    fun overviewLabelsDaysKeepsRepeatedVisitsAndNeverConnectsDates() {
+        val visits =
+            listOf(
+                visit("first", station),
+                visit("repeat", station).copy(dayNumber = 2),
+                visit("undated", park).copy(dayNumber = 0),
+                visit("manual", null).copy(dayNumber = 3),
+            )
+        val scene = travelOverviewScene(visits, places, station.coordinates)
+        assertEquals(listOf("first", "repeat", "undated"), scene.markers.map { it.id })
+        assertEquals(listOf("1", "2", "–"), scene.markers.map { it.label })
+        assertEquals(listOf(1, 2, 0), scene.markers.map { it.dayNumber })
+        assertEquals(
+            3,
+            scene.markers
+                .map { it.colorArgb }
+                .distinct()
+                .size,
+        )
+        assertEquals(station.coordinates, scene.cityCenter)
+        assertTrue(scene.lines.isEmpty())
+    }
+
     private fun place(
         id: String,
         latitude: Double,
