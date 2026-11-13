@@ -16,6 +16,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -84,6 +85,7 @@ internal fun CreateTravelPlanScreen(
     onBack: () -> Unit,
     onCreate: (TravelPlanDetails) -> Unit,
     onRetrySave: () -> Unit,
+    onRetryRecovery: () -> Unit,
     onSignIn: () -> Unit,
     onOpenExisting: (String) -> Unit,
     onRetryDestination: () -> Unit,
@@ -102,6 +104,22 @@ internal fun CreateTravelPlanScreen(
     var isTimeZoneMenuOpen by remember { mutableStateOf(false) }
     var isDatePickerForStart by rememberSaveable { mutableStateOf<Boolean?>(null) }
 
+    LaunchedEffect(state.recoveredCreation) {
+        state.recoveredCreation?.let { details ->
+            cityEdited = true
+            cityInput = details.city
+            timeZoneOverride = details.timeZone.id
+            title = details.title
+            startMillis =
+                details.dates.start
+                    .atStartOfDayIn(TimeZone.UTC)
+                    .toEpochMilliseconds()
+            endMillis =
+                details.dates.endInclusive
+                    .atStartOfDayIn(TimeZone.UTC)
+                    .toEpochMilliseconds()
+        }
+    }
     LaunchedEffect(state.creationCity) {
         val recommendedCity = state.creationCity ?: return@LaunchedEffect
         if (!cityEdited) cityInput = recommendedCity
@@ -129,7 +147,7 @@ internal fun CreateTravelPlanScreen(
             null
         }
     val hasInvalidDates = startDate != null && endDate != null && dates == null
-    val canEdit = !state.isSaving && !state.canRetrySave
+    val canEdit = state.creationReady && !state.isSaving && !state.canRetrySave
     val matchingPlan =
         state.plans?.firstOrNull {
             it.details.city.equals(cityName, ignoreCase = true) && it.details.dates == dates
@@ -146,6 +164,7 @@ internal fun CreateTravelPlanScreen(
             modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (!state.creationReady && !state.creationRecoveryFailed) LinearProgressIndicator(Modifier.fillMaxWidth())
             Column {
                 OutlinedTextField(
                     value = cityInput,
@@ -183,8 +202,9 @@ internal fun CreateTravelPlanScreen(
                 Text(stringResource(Res.string.travel_city_unavailable))
                 TextButton(onClick = onRetryDestination) { Text(stringResource(Res.string.common_retry_button)) }
             }
-            val recommendedStart = source?.startDate
-            val recommendedEnd = source?.endDate
+            val creationSource = state.recoveredCreation?.source ?: source
+            val recommendedStart = creationSource?.startDate
+            val recommendedEnd = creationSource?.endDate
             if (recommendedStart != null && recommendedEnd != null) {
                 Text(
                     stringResource(Res.string.travel_recommended_dates, recommendedStart.toString(), recommendedEnd.toString()),
@@ -218,7 +238,15 @@ internal fun CreateTravelPlanScreen(
                 )
             }
             state.failure?.takeUnless { it == TravelPlanFailure.SIGN_IN_REQUIRED }?.let {
-                TravelInlineFailure(it, onRetry = onRetrySave.takeIf { state.canRetrySave })
+                TravelInlineFailure(
+                    it,
+                    onRetry =
+                        when {
+                            state.creationRecoveryFailed -> onRetryRecovery
+                            state.canRetrySave -> onRetrySave
+                            else -> null
+                        },
+                )
             }
             if (matchingPlan != null) {
                 Text(stringResource(Res.string.travel_matching_plan, matchingPlan.details.title))
@@ -230,7 +258,7 @@ internal fun CreateTravelPlanScreen(
                 enabled = canEdit && dates != null && cityName.isNotEmpty() && cityTimeZone != null,
                 onClick = {
                     if (dates != null && cityTimeZone != null) {
-                        onCreate(TravelPlanDetails(cityName, cityTimeZone, title.trim().ifEmpty { defaultTitle }, dates, source))
+                        onCreate(TravelPlanDetails(cityName, cityTimeZone, title.trim().ifEmpty { defaultTitle }, dates, creationSource))
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),

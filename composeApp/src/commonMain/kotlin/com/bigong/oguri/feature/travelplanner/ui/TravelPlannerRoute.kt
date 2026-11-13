@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlaceSearchSheet
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.isActive
@@ -46,6 +47,7 @@ internal fun CreateTravelPlanRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     var destinationRetry by remember { mutableIntStateOf(0) }
+    var creationRecoveryRetry by remember { mutableIntStateOf(0) }
     val source =
         remember(destinationId, recommendedStartDate, recommendedEndDate) {
             val start = recommendedStartDate?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
@@ -61,13 +63,12 @@ internal fun CreateTravelPlanRoute(
         if (signedIn && destinationId != null) viewModel.loadCreationCity(destinationId)
     }
     LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.loadCreationMatches() }
-    LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.recoverCreation() }
+    LaunchedEffect(viewModel, signedIn, creationRecoveryRetry) { if (signedIn) viewModel.recoverCreation() }
     LaunchedEffect(state.createdPlanId) {
         state.createdPlanId?.let(onCreated)
     }
     if (!signedIn) {
-        com.bigong.oguri.feature.travelplanner.ui.component
-            .TravelSignInRequired(onSignIn, onBack)
+        TravelSignInRequired(onSignIn, onBack)
         return
     }
     CreateTravelPlanScreen(
@@ -75,10 +76,11 @@ internal fun CreateTravelPlanRoute(
         source = source,
         signedIn = signedIn,
         onBack = onBack,
-        onCreate = { details -> if (signedIn) viewModel.create(details) else onSignIn() },
+        onCreate = viewModel::create,
         onOpenExisting = onOpenExisting,
         onSignIn = onSignIn,
         onRetrySave = viewModel::retrySave,
+        onRetryRecovery = { creationRecoveryRetry++ },
         onRetryDestination = { destinationRetry++ },
         onOpenCitySearch = viewModel::openCitySearch,
         onCloseCitySearch = viewModel::closeCitySearch,

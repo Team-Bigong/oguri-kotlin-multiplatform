@@ -5,6 +5,7 @@ import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelDraft
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
+import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.domain.model.TravelVisit
@@ -23,6 +24,9 @@ internal data class TravelPlannerUiState(
     val needsLatestPlan: Boolean = false,
     val plans: List<TravelPlanSummary>? = null,
     val resumePlan: TravelPlanSummary? = null,
+    val creationReady: Boolean = false,
+    val creationRecoveryFailed: Boolean = false,
+    val recoveredCreation: TravelPlanDetails? = null,
     val creationCity: String? = null,
     val creationCityFailed: Boolean = false,
     val citySearch: TravelCitySearchState? = null,

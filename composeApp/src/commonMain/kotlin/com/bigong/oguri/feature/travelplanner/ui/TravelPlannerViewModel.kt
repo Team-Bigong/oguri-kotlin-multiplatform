@@ -163,10 +163,24 @@ class TravelPlannerViewModel(
     }
 
     internal suspend fun recoverCreation() {
-        val stored = recoverSafely { recovery.load(null) } ?: return
-        if (pendingSave == null && state.value.createdPlanId == null && stored.pending is TravelPendingSave.Create) {
-            pendingSave = stored.pending
-            mutableState.update { it.copy(canRetrySave = true, failure = TravelPlanFailure.CONNECTION) }
+        if (state.value.creationReady) return
+        mutableState.update { it.copy(creationRecoveryFailed = false, failure = null) }
+        try {
+            val stored = recovery.load(null)
+            val pending = stored.pending as? TravelPendingSave.Create
+            if (pendingSave == null && state.value.createdPlanId == null && pending != null) {
+                pendingSave = pending
+                pendingPlanId = null
+                mutableState.update {
+                    it.copy(recoveredCreation = pending.details, canRetrySave = true, failure = TravelPlanFailure.CONNECTION)
+                }
+            }
+            mutableState.update { it.copy(creationReady = true) }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            val failure = (exception as? TravelPlanException)?.failure ?: TravelPlanFailure.CONNECTION
+            mutableState.update { it.copy(creationRecoveryFailed = true, failure = failure) }
         }
     }
 
@@ -453,7 +467,7 @@ class TravelPlannerViewModel(
     }
 
     internal fun create(details: TravelPlanDetails) {
-        if (pendingSave != null || state.value.createdPlanId != null) return
+        if (!state.value.creationReady || pendingSave != null || state.value.createdPlanId != null) return
         submit(null, TravelPendingSave.Create(newRequestId(), details))
     }
 

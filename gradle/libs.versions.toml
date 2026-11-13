@@ -29,6 +29,7 @@ jetbrains-navigation = "2.9.1"
 metro = "0.9.4"
 coil = "3.3.0"
 kotlinx-datetime = "0.7.1"
+kotlinx-coroutines = "1.10.2"
 jjwt = "0.12.6"
 googleApiClient = "2.7.0"
 googleOAuthClient = "1.36.0"
@@ -47,6 +48,7 @@ firebase-messaging = "24.1.2"
 googleMapsAndroid = "20.0.0"
 
 [libraries]
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "googleMapsAndroid" }
 analytics-android = { module = "com.amplitude:analytics-android", version.ref = "analyticsAndroid" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
