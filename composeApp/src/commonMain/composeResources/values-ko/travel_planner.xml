@@ -159,4 +159,6 @@
     <string name="travel_latest_saved_values">현재 저장된 내용 (내 입력은 아래에 유지돼요)</string>
     <string name="travel_value_not_set">설정 안 함</string>
     <string name="travel_visit_day">날짜</string>
+    <string name="travel_visit_note_shared">이 메모는 여행 멤버 모두에게 보여요.</string>
+    <string name="travel_visit_time_order">방문 순서와 시각이 맞지 않아요. 적용해도 현재 순서는 유지돼요.</string>
 </resources>

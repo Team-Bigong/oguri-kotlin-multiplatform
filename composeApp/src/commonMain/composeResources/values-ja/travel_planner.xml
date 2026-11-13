@@ -159,4 +159,6 @@
     <string name="travel_latest_saved_values">現在保存されている内容（入力内容は下に保持されます）</string>
     <string name="travel_value_not_set">未設定</string>
     <string name="travel_visit_day">日付</string>
+    <string name="travel_visit_note_shared">このメモは旅行のメンバー全員に共有されます。</string>
+    <string name="travel_visit_time_order">訪問順と時刻が一致していません。適用しても現在の順序は変わりません。</string>
 </resources>

@@ -56,6 +56,7 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
+import com.bigong.oguri.feature.travelplanner.ui.model.hasTimeOrderMismatch
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
@@ -398,6 +399,7 @@ internal fun TravelPlanScreen(
                 failure = failure,
                 attributions = state.dayPlaces[draft.visit?.details?.googlePlaceId]?.attributions.orEmpty(),
                 canRetrySave = state.canRetrySave,
+                timeOrderMismatch = draft.hasTimeOrderMismatch(plan.visits),
                 onDraftChange = onDraftChange,
                 onApply = onApplyVisit,
                 onRemove = onRemoveVisit,

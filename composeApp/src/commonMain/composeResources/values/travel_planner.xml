@@ -159,4 +159,6 @@
     <string name="travel_latest_saved_values">Currently saved values (your input is kept below)</string>
     <string name="travel_value_not_set">Not set</string>
     <string name="travel_visit_day">Date</string>
+    <string name="travel_visit_note_shared">Everyone in this trip can read this note.</string>
+    <string name="travel_visit_time_order">This time differs from the visit order. Applying it keeps the current order.</string>
 </resources>

@@ -57,7 +57,9 @@ import oguri.composeapp.generated.resources.travel_reload
 import oguri.composeapp.generated.resources.travel_visit_location
 import oguri.composeapp.generated.resources.travel_visit_name
 import oguri.composeapp.generated.resources.travel_visit_note
+import oguri.composeapp.generated.resources.travel_visit_note_shared
 import oguri.composeapp.generated.resources.travel_visit_time
+import oguri.composeapp.generated.resources.travel_visit_time_order
 import org.jetbrains.compose.resources.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,6 +72,7 @@ internal fun TravelVisitEditor(
     failure: TravelPlanFailure?,
     attributions: List<TravelPlaceAttribution>,
     canRetrySave: Boolean,
+    timeOrderMismatch: Boolean,
     onDraftChange: (TravelVisitDraft?) -> Unit,
     onApply: () -> Unit,
     onRemove: () -> Unit,
@@ -152,6 +155,8 @@ internal fun TravelVisitEditor(
                 supportingText =
                     if (draft.hasInvalidTime) {
                         { Text(stringResource(Res.string.travel_invalid_time)) }
+                    } else if (timeOrderMismatch) {
+                        { Text(stringResource(Res.string.travel_visit_time_order)) }
                     } else {
                         null
                     },
@@ -174,6 +179,7 @@ internal fun TravelVisitEditor(
                 value = draft.note,
                 onValueChange = { if (it.length <= TravelVisitDetails.MAX_NOTE_LENGTH) onDraftChange(draft.copy(note = it)) },
                 label = { Text(stringResource(Res.string.travel_visit_note)) },
+                supportingText = { Text(stringResource(Res.string.travel_visit_note_shared)) },
                 maxLines = 4,
                 enabled = canEdit,
                 modifier = Modifier.fillMaxWidth(),
