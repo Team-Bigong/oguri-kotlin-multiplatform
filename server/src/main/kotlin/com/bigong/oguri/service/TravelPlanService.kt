@@ -304,6 +304,7 @@ class TravelPlanService(
         TravelPlanResponse(
             summary = toSummary(),
             lastViewedDay = lastViewedDay,
+            lastModifiedAt = collaboration.lastModifiedAt(id),
             revision = revision,
             structureRevision = structureRevision,
             dayOrderRevisions = dayOrderRevisions(),

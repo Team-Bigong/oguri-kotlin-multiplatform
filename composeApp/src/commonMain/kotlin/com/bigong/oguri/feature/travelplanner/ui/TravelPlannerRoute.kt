@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.intl.Locale
@@ -11,8 +12,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlaceSearchSheet
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -92,6 +95,7 @@ internal fun CreateTravelPlanRoute(
 @Composable
 internal fun TravelPlanRoute(
     viewModel: TravelPlannerViewModel,
+    collaborationViewModel: TravelCollaborationViewModel,
     planId: String,
     requestedDay: StateFlow<Int?>,
     onDayConsumed: () -> Unit,
@@ -101,6 +105,11 @@ internal fun TravelPlanRoute(
     onBack: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val changesState by collaborationViewModel.state.collectAsStateWithLifecycle()
+    var showChanges by remember(planId) { mutableStateOf(false) }
+    LaunchedEffect(viewModel, planId, changesState.failure) {
+        if (changesState.failure == TravelPlanFailure.UNAVAILABLE) viewModel.forgetUnavailablePlan(planId)
+    }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val language = Locale.current.toLanguageTag()
     var detailsRetry by remember { mutableIntStateOf(0) }
@@ -163,9 +172,31 @@ internal fun TravelPlanRoute(
                 ?.dates
                 ?.let { onMembers(it.start.toString(), it.endInclusive.toString()) }
         },
+        onRecentChanges = {
+            showChanges = true
+            collaborationViewModel.recentChanges(planId)
+        },
         onSignIn = onSignIn,
         onRetryPlaces = { detailsRetry++ },
     )
+    if (plan != null && showChanges) {
+        val dismissChanges = {
+            if (!changesState.busy) changesState.recentChanges?.let { collaborationViewModel.dismissChanges(planId, it.throughRevision) }
+            showChanges = false
+        }
+        TravelRecentChangesDialog(
+            changes = changesState.recentChanges,
+            dates = plan.summary.details.dates,
+            busy = changesState.busy,
+            failure = changesState.failure,
+            onRetry = { collaborationViewModel.recentChanges(planId) },
+            onDismiss = dismissChanges,
+            onSelectDay = { day ->
+                viewModel.selectDay(day)
+                dismissChanges()
+            },
+        )
+    }
     if (plan != null) {
         TravelPlaceSearchSheet(
             state = state,

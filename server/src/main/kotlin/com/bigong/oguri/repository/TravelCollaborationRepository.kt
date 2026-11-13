@@ -171,6 +171,14 @@ class TravelCollaborationRepository(
         jdbc.sql("DELETE FROM travel_ownership_offers WHERE travel_plan_id = :plan").param("plan", planId).update()
     }
 
+    fun lastModifiedAt(planId: UUID): OffsetDateTime? =
+        jdbc
+            .sql("SELECT occurred_at FROM travel_plan_changes WHERE travel_plan_id = :plan ORDER BY revision DESC LIMIT 1")
+            .param("plan", planId)
+            .query(OffsetDateTime::class.java)
+            .optional()
+            .orElse(null)
+
     fun recentChanges(
         planId: UUID,
         memberId: String,

@@ -304,6 +304,7 @@ class DefaultTravelPlanRepository internal constructor(
             dayOrderRevisions = dayOrderRevisions,
             lastViewedDay = lastViewedDay,
             structureRevision = structureRevision,
+            lastModifiedAt = lastModifiedAt?.let(kotlin.time.Instant::parse),
             visits =
                 visits.map { visit ->
                     TravelVisit(

@@ -147,4 +147,9 @@
     <string name="travel_change_moved_now">현재 %1$s에 있어요.</string>
     <string name="travel_change_open_day">%1$s 열기</string>
     <string name="travel_day_outside_trip">%1$d일차 · 현재 여행 기간 밖</string>
+    <string name="travel_modified_just_now">방금 수정</string>
+    <string name="travel_modified_minutes">최근 수정 %1$d분 전</string>
+    <string name="travel_modified_hours">최근 수정 %1$d시간 전</string>
+    <string name="travel_modified_days">최근 수정 %1$d일 전</string>
+    <string name="travel_changes_trip">여행 전체</string>
 </resources>

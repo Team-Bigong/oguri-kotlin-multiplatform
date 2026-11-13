@@ -147,4 +147,9 @@
     <string name="travel_change_moved_now">现位于%1$s。</string>
     <string name="travel_change_open_day">打开%1$s</string>
     <string name="travel_day_outside_trip">第%1$d天 · 不在当前旅行日期内</string>
+    <string name="travel_modified_just_now">刚刚修改</string>
+    <string name="travel_modified_minutes">%1$d分钟前修改</string>
+    <string name="travel_modified_hours">%1$d小时前修改</string>
+    <string name="travel_modified_days">%1$d天前修改</string>
+    <string name="travel_changes_trip">整个旅行</string>
 </resources>

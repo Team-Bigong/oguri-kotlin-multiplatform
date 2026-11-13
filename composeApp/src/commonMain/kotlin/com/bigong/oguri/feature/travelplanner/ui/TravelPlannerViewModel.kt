@@ -746,7 +746,7 @@ class TravelPlannerViewModel(
             generation == mutationGeneration
         }
 
-    private suspend fun forgetUnavailablePlan(planId: String) {
+    internal suspend fun forgetUnavailablePlan(planId: String) {
         mutationGeneration++
         pendingSave = null
         pendingPlanId = null

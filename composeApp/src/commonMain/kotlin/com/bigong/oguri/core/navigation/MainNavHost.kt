@@ -330,6 +330,10 @@ fun MainNavHost(
                 return@composable
             }
             TravelPlanRoute(
+                collaborationViewModel =
+                    viewModel(
+                        key = "travel-changes-${travelSession.version}",
+                    ) { appGraph.travelCollaborationViewModelProvider() },
                 viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
                 planId = entry.toRoute<RouteModel.TravelPlan>().planId,
                 requestedDay = entry.savedStateHandle.getStateFlow(TRAVEL_DAY_REQUEST, null),

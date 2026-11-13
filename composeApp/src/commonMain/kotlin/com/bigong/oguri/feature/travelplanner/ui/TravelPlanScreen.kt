@@ -49,6 +49,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.GooglePlacesAttributi
 import com.bigong.oguri.feature.travelplanner.ui.component.PlatformTravelMap
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelModifiedButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
@@ -110,6 +111,7 @@ internal fun TravelPlanScreen(
     onFitMap: () -> Unit,
     onFindNextHoliday: () -> Unit,
     onMembers: () -> Unit,
+    onRecentChanges: () -> Unit,
     onSignIn: () -> Unit,
     onRetryPlaces: () -> Unit,
 ) {
@@ -139,6 +141,7 @@ internal fun TravelPlanScreen(
             return@TravelPlannerPage
         }
 
+        TravelModifiedButton(plan, enabled = !state.isSaving && !state.canRetrySave, onClick = onRecentChanges)
         val dates = plan.summary.details.dates
         val savedVisits = plan.visits.filter { it.dayNumber == state.selectedDay }
         var dragOrder by remember(state.selectedDay, plan.revision) { mutableStateOf<List<String>?>(null) }

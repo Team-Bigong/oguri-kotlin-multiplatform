@@ -33,6 +33,7 @@ internal data class TravelPlanResponse(
     val visits: List<TravelVisitResponse>,
     val lastViewedDay: Int? = null,
     val structureRevision: Long = 0,
+    val lastModifiedAt: String? = null,
 )
 
 @Serializable

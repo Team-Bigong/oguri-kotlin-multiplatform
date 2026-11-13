@@ -1,6 +1,7 @@
 package com.bigong.oguri.dto.response
 
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 data class TravelPlanSummaryResponse(
@@ -30,6 +31,7 @@ data class TravelPlanResponse(
     val dayOrderRevisions: Map<Int, Long>,
     val visits: List<TravelVisitResponse>,
     val lastViewedDay: Int?,
+    val lastModifiedAt: OffsetDateTime? = null,
 )
 
 data class TravelVisitResponse(

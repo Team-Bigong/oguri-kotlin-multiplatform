@@ -147,4 +147,9 @@
     <string name="travel_change_moved_now">現在は%1$sにあります。</string>
     <string name="travel_change_open_day">%1$sを開く</string>
     <string name="travel_day_outside_trip">%1$d日目 · 現在の旅行期間外</string>
+    <string name="travel_modified_just_now">たった今更新</string>
+    <string name="travel_modified_minutes">%1$d分前に更新</string>
+    <string name="travel_modified_hours">%1$d時間前に更新</string>
+    <string name="travel_modified_days">%1$d日前に更新</string>
+    <string name="travel_changes_trip">旅行全体</string>
 </resources>

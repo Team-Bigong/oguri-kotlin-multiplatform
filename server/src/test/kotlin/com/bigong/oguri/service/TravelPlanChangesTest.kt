@@ -10,12 +10,14 @@ import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelPlanViewRepository
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.`when`
 import java.time.LocalDate
+import java.time.OffsetDateTime
 import java.util.UUID
 
 class TravelPlanChangesTest {
@@ -49,6 +51,14 @@ class TravelPlanChangesTest {
     fun prepare() {
         `when`(members.existsById(member)).thenReturn(true)
         `when`(plans.findForUpdate(plan.id)).thenReturn(plan)
+    }
+
+    @Test
+    fun `일정 조회는 실제 변경 기록의 수정 시각을 반환한다`() {
+        val modified = OffsetDateTime.parse("2027-03-31T10:00:00Z")
+        `when`(plans.findForRead(plan.id)).thenReturn(plan)
+        `when`(collaboration.lastModifiedAt(plan.id)).thenReturn(modified)
+        assertEquals(modified, service.get(member, plan.id).lastModifiedAt)
     }
 
     @Test

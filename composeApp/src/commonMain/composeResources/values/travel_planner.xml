@@ -147,4 +147,9 @@
     <string name="travel_change_moved_now">Now in %1$s</string>
     <string name="travel_change_open_day">Open %1$s</string>
     <string name="travel_day_outside_trip">Day %1$d · outside current trip dates</string>
+    <string name="travel_modified_just_now">Updated just now</string>
+    <string name="travel_modified_minutes">Updated %1$d minutes ago</string>
+    <string name="travel_modified_hours">Updated %1$d hours ago</string>
+    <string name="travel_modified_days">Updated %1$d days ago</string>
+    <string name="travel_changes_trip">Trip settings</string>
 </resources>

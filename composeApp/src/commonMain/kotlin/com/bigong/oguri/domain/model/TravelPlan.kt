@@ -4,6 +4,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
+import kotlin.time.Instant
 
 @Serializable
 data class TravelDates(
@@ -67,6 +68,7 @@ data class TravelPlan(
     val visits: List<TravelVisit>,
     val lastViewedDay: Int? = null,
     val structureRevision: Long = 0,
+    val lastModifiedAt: Instant? = null,
 ) {
     fun orderRevision(dayNumber: Int): Long = dayOrderRevisions[dayNumber] ?: 0
 

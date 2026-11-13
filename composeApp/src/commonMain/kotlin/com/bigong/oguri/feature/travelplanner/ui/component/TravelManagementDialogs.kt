@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -43,6 +44,7 @@ import oguri.composeapp.generated.resources.travel_change_visit_edited
 import oguri.composeapp.generated.resources.travel_change_visit_removed
 import oguri.composeapp.generated.resources.travel_change_visit_undone
 import oguri.composeapp.generated.resources.travel_changed_place
+import oguri.composeapp.generated.resources.travel_changes_trip
 import oguri.composeapp.generated.resources.travel_choose_time_zone
 import oguri.composeapp.generated.resources.travel_city
 import oguri.composeapp.generated.resources.travel_details_keep_local_times
@@ -117,47 +119,64 @@ internal fun TravelDetailsDialog(
 
 @Composable
 internal fun TravelRecentChangesDialog(
-    changes: TravelRecentChanges,
+    changes: TravelRecentChanges?,
     dates: TravelDates,
     onDismiss: () -> Unit,
     onSelectDay: (Int) -> Unit,
+    busy: Boolean = false,
+    failure: TravelPlanFailure? = null,
+    onRetry: (() -> Unit)? = null,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.travel_recent_changes)) },
         text = {
-            if (changes.changes.isEmpty()) {
+            if (busy) {
+                LinearProgressIndicator()
+            } else if (failure != null) {
+                TravelInlineFailure(failure, onRetry = onRetry)
+            } else if (changes == null || changes.changes.isEmpty()) {
                 Text(stringResource(Res.string.travel_no_recent_changes))
             } else {
                 val currentDates = changes.dates ?: dates
                 LazyColumn(Modifier.heightIn(max = 360.dp)) {
-                    items(changes.changes, key = { it.revision }) { entry ->
-                        val destination = entry.destinationDay(currentDates)
-                        val label =
-                            when (entry.kind) {
-                                "VISIT_ADDED" -> Res.string.travel_change_visit_added
-                                "VISIT_EDITED" -> Res.string.travel_change_visit_edited
-                                "VISIT_UNDONE" -> Res.string.travel_change_visit_undone
-                                "VISIT_REMOVED" -> Res.string.travel_change_visit_removed
-                                "DAY_REORDERED" -> Res.string.travel_change_day_reordered
-                                "OWNER_CHANGED" -> Res.string.travel_change_owner
-                                else -> Res.string.travel_change_trip
-                            }
-                        Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(stringResource(label), style = MaterialTheme.typography.titleSmall)
-                            entry.occurredAt?.let { instant ->
-                                Text(changes.timeZone?.let { instant.toLocalDateTime(it).toString() + " · " + it.id } ?: instant.toString())
-                            }
-                            if (entry.visitId != null) Text(entry.visitName ?: stringResource(Res.string.travel_changed_place))
-                            entry.dayNumber?.let { day -> Text(travelDayLabel(currentDates, day)) }
-                            if (entry.isVisitRemoved) {
-                                Text(stringResource(Res.string.travel_change_removed_now))
-                            } else if (destination != null) {
-                                if (entry.visitId != null && entry.dayNumber != destination) {
-                                    Text(stringResource(Res.string.travel_change_moved_now, travelDayLabel(currentDates, destination)))
+                    for ((day, entries) in changes.changes.groupBy { it.dayNumber }) {
+                        item(key = "change-day-$day") {
+                            Text(
+                                if (day == null) stringResource(Res.string.travel_changes_trip) else travelDayLabel(currentDates, day),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                        }
+                        items(entries, key = { it.revision }) { entry ->
+                            val destination = entry.destinationDay(currentDates)
+                            val label =
+                                when (entry.kind) {
+                                    "VISIT_ADDED" -> Res.string.travel_change_visit_added
+                                    "VISIT_EDITED" -> Res.string.travel_change_visit_edited
+                                    "VISIT_UNDONE" -> Res.string.travel_change_visit_undone
+                                    "VISIT_REMOVED" -> Res.string.travel_change_visit_removed
+                                    "DAY_REORDERED" -> Res.string.travel_change_day_reordered
+                                    "OWNER_CHANGED" -> Res.string.travel_change_owner
+                                    else -> Res.string.travel_change_trip
                                 }
-                                TextButton(onClick = { onSelectDay(destination) }) {
-                                    Text(stringResource(Res.string.travel_change_open_day, travelDayLabel(currentDates, destination)))
+                            Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(stringResource(label), style = MaterialTheme.typography.titleSmall)
+                                entry.occurredAt?.let { instant ->
+                                    Text(
+                                        changes.timeZone?.let { instant.toLocalDateTime(it).toString() + " · " + it.id }
+                                            ?: instant.toString(),
+                                    )
+                                }
+                                if (entry.visitId != null) Text(entry.visitName ?: stringResource(Res.string.travel_changed_place))
+                                if (entry.isVisitRemoved) {
+                                    Text(stringResource(Res.string.travel_change_removed_now))
+                                } else if (destination != null) {
+                                    if (entry.visitId != null && entry.dayNumber != destination) {
+                                        Text(stringResource(Res.string.travel_change_moved_now, travelDayLabel(currentDates, destination)))
+                                    }
+                                    TextButton(onClick = { onSelectDay(destination) }) {
+                                        Text(stringResource(Res.string.travel_change_open_day, travelDayLabel(currentDates, destination)))
+                                    }
                                 }
                             }
                         }
