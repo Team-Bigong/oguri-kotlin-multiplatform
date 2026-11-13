@@ -53,6 +53,8 @@ class AuthInterceptor(
         val requestMethod = request.method.uppercase()
 
         return when {
+            requestPath == "/api/v1/trip-invites/join" -> true
+            requestPath == "/api/v1/trips" || requestPath.startsWith("/api/v1/trips/") -> true
             requestPath == "/api/v1/members/me" && requestMethod == HttpMethod.GET.name() -> true
             requestPath == "/api/v1/members/me" && requestMethod == HttpMethod.DELETE.name() -> true
             requestPath == "/api/v1/members/day-off" && requestMethod == HttpMethod.POST.name() -> true
