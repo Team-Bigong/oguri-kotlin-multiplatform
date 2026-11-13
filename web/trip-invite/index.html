@@ -7,19 +7,26 @@
   <meta name="robots" content="noindex, nofollow">
   <title>여행 초대 · 오구리</title>
   <style>
+    [hidden] { display: none !important; }
     body { margin: 0; background: #f8faf9; color: #142c25; font: 1rem/1.6 system-ui, sans-serif; }
     main { max-width: 32rem; margin: 15vh auto; padding: 1.5rem; }
     a { display: inline-block; color: #00614f; margin: .25rem 1rem .25rem 0; padding: .5rem 0; }
+    @media (prefers-color-scheme: dark) {
+      body { background: #14201c; color: #edf5f1; }
+      a { color: #80dbc0; }
+    }
   </style>
 </head>
 <body>
   <main>
-    <h1>여행 초대</h1>
-    <p>오구리 앱에서 초대를 확인하고 함께 여행을 계획할 수 있어요.</p>
+    <h1 id="invite-title">여행 초대</h1>
+    <p id="invite-description" role="status">오구리 앱에서 초대를 확인하고 함께 여행을 계획할 수 있어요.</p>
     <a id="open-app" hidden>오구리에서 열기</a>
-    <p>앱이 없다면 설치한 뒤 받은 초대 링크를 다시 열어 주세요.</p>
+    <section id="installation" hidden>
+    <p id="install-instructions">앱이 없다면 설치한 뒤 받은 초대 링크를 다시 열어 주세요.</p>
     <a href="https://play.google.com/store/apps/details?id=com.bigong.oguri">Google Play</a>
     <a href="https://apps.apple.com/kr/app/id6760905900">App Store</a>
+    </section>
   </main>
   <script type="module" src="/src/features/routing/travelInvite.ts"></script>
 </body>
