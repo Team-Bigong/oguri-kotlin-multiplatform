@@ -78,6 +78,31 @@ class TravelPlanChangesTest {
     }
 
     @Test
+    fun `이동된 방문의 독립 수정 기록은 병합 후 현재 날짜를 가리킨다`() {
+        val original = TravelVisitDetails("Museum", null, null, null, null)
+        plan.addVisit(1, original)
+        val visit = plan.orderedVisits().single()
+        val originalRevision = visit.revision
+        plan.editVisit(visit.id, originalRevision, 2, original, original, 1)
+        val base = TravelVisitRequest("Museum", null, null, null, null)
+        service.execute(
+            member,
+            plan.id,
+            TravelPlanCommand.EditVisit(
+                UUID.randomUUID(),
+                visit.id,
+                originalRevision,
+                1,
+                base.copy(note = "Independent note"),
+                base,
+                1,
+                0,
+            ),
+        )
+        verify(collaboration).recordChange(plan.id, member, plan.revision, 2, "VISIT_EDITED", visit.id)
+    }
+
+    @Test
     fun `날짜를 옮겨도 같은 방문 식별자를 남긴다`() {
         plan.addVisit(1, TravelVisitDetails("Museum", null, null, null, null))
         val visit = plan.orderedVisits().single()

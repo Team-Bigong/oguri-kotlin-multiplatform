@@ -185,14 +185,6 @@ class TravelPlanService(
             } else {
                 null
             }
-        val changeDay =
-            when (command) {
-                is TravelPlanCommand.AddVisit -> command.dayNumber
-                is TravelPlanCommand.EditVisit -> command.dayNumber
-                is TravelPlanCommand.ReorderDay -> command.dayNumber
-                is TravelPlanCommand.RemoveVisit -> original?.dayNumber
-                is TravelPlanCommand.UndoVisit -> undo?.second?.dayNumber
-            }
 
         when (command) {
             is TravelPlanCommand.AddVisit ->
@@ -225,6 +217,15 @@ class TravelPlanService(
             val snapshot = StoredVisitUndo.from(original.copy(targetDay = target))
             collaboration.storeVisitUndo(planId, memberId, command.requestId, plan.revision, objectMapper.writeValueAsString(snapshot))
         }
+
+        val changeDay =
+            when (command) {
+                is TravelPlanCommand.AddVisit -> command.dayNumber
+                is TravelPlanCommand.EditVisit -> originalVisit?.dayNumber
+                is TravelPlanCommand.ReorderDay -> command.dayNumber
+                is TravelPlanCommand.RemoveVisit -> original?.dayNumber
+                is TravelPlanCommand.UndoVisit -> undo?.second?.dayNumber
+            }
 
         collaboration.recordMemberCommand(planId, memberId, command.requestId, fingerprint)
         collaboration.recordChange(
