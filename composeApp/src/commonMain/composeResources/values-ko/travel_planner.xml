@@ -152,4 +152,8 @@
     <string name="travel_modified_hours">최근 수정 %1$d시간 전</string>
     <string name="travel_modified_days">최근 수정 %1$d일 전</string>
     <string name="travel_changes_trip">여행 전체</string>
+    <string name="travel_trip_info">여행 정보</string>
+    <string name="travel_source">추천 출처</string>
+    <string name="travel_source_explanation">원래 추천받은 정보예요. 실제 여행 날짜·개인 연차 잔여량과는 별개예요.</string>
+    <string name="travel_open_source">원래 추천 보기</string>
 </resources>

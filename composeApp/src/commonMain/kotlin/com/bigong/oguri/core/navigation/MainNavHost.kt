@@ -290,6 +290,7 @@ fun MainNavHost(
                     ) { appGraph.travelReminderViewModelProvider() },
                 onBack = { navigator.popBackStack() },
                 onClosed = navigator::closeManagedTravelPlan,
+                onOpenSource = { source -> source.toRecommendationRoute()?.let(navigator::navigateToRouteModel) },
             )
         }
         composable<RouteModel.TravelPlans> {

@@ -25,6 +25,7 @@ import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
+import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelRecentChanges
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import kotlinx.datetime.LocalDate
@@ -47,15 +48,22 @@ import oguri.composeapp.generated.resources.travel_changed_place
 import oguri.composeapp.generated.resources.travel_changes_trip
 import oguri.composeapp.generated.resources.travel_choose_time_zone
 import oguri.composeapp.generated.resources.travel_city
+import oguri.composeapp.generated.resources.travel_dates_value
 import oguri.composeapp.generated.resources.travel_details_keep_local_times
 import oguri.composeapp.generated.resources.travel_details_move_unassigned
 import oguri.composeapp.generated.resources.travel_edit_trip
 import oguri.composeapp.generated.resources.travel_end_date
 import oguri.composeapp.generated.resources.travel_no_recent_changes
+import oguri.composeapp.generated.resources.travel_open_source
 import oguri.composeapp.generated.resources.travel_recent_changes
+import oguri.composeapp.generated.resources.travel_recommended_dates
 import oguri.composeapp.generated.resources.travel_search_close
+import oguri.composeapp.generated.resources.travel_source
+import oguri.composeapp.generated.resources.travel_source_explanation
 import oguri.composeapp.generated.resources.travel_start_date
+import oguri.composeapp.generated.resources.travel_time_zone
 import oguri.composeapp.generated.resources.travel_title
+import oguri.composeapp.generated.resources.travel_trip_info
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -66,8 +74,12 @@ internal fun TravelDetailsDialog(
     onDismiss: () -> Unit,
     onReload: () -> Unit,
     onApply: (TravelPlanDetails, Int) -> Unit,
+    canEdit: Boolean,
+    onOpenSource: (TravelPlanSource) -> Unit,
 ) {
     val current = plan.summary.details
+    var editing by remember(plan.summary.id) { mutableStateOf(false) }
+    val showEditor = canEdit && editing
     var title by remember(plan.revision) { mutableStateOf(current.title) }
     var city by remember(plan.revision) { mutableStateOf(current.city) }
     var zone by remember(plan.revision) { mutableStateOf(current.timeZone.id) }
@@ -85,35 +97,90 @@ internal fun TravelDetailsDialog(
             timeZone != null
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.travel_edit_trip)) },
+        title = { Text(stringResource(if (showEditor) Res.string.travel_edit_trip else Res.string.travel_trip_info)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                OutlinedTextField(title, { title = it }, label = { Text(stringResource(Res.string.travel_title)) }, singleLine = true)
-                OutlinedTextField(city, { city = it }, label = { Text(stringResource(Res.string.travel_city)) }, singleLine = true)
-                OutlinedTextField(
-                    zone,
-                    { zone = it },
-                    label = { Text(stringResource(Res.string.travel_choose_time_zone)) },
-                    singleLine = true,
-                )
-                OutlinedTextField(start, { start = it }, label = { Text(stringResource(Res.string.travel_start_date)) }, singleLine = true)
-                OutlinedTextField(end, { end = it }, label = { Text(stringResource(Res.string.travel_end_date)) }, singleLine = true)
-                if (affected > 0) Text(stringResource(Res.string.travel_details_move_unassigned, affected))
-                if (zone.trim() != current.timeZone.id) Text(stringResource(Res.string.travel_details_keep_local_times))
+                if (showEditor) {
+                    OutlinedTextField(
+                        title,
+                        { title = it },
+                        label = { Text(stringResource(Res.string.travel_title)) },
+                        enabled = !busy,
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        city,
+                        { city = it },
+                        label = { Text(stringResource(Res.string.travel_city)) },
+                        enabled = !busy,
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        zone,
+                        { zone = it },
+                        label = { Text(stringResource(Res.string.travel_choose_time_zone)) },
+                        enabled = !busy,
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        start,
+                        { start = it },
+                        label = { Text(stringResource(Res.string.travel_start_date)) },
+                        enabled = !busy,
+                        singleLine = true,
+                    )
+                    OutlinedTextField(
+                        end,
+                        { end = it },
+                        label = { Text(stringResource(Res.string.travel_end_date)) },
+                        enabled = !busy,
+                        singleLine = true,
+                    )
+                    if (affected > 0) Text(stringResource(Res.string.travel_details_move_unassigned, affected))
+                    if (zone.trim() != current.timeZone.id) Text(stringResource(Res.string.travel_details_keep_local_times))
+                } else {
+                    Text(current.title, style = MaterialTheme.typography.titleMedium)
+                    Text(current.city)
+                    Text(
+                        stringResource(
+                            Res.string.travel_dates_value,
+                            current.dates.start.toString(),
+                            current.dates.endInclusive.toString(),
+                        ),
+                    )
+                    Text(stringResource(Res.string.travel_time_zone, current.timeZone.id))
+                    current.source?.let { source ->
+                        Text(stringResource(Res.string.travel_source), style = MaterialTheme.typography.titleSmall)
+                        if (source.startDate != null && source.endDate != null) {
+                            Text(
+                                stringResource(Res.string.travel_recommended_dates, source.startDate.toString(), source.endDate.toString()),
+                            )
+                        }
+                        Text(stringResource(Res.string.travel_source_explanation))
+                        TextButton(enabled = !busy, onClick = { onOpenSource(source) }) {
+                            Text(stringResource(Res.string.travel_open_source))
+                        }
+                    }
+                }
                 if (failure != null) TravelInlineFailure(failure, onRetry = onReload.takeIf { failure == TravelPlanFailure.CONFLICT })
             }
         },
         confirmButton = {
-            TextButton(enabled = !busy && valid && failure != TravelPlanFailure.CONFLICT, onClick = {
-                if (dates != null && timeZone != null) {
-                    onApply(
-                        TravelPlanDetails(city.trim(), timeZone, title.trim(), dates, current.source),
-                        affected,
-                    )
-                }
-            }) { Text(stringResource(Res.string.travel_apply)) }
+            if (showEditor) {
+                TextButton(enabled = !busy && valid && failure != TravelPlanFailure.CONFLICT, onClick = {
+                    if (dates != null && timeZone != null) {
+                        onApply(TravelPlanDetails(city.trim(), timeZone, title.trim(), dates, current.source), affected)
+                    }
+                }) { Text(stringResource(Res.string.travel_apply)) }
+            } else if (canEdit) {
+                TextButton(enabled = !busy, onClick = { editing = true }) { Text(stringResource(Res.string.travel_edit_trip)) }
+            }
         },
-        dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text(stringResource(Res.string.travel_cancel)) } },
+        dismissButton = {
+            TextButton(enabled = !busy, onClick = onDismiss) {
+                Text(stringResource(if (showEditor) Res.string.travel_cancel else Res.string.travel_search_close))
+            }
+        },
     )
 }
 

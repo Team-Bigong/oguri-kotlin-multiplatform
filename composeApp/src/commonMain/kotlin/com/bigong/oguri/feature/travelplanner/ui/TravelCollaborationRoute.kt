@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.deeplink.travelInviteLink
 import com.bigong.oguri.domain.model.TravelDates
+import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
@@ -39,7 +40,6 @@ import oguri.composeapp.generated.resources.travel_copy_invite
 import oguri.composeapp.generated.resources.travel_create_invite
 import oguri.composeapp.generated.resources.travel_dates_value
 import oguri.composeapp.generated.resources.travel_delete_trip
-import oguri.composeapp.generated.resources.travel_edit_trip
 import oguri.composeapp.generated.resources.travel_invitation
 import oguri.composeapp.generated.resources.travel_invite_copied
 import oguri.composeapp.generated.resources.travel_invite_explanation
@@ -59,6 +59,7 @@ import oguri.composeapp.generated.resources.travel_recent_changes
 import oguri.composeapp.generated.resources.travel_remove_member
 import oguri.composeapp.generated.resources.travel_revoke_invite
 import oguri.composeapp.generated.resources.travel_sign_in
+import oguri.composeapp.generated.resources.travel_trip_info
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -70,6 +71,7 @@ internal fun TravelMembersRoute(
     onClosed: () -> Unit,
     onSelectDay: (Int) -> Unit,
     dates: TravelDates,
+    onOpenSource: (TravelPlanSource) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val reminderState by reminderViewModel.state.collectAsStateWithLifecycle()
@@ -123,10 +125,10 @@ internal fun TravelMembersRoute(
                     reminderViewModel.load(planId)
                 }) { Text(stringResource(Res.string.travel_my_reminder)) }
                 HorizontalDivider()
+                TextButton(enabled = !state.busy, onClick = { viewModel.loadDetails(planId) }) {
+                    Text(stringResource(Res.string.travel_trip_info))
+                }
                 if (members.isOwner) {
-                    TextButton(enabled = !state.busy, onClick = { viewModel.loadDetails(planId) }) {
-                        Text(stringResource(Res.string.travel_edit_trip))
-                    }
                     Text(stringResource(Res.string.travel_invite_explanation))
                     if (state.invite == null) {
                         Button(enabled = !state.busy, onClick = { viewModel.issue(planId) }) {
@@ -177,6 +179,11 @@ internal fun TravelMembersRoute(
             viewModel::dismissDetails,
             onReload = { viewModel.loadDetails(planId) },
             onApply = { details, affected -> viewModel.updateDetails(plan, details, affected) },
+            canEdit = state.members?.isOwner == true,
+            onOpenSource = { source ->
+                viewModel.dismissDetails()
+                onOpenSource(source)
+            },
         )
     }
     state.recentChanges?.let { changes ->

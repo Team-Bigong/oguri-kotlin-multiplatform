@@ -152,4 +152,8 @@
     <string name="travel_modified_hours">%1$d時間前に更新</string>
     <string name="travel_modified_days">%1$d日前に更新</string>
     <string name="travel_changes_trip">旅行全体</string>
+    <string name="travel_trip_info">旅行情報</string>
+    <string name="travel_source">元のおすすめ</string>
+    <string name="travel_source_explanation">元のおすすめ情報です。実際の旅行日程や個人の有給休暇残数とは別です。</string>
+    <string name="travel_open_source">元のおすすめを見る</string>
 </resources>

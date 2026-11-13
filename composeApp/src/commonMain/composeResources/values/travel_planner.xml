@@ -152,4 +152,8 @@
     <string name="travel_modified_hours">Updated %1$d hours ago</string>
     <string name="travel_modified_days">Updated %1$d days ago</string>
     <string name="travel_changes_trip">Trip settings</string>
+    <string name="travel_trip_info">Trip information</string>
+    <string name="travel_source">Recommendation source</string>
+    <string name="travel_source_explanation">These are the original recommendation details. Your trip dates and personal leave balance are separate.</string>
+    <string name="travel_open_source">Open original recommendation</string>
 </resources>

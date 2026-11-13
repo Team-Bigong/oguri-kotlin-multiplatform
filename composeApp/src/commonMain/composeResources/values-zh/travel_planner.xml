@@ -152,4 +152,8 @@
     <string name="travel_modified_hours">%1$d小时前修改</string>
     <string name="travel_modified_days">%1$d天前修改</string>
     <string name="travel_changes_trip">整个旅行</string>
+    <string name="travel_trip_info">旅行信息</string>
+    <string name="travel_source">原始推荐</string>
+    <string name="travel_source_explanation">这是原始推荐信息，与实际旅行日期和个人剩余假期分开。</string>
+    <string name="travel_open_source">查看原始推荐</string>
 </resources>
