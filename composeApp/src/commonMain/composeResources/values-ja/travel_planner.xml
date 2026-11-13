@@ -156,4 +156,7 @@
     <string name="travel_source">元のおすすめ</string>
     <string name="travel_source_explanation">元のおすすめ情報です。実際の旅行日程や個人の有給休暇残数とは別です。</string>
     <string name="travel_open_source">元のおすすめを見る</string>
+    <string name="travel_latest_saved_values">現在保存されている内容（入力内容は下に保持されます）</string>
+    <string name="travel_value_not_set">未設定</string>
+    <string name="travel_visit_day">日付</string>
 </resources>

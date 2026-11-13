@@ -297,6 +297,13 @@ class TravelPlannerViewModel(
                         },
                 )
             }
+            if (rebaseDraft && pendingSave == null) {
+                draftWrite?.join()
+                val snapshot = state.value.visitDraft?.forRecovery()
+                recoveryWriteMutex.withLock {
+                    if (generation == mutationGeneration) recoverSafely { recovery.saveDraft(planId, snapshot) }
+                }
+            }
         }
     }
 

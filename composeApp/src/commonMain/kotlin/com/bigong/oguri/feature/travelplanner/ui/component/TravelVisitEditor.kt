@@ -116,6 +116,7 @@ internal fun TravelVisitEditor(
                 stringResource(if (draft.visit == null) Res.string.travel_add_visit else Res.string.travel_edit_visit),
                 style = MaterialTheme.typography.titleLarge,
             )
+            TravelConflictComparison(draft, dates)
             if (isSaving) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             if (placeId == null) {
                 OutlinedTextField(

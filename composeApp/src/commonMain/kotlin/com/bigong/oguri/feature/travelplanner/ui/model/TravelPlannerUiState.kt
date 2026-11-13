@@ -63,11 +63,12 @@ internal data class TravelVisitDraft(
             ?.toString()
             .orEmpty(),
     val note: String = visit?.details?.note.orEmpty(),
+    val showLatestComparison: Boolean = false,
 ) {
     val hasInvalidTime: Boolean
         get() = localTime.isNotBlank() && parsedTime() == null
 
-    fun forRecovery(): TravelDraft = TravelDraft(dayNumber, visit, structureRevision, name, location, localTime, note)
+    fun forRecovery(): TravelDraft = TravelDraft(dayNumber, visit, structureRevision, name, location, localTime, note, showLatestComparison)
 
     fun toDetails(): TravelVisitDetails =
         TravelVisitDetails(
@@ -82,6 +83,7 @@ internal data class TravelVisitDraft(
         val previous = visit ?: return this
         return copy(
             visit = latest,
+            showLatestComparison = true,
             dayNumber = if (dayNumber == previous.dayNumber) latest.dayNumber else dayNumber,
             name = if (name == previous.details.name.orEmpty()) latest.details.name.orEmpty() else name,
             location = if (location == previous.details.location.orEmpty()) latest.details.location.orEmpty() else location,
@@ -99,6 +101,23 @@ internal data class TravelVisitDraft(
                 },
             note = if (note == previous.details.note.orEmpty()) latest.details.note.orEmpty() else note,
         )
+    }
+
+    fun latestDifferences(): Set<TravelVisitField> {
+        val latest = visit?.takeIf { showLatestComparison } ?: return emptySet()
+        return buildSet {
+            if (dayNumber != latest.dayNumber) add(TravelVisitField.DAY)
+            if (name.trim() != latest.details.name.orEmpty()) add(TravelVisitField.NAME)
+            if (location.trim() != latest.details.location.orEmpty()) add(TravelVisitField.LOCATION)
+            if (localTime.trim() !=
+                latest.details.localTime
+                    ?.toString()
+                    .orEmpty()
+            ) {
+                add(TravelVisitField.TIME)
+            }
+            if (note.trim() != latest.details.note.orEmpty()) add(TravelVisitField.NOTE)
+        }
     }
 
     private fun parsedTime(): LocalTime? {
@@ -191,4 +210,7 @@ internal fun TravelDraft.toVisitDraft(): TravelVisitDraft =
         location = location,
         localTime = localTime,
         note = note,
+        showLatestComparison = showLatestComparison,
     )
+
+internal enum class TravelVisitField { DAY, NAME, LOCATION, TIME, NOTE }

@@ -156,4 +156,7 @@
     <string name="travel_source">原始推荐</string>
     <string name="travel_source_explanation">这是原始推荐信息，与实际旅行日期和个人剩余假期分开。</string>
     <string name="travel_open_source">查看原始推荐</string>
+    <string name="travel_latest_saved_values">当前保存的内容（您的输入保留在下方）</string>
+    <string name="travel_value_not_set">未设置</string>
+    <string name="travel_visit_day">日期</string>
 </resources>

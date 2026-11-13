@@ -156,4 +156,7 @@
     <string name="travel_source">추천 출처</string>
     <string name="travel_source_explanation">원래 추천받은 정보예요. 실제 여행 날짜·개인 연차 잔여량과는 별개예요.</string>
     <string name="travel_open_source">원래 추천 보기</string>
+    <string name="travel_latest_saved_values">현재 저장된 내용 (내 입력은 아래에 유지돼요)</string>
+    <string name="travel_value_not_set">설정 안 함</string>
+    <string name="travel_visit_day">날짜</string>
 </resources>

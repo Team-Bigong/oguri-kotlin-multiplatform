@@ -156,4 +156,7 @@
     <string name="travel_source">Recommendation source</string>
     <string name="travel_source_explanation">These are the original recommendation details. Your trip dates and personal leave balance are separate.</string>
     <string name="travel_open_source">Open original recommendation</string>
+    <string name="travel_latest_saved_values">Currently saved values (your input is kept below)</string>
+    <string name="travel_value_not_set">Not set</string>
+    <string name="travel_visit_day">Date</string>
 </resources>
