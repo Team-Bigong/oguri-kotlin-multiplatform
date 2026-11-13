@@ -68,6 +68,7 @@ fun HomeScreen(
     onMoveToCalendarClick: () -> Unit,
     onSearchClick: () -> Unit,
     scrollToTopTrigger: Int,
+    travelResume: (@Composable () -> Unit)? = null,
 ) {
     if (homeUiState.isLoading) {
         HomeSkeletonContent()
@@ -149,6 +150,9 @@ fun HomeScreen(
                     },
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
+            }
+            if (travelResume != null) {
+                item(key = "travel_resume") { travelResume() }
             }
             item {
                 Spacer(modifier = Modifier.height(28.dp))

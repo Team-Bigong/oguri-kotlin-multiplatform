@@ -27,7 +27,9 @@ import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
 import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
 import com.bigong.oguri.core.analytics.initializeOguriAnalytics
+import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
+import com.bigong.oguri.core.deeplink.parseTravelInvite
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
@@ -176,10 +178,23 @@ fun NavDisplay(
             }
         }
 
-        LaunchedEffect(incomingDeepLinkUrl) {
+        LaunchedEffect(incomingDeepLinkUrl, currentDestination?.route) {
             val deepLinkUrl = incomingDeepLinkUrl ?: return@LaunchedEffect
+            if (currentDestination?.route == null ||
+                currentDestination.route ==
+                RouteModel.Splash
+                    .serializer()
+                    .descriptor.serialName
+            ) {
+                return@LaunchedEffect
+            }
             appGraph.deepLinkStore.clearConsumed(urlText = deepLinkUrl)
-
+            val invite = parseTravelInvite(deepLinkUrl)
+            if (invite != null) {
+                TravelInviteIntent.receive(invite)
+                navigator.navigateToTravelInvite()
+                return@LaunchedEffect
+            }
             val targetRoute = parseAppDeepLinkRoute(urlText = deepLinkUrl) ?: return@LaunchedEffect
             navigator.navigateToRouteModel(targetRoute)
         }
@@ -234,7 +249,12 @@ fun NavDisplay(
             if (currentRouteText != null && previousRoute != null) {
                 if (!hasCompletedInitialMainTabEntry && isMainTabRoute(currentRouteText)) {
                     hasCompletedInitialMainTabEntry = true
-                } else if (hasCompletedInitialMainTabEntry && previousRoute != currentRouteText) {
+                } else if (
+                    hasCompletedInitialMainTabEntry &&
+                    previousRoute != currentRouteText &&
+                    !isTravelPlannerRoute(previousRoute) &&
+                    !isTravelPlannerRoute(currentRouteText)
+                ) {
                     tryShowAppOpenAdAfterScreenMove()
                 }
 
@@ -306,7 +326,7 @@ fun NavDisplay(
         }
 
         PlatformBackGestureContainer(
-            enabled = !shouldHandleDoubleBackToExit,
+            enabled = !shouldHandleDoubleBackToExit && !isTravelPlannerRoute(currentDestination?.route),
             onBack = { navigator.popBackStack() },
         ) {
             Box(
@@ -359,6 +379,7 @@ fun NavDisplay(
                                 )
                             }
                         },
+                        onTravelAuthenticationFinished = { authSessionVersion += 1 },
                         onLoggedOut = {
                             authSessionVersion += 1
                             navigator.navigateToLoginAndClearBackStack()
@@ -411,3 +432,30 @@ fun NavDisplay(
         }
     }
 }
+
+private val travelRouteNames: Set<String> =
+    setOf(
+        RouteModel.TravelPlans
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.CreateTravelPlan
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelPlan
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelInvite
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelMembers
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelLogin
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelOnboarding
+            .serializer()
+            .descriptor.serialName,
+    )
+
+private fun isTravelPlannerRoute(routeText: String?): Boolean = routeText?.substringBefore('/')?.substringBefore('?') in travelRouteNames

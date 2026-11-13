@@ -158,6 +158,7 @@ kotlin {
             implementation(libs.androidx.credentials.play.services.auth)
             implementation(libs.google.android.googleid)
             implementation(libs.google.mobile.ads)
+            implementation(libs.play.services.maps)
             implementation(libs.firebase.crashlytics.ktx)
             implementation(libs.firebase.analytics.ktx)
             implementation(libs.ktor.client.okhttp)
@@ -215,6 +216,15 @@ android {
         versionCode = currentProjectVersionValue.toInt()
         versionName = marketingVersionValue
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
+        manifestPlaceholders["googleMapsAndroidApiKey"] =
+            providers.environmentVariable("GOOGLE_MAPS_ANDROID_API_KEY").orNull
+                ?: localProperties.getProperty("google.maps.android.api.key")
+                ?: providers.fileContents(rootProject.layout.projectDirectory.file(".env")).asText.orNull
+                    ?.lineSequence()
+                    ?.firstOrNull { it.startsWith("GOOGLE_MAPS_ANDROID_API_KEY=") }
+                    ?.substringAfter('=')
+                    ?.trim()
+                    .orEmpty()
     }
     packaging {
         resources {

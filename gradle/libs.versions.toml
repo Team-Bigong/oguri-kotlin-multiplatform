@@ -43,7 +43,10 @@ firebase-crashlytics-gradle = "3.0.6"
 firebase-crashlytics-ktx = "19.4.4"
 firebase-analytics-ktx = "22.5.0"
 
+googleMapsAndroid = "20.0.0"
+
 [libraries]
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "googleMapsAndroid" }
 analytics-android = { module = "com.amplitude:analytics-android", version.ref = "analyticsAndroid" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

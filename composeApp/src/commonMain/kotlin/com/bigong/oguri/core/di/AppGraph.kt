@@ -21,12 +21,18 @@ import com.bigong.oguri.data.repository.DefaultHomeRepository
 import com.bigong.oguri.data.repository.DefaultMyPageRepository
 import com.bigong.oguri.data.repository.DefaultPlaceDetailRepository
 import com.bigong.oguri.data.repository.DefaultSearchRepository
+import com.bigong.oguri.data.repository.DefaultTravelPlanRepository
+import com.bigong.oguri.data.repository.DefaultTravelRecoveryRepository
 import com.bigong.oguri.domain.repository.AuthRepository
 import com.bigong.oguri.domain.repository.CalendarRepository
 import com.bigong.oguri.domain.repository.HomeRepository
 import com.bigong.oguri.domain.repository.MyPageRepository
 import com.bigong.oguri.domain.repository.PlaceDetailRepository
 import com.bigong.oguri.domain.repository.SearchRepository
+import com.bigong.oguri.domain.repository.TravelCollaborationRepository
+import com.bigong.oguri.domain.repository.TravelPlaceRepository
+import com.bigong.oguri.domain.repository.TravelPlanRepository
+import com.bigong.oguri.domain.repository.TravelRecoveryRepository
 import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
 import com.bigong.oguri.feature.home.ui.HomeViewModel
 import com.bigong.oguri.feature.login.ui.LoginViewModel
@@ -36,6 +42,8 @@ import com.bigong.oguri.feature.perioddetail.ui.PeriodDetailViewModel
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailViewModel
 import com.bigong.oguri.feature.search.ui.SearchViewModel
 import com.bigong.oguri.feature.splash.ui.SplashViewModel
+import com.bigong.oguri.feature.travelplanner.ui.TravelCollaborationViewModel
+import com.bigong.oguri.feature.travelplanner.ui.TravelPlannerViewModel
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provider
 import dev.zacsweers.metro.Provides
@@ -54,6 +62,8 @@ interface AppGraph {
     val placeDetailViewModelProvider: Provider<PlaceDetailViewModel>
     val searchViewModelProvider: Provider<SearchViewModel>
     val splashViewModelProvider: Provider<SplashViewModel>
+    val travelCollaborationViewModelProvider: Provider<TravelCollaborationViewModel>
+    val travelPlannerViewModelProvider: Provider<TravelPlannerViewModel>
 
     @Provides
     fun provideAuthRemoteDataSource(implementation: KtorAuthRemoteDataSource): AuthRemoteDataSource = implementation
@@ -93,6 +103,18 @@ interface AppGraph {
 
     @Provides
     fun provideSearchRepository(implementation: DefaultSearchRepository): SearchRepository = implementation
+
+    @Provides
+    fun provideTravelPlanRepository(implementation: DefaultTravelPlanRepository): TravelPlanRepository = implementation
+
+    @Provides
+    fun provideTravelPlaceRepository(implementation: DefaultTravelPlanRepository): TravelPlaceRepository = implementation
+
+    @Provides
+    fun provideTravelCollaborationRepository(implementation: DefaultTravelPlanRepository): TravelCollaborationRepository = implementation
+
+    @Provides
+    fun provideTravelRecoveryRepository(implementation: DefaultTravelRecoveryRepository): TravelRecoveryRepository = implementation
 
     @Provides
     fun provideDeepLinkStoreInstance(): DeepLinkStore = provideDeepLinkStore()

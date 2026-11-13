@@ -53,6 +53,7 @@ import oguri.composeapp.generated.resources.mypage_menu_suggest
 import oguri.composeapp.generated.resources.mypage_menu_terms_of_service
 import oguri.composeapp.generated.resources.mypage_menu_withdraw
 import oguri.composeapp.generated.resources.mypage_withdraw_dialog_phrase
+import oguri.composeapp.generated.resources.travel_list
 import org.jetbrains.compose.resources.stringResource
 
 private val MYPAGE_BOTTOM_BANNER_HEIGHT = 60.dp
@@ -77,6 +78,7 @@ fun MyPageScreen(
     onConfirmDeleteSavedPlace: () -> Unit,
     onSuggestClick: () -> Unit,
     onDisplaySettingsClick: () -> Unit,
+    onTravelPlansClick: (() -> Unit)? = null,
     onTermsOfServiceClick: () -> Unit,
     onPrivacyPolicyClick: () -> Unit,
     onWithdrawClick: () -> Unit,
@@ -140,6 +142,13 @@ fun MyPageScreen(
                         )
                     }
                     HorizontalDivider(color = Neutral20)
+                }
+                if (onTravelPlansClick != null) {
+                    item {
+                        MyPageMenuSection(
+                            menuItems = listOf(MyPageMenuItem(stringResource(Res.string.travel_list), onTravelPlansClick)),
+                        )
+                    }
                 }
                 item {
                     MyPageGuestSection(
@@ -221,6 +230,19 @@ fun MyPageScreen(
                     )
                 }
                 HorizontalDivider(color = Neutral20)
+            }
+            if (onTravelPlansClick != null) {
+                item {
+                    MyPageMenuSection(
+                        menuItems =
+                            listOf(
+                                MyPageMenuItem(
+                                    label = stringResource(Res.string.travel_list),
+                                    onClick = onTravelPlansClick,
+                                ),
+                            ),
+                    )
+                }
             }
             item {
                 Spacer(modifier = Modifier.height(24.dp))

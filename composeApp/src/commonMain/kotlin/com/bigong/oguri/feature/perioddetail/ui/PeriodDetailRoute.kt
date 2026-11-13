@@ -41,6 +41,7 @@ fun PeriodDetailRoute(
     onBackClick: () -> Unit,
     onLoginRequired: () -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onCreateTravelPlan: (() -> Unit)? = null,
 ) {
     val periodDetailViewModel =
         remember {
@@ -126,6 +127,7 @@ fun PeriodDetailRoute(
             )
         },
         onBackClick = onBackClick,
+        onCreateTravelPlan = onCreateTravelPlan,
         onShareClick = {
             val periodDetail = periodDetailUiState.periodDetail ?: return@PeriodDetailScreen
             val payload: SharePayload = sharePayload ?: return@PeriodDetailScreen
