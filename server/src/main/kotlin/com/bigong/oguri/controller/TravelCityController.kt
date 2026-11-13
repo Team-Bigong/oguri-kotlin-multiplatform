@@ -1,10 +1,10 @@
 package com.bigong.oguri.controller
 
-import com.bigong.oguri.config.AuthContext
 import com.bigong.oguri.config.resolveMemberId
 import com.bigong.oguri.dto.response.TravelCitySuggestion
 import com.bigong.oguri.dto.response.TravelCityTimeZoneResponse
 import com.bigong.oguri.service.TravelPlacesService
+import com.bigong.oguri.service.TravelPlanService
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.CacheControl
 import org.springframework.http.HttpStatus
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/travel-places/cities")
 class TravelCityController(
     private val places: TravelPlacesService,
+    private val plans: TravelPlanService,
 ) {
     @PostMapping("/search")
     fun search(
@@ -43,7 +44,8 @@ class TravelCityController(
 
     private fun HttpServletRequest.cityLookupKey(): String {
         val memberId = resolveMemberId()
-        return if (memberId == AuthContext.GUEST_MEMBER_ID) "city:guest:$remoteAddr" else "city:member:$memberId"
+        plans.requireMember(memberId)
+        return "city:member:$memberId"
     }
 }
 

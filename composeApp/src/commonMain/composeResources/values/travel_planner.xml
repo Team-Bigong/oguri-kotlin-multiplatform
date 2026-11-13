@@ -75,7 +75,7 @@
     <string name="travel_create_from_period">Plan a trip for these dates</string>
     <string name="travel_resume">Continue planning</string>
     <string name="travel_sign_in">Sign in</string>
-    <string name="travel_guest_plans">Sign in to see your saved trips.</string>
+    <string name="travel_guest_plans">Sign in to create and manage your trips.</string>
     <string name="travel_find_next_holiday">Find your next holiday</string>
     <string name="travel_city_unavailable">Could not load the recommended city. You can enter a city below or try again.</string>
     <string name="travel_choose_time_zone">Choose the local time zone</string>

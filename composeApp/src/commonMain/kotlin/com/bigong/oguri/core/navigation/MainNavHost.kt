@@ -44,6 +44,7 @@ import com.bigong.oguri.feature.travelplanner.ui.TravelMembersRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlanRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 import kotlinx.datetime.LocalDate
 
@@ -273,6 +274,10 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.TravelMembers> { entry ->
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
             val route = entry.toRoute<RouteModel.TravelMembers>()
             TravelMembersRoute(
                 planId = route.planId,
@@ -288,6 +293,10 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.TravelPlans> {
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
             TravelPlansRoute(
                 viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
                 onBack = { navigator.popBackStack() },
@@ -298,6 +307,10 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.CreateTravelPlan> { entry ->
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
             val route = entry.toRoute<RouteModel.CreateTravelPlan>()
             CreateTravelPlanRoute(
                 viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
@@ -312,6 +325,10 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.TravelPlan> { entry ->
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
             TravelPlanRoute(
                 viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
                 planId = entry.toRoute<RouteModel.TravelPlan>().planId,

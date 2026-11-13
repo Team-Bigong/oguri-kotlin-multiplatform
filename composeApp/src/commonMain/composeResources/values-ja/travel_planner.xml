@@ -75,7 +75,7 @@
     <string name="travel_create_from_period">この期間で旅行を作成</string>
     <string name="travel_resume">旅行の計画を続ける</string>
     <string name="travel_sign_in">ログイン</string>
-    <string name="travel_guest_plans">ログインすると保存した旅行を確認できます。</string>
+    <string name="travel_guest_plans">旅行の予定を作成・管理するにはログインしてください。</string>
     <string name="travel_find_next_holiday">次の休暇を探す</string>
     <string name="travel_city_unavailable">おすすめの都市を読み込めませんでした。都市を入力するか、再試行してください。</string>
     <string name="travel_choose_time_zone">現地のタイムゾーンを選択</string>

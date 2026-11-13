@@ -60,7 +60,6 @@ internal fun TravelPlansScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Text(stringResource(Res.string.travel_guest_plans))
-                    Button(onClick = onCreate) { Text(stringResource(Res.string.travel_create)) }
                     TextButton(onClick = onSignIn) { Text(stringResource(Res.string.travel_sign_in)) }
                 }
             failure != null -> TravelLoadFailure(failure, onRetry)

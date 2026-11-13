@@ -57,13 +57,18 @@ internal fun CreateTravelPlanRoute(
                 TravelPlanSource(destinationId, start.takeIf { hasDates }, end.takeIf { hasDates })
             }
         }
-    LaunchedEffect(viewModel, destinationId, destinationRetry) {
-        if (destinationId != null) viewModel.loadCreationCity(destinationId)
+    LaunchedEffect(viewModel, signedIn, destinationId, destinationRetry) {
+        if (signedIn && destinationId != null) viewModel.loadCreationCity(destinationId)
     }
     LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.loadCreationMatches() }
     LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.recoverCreation() }
     LaunchedEffect(state.createdPlanId) {
         state.createdPlanId?.let(onCreated)
+    }
+    if (!signedIn) {
+        com.bigong.oguri.feature.travelplanner.ui.component
+            .TravelSignInRequired(onSignIn, onBack)
+        return
     }
     CreateTravelPlanScreen(
         state = state,
