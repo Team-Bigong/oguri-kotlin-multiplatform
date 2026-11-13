@@ -164,4 +164,10 @@
     <string name="travel_overview">All dates</string>
     <string name="travel_overview_legend">Pin numbers indicate trip days; – means no date. Select a visit to open its day.</string>
     <string name="travel_choose_day">Choose a date to add a place</string>
+    <string name="travel_list_expand">Expand list</string>
+    <string name="travel_map_expand">Expand map</string>
+    <string name="travel_pane_list">List view</string>
+    <string name="travel_pane_split">Map and list view</string>
+    <string name="travel_pane_map">Expanded map view</string>
+    <string name="travel_select_day">Select date</string>
 </resources>

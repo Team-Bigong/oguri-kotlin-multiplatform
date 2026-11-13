@@ -164,4 +164,10 @@
     <string name="travel_overview">전체 날짜 보기</string>
     <string name="travel_overview_legend">핀 숫자는 여행 일차, –는 날짜 없음을 뜻해요. 방문을 선택하면 해당 날짜로 이동해요.</string>
     <string name="travel_choose_day">장소를 추가할 날짜 선택</string>
+    <string name="travel_list_expand">목록 펼치기</string>
+    <string name="travel_map_expand">지도 넓히기</string>
+    <string name="travel_pane_list">목록 중심 보기</string>
+    <string name="travel_pane_split">지도와 목록 함께 보기</string>
+    <string name="travel_pane_map">지도 중심 보기</string>
+    <string name="travel_select_day">날짜 선택</string>
 </resources>

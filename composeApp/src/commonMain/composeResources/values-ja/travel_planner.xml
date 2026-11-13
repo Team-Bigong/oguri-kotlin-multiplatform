@@ -164,4 +164,10 @@
     <string name="travel_overview">すべての日程</string>
     <string name="travel_overview_legend">ピンの数字は旅行の日数、–は日付未定です。訪問先を選ぶとその日程に移動します。</string>
     <string name="travel_choose_day">場所を追加する日付を選択</string>
+    <string name="travel_list_expand">リストを広げる</string>
+    <string name="travel_map_expand">地図を広げる</string>
+    <string name="travel_pane_list">リスト表示</string>
+    <string name="travel_pane_split">地図とリスト表示</string>
+    <string name="travel_pane_map">地図を拡大表示</string>
+    <string name="travel_select_day">日付を選択</string>
 </resources>

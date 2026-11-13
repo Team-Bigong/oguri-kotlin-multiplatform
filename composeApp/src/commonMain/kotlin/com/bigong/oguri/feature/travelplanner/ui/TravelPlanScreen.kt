@@ -2,24 +2,20 @@ package com.bigong.oguri.feature.travelplanner.ui
 
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -30,15 +26,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
@@ -46,10 +39,11 @@ import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.component.GooglePlacesAttribution
-import com.bigong.oguri.feature.travelplanner.ui.component.PlatformTravelMap
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelDaySelector
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelModifiedButton
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanPane
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
@@ -71,17 +65,11 @@ import oguri.composeapp.generated.resources.travel_find_next_holiday
 import oguri.composeapp.generated.resources.travel_has_note
 import oguri.composeapp.generated.resources.travel_list
 import oguri.composeapp.generated.resources.travel_manage
-import oguri.composeapp.generated.resources.travel_map_fit
-import oguri.composeapp.generated.resources.travel_map_hide
-import oguri.composeapp.generated.resources.travel_map_sequence
-import oguri.composeapp.generated.resources.travel_map_show
-import oguri.composeapp.generated.resources.travel_map_unavailable
 import oguri.composeapp.generated.resources.travel_move_down
 import oguri.composeapp.generated.resources.travel_move_up
 import oguri.composeapp.generated.resources.travel_move_visit
 import oguri.composeapp.generated.resources.travel_offline_snapshot
 import oguri.composeapp.generated.resources.travel_overlapping_visits
-import oguri.composeapp.generated.resources.travel_overview
 import oguri.composeapp.generated.resources.travel_place_details_unavailable
 import oguri.composeapp.generated.resources.travel_reload
 import oguri.composeapp.generated.resources.travel_sign_in
@@ -160,94 +148,20 @@ internal fun TravelPlanScreen(
         if (state.isOffline) {
             Text(offlineMessage, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
         }
-        val dayListState = rememberLazyListState()
-        LaunchedEffect(state.selectedDay) {
-            val index = if (state.selectedDay == TravelPlan.UNASSIGNED_DAY) dates.dayCount + 1 else state.selectedDay
-            if (dayListState.layoutInfo.visibleItemsInfo.none { it.index == index }) dayListState.scrollToItem(index)
-        }
-
-        LazyRow(
-            state = dayListState,
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            item {
-                TextButton(onClick = onOverview, enabled = !state.isSaving && !state.canRetrySave) {
-                    Text(stringResource(Res.string.travel_overview))
-                }
-            }
-            items(dates.dayCount) { index ->
-                val dayNumber = index + 1
-                FilterChip(
-                    selected = state.selectedDay == dayNumber,
-                    onClick = { onSelectDay(dayNumber) },
-                    enabled = !state.isSaving && !state.canRetrySave,
-                    label = { Text(travelDayLabel(dates, dayNumber)) },
-                )
-            }
-            item {
-                FilterChip(
-                    selected = state.selectedDay == TravelPlan.UNASSIGNED_DAY,
-                    onClick = { onSelectDay(TravelPlan.UNASSIGNED_DAY) },
-                    enabled = !state.isSaving && !state.canRetrySave,
-                    label = { Text(travelDayLabel(dates, TravelPlan.UNASSIGNED_DAY)) },
-                )
-            }
-        }
+        TravelDaySelector(
+            dates = dates,
+            selectedDay = state.selectedDay,
+            enabled = !state.isSaving && !state.canRetrySave,
+            onSelectDay = onSelectDay,
+            onOverview = onOverview,
+        )
 
         val cityCenter = TravelCity.centerOf(plan.summary.details.city)
         val scene =
             remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter) {
                 travelMapScene(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter)
             }
-        val startWithMap = LocalDensity.current.fontScale <= 1.3f
-        var showMap by rememberSaveable { mutableStateOf(startWithMap) }
-        var mapUnavailable by remember { mutableStateOf(false) }
-        var mapAttempt by remember { mutableStateOf(0) }
-        val mapFocus = state.mapFocusedVisitId
         var overlappingVisits by remember(state.selectedDay) { mutableStateOf<List<String>>(emptyList()) }
-        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
-            TextButton(onClick = { showMap = !showMap }) {
-                Text(stringResource(if (showMap) Res.string.travel_map_hide else Res.string.travel_map_show))
-            }
-            if (showMap && !mapUnavailable) {
-                TextButton(onClick = onFitMap) { Text(stringResource(Res.string.travel_map_fit)) }
-            }
-        }
-        if (showMap) {
-            if (mapUnavailable) {
-                Text(stringResource(Res.string.travel_map_unavailable), Modifier.padding(horizontal = 16.dp))
-                TextButton(onClick = {
-                    mapAttempt++
-                    mapUnavailable = false
-                }) {
-                    Text(stringResource(Res.string.common_retry_button))
-                }
-            } else {
-                key(mapAttempt) {
-                    PlatformTravelMap(
-                        scene = scene,
-                        viewportRequest = state.viewportRequest,
-                        focusedVisitId = mapFocus,
-                        onMarkerClick = { visitId ->
-                            val coordinates = scene.markers.firstOrNull { it.id == visitId }?.coordinates
-                            val atPoint = scene.markers.filter { it.coordinates == coordinates }.map { it.id }
-                            if (atPoint.size > 1) overlappingVisits = atPoint else onMarkerClick(visitId)
-                        },
-                        onUnavailable = { mapUnavailable = true },
-                        modifier = Modifier.fillMaxWidth().height(180.dp),
-                    )
-                }
-                if (scene.lines.isNotEmpty()) {
-                    Text(
-                        stringResource(Res.string.travel_map_sequence),
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                        style = MaterialTheme.typography.labelMedium,
-                    )
-                }
-            }
-        }
         if (overlappingVisits.isNotEmpty()) {
             AlertDialog(
                 onDismissRequest = { overlappingVisits = emptyList() },
@@ -280,102 +194,116 @@ internal fun TravelPlanScreen(
                 },
             )
         }
-        if (state.isLoadingDayPlaces) LinearProgressIndicator(Modifier.fillMaxWidth())
-        if (state.dayPlacesIncomplete) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                Text(stringResource(Res.string.travel_place_details_unavailable), Modifier.weight(1f))
-                TextButton(onClick = onRetryPlaces) { Text(stringResource(Res.string.common_retry_button)) }
-            }
-        }
-
-        if (failure != null && state.visitDraft == null && state.placeSearch == null) {
-            TravelInlineFailure(
-                failure = failure,
-                onRetry =
-                    when {
-                        state.canRetrySave -> onRetrySave
-                        failure == TravelPlanFailure.CONFLICT || failure == TravelPlanFailure.CONNECTION -> onReload
-                        else -> null
-                    },
-                retryLabel =
-                    if (state.canRetrySave) {
-                        stringResource(Res.string.common_retry_button)
-                    } else {
-                        stringResource(Res.string.travel_reload)
-                    },
-            )
-        }
-
-        if (state.visitUndo != null && state.visitDraft == null && state.placeSearch == null) {
-            TextButton(onClick = onUndoVisit, enabled = canEdit, modifier = Modifier.padding(horizontal = 12.dp)) {
-                Text(stringResource(Res.string.travel_undo_visit))
-            }
-        }
-
-        val visitListState = rememberLazyListState()
-        var draggedId by remember(state.selectedDay, plan.revision) { mutableStateOf<String?>(null) }
-        var dragPosition by remember(state.selectedDay, plan.revision) { mutableStateOf(0f) }
-        LaunchedEffect(state.listFocusRequest) {
-            val index = visits.indexOfFirst { it.id == state.selectedVisitId }
-            if (state.listFocusRequest > 0 && index >= 0) visitListState.scrollToItem(index)
-        }
-        LazyColumn(
-            state = visitListState,
+        TravelPlanPane(
+            scene = scene,
+            viewportRequest = state.viewportRequest,
+            focusedVisitId = state.mapFocusedVisitId,
+            onFitMap = onFitMap,
+            onMarkerClick = { visitId ->
+                val coordinates = scene.markers.firstOrNull { it.id == visitId }?.coordinates
+                val atPoint = scene.markers.filter { it.coordinates == coordinates }.map { it.id }
+                if (atPoint.size > 1) overlappingVisits = atPoint else onMarkerClick(visitId)
+            },
             modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            status = {
+                if (state.isLoadingDayPlaces) LinearProgressIndicator(Modifier.fillMaxWidth())
+                if (state.dayPlacesIncomplete) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        Text(stringResource(Res.string.travel_place_details_unavailable), Modifier.weight(1f))
+                        TextButton(onClick = onRetryPlaces) { Text(stringResource(Res.string.common_retry_button)) }
+                    }
+                }
+
+                if (failure != null && state.visitDraft == null && state.placeSearch == null) {
+                    TravelInlineFailure(
+                        failure = failure,
+                        onRetry =
+                            when {
+                                state.canRetrySave -> onRetrySave
+                                failure == TravelPlanFailure.CONFLICT || failure == TravelPlanFailure.CONNECTION -> onReload
+                                else -> null
+                            },
+                        retryLabel =
+                            if (state.canRetrySave) {
+                                stringResource(Res.string.common_retry_button)
+                            } else {
+                                stringResource(Res.string.travel_reload)
+                            },
+                    )
+                }
+
+                if (state.visitUndo != null && state.visitDraft == null && state.placeSearch == null) {
+                    TextButton(onClick = onUndoVisit, enabled = canEdit, modifier = Modifier.padding(horizontal = 12.dp)) {
+                        Text(stringResource(Res.string.travel_undo_visit))
+                    }
+                }
+            },
         ) {
-            if (visits.isEmpty()) {
-                item { Text(stringResource(Res.string.travel_empty_day)) }
+            val visitListState = rememberLazyListState()
+            var draggedId by remember(state.selectedDay, plan.revision) { mutableStateOf<String?>(null) }
+            var dragPosition by remember(state.selectedDay, plan.revision) { mutableStateOf(0f) }
+            LaunchedEffect(state.listFocusRequest) {
+                val index = visits.indexOfFirst { it.id == state.selectedVisitId }
+                if (state.listFocusRequest > 0 && index >= 0) visitListState.scrollToItem(index)
             }
-            itemsIndexed(visits, key = { _, visit -> visit.id }) { index, visit ->
-                TravelVisitRow(
-                    visit = visit,
-                    title =
-                        state.dayPlaces[visit.details.googlePlaceId]?.name ?: visit.details.name
-                            ?: stringResource(Res.string.travel_visit_fallback, index + 1),
-                    number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
-                    selected = state.selectedVisitId == visit.id,
-                    canEdit = canEdit,
-                    canMoveUp = index > 0,
-                    canMoveDown = index < visits.lastIndex,
-                    onOpen = { onOpenVisit(visit) },
-                    onMove = { offset -> onMoveVisit(visit, offset) },
-                    onDragStart = {
-                        val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
-                        if (row != null) {
-                            draggedId = visit.id
-                            dragPosition = row.offset + row.size / 2f
-                            dragOrder = savedVisits.map(TravelVisit::id)
-                        }
-                    },
-                    onDrag = { delta ->
-                        val order = dragOrder
-                        if (order != null && draggedId == visit.id) {
-                            dragPosition += delta
-                            val target =
-                                visitListState.layoutInfo.visibleItemsInfo.firstOrNull { row ->
-                                    dragPosition >= row.offset && dragPosition < row.offset + row.size
-                                }
-                            val from = order.indexOf(visit.id)
-                            val to = target?.index ?: from
-                            if (from >= 0 && to in order.indices && from != to) {
-                                dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
+            LazyColumn(
+                state = visitListState,
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            ) {
+                if (visits.isEmpty()) {
+                    item { Text(stringResource(Res.string.travel_empty_day)) }
+                }
+                itemsIndexed(visits, key = { _, visit -> visit.id }) { index, visit ->
+                    TravelVisitRow(
+                        visit = visit,
+                        title =
+                            state.dayPlaces[visit.details.googlePlaceId]?.name ?: visit.details.name
+                                ?: stringResource(Res.string.travel_visit_fallback, index + 1),
+                        number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
+                        selected = state.selectedVisitId == visit.id,
+                        canEdit = canEdit,
+                        canMoveUp = index > 0,
+                        canMoveDown = index < visits.lastIndex,
+                        onOpen = { onOpenVisit(visit) },
+                        onMove = { offset -> onMoveVisit(visit, offset) },
+                        onDragStart = {
+                            val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
+                            if (row != null) {
+                                draggedId = visit.id
+                                dragPosition = row.offset + row.size / 2f
+                                dragOrder = savedVisits.map(TravelVisit::id)
                             }
-                        }
-                    },
-                    onDragFinished = { apply ->
-                        val order = dragOrder
-                        if (apply && order != null && order != savedVisits.map(TravelVisit::id)) {
-                            onReorderVisits(order)
-                        } else {
-                            dragOrder = null
-                        }
-                        draggedId = null
-                    },
-                )
-            }
-            if (state.dayPlaces.isNotEmpty()) {
-                item { GooglePlacesAttribution(state.dayPlaces.values.flatMap { it.attributions }) }
+                        },
+                        onDrag = { delta ->
+                            val order = dragOrder
+                            if (order != null && draggedId == visit.id) {
+                                dragPosition += delta
+                                val target =
+                                    visitListState.layoutInfo.visibleItemsInfo.firstOrNull { row ->
+                                        dragPosition >= row.offset && dragPosition < row.offset + row.size
+                                    }
+                                val from = order.indexOf(visit.id)
+                                val to = target?.index ?: from
+                                if (from >= 0 && to in order.indices && from != to) {
+                                    dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
+                                }
+                            }
+                        },
+                        onDragFinished = { apply ->
+                            val order = dragOrder
+                            if (apply && order != null && order != savedVisits.map(TravelVisit::id)) {
+                                onReorderVisits(order)
+                            } else {
+                                dragOrder = null
+                            }
+                            draggedId = null
+                        },
+                    )
+                }
+                if (state.dayPlaces.isNotEmpty()) {
+                    item { GooglePlacesAttribution(state.dayPlaces.values.flatMap { it.attributions }) }
+                }
             }
         }
         if (plan.summary.hasEnded {
