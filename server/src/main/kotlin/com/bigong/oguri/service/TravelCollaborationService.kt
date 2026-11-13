@@ -6,6 +6,7 @@ import com.bigong.oguri.repository.TravelChangeRow
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelMemberRow
 import com.bigong.oguri.repository.TravelPlanRepository
+import com.bigong.oguri.repository.TravelReminderRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -26,6 +27,7 @@ class TravelCollaborationService(
     private val plans: TravelPlanRepository,
     private val members: MemberRepository,
     private val collaboration: TravelCollaborationRepository,
+    private val reminders: TravelReminderRepository,
     @param:Value("\${TRAVEL_INVITE_TTL_DAYS:7}") private val inviteTtlDays: Long,
 ) {
     private val random: SecureRandom = SecureRandom()
@@ -130,6 +132,7 @@ class TravelCollaborationService(
         change: TravelDetailsChange,
     ) {
         val plan = owner(memberId, planId)
+        val reminderTimeChanged = plan.startDate != change.startDate || plan.endDate != change.endDate || plan.timeZone != change.timeZone
         plan.updateDetails(
             change.city.trim(),
             change.title.trim(),
@@ -139,6 +142,7 @@ class TravelCollaborationService(
             requireNotNull(change.expectedRevision),
             requireNotNull(change.confirmedUnassignedCount),
         )
+        if (reminderTimeChanged) reminders.cancelForPlan(planId)
         collaboration.recordChange(planId, memberId, plan.revision, null, "TRIP_UPDATED")
     }
 
@@ -196,6 +200,7 @@ class TravelCollaborationService(
         planId: UUID,
         memberId: String,
     ) {
+        reminders.cancelForMember(planId, memberId)
         collaboration.removeView(planId, memberId)
         if (collaboration.ownershipTarget(planId) == memberId) collaboration.clearOwnershipOffer(planId)
         collaboration.revokeInvites(planId)
