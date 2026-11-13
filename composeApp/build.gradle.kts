@@ -218,13 +218,7 @@ android {
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
         manifestPlaceholders["googleMapsAndroidApiKey"] =
             providers.environmentVariable("GOOGLE_MAPS_ANDROID_API_KEY").orNull
-                ?: localProperties.getProperty("google.maps.android.api.key")
-                ?: providers.fileContents(rootProject.layout.projectDirectory.file(".env")).asText.orNull
-                    ?.lineSequence()
-                    ?.firstOrNull { it.startsWith("GOOGLE_MAPS_ANDROID_API_KEY=") }
-                    ?.substringAfter('=')
-                    ?.trim()
-                    .orEmpty()
+                ?: localProperties.getProperty("google.maps.android.api.key").orEmpty()
     }
     packaging {
         resources {
