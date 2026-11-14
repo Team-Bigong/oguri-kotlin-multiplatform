@@ -51,3 +51,7 @@ bash scripts/verify_ios_simulator.sh
 `Package.resolved`에 고정된 버전을 사용한다. 공개 패키지의 바이너리 다운로드 전 인증 저장소 조회에서 대기하는 경우를 피하도록 Xcode의 `-packageAuthorizationProvider netrc` 옵션을 해당 명령에 적용한다. [관련 도구 이슈](https://github.com/actions/runner-images/issues/13175)는 같은 대기 증상을 보고한다. 전역 키체인 설정을 변경하지 않는다.
 
 빌드는 앱 실행·지도 표시·실제 푸시 전달의 검증과 구분한다. 실제 앱 실행에는 해당 iOS Firebase 앱의 `GoogleService-Info-Debug.plist`가 앱 리소스에 포함되어야 하며, 배포 설정은 `GoogleService-Info-Release.plist`를 사용한다. Android의 `google-services.json`으로 이 파일을 대신할 수 없다. 두 plist는 Git 제외 대상이다.
+
+로컬 설정은 `iosApp/iosApp/GoogleService-Info-Debug.plist`와 `iosApp/iosApp/GoogleService-Info-Release.plist`에 둔다. 각 파일의 `BUNDLE_ID`가 해당 `iosApp/Configuration/Debug.xcconfig` 또는 `Release.xcconfig`의 `PRODUCT_BUNDLE_IDENTIFIER`와 일치해야 한다. Xcode의 동기화 리소스 폴더에서 앱에 포함되므로 별도 참조를 추가하지 않는다. 설정 파일의 내용은 로그나 커밋에 남기지 않는다.
+
+빌드 후 선택한 시뮬레이터에 `Oguri.app`을 설치하고 Debug 번들 식별자로 실행한다. 앱 번들에 Debug plist가 실제로 존재하고 앱과 Firebase 번들 식별자가 같은지 확인한 뒤 로그인 화면 표시까지 검증한다. 이 단계만으로 회원 로그인·Google 지도 표시·실제 APNs/FCM 수신이 검증되지는 않는다.
