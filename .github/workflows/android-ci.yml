@@ -67,4 +67,6 @@ jobs:
           if-no-files-found: ignore
 
       - name: Build debug app for verification
+        env:
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY_DEBUG }}
         run: ./gradlew :composeApp:assembleDebug --stacktrace

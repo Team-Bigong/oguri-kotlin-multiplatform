@@ -3,13 +3,13 @@
 ## 단위 테스트와 앱 빌드
 
 ```sh
-./gradlew :server:test :composeApp:testDebugUnitTest :composeApp:assembleDebug :composeApp:compileKotlinIosSimulatorArm64
+./gradlew :server:test :composeApp:testDebugUnitTest :composeApp:assembleDebug :composeApp:iosSimulatorArm64Test
 npm --prefix web ci
 npm --prefix web test
 npm --prefix web run build
 ```
 
-Android 빌드에는 로컬 Firebase 설정이 필요하다. iOS Kotlin 컴파일은 Swift 호스트 앱 전체 빌드나 실제 기기 전달 검증을 대신하지 않는다.
+Android 빌드에는 로컬 Firebase 설정이 필요하다. iOS 공통 테스트는 macOS arm64와 iOS 시뮬레이터에서 실행한다. 이 테스트와 Swift 호스트 앱 전체 빌드는 별도로 실행한다.
 
 ## 임시 PostgreSQL에서 전체 서버 테스트
 
@@ -76,3 +76,10 @@ bash scripts/verify_ios_simulator.sh
 - `TRAVEL_REMINDERS_ENABLED=false`는 새 예약과 기기 등록, 서버의 발송 작업을 중지한다. 예약·기기 해제와 이미 전달된 알림의 현재 상태 확인은 계속 가능하다. 아직 유효한 대기 예약은 발송을 다시 활성화하면 처리될 수 있다.
 
 서버 설정은 기본적으로 켜져 있으며 환경 변수 변경은 다음 서버 시작 시 적용된다.
+
+
+## CI의 여행 지도와 Firebase 설정
+
+- Android CI 디버그 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY_DEBUG`, Android 배포 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY`를 GitHub Actions 시크릿으로 전달한다.
+- Xcode Cloud에는 각각 `GOOGLE_MAPS_IOS_API_KEY_DEBUG`와 `GOOGLE_MAPS_IOS_API_KEY`를 전달한다. `ci_post_clone.sh`에서 각 환경의 `GOOGLE_MAPS_IOS_API_KEY` 빌드 설정에 적용한다.
+- Xcode Cloud의 `OGURI_IOS_FIREBASE_DEBUG_PLIST_BASE64`와 `OGURI_IOS_FIREBASE_RELEASE_PLIST_BASE64`에는 해당 plist의 Base64 값을 전달한다. 파일 구조와 번들 식별자가 일치하면 앱 리소스 경로에 기록한다.

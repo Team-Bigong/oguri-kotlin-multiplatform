@@ -74,6 +74,7 @@ jobs:
       - name: Build signed Android App Bundle
         env:
           TRAVEL_PLANNER_ENABLED_IN_RELEASE: ${{ vars.TRAVEL_PLANNER_ENABLED_IN_RELEASE || 'false' }}
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
