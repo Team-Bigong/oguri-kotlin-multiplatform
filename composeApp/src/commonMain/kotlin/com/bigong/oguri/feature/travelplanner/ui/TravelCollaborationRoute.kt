@@ -224,9 +224,12 @@ internal fun TravelInviteRoute(
     onBack: () -> Unit,
     onJoined: (String) -> Unit,
 ) {
-    val state by viewModel.state.collectAsStateWithLifecycle()
+    val loadedState by viewModel.state.collectAsStateWithLifecycle()
+    val state = if (viewModel.matchesInvite(token)) loadedState else TravelCollaborationState(busy = token != null)
     LaunchedEffect(viewModel, token) { if (token != null) viewModel.preview(token) }
-    LaunchedEffect(state.joinedPlanId) { state.joinedPlanId?.let(onJoined) }
+    LaunchedEffect(viewModel, token, state.joinedPlanId) {
+        if (viewModel.matchesInvite(token)) state.joinedPlanId?.let(onJoined)
+    }
     TravelPlannerPage(stringResource(Res.string.travel_invitation), onBack, state.busy) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val preview = state.preview

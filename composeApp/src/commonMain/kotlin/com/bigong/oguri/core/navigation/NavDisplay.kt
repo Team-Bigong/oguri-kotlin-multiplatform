@@ -25,6 +25,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
 import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
@@ -220,8 +221,15 @@ fun NavDisplay(
             ) {
                 return@LaunchedEffect
             }
-            appGraph.deepLinkStore.clearConsumed(urlText = deepLinkUrl)
             val invite = parseTravelInvite(deepLinkUrl)
+            if (invite != null &&
+                (currentDestination.hasRoute<RouteModel.TravelLogin>() ||
+                    currentDestination.hasRoute<RouteModel.TravelOnboarding>() ||
+                    currentDestination.hasRoute<RouteModel.Onboarding>())
+            ) {
+                return@LaunchedEffect
+            }
+            appGraph.deepLinkStore.clearConsumed(urlText = deepLinkUrl)
             if (invite != null) {
                 TravelInviteIntent.receive(invite)
                 navigator.navigateToTravelInvite()

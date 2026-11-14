@@ -29,7 +29,5 @@ internal object TravelInviteIntent {
         mutableToken.value = token
     }
 
-    fun clear(token: String) {
-        mutableToken.compareAndSet(token, null)
-    }
+    fun clear(token: String): Boolean = mutableToken.compareAndSet(token, null)
 }

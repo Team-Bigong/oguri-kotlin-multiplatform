@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -25,6 +26,7 @@ import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.core.network.TRAVEL_PLANNER_ENABLED_IN_RELEASE
 import com.bigong.oguri.core.network.isDebugPlatformBuild
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
+import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.domain.model.DisplayThemeMode
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.repository.TravelRecommendationEntry
@@ -285,26 +287,30 @@ fun MainNavHost(
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
-        composable<RouteModel.TravelInvite> {
+        composable<RouteModel.TravelInvite> { entry ->
             val token by TravelInviteIntent.token.collectAsStateWithLifecycle()
             val inviteViewModel =
                 viewModel<com.bigong.oguri.feature.travelplanner.ui.TravelCollaborationViewModel>(
                     key = "travel-invite-${travelSession.version}",
                 ) { appGraph.travelCollaborationViewModelProvider() }
-            TravelInviteRoute(
-                token = token,
-                signedIn = travelSession.tokens != null,
-                viewModel = inviteViewModel,
-                onSignIn = navigator::navigateToTravelLogin,
-                onBack = {
-                    token?.let(TravelInviteIntent::clear)
-                    navigator.popBackStack()
-                },
-                onJoined = {
-                    token?.let(TravelInviteIntent::clear)
-                    navigator.openJoinedTravelPlan(it)
-                },
-            )
+            val closeInvite: () -> Unit = {
+                if (token?.let(TravelInviteIntent::clear) != false) navigator.popBackStack()
+            }
+            val lifecycleState by entry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+            val isCurrent = lifecycleState == Lifecycle.State.RESUMED
+            PlatformBackHandler(enabled = isCurrent, onBack = closeInvite)
+            PlatformBackGestureContainer(enabled = isCurrent, onBack = closeInvite) {
+                TravelInviteRoute(
+                    token = token,
+                    signedIn = travelSession.tokens != null,
+                    viewModel = inviteViewModel,
+                    onSignIn = navigator::navigateToTravelLogin,
+                    onBack = closeInvite,
+                    onJoined = {
+                        if (token?.let(TravelInviteIntent::clear) == true) navigator.openJoinedTravelPlan(it)
+                    },
+                )
+            }
         }
         composable<RouteModel.TravelMembers> { entry ->
             if (travelSession.tokens == null) {

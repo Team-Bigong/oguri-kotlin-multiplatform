@@ -40,6 +40,7 @@ class TravelCollaborationViewModel(
 ) : ViewModel() {
     private val mutableState: MutableStateFlow<TravelCollaborationState> = MutableStateFlow(TravelCollaborationState())
     private var inviteJob: Job? = null
+    private var previewToken: String? = null
     private var operationJob: Job? = null
     private var operationGeneration: Long = 0
     internal val state: StateFlow<TravelCollaborationState> = mutableState.asStateFlow()
@@ -142,7 +143,8 @@ class TravelCollaborationViewModel(
     }
 
     internal fun preview(token: String) {
-        operationGeneration++
+        previewToken = token
+        val generation = ++operationGeneration
         operationJob?.cancel()
         inviteJob?.cancel()
         mutableState.value = TravelCollaborationState(busy = true)
@@ -150,18 +152,22 @@ class TravelCollaborationViewModel(
             viewModelScope.launch {
                 try {
                     val preview = checkedResult { repository.preview(token) }
-                    mutableState.update { it.copy(preview = preview, busy = false) }
+                    if (generation == operationGeneration) mutableState.update { it.copy(preview = preview, busy = false) }
                 } catch (exception: TravelPlanException) {
-                    mutableState.update { it.copy(failure = exception.failure, busy = false) }
+                    if (generation == operationGeneration) mutableState.update { it.copy(failure = exception.failure, busy = false) }
                 }
             }
     }
 
-    internal fun join(token: String) =
+    internal fun matchesInvite(token: String?): Boolean = token != null && token == previewToken
+
+    internal fun join(token: String) {
+        if (!matchesInvite(token) || mutableState.value.preview == null) return
         perform {
             val joined = checkedResult { repository.join(token) }
             mutableState.update { it.copy(joinedPlanId = joined) }
         }
+    }
 
     internal fun applyAccessFailure(failure: TravelPlanFailure) {
         if (failure == TravelPlanFailure.UNAVAILABLE || failure == TravelPlanFailure.SIGN_IN_REQUIRED) applyFailure(failure)
@@ -191,7 +197,7 @@ class TravelCollaborationViewModel(
                 try {
                     action()
                 } catch (exception: TravelPlanException) {
-                    applyFailure(exception.failure)
+                    if (generation == operationGeneration) applyFailure(exception.failure)
                 } finally {
                     if (generation == operationGeneration) mutableState.update { it.copy(busy = false) }
                 }

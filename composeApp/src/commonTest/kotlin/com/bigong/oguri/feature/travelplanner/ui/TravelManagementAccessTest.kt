@@ -19,6 +19,36 @@ class TravelManagementAccessTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     @Test
+    fun replacingAnInvitationBlocksAStaleJoinAndDiscardsItsLateFailure() =
+        runTest {
+            val repository = ManagementCollaboration()
+            val viewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+            val oldJoin = CompletableDeferred<Unit>()
+            repository.joinInvite = {
+                withContext(NonCancellable) { oldJoin.await() }
+                throw TravelPlanException(TravelPlanFailure.SIGN_IN_REQUIRED)
+            }
+            viewModel.preview("first")
+            advanceUntilIdle()
+            assertTrue(viewModel.matchesInvite("first"))
+            assertFalse(viewModel.matchesInvite("second"))
+            viewModel.join("second")
+            advanceUntilIdle()
+            assertTrue(repository.joinedTokens.isEmpty())
+
+            viewModel.join("first")
+            runCurrent()
+            viewModel.preview("second")
+            runCurrent()
+            oldJoin.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(listOf("first"), repository.joinedTokens)
+            assertEquals("second", viewModel.state.value.preview?.title)
+            assertNull(viewModel.state.value.failure)
+            assertNull(viewModel.state.value.joinedPlanId)
+        }
+
+    @Test
     fun revokedMembershipClearsMembersInviteAndPreviouslyShownChanges() =
         runTest {
             val repository = ManagementCollaboration()
@@ -183,9 +213,16 @@ private class ManagementCollaboration : TravelCollaborationRepository {
 
     override suspend fun acceptOwnership(planId: String): Unit = error("Unused")
 
-    override suspend fun preview(token: String): TravelInvitePreview = error("Unused")
+    val joinedTokens = mutableListOf<String>()
+    var joinInvite: suspend (String) -> String = { error("Unused") }
 
-    override suspend fun join(token: String): String = error("Unused")
+    override suspend fun preview(token: String): TravelInvitePreview =
+        TravelInvitePreview(token, LocalDate(2027, 4, 1), LocalDate(2027, 4, 3), null)
+
+    override suspend fun join(token: String): String {
+        joinedTokens.add(token)
+        return joinInvite(token)
+    }
 }
 
 private class ManagementPlans : TravelPlanRepository {
