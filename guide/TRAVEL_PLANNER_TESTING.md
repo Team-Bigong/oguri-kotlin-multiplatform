@@ -39,3 +39,15 @@ V24 이전에는 `destination_experiences` 생성 DDL이 버전 관리에 없었
 V41은 회원 조회에 필요한 `onboarding_completed` 열을 추가한다. 새 DB의 기본값은 `false`이며, 이미 수동으로 추가한 열과 기존 완료 값은 보존한다. 관련 통합 테스트는 새 스키마의 Hibernate 검증과 기존 완료 값 보존을 각각 확인한다.
 
 알림 검증도 같은 임시 DB 실행에 포함된다. 실제 트랜잭션으로 취소/인계·인계/취소·새 예약/이전 작업·기기 해제/인계·멤버 제외/인계·기간 변경/인계·두 작업의 동일 예약 인계를 겹쳐 실행한다. 발송 공급자 인증 실패·거절·예외·중단은 공급자 모형을 사용하는 단위 테스트로 확인한다. 이 결과는 실제 FCM/APNs 수락·기기 표시·OS 권한·앱 종료 상태 수신을 증명하지 않는다.
+
+## iOS Swift 호스트 시뮬레이터 빌드
+
+```sh
+bash scripts/verify_ios_simulator.sh
+```
+
+전체 Xcode와 Java 17이 필요하다. 이 명령은 `iosApp-Debug`의 arm64 시뮬레이터 앱을 서명 없이 빌드하며, Kotlin 프레임워크 연결과 Swift 지도·알림 브리지까지 컴파일한다. 명시한 `DEVELOPER_DIR`를 우선 사용하고, 기본 선택이 Command Line Tools이면 설치된 `/Applications/Xcode.app`을 사용한다.
+
+`Package.resolved`에 고정된 버전을 사용한다. 공개 패키지의 바이너리 다운로드 전 인증 저장소 조회에서 대기하는 경우를 피하도록 Xcode의 `-packageAuthorizationProvider netrc` 옵션을 해당 명령에 적용한다. [관련 도구 이슈](https://github.com/actions/runner-images/issues/13175)는 같은 대기 증상을 보고한다. 전역 키체인 설정을 변경하지 않는다.
+
+빌드는 앱 실행·지도 표시·실제 푸시 전달의 검증과 구분한다. 실제 앱 실행에는 해당 iOS Firebase 앱의 `GoogleService-Info-Debug.plist`가 앱 리소스에 포함되어야 하며, 배포 설정은 `GoogleService-Info-Release.plist`를 사용한다. Android의 `google-services.json`으로 이 파일을 대신할 수 없다. 두 plist는 Git 제외 대상이다.
