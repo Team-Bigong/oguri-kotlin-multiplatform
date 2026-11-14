@@ -155,6 +155,39 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun orderConflictPreservesTheAttemptAndRequiresAnExplicitSaveAgainstTheLatestOrder() =
+        runTest {
+            val visits = listOf(
+                TravelVisit("first", 1, TravelVisitDetails("First", null, null, null, null), 1),
+                TravelVisit("second", 1, TravelVisitDetails("Second", null, null, null, null), 1),
+            )
+            val plans = AccessPlans(plan.copy(visits = visits, dayOrderRevisions = mapOf(1 to 1L)))
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.selectDay(1)
+            val desired = listOf("second", "first")
+            plans.saveFailure = TravelPlanFailure.CONFLICT
+            assertTrue(viewModel.reorderVisits(1, 1, 0, desired))
+            advanceUntilIdle()
+            val attempted = assertNotNull(viewModel.state.value.unappliedOrder)
+            assertEquals(desired, attempted.visitIds)
+            viewModel.applyUnappliedOrder()
+            advanceUntilIdle()
+            assertEquals(listOf<TravelVisitChange>(attempted), plans.saveAttempts)
+
+            plans.saveFailure = null
+            plans.currentPlan = plans.currentPlan.copy(revision = 2, dayOrderRevisions = mapOf(1 to 2L))
+            viewModel.loadPlan("plan", rebaseDraft = true)
+            advanceUntilIdle()
+            assertEquals(attempted, viewModel.state.value.unappliedOrder)
+            viewModel.applyUnappliedOrder()
+            advanceUntilIdle()
+            assertEquals(listOf<TravelVisitChange>(attempted, attempted.copy(expectedOrderRevision = 2)), plans.saveAttempts)
+            assertNull(viewModel.state.value.unappliedOrder)
+        }
+
+    @Test
     fun automaticRefreshSkipsUnchangedCacheWritesAndPreservesTheDraftWhenARevisionArrives() =
         runTest {
             val plans = AccessPlans(plan)
@@ -573,6 +606,7 @@ private class AccessPlans(
 
     var unavailable: Boolean = false
     var connectionFailure: Boolean = false
+    val saveAttempts = mutableListOf<TravelVisitChange>()
     var saveFailure: TravelPlanFailure? = null
     var readBarrier: CompletableDeferred<Unit>? = null
 
@@ -612,6 +646,7 @@ private class AccessPlans(
         requestId: String,
         change: TravelVisitChange,
     ): TravelPlan {
+        saveAttempts.add(change)
         saveFailure?.let { throw TravelPlanException(it) }
         return currentPlan
     }

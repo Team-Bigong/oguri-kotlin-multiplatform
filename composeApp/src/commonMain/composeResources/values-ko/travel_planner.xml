@@ -173,4 +173,7 @@
     <string name="travel_visit_details">방문 정보</string>
     <string name="travel_visit_local_time">현지 시각 · %1$s</string>
     <string name="travel_directions_unavailable">지도를 열지 못했어요. 다시 시도해 주세요.</string>
+    <string name="travel_order_mine">내가 정한 순서</string>
+    <string name="travel_order_cannot_reapply">방문 목록이나 여행 기간이 바뀌었어요. 현재 목록에서 순서를 다시 바꿔 주세요.</string>
+    <string name="travel_order_matches">현재 목록이 이미 이 순서예요.</string>
 </resources>

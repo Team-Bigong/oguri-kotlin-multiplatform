@@ -173,4 +173,7 @@
     <string name="travel_visit_details">到访信息</string>
     <string name="travel_visit_local_time">当地时间 · %1$s</string>
     <string name="travel_directions_unavailable">无法打开地图，请重试。</string>
+    <string name="travel_order_mine">我尚未保存的顺序</string>
+    <string name="travel_order_cannot_reapply">到访地点或旅行日期已变更。请在当前列表中重新排序。</string>
+    <string name="travel_order_matches">当前列表已经是这个顺序。</string>
 </resources>

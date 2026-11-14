@@ -623,6 +623,18 @@ class TravelPlannerViewModel(
         return changeVisit(TravelVisitChange.Reorder(day, expectedOrderRevision, visitIds, expectedStructureRevision))
     }
 
+    internal fun applyUnappliedOrder() {
+        val current = state.value
+        val order = current.unappliedOrder ?: return
+        val plan = current.plan ?: return
+        if (order.structureRevision != plan.structureRevision) return
+        reorderVisits(order.dayNumber, plan.orderRevision(order.dayNumber), plan.structureRevision, order.visitIds)
+    }
+
+    internal fun discardUnappliedOrder() {
+        mutableState.update { it.copy(unappliedOrder = null) }
+    }
+
     internal fun openExistingPlace(visit: TravelVisit) {
         closePlaceSearch()
         selectVisitFromMap(visit.id)
@@ -797,6 +809,7 @@ class TravelPlannerViewModel(
                 plan = updated,
                 isOffline = false,
                 visitUndo = undo,
+                unappliedOrder = current.unappliedOrder.takeUnless { change is TravelVisitChange.Reorder && it?.dayNumber == change.dayNumber },
                 selectedDay = selectedDayAfterSave,
                 visitDraft = null,
                 selectedVisitId =
@@ -905,6 +918,10 @@ class TravelPlannerViewModel(
             } catch (exception: TravelPlanException) {
                 if (generation != mutationGeneration) return@launch
                 if (planId != null && visitSaveAttempted) recordVisitSaveFailure(planId, exception.failure)
+                val attemptedOrder = (request as? TravelPendingSave.Visit)?.change as? TravelVisitChange.Reorder
+                if (attemptedOrder != null && exception.failure == TravelPlanFailure.CONFLICT) {
+                    mutableState.update { it.copy(unappliedOrder = attemptedOrder) }
+                }
                 when (exception.failure) {
                     TravelPlanFailure.CONNECTION, TravelPlanFailure.SIGN_IN_REQUIRED -> Unit
                     TravelPlanFailure.UNAVAILABLE -> {

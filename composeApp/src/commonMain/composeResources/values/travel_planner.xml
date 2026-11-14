@@ -173,4 +173,7 @@
     <string name="travel_visit_details">Visit details</string>
     <string name="travel_visit_local_time">Local time · %1$s</string>
     <string name="travel_directions_unavailable">Could not open the map. Try again.</string>
+    <string name="travel_order_mine">Your unsaved order</string>
+    <string name="travel_order_cannot_reapply">The visits or trip dates changed. Reorder the current list to continue.</string>
+    <string name="travel_order_matches">The current list already has this order.</string>
 </resources>

@@ -9,6 +9,7 @@ import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.domain.model.TravelVisit
+import com.bigong.oguri.domain.model.TravelVisitChange
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -34,6 +35,7 @@ internal data class TravelPlannerUiState(
     val selectedDay: Int = 1,
     val createdPlanId: String? = null,
     val visitDraft: TravelVisitDraft? = null,
+    val unappliedOrder: TravelVisitChange.Reorder? = null,
     val placeSearch: TravelPlaceSearchState? = null,
     val overview: TravelOverviewState? = null,
     val dayPlaces: Map<String, TravelPlace> = emptyMap(),

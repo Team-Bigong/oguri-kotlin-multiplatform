@@ -58,6 +58,11 @@ import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_menu
 import oguri.composeapp.generated.resources.common_retry_button
 import oguri.composeapp.generated.resources.travel_add_visit
+import oguri.composeapp.generated.resources.travel_apply
+import oguri.composeapp.generated.resources.travel_discard_draft
+import oguri.composeapp.generated.resources.travel_order_mine
+import oguri.composeapp.generated.resources.travel_order_cannot_reapply
+import oguri.composeapp.generated.resources.travel_order_matches
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_day
 import oguri.composeapp.generated.resources.travel_day_outside_trip
@@ -97,6 +102,8 @@ internal fun TravelPlanScreen(
     onCloseInspection: () -> Unit,
     onMoveVisit: (TravelVisit, Int) -> Unit,
     onReorderVisits: (Int, Long, Long, List<String>) -> Boolean,
+    onApplyUnappliedOrder: () -> Unit,
+    onDiscardUnappliedOrder: () -> Unit,
     onDraftChange: (TravelVisitDraft?) -> Unit,
     onApplyVisit: () -> Unit,
     onRemoveVisit: () -> Unit,
@@ -248,15 +255,50 @@ internal fun TravelPlanScreen(
             val visitListState = rememberLazyListState()
             var draggedId by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf<String?>(null) }
             var dragPosition by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf(0f) }
+            val unappliedOrder = state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay }
             LaunchedEffect(state.listFocusRequest) {
                 val index = visits.indexOfFirst { it.id == state.selectedVisitId }
-                if (state.listFocusRequest > 0 && index >= 0) visitListState.scrollToItem(index)
+                if (state.listFocusRequest > 0 && index >= 0) {
+                    visitListState.scrollToItem(index + if (unappliedOrder == null) 0 else 1)
+                }
             }
             LazyColumn(
                 state = visitListState,
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             ) {
+                if (unappliedOrder != null) {
+                    item(key = "unapplied-visit-order") {
+                        val savedIds = savedVisits.map(TravelVisit::id)
+                        val latestById = plan.visits.associateBy(TravelVisit::id)
+                        val sameOrder = savedIds == unappliedOrder.visitIds
+                        val canReapply =
+                            plan.structureRevision == unappliedOrder.structureRevision &&
+                                savedIds.toSet() == unappliedOrder.visitIds.toSet()
+                        Text(stringResource(Res.string.travel_order_mine), style = MaterialTheme.typography.titleSmall)
+                        unappliedOrder.visitIds.forEachIndexed { index, id ->
+                            val details = latestById[id]?.details
+                            val name = state.dayPlaces[details?.googlePlaceId]?.name ?: details?.name
+                            Text(
+                                if (name == null) stringResource(Res.string.travel_visit_fallback, index + 1)
+                                else stringResource(Res.string.travel_visit_number, index + 1, name),
+                            )
+                        }
+                        if (!state.needsLatestPlan) {
+                            when {
+                                sameOrder -> Text(stringResource(Res.string.travel_order_matches))
+                                !canReapply -> Text(stringResource(Res.string.travel_order_cannot_reapply))
+                                else -> TextButton(onClick = onApplyUnappliedOrder, enabled = canEdit) {
+                                    Text(stringResource(Res.string.travel_apply))
+                                }
+                            }
+                        }
+                        TextButton(onClick = onDiscardUnappliedOrder, enabled = !state.isSaving && !state.canRetrySave) {
+                            Text(stringResource(Res.string.travel_discard_draft))
+                        }
+                        HorizontalDivider()
+                    }
+                }
                 if (visits.isEmpty()) {
                     item { Text(stringResource(Res.string.travel_empty_day)) }
                 }
@@ -291,7 +333,7 @@ internal fun TravelPlanScreen(
                                         dragPosition >= row.offset && dragPosition < row.offset + row.size
                                     }
                                 val from = order.indexOf(visit.id)
-                                val to = target?.index ?: from
+                                val to = order.indexOf(target?.key).takeIf { it >= 0 } ?: from
                                 if (from >= 0 && to in order.indices && from != to) {
                                     dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
                                 }

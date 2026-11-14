@@ -185,6 +185,8 @@ internal fun TravelPlanRoute(
         onCloseInspection = viewModel::closeInspection,
         onMoveVisit = viewModel::moveVisit,
         onReorderVisits = viewModel::reorderVisits,
+        onApplyUnappliedOrder = viewModel::applyUnappliedOrder,
+        onDiscardUnappliedOrder = viewModel::discardUnappliedOrder,
         onDraftChange = viewModel::updateVisitDraft,
         onApplyVisit = viewModel::applyVisit,
         onRemoveVisit = viewModel::removeVisit,
