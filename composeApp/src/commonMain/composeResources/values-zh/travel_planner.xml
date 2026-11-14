@@ -107,7 +107,7 @@
     <string name="travel_invite_revoked">邀请已撤销。请索取新链接。</string>
     <string name="travel_invite_trip_deleted">此旅行已删除。</string>
     <string name="travel_edit_trip">编辑旅行信息</string>
-    <string name="travel_details_move_unassigned">%1$d 条到访安排将移至日期待定。</string>
+    <string name="travel_details_move_unassigned">超出日期的%1$d个行程不会删除，将移至最后一天末尾。</string>
     <string name="travel_details_keep_local_times">现有到访安排的当地时间保持不变。</string>
     <string name="travel_offer_ownership">提出所有权转让</string>
     <string name="travel_accept_ownership">接受所有权</string>
@@ -224,4 +224,15 @@
     <string name="travel_already_added">已加入当天，可再次添加。</string>
     <string name="travel_conflict_mine">我的修改</string>
     <string name="travel_conflict_saved">最新保存内容</string>
+    <string name="travel_add_city">添加城市</string>
+    <string name="travel_date_week">%1$s（%2$s）</string>
+    <string name="travel_primary_city">行程时间以第一个城市为准。</string>
+    <string name="travel_choose_range">实际旅行日期</string>
+    <string name="travel_weekday_0">一</string>
+    <string name="travel_weekday_1">二</string>
+    <string name="travel_weekday_2">三</string>
+    <string name="travel_weekday_3">四</string>
+    <string name="travel_weekday_4">五</string>
+    <string name="travel_weekday_5">六</string>
+    <string name="travel_weekday_6">日</string>
 </resources>

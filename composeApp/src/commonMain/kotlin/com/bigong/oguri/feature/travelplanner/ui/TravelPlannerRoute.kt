@@ -249,6 +249,7 @@ internal fun TravelPlanRoute(
             onManualAdd = { if (state.visitDraft == null) viewModel.openVisit(null) },
             onDraftChange = viewModel::updateVisitDraft,
             onApplyManual = viewModel::applyVisit,
+            onSearchCity = { viewModel.selectSearchCity(it, language) },
         )
     }
 }

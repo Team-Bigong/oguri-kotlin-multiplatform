@@ -36,8 +36,11 @@ data class TravelPlanDetails(
     val title: String,
     val dates: TravelDates,
     val source: TravelPlanSource? = null,
+    val cities: List<String> = listOf(city),
 ) {
     init {
+        require(cities.size in 1..10 && cities.distinct().size == cities.size && cities.first() == city)
+        require(cities.all { it.isNotBlank() && it.length <= MAX_TEXT_LENGTH })
         require(city.isNotBlank() && city.length <= MAX_TEXT_LENGTH)
         require(title.isNotBlank() && title.length <= MAX_TEXT_LENGTH)
     }

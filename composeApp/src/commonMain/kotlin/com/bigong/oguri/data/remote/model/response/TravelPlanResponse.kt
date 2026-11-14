@@ -13,6 +13,7 @@ internal data class TravelPlanSummaryResponse(
     val endDate: String,
     val source: TravelPlanSourceResponse? = null,
     val memberCount: Int? = null,
+    val cities: List<String> = listOf(city),
 )
 
 @Serializable

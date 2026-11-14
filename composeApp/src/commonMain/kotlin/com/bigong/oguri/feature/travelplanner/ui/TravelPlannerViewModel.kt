@@ -582,6 +582,13 @@ class TravelPlannerViewModel(
         mutableState.update { it.copy(placeSearch = null, failure = null) }
     }
 
+    internal fun selectSearchCity(city: String, language: String) {
+        if (city !in state.value.plan?.summary?.details?.cities.orEmpty()) return
+        val query = state.value.placeSearch?.query.orEmpty()
+        mutableState.update { it.copy(searchCity = city, placeSearch = it.placeSearch?.copy(selected = null, results = emptyList())) }
+        searchPlaces(query, language)
+    }
+
     internal fun searchPlaces(
         query: String,
         language: String,
@@ -601,7 +608,7 @@ class TravelPlannerViewModel(
             viewModelScope.launch {
                 delay(SEARCH_DEBOUNCE_MILLIS)
                 try {
-                    val results = placeRepository.search(planId, query.trim(), language)
+                    val results = placeRepository.searchInCity(planId, query.trim(), language, state.value.searchCity?.takeIf { it in state.value.plan!!.summary.details.cities } ?: state.value.plan!!.summary.details.city)
                     currentCoroutineContext().ensureActive()
                     mutableState.update { it.copy(placeSearch = it.placeSearch?.copy(results = results, isLoading = false)) }
                 } catch (exception: TravelPlanException) {

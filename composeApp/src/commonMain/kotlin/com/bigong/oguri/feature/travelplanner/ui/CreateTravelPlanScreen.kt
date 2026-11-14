@@ -54,6 +54,8 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone
+import oguri.composeapp.generated.resources.travel_add_city
+import oguri.composeapp.generated.resources.travel_primary_city
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_retry_button
 import oguri.composeapp.generated.resources.travel_apply
@@ -111,6 +113,7 @@ internal fun CreateTravelPlanScreen(
 ) {
     var cityInput by rememberSaveable { mutableStateOf("") }
     var cityEdited by rememberSaveable { mutableStateOf(false) }
+    var selectedCities by rememberSaveable { mutableStateOf(listOf<String>()) }
     var timeZoneOverride by rememberSaveable { mutableStateOf<String?>(null) }
     var title by rememberSaveable { mutableStateOf("") }
     var startMillis by rememberSaveable { mutableStateOf(source?.startDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()) }
@@ -123,6 +126,7 @@ internal fun CreateTravelPlanScreen(
         state.recoveredCreation?.let { details ->
             cityEdited = true
             cityInput = details.city
+            selectedCities = details.cities
             timeZoneOverride = details.timeZone.id
             title = details.title
             startMillis =
@@ -143,12 +147,15 @@ internal fun CreateTravelPlanScreen(
     LaunchedEffect(citySearch?.selected, citySearch?.loading) {
         if (citySearch?.selected != null && !citySearch.loading) {
             cityEdited = true
-            cityInput = citySearch.selected.label.take(TravelPlanDetails.MAX_TEXT_LENGTH)
-            timeZoneOverride = citySearch.timeZone?.takeIf { it in TimeZone.availableZoneIds }
+            val chosen = citySearch.selected.label.take(TravelPlanDetails.MAX_TEXT_LENGTH)
+            val primary = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) }
+            selectedCities = (primary + chosen).distinct().take(10)
+            cityInput = selectedCities.first()
+            if (primary.isEmpty()) timeZoneOverride = citySearch.timeZone?.takeIf { it in TimeZone.availableZoneIds }
             onCloseCitySearch()
         }
     }
-    val cityName = cityInput.trim()
+    val cityName = selectedCities.firstOrNull() ?: cityInput.trim()
     val timeZoneId = timeZoneOverride ?: suggestedTimeZone(cityName)
     val cityTimeZone = timeZoneId?.let(TimeZone::of)
     val defaultTitle = stringResource(Res.string.travel_default_title, cityName)
@@ -179,27 +186,22 @@ internal fun CreateTravelPlanScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (!state.creationReady && !state.creationRecoveryFailed) TravelLoading(Modifier.fillMaxWidth())
-            Column {
-                OutlinedTextField(
-                    value = cityInput,
-                    onValueChange = {
-                        if (it.length <= TravelPlanDetails.MAX_TEXT_LENGTH) {
-                            cityEdited = true
-                            cityInput = it
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(Res.string.travel_city), style = OguriTheme.typography.labelMedium)
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val cities = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) }
+                    cities.forEach { city ->
+                        TravelTextButton(enabled = canEdit, onClick = {
+                            selectedCities = cities - city
+                            cityInput = selectedCities.firstOrNull().orEmpty()
                             timeZoneOverride = null
-                        }
-                    },
-                    label = { Text(stringResource(Res.string.travel_city)) },
-                    enabled = canEdit,
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
-                    textStyle = OguriTheme.typography.bodyLarge,
-                    colors = TravelFieldColors(),
-                )
-                TravelTextButton(onClick = onOpenCitySearch, enabled = canEdit) {
-                    Text(stringResource(Res.string.travel_search_cities), color = OguriTheme.colors.textPrimary)
+                        }) { Text("$city ×") }
+                    }
                 }
+                TravelOutlineButton(onClick = onOpenCitySearch, enabled = canEdit && selectedCities.size < 10, modifier = Modifier.fillMaxWidth()) {
+                    Text(stringResource(Res.string.travel_add_city))
+                }
+                if (selectedCities.size > 1) Text(stringResource(Res.string.travel_primary_city), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
             }
             if (state.creationCityFailed) {
                 Text(stringResource(Res.string.travel_city_unavailable))
@@ -210,7 +212,7 @@ internal fun CreateTravelPlanScreen(
             val recommendedEnd = creationSource?.endDate
             if (recommendedStart != null && recommendedEnd != null) {
                 Text(
-                    stringResource(Res.string.travel_recommended_dates, recommendedStart.toString(), recommendedEnd.toString()),
+                    stringResource(Res.string.travel_recommended_dates, travelWeekDate(recommendedStart), travelWeekDate(recommendedEnd)),
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
@@ -224,15 +226,6 @@ internal fun CreateTravelPlanScreen(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
-            val optionsState =
-                stringResource(if (showOptions) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
-            TravelTextButton(
-                onClick = { showOptions = !showOptions },
-                modifier = Modifier.semantics { stateDescription = optionsState },
-            ) {
-                Text(stringResource(Res.string.travel_creation_options), color = OguriTheme.colors.textPrimary)
-            }
-            if (showOptions) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { if (it.length <= TravelPlanDetails.MAX_TEXT_LENGTH) title = it },
@@ -245,7 +238,6 @@ internal fun CreateTravelPlanScreen(
                     textStyle = OguriTheme.typography.bodyLarge,
                     colors = TravelFieldColors(),
                 )
-            }
             state.failure?.takeUnless { it == TravelPlanFailure.SIGN_IN_REQUIRED }?.let {
                 TravelInlineFailure(
                     it,
@@ -267,7 +259,7 @@ internal fun CreateTravelPlanScreen(
                 enabled = canEdit && dates != null && cityName.isNotEmpty() && cityTimeZone != null,
                 onClick = {
                     if (dates != null && cityTimeZone != null) {
-                        onCreate(TravelPlanDetails(cityName, cityTimeZone, title.trim().ifEmpty { defaultTitle }, dates, creationSource))
+                        onCreate(TravelPlanDetails(cityName, cityTimeZone, title.trim().ifEmpty { defaultTitle }, dates, creationSource, selectedCities.ifEmpty { listOf(cityName) }))
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -292,7 +284,8 @@ internal fun CreateTravelPlanScreen(
             onChoose = onChooseCity,
             onChooseRecommendedCity = { city ->
                 cityEdited = true
-                cityInput = city
+                selectedCities = (selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) } + city).distinct().take(10)
+                cityInput = selectedCities.first()
                 timeZoneOverride = null
                 onCloseCitySearch()
             },
@@ -300,21 +293,14 @@ internal fun CreateTravelPlanScreen(
         )
     }
 
-    isDatePickerForStart?.let { selectingStart ->
-        TravelDatePicker(
-            initialMillis = if (selectingStart) startMillis else endMillis ?: startMillis,
-            onDismiss = { isDatePickerForStart = null },
-            onSelected = {
-                if (selectingStart) {
-                    startMillis = it
-                    if (endMillis == null) endMillis = it
-                } else {
-                    endMillis = it
-                }
-                isDatePickerForStart = null
-            },
-        )
-    }
+    if (isDatePickerForStart != null) com.bigong.oguri.feature.travelplanner.ui.component.TravelDateRangePicker(
+        initial = dates, onDismiss = { isDatePickerForStart = null },
+        onSelected = { range ->
+            startMillis = range.start.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+            endMillis = range.endInclusive.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+            isDatePickerForStart = null
+        },
+    )
 }
 
 @Composable
@@ -332,7 +318,7 @@ private fun TravelDateButton(
         ) {
             Icon(painterResource(Res.drawable.ic_calendar), contentDescription = null, modifier = Modifier.size(20.dp))
             Text(label, Modifier.weight(1f), style = OguriTheme.typography.labelLarge)
-            if (date != null) Text(travelDateLabel(date))
+            if (date != null) Text(travelWeekDate(date))
             Icon(painterResource(Res.drawable.ic_pen), contentDescription = null, modifier = Modifier.size(18.dp))
         }
     }

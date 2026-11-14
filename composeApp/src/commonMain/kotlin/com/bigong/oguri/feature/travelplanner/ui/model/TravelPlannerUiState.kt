@@ -36,6 +36,7 @@ internal data class TravelPlannerUiState(
     val citySearch: TravelCitySearchState? = null,
     val plan: TravelPlan? = null,
     val selectedDay: Int = 1,
+    val searchCity: String? = null,
     val createdPlanId: String? = null,
     val visitDraft: TravelVisitDraft? = null,
     val unappliedOrder: TravelVisitChange.Reorder? = null,

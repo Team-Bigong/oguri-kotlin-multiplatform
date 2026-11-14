@@ -107,7 +107,7 @@
     <string name="travel_invite_revoked">The owner revoked this invitation. Ask for a new link.</string>
     <string name="travel_invite_trip_deleted">This trip was deleted.</string>
     <string name="travel_edit_trip">Edit trip details</string>
-    <string name="travel_details_move_unassigned">%1$d visits will move to No date.</string>
+    <string name="travel_details_move_unassigned">%1$d visits will move to the end of the last day.</string>
     <string name="travel_details_keep_local_times">Existing visits keep their local clock times.</string>
     <string name="travel_offer_ownership">Offer ownership</string>
     <string name="travel_accept_ownership">Accept ownership</string>
@@ -224,4 +224,15 @@
     <string name="travel_already_added">Already in this day. You can add it again.</string>
     <string name="travel_conflict_mine">Your edits</string>
     <string name="travel_conflict_saved">Latest saved content</string>
+    <string name="travel_add_city">Add city</string>
+    <string name="travel_date_week">%1$s (%2$s)</string>
+    <string name="travel_primary_city">First city sets the trip’s time zone.</string>
+    <string name="travel_choose_range">Select travel dates</string>
+    <string name="travel_weekday_0">Mon</string>
+    <string name="travel_weekday_1">Tue</string>
+    <string name="travel_weekday_2">Wed</string>
+    <string name="travel_weekday_3">Thu</string>
+    <string name="travel_weekday_4">Fri</string>
+    <string name="travel_weekday_5">Sat</string>
+    <string name="travel_weekday_6">Sun</string>
 </resources>

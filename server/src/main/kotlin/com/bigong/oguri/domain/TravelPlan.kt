@@ -35,6 +35,7 @@ class TravelPlan(
     val sourceStartDate: LocalDate? = null,
     val sourceEndDate: LocalDate? = null,
     val creatorId: String? = ownerId,
+    cities: List<String> = listOf(city),
 ) {
     @Column(nullable = false, length = 100)
     var ownerId: String = ownerId
@@ -43,6 +44,14 @@ class TravelPlan(
     @Column(nullable = false, length = 100)
     var city: String = city
         private set
+
+    @ElementCollection
+    @CollectionTable(name = "travel_plan_cities", joinColumns = [JoinColumn(name = "travel_plan_id")])
+    @jakarta.persistence.OrderColumn(name = "city_order")
+    @Column(name = "city", nullable = false, length = 100)
+    private var cities: MutableList<String> = cities.toMutableList()
+
+    fun cityNames(): List<String> = cities.ifEmpty { listOf(city) }.toList()
 
     @Column(nullable = false, length = 100)
     var title: String = title
@@ -94,6 +103,7 @@ class TravelPlan(
                 !sourceStartDate.isAfter(sourceEndDate),
         )
         validateDetails(city, title, timeZone, startDate, endDate)
+        validateCities(cities, city)
     }
 
     fun updateDetails(
@@ -104,13 +114,17 @@ class TravelPlan(
         endDate: LocalDate,
         expectedRevision: Long,
         confirmedUnassignedCount: Int,
+        cities: List<String> = listOf(city),
     ) {
         if (revision != expectedRevision) throw TravelPlanConflict("TRIP_STRUCTURE_CHANGED")
         validateDetails(city, title, timeZone, startDate, endDate)
+        validateCities(cities, city)
         val dayCount = ChronoUnit.DAYS.between(startDate, endDate) + 1
         val unassigned = orderedVisits().filter { it.dayNumber > dayCount }
         if (unassigned.size != confirmedUnassignedCount) throw TravelPlanConflict("TRIP_STRUCTURE_CHANGED")
         this.city = city
+        this.cities.clear()
+        this.cities.addAll(cities)
         this.title = title
         this.timeZone = timeZone
         this.startDate = startDate
@@ -123,6 +137,11 @@ class TravelPlan(
             visit.moveTo(dayCount.toInt(), position++)
         }
         if (unassigned.isNotEmpty()) dayRevisions[dayCount.toInt()] = revision
+    }
+
+    private fun validateCities(cities: List<String>, primary: String) {
+        require(cities.size in 1..10 && cities.first() == primary && cities.distinct().size == cities.size)
+        require(cities.all { it.isNotBlank() && it.length <= MAX_TRIP_TEXT_LENGTH })
     }
 
     fun transferTo(memberId: String) {
@@ -285,7 +304,7 @@ class TravelPlan(
         }
     }
 
-    fun containsDay(dayNumber: Int): Boolean = dayNumber.toLong() in 0..ChronoUnit.DAYS.between(startDate, endDate) + 1
+    fun containsDay(dayNumber: Int): Boolean = dayNumber.toLong() in 1..ChronoUnit.DAYS.between(startDate, endDate) + 1
 
     private fun requireValidDay(dayNumber: Int) {
         require(containsDay(dayNumber))

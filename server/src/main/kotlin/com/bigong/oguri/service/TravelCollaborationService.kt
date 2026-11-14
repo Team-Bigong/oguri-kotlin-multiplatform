@@ -149,6 +149,7 @@ class TravelCollaborationService(
             change.endDate,
             requireNotNull(change.expectedRevision),
             requireNotNull(change.confirmedUnassignedCount),
+            change.cities.map(String::trim),
         )
         if (reminderTimeChanged) reminders.cancelForPlan(planId)
         collaboration.recordChange(planId, memberId, plan.revision, null, "TRIP_UPDATED")
@@ -324,4 +325,5 @@ data class TravelDetailsChange(
     val endDate: LocalDate,
     val expectedRevision: Long?,
     val confirmedUnassignedCount: Int?,
+    val cities: List<String> = listOf(city),
 )

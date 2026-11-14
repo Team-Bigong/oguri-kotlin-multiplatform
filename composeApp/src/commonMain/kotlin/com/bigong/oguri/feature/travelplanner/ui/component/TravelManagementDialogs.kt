@@ -86,6 +86,7 @@ internal fun TravelDetailsDialog(
     var zone by remember(plan.revision) { mutableStateOf(current.timeZone.id) }
     var start by remember(plan.revision) { mutableStateOf(current.dates.start.toString()) }
     var end by remember(plan.revision) { mutableStateOf(current.dates.endInclusive.toString()) }
+    var chooseDates by remember { mutableStateOf(false) }
     val dates = runCatching { TravelDates(LocalDate.parse(start), LocalDate.parse(end)) }.getOrNull()
     val timeZone = com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone(city.trim())?.let(TimeZone::of) ?: current.timeZone
     val affected = if (dates == null) 0 else plan.visits.count { it.dayNumber > dates.dayCount }
@@ -96,7 +97,7 @@ internal fun TravelDetailsDialog(
             city.length <= TravelPlanDetails.MAX_TEXT_LENGTH &&
             dates != null &&
             timeZone != null
-    com.bigong.oguri.feature.travelplanner.ui.component.TravelFormSheet(
+    TravelFullScreenForm(
         shape = RoundedCornerShape(8.dp),
         containerColor = Neutral0,
         onDismissRequest = onDismiss,
@@ -124,43 +125,25 @@ internal fun TravelDetailsDialog(
                         textStyle = OguriTheme.typography.bodyLarge,
                         colors = TravelFieldColors(),
                     )
-                    OutlinedTextField(
-                        start,
-                        { start = it },
-                        label = { Text(stringResource(Res.string.travel_start_date)) },
-                        enabled = !busy,
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        textStyle = OguriTheme.typography.bodyLarge,
-                        colors = TravelFieldColors(),
-                    )
-                    OutlinedTextField(
-                        end,
-                        { end = it },
-                        label = { Text(stringResource(Res.string.travel_end_date)) },
-                        enabled = !busy,
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        textStyle = OguriTheme.typography.bodyLarge,
-                        colors = TravelFieldColors(),
-                    )
+                    TravelOutlineButton(onClick = { chooseDates = true }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
+                        dates?.let { Text(com.bigong.oguri.feature.travelplanner.ui.travelDateRange(it)) }
+                    }
                     if (affected > 0) Text(stringResource(Res.string.travel_details_move_unassigned, affected))
-                    if (zone.trim() != current.timeZone.id) Text(stringResource(Res.string.travel_details_keep_local_times))
                 } else {
                     Text(current.title, style = OguriTheme.typography.cardTitle)
                     Text(current.city)
                     Text(
                         stringResource(
                             Res.string.travel_dates_value,
-                            current.dates.start.toString(),
-                            current.dates.endInclusive.toString(),
+                            com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(current.dates.start),
+                            com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(current.dates.endInclusive),
                         ),
                     )
                     current.source?.let { source ->
                         Text(stringResource(Res.string.travel_source), style = OguriTheme.typography.cardSubtitle)
                         if (source.startDate != null && source.endDate != null) {
                             Text(
-                                stringResource(Res.string.travel_recommended_dates, source.startDate.toString(), source.endDate.toString()),
+                                stringResource(Res.string.travel_recommended_dates, com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(source.startDate), com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(source.endDate)),
                             )
                         }
                         Text(stringResource(Res.string.travel_source_explanation))
@@ -176,7 +159,7 @@ internal fun TravelDetailsDialog(
             if (showEditor) {
                 TravelTextButton(enabled = !busy && valid && failure != TravelPlanFailure.CONFLICT, onClick = {
                     if (dates != null && timeZone != null) {
-                        onApply(TravelPlanDetails(city.trim(), timeZone, title.trim(), dates, current.source), affected)
+                        onApply(TravelPlanDetails(city.trim(), timeZone, title.trim(), dates, current.source, (listOf(city.trim()) + current.cities.drop(1)).distinct()), affected)
                     }
                 }) { Text(stringResource(Res.string.travel_apply)) }
             } else if (canEdit) {
@@ -189,5 +172,9 @@ internal fun TravelDetailsDialog(
             }
         },
     )
+    if (chooseDates) TravelDateRangePicker(dates, { chooseDates = false }) { range ->
+        start = range.start.toString(); end = range.endInclusive.toString(); chooseDates = false
+    }
+
 }
 

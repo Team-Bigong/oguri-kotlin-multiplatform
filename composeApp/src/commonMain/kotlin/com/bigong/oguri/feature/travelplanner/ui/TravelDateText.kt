@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui
 import androidx.compose.runtime.Composable
 import com.bigong.oguri.domain.model.TravelDates
 import kotlinx.datetime.LocalDate
+import oguri.composeapp.generated.resources.*
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.travel_calendar_date
@@ -36,3 +37,9 @@ internal fun travelCardDates(dates: TravelDates, includeYear: Boolean): String {
 @Composable
 private fun travelMonthDay(date: LocalDate): String =
     stringResource(Res.string.calendar_month_day, date.month.ordinal + 1, date.day)
+
+@Composable
+internal fun travelWeekDate(date: LocalDate): String {
+    val weekdays = listOf(Res.string.travel_weekday_0, Res.string.travel_weekday_1, Res.string.travel_weekday_2, Res.string.travel_weekday_3, Res.string.travel_weekday_4, Res.string.travel_weekday_5, Res.string.travel_weekday_6)
+    return stringResource(Res.string.travel_date_week, travelMonthDay(date), stringResource(weekdays[date.dayOfWeek.ordinal]))
+}

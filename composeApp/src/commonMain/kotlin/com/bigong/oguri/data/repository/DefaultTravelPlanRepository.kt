@@ -71,6 +71,7 @@ class DefaultTravelPlanRepository internal constructor(
                     CreateTravelPlanRequest(
                         requestId = requestId,
                         city = details.city,
+                        cities = details.cities,
                         timeZone = details.timeZone.id,
                         title = details.title,
                         startDate = details.dates.start.toString(),
@@ -144,6 +145,9 @@ class DefaultTravelPlanRepository internal constructor(
 
     override suspend fun cityTimeZone(placeId: String): String? = request { remote.cityTimeZone(placeId).timeZone }
 
+    override suspend fun searchInCity(planId: String, query: String, language: String, city: String): List<TravelPlace> =
+        request { remote.searchPlaces(planId, query, language, city).map { it.toDomain() } }
+
     override suspend fun search(
         planId: String,
         query: String,
@@ -210,6 +214,7 @@ class DefaultTravelPlanRepository internal constructor(
                     details.dates.endInclusive.toString(),
                     revision,
                     unassignedCount,
+                    details.cities,
                 ),
             )
         }
@@ -316,6 +321,7 @@ class DefaultTravelPlanRepository internal constructor(
                     source?.let {
                         TravelPlanSource(it.destinationId, it.startDate?.let(LocalDate::parse), it.endDate?.let(LocalDate::parse))
                     },
+                    cities,
                 ),
         )
 

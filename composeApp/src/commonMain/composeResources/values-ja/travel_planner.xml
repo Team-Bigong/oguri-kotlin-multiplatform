@@ -107,7 +107,7 @@
     <string name="travel_invite_revoked">招待は取り消されました。新しいリンクを依頼してください。</string>
     <string name="travel_invite_trip_deleted">この旅行は削除されました。</string>
     <string name="travel_edit_trip">旅行情報を編集</string>
-    <string name="travel_details_move_unassigned">%1$d件の訪問予定が日付未定に移動します。</string>
+    <string name="travel_details_move_unassigned">期間外の訪問%1$d件は削除せず、最終日の最後に移動します。</string>
     <string name="travel_details_keep_local_times">既存の訪問予定の現地時刻は変わりません。</string>
     <string name="travel_offer_ownership">所有権の譲渡を依頼</string>
     <string name="travel_accept_ownership">所有権を引き受ける</string>
@@ -224,4 +224,15 @@
     <string name="travel_already_added">この日には追加済みです。もう一度追加できます。</string>
     <string name="travel_conflict_mine">自分の編集内容</string>
     <string name="travel_conflict_saved">最新の保存内容</string>
+    <string name="travel_add_city">都市を追加</string>
+    <string name="travel_date_week">%1$s（%2$s）</string>
+    <string name="travel_primary_city">最初の都市を基準に旅行時間を設定します。</string>
+    <string name="travel_choose_range">実際の旅行日程</string>
+    <string name="travel_weekday_0">月</string>
+    <string name="travel_weekday_1">火</string>
+    <string name="travel_weekday_2">水</string>
+    <string name="travel_weekday_3">木</string>
+    <string name="travel_weekday_4">金</string>
+    <string name="travel_weekday_5">土</string>
+    <string name="travel_weekday_6">日</string>
 </resources>

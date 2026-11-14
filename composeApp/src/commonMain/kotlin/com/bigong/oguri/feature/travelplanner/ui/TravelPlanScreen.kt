@@ -527,7 +527,7 @@ internal fun travelDayLabel(
         stringResource(Res.string.travel_unassigned)
     } else if (dayNumber in 1..dates.dayCount) {
         val date = dates.dateOn(dayNumber)
-        stringResource(Res.string.travel_day, dayNumber, stringResource(Res.string.calendar_month_day, date.month.ordinal + 1, date.day))
+        stringResource(Res.string.travel_day, dayNumber, travelWeekDate(date))
     } else {
         stringResource(Res.string.travel_day_outside_trip, dayNumber)
     }

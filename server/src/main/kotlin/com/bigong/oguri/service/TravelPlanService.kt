@@ -71,6 +71,7 @@ class TravelPlanService(
                         creationRequestId = request.requestId,
                         creationFingerprint = fingerprint,
                         city = request.city.trim(),
+                        cities = request.cities.map(String::trim),
                         timeZone = request.timeZone.trim(),
                         title = request.title.trim(),
                         startDate = request.startDate,
@@ -149,9 +150,12 @@ class TravelPlanService(
     fun cityForPlaces(
         memberId: String,
         planId: UUID,
+        selectedCity: String? = null,
     ): String {
         requireMember(memberId)
-        return accessiblePlan(memberId, planId).city
+        val plan = accessiblePlan(memberId, planId)
+        require(selectedCity == null || selectedCity in plan.cityNames())
+        return selectedCity ?: plan.city
     }
 
     @Transactional
@@ -327,7 +331,11 @@ class TravelPlanService(
 
     private fun fingerprint(request: Any): String =
         HexFormat.of().formatHex(
-            MessageDigest.getInstance("SHA-256").digest(objectMapper.writeValueAsBytes(request)),
+            MessageDigest.getInstance("SHA-256").digest(objectMapper.writeValueAsBytes(
+                if (request is CreateTravelPlanRequest && request.cities == listOf(request.city)) {
+                    objectMapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(request).also { it.remove("cities") }
+                } else request,
+            )),
         )
 
     private fun TravelVisitRequest.toDomain(): TravelVisitDetails =
@@ -337,7 +345,7 @@ class TravelPlanService(
             localTime = localTime,
             note = note?.trim()?.takeIf(String::isNotEmpty),
             googlePlaceId = googlePlaceId,
-            category = category,
+            category = if (category == com.bigong.oguri.domain.TravelVisitCategory.FLIGHT) com.bigong.oguri.domain.TravelVisitCategory.TRANSPORT else category,
         )
 
     private fun TravelPlan.toSummary(memberCount: Int? = null): TravelPlanSummaryResponse =
@@ -354,6 +362,7 @@ class TravelPlanService(
                 TravelPlanSourceResponse(sourceDestinationId, sourceStartDate, sourceEndDate)
             },
             memberCount,
+            cityNames(),
         )
 
     private fun TravelPlan.toResponseFor(memberId: String): TravelPlanResponse =

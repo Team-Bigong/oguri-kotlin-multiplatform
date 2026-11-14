@@ -23,13 +23,33 @@ class TravelPlanCollaborationTest {
     private val details = TravelVisitDetails("Museum", "Address", null, "Original")
 
     @Test
-    fun `전체 날짜 장소 조회는 미배정과 재방문을 포함하되 외부 조회값은 중복하지 않는다`() {
+    fun `여러 도시는 순서를 유지하고 중복 도시 변경은 원자적으로 거절한다`() {
+        val plan = plan()
+        plan.updateDetails("Seoul", "Trip", "Asia/Seoul", plan.startDate, plan.endDate, 0, 0, listOf("Seoul", "Busan"))
+        assertEquals(listOf("Seoul", "Busan"), plan.cityNames())
+        val revision = plan.revision
+        assertThrows(IllegalArgumentException::class.java) {
+            plan.updateDetails("Seoul", "Changed", "Asia/Seoul", plan.startDate, plan.endDate, revision, 0, listOf("Seoul", "Seoul"))
+        }
+        assertEquals(revision, plan.revision)
+        assertEquals(listOf("Seoul", "Busan"), plan.cityNames())
+    }
+
+    @Test
+    fun `날짜 없는 방문을 새로 만들 수 없다`() {
+        val plan = plan()
+        assertThrows(IllegalArgumentException::class.java) { plan.addVisit(0, details) }
+        assertTrue(plan.orderedVisits().isEmpty())
+    }
+
+    @Test
+    fun `전체 날짜 장소 조회는 재방문을 포함하되 외부 조회값은 중복하지 않는다`() {
         val plan = plan()
         plan.addVisit(1, details.copy(name = null, location = null, googlePlaceId = "same"))
         plan.addVisit(2, details.copy(name = null, location = null, googlePlaceId = "same"))
-        plan.addVisit(0, details.copy(name = null, location = null, googlePlaceId = "undated"))
+        plan.addVisit(3, details.copy(name = null, location = null, googlePlaceId = "third"))
         plan.addVisit(3, details)
-        assertEquals(setOf("same", "undated"), plan.googlePlaceIds().toSet())
+        assertEquals(setOf("same", "third"), plan.googlePlaceIds().toSet())
         assertEquals(2, plan.googlePlaceIds().size)
         assertEquals(4, plan.orderedVisits().size)
     }

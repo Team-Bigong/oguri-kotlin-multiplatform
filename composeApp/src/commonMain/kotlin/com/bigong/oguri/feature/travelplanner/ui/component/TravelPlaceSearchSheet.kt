@@ -85,6 +85,7 @@ internal fun TravelPlaceSearchSheet(
     onManualAdd: () -> Unit,
     onDraftChange: (TravelVisitDraft?) -> Unit,
     onApplyManual: () -> Unit,
+    onSearchCity: (String) -> Unit = {},
 ) {
     val search = state.placeSearch ?: return
     val colors = OguriTheme.colors
@@ -202,6 +203,13 @@ internal fun TravelPlaceSearchSheet(
                         }
                     }
                 } else {
+                    if (plan.summary.details.cities.size > 1) item {
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            plan.summary.details.cities.forEach { city ->
+                                TravelChoiceChip(city, (state.searchCity ?: plan.summary.details.city) == city, canEdit, { onSearchCity(city) })
+                            }
+                        }
+                    }
                     item {
                         TravelPlaceInput(
                             value = search.query,
@@ -226,7 +234,7 @@ internal fun TravelPlaceSearchSheet(
                         search.results.isNotEmpty() -> {
                             item {
                                 Text(
-                                    stringResource(Res.string.travel_search_city, plan.summary.details.city),
+                                    stringResource(Res.string.travel_search_city, state.searchCity ?: plan.summary.details.city),
                                     style = travelTextStyle(11, 13), color = colors.textTertiary,
                                 )
                             }

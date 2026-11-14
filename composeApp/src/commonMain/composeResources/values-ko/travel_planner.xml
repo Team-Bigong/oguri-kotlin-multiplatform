@@ -107,7 +107,7 @@
     <string name="travel_invite_revoked">철회된 초대예요. 소유자에게 새 링크를 요청해 주세요.</string>
     <string name="travel_invite_trip_deleted">삭제된 여행이에요.</string>
     <string name="travel_edit_trip">여행 정보 수정</string>
-    <string name="travel_details_move_unassigned">방문 일정 %1$d개가 날짜 없음으로 이동해요.</string>
+    <string name="travel_details_move_unassigned">기간에서 벗어나는 방문 일정 %1$d개는 지워지지 않고 마지막 날 맨 뒤로 옮겨져요.</string>
     <string name="travel_details_keep_local_times">기존 방문 일정에 입력한 현지 시각은 그대로 유지돼요.</string>
     <string name="travel_offer_ownership">소유권 이전 요청</string>
     <string name="travel_accept_ownership">소유권 수락</string>
@@ -224,4 +224,15 @@
     <string name="travel_already_added">이미 이 날짜에 담은 장소예요. 한 번 더 담을 수 있어요.</string>
     <string name="travel_conflict_mine">내가 작성한 내용</string>
     <string name="travel_conflict_saved">최근 저장된 내용</string>
+    <string name="travel_add_city">도시 추가</string>
+    <string name="travel_date_week">%1$s (%2$s)</string>
+    <string name="travel_primary_city">첫 도시를 기준으로 여행 시간을 설정해요.</string>
+    <string name="travel_choose_range">실제 여행 날짜</string>
+    <string name="travel_weekday_0">월</string>
+    <string name="travel_weekday_1">화</string>
+    <string name="travel_weekday_2">수</string>
+    <string name="travel_weekday_3">목</string>
+    <string name="travel_weekday_4">금</string>
+    <string name="travel_weekday_5">토</string>
+    <string name="travel_weekday_6">일</string>
 </resources>

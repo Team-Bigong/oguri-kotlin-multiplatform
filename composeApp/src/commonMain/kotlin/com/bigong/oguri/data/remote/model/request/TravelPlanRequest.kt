@@ -13,6 +13,7 @@ internal data class CreateTravelPlanRequest(
     val startDate: String,
     val endDate: String,
     val source: TravelPlanSourceRequest? = null,
+    val cities: List<String> = listOf(city),
 )
 
 @Serializable
@@ -92,6 +93,7 @@ internal sealed interface TravelPlanCommandRequest {
 internal data class TravelPlaceSearchRequest(
     val query: String,
     val language: String,
+    val city: String? = null,
 )
 
 @Serializable
@@ -113,6 +115,7 @@ internal data class TravelDetailsRequest(
     val endDate: String,
     val expectedRevision: Long,
     val confirmedUnassignedCount: Int,
+    val cities: List<String> = listOf(city),
 )
 
 @Serializable
