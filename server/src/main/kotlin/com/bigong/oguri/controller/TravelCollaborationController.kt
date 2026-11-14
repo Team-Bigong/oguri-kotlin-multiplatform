@@ -1,5 +1,7 @@
 package com.bigong.oguri.controller
 
+import com.bigong.oguri.config.RequiresTravelOperation
+import com.bigong.oguri.config.TravelOperation
 import com.bigong.oguri.config.resolveMemberId
 import com.bigong.oguri.config.resolveTravelUsageSession
 import com.bigong.oguri.domain.TravelPlanConflict
@@ -38,6 +40,7 @@ class TravelCollaborationController(
     ): ResponseEntity<TravelMembersResponse> = noStore(service.members(request.resolveMemberId(), tripId))
 
     @PostMapping("/trips/{tripId}/invites")
+    @RequiresTravelOperation(TravelOperation.INVITE)
     fun issue(
         request: HttpServletRequest,
         @PathVariable tripId: UUID,
@@ -81,6 +84,7 @@ class TravelCollaborationController(
     }
 
     @PutMapping("/trips/{tripId}/details")
+    @RequiresTravelOperation(TravelOperation.WRITE)
     fun updateDetails(
         request: HttpServletRequest,
         @PathVariable tripId: UUID,
@@ -91,6 +95,7 @@ class TravelCollaborationController(
     }
 
     @PostMapping("/trips/{tripId}/ownership")
+    @RequiresTravelOperation(TravelOperation.WRITE)
     fun offerOwnership(
         request: HttpServletRequest,
         @PathVariable tripId: UUID,
@@ -101,6 +106,7 @@ class TravelCollaborationController(
     }
 
     @PostMapping("/trips/{tripId}/ownership/accept")
+    @RequiresTravelOperation(TravelOperation.WRITE)
     fun acceptOwnership(
         request: HttpServletRequest,
         @PathVariable tripId: UUID,
@@ -135,6 +141,7 @@ class TravelCollaborationController(
     ): ResponseEntity<TravelInvitePreview> = noStore(service.preview(body.token))
 
     @PostMapping("/trip-invites/join")
+    @RequiresTravelOperation(TravelOperation.INVITE)
     fun join(
         request: HttpServletRequest,
         @RequestBody body: TravelInviteRequest,

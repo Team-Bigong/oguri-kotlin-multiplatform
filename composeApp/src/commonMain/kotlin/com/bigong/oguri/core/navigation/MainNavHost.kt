@@ -22,6 +22,7 @@ import androidx.navigation.toRoute
 import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
+import com.bigong.oguri.core.network.TRAVEL_PLANNER_ENABLED_IN_RELEASE
 import com.bigong.oguri.core.network.isDebugPlatformBuild
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.domain.model.DisplayThemeMode
@@ -77,7 +78,7 @@ fun MainNavHost(
     onDisplayThemeModeChange: (DisplayThemeMode) -> Unit,
 ) {
     val navigationScope = rememberCoroutineScope()
-    val travelEnabled = isDebugPlatformBuild()
+    val travelEnabled = isDebugPlatformBuild() || TRAVEL_PLANNER_ENABLED_IN_RELEASE
     val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
     fun recordRecommendation(source: TravelRecommendationSource, entry: TravelRecommendationEntry) {
         navigationScope.launch {

@@ -1,5 +1,7 @@
 package com.bigong.oguri.controller
 
+import com.bigong.oguri.config.RequiresTravelOperation
+import com.bigong.oguri.config.TravelOperation
 import com.bigong.oguri.config.resolveMemberId
 import com.bigong.oguri.config.resolveTravelUsageSession
 import com.bigong.oguri.domain.TravelPlanConflict
@@ -39,6 +41,7 @@ class TravelPlanController(
     private val travelPlacesService: TravelPlacesService,
 ) {
     @PostMapping
+    @RequiresTravelOperation(TravelOperation.WRITE)
     fun create(
         request: HttpServletRequest,
         @RequestBody body: CreateTravelPlanRequest,
@@ -100,6 +103,7 @@ class TravelPlanController(
     }
 
     @PostMapping("/{tripId}/commands")
+    @RequiresTravelOperation(TravelOperation.WRITE)
     fun execute(
         request: HttpServletRequest,
         @PathVariable tripId: UUID,

@@ -29,6 +29,9 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
     @get:Input
     abstract val amplitudeApiKey: Property<String>
 
+    @get:Input
+    abstract val travelPlannerEnabledInRelease: Property<Boolean>
+
     @get:OutputFile
     abstract val outputFile: RegularFileProperty
 
@@ -44,6 +47,7 @@ abstract class GenerateNetworkConfigTask : DefaultTask() {
             const val RELEASE_BASE_URL: String = "${releaseBaseUrl.get()}"
             const val KAKAO_NATIVE_APP_KEY: String = "${kakaoNativeAppKey.get()}"
             const val GOOGLE_WEB_CLIENT_ID: String = "${googleWebClientId.get()}"
+            const val TRAVEL_PLANNER_ENABLED_IN_RELEASE: Boolean = ${travelPlannerEnabledInRelease.get()}
             const val AMPLITUDE_API_KEY: String = "${amplitudeApiKey.get()}"
             """.trimIndent(),
         )
@@ -114,6 +118,7 @@ val generateNetworkConfigTask =
         kakaoNativeAppKey.set(kakaoNativeAppKeyValue)
         googleWebClientId.set(googleWebClientIdValue)
         amplitudeApiKey.set(amplitudeApiKeyValue)
+        travelPlannerEnabledInRelease.set(providers.environmentVariable("TRAVEL_PLANNER_ENABLED_IN_RELEASE").map(String::toBooleanStrict).orElse(false))
         outputFile.set(generatedNetworkConfigFile)
     }
 

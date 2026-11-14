@@ -3,6 +3,7 @@ package com.bigong.oguri.service
 import com.bigong.oguri.repository.TravelReminderRepository
 import com.bigong.oguri.repository.TravelReminderRow
 import com.bigong.oguri.repository.TravelReminderStatus
+import com.fasterxml.jackson.databind.ObjectMapper
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -36,6 +37,12 @@ class TravelReminderDispatcherTest {
         `when`(reminders.due()).thenReturn(listOf(candidate))
         `when`(delivery.prepare()).thenReturn("authorization")
         `when`(service.beginHandoff(candidate)).thenReturn("push-token")
+    }
+
+    @Test
+    fun `발송 중지는 유효한 Firebase 프로젝트가 있어도 우선한다`() {
+        assertFalse(TravelReminderDelivery(ObjectMapper(), false, "test-project").configured)
+        assertTrue(TravelReminderDelivery(ObjectMapper(), true, "test-project").configured)
     }
 
     @Test
