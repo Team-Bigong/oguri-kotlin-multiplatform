@@ -321,6 +321,38 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun reloadingAShortenedTripUsesTheUnassignedDayAndKeepsTheDraft() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.selectDay(3)
+            viewModel.openVisit(null)
+            val draft = requireNotNull(viewModel.state.value.visitDraft).copy(name = "Museum")
+            viewModel.updateVisitDraft(draft)
+            advanceUntilIdle()
+
+            val details = plan.summary.details
+            plans.currentPlan = plan.copy(
+                summary = plan.summary.copy(details = details.copy(dates = TravelDates(details.dates.start, details.dates.start))),
+                revision = 2,
+                structureRevision = 1,
+            )
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            assertEquals(TravelPlan.UNASSIGNED_DAY, viewModel.state.value.selectedDay)
+            assertEquals(draft, viewModel.state.value.visitDraft)
+            assertTrue(viewModel.state.value.needsLatestPlan)
+
+            viewModel.loadPlan("plan", rebaseDraft = true)
+            advanceUntilIdle()
+            assertEquals(TravelPlan.UNASSIGNED_DAY, viewModel.state.value.visitDraft?.dayNumber)
+            assertEquals("Museum", viewModel.state.value.visitDraft?.name)
+            assertTrue(plans.saveAttempts.isEmpty())
+        }
+
+    @Test
     fun anUncertainSaveCanBeRetriedWithTheSameRequestAfterLeavingTheTrip() =
         runTest {
             val plans = AccessPlans(plan)

@@ -317,22 +317,15 @@ class TravelPlannerViewModel(
                         }
                     }
                 val changedStructure = nextDraft?.let { it.structureRevision != plan.structureRevision } == true
-                current.copy(
+                val refreshed = if (current.plan == null) current.copy(selectedDay = initialDay) else current.withRefreshedPlan(plan)
+                refreshed.copy(
                     plan = plan,
                     isOffline = false,
                     canRetrySave = pendingSave != null,
                     pendingSaveStored = stored?.pending != null || current.pendingSaveStored,
-                    selectedDay =
-                        if (current.plan ==
-                            null
-                        ) {
-                            initialDay
-                        } else {
-                            current.selectedDay.takeIf { it in 0..dates.dayCount } ?: initialDay
-                        },
                     visitDraft = nextDraft,
                     unappliedOrder = if (wasLoaded) current.unappliedOrder else current.unappliedOrder ?: stored?.unappliedOrder,
-                    inspectedVisitId = current.inspectedVisitId?.takeIf { id -> nextDraft == null && plan.visits.any { it.id == id } },
+                    inspectedVisitId = refreshed.inspectedVisitId.takeIf { nextDraft == null },
                     needsLatestPlan = pendingSave == null && (wasRemoved || changedStructure || (!rebaseDraft && current.needsLatestPlan)),
                     failure =
                         when {
@@ -838,7 +831,7 @@ class TravelPlannerViewModel(
     ) {
         val addedPlace = addedPlaceForSave
         val change = request.change
-        val selectedDayAfterSave = request.selectedDay.takeIf { it in 0..updated.summary.details.dates.dayCount } ?: 1
+        val selectedDayAfterSave = request.selectedDay.takeIf { it in 0..updated.summary.details.dates.dayCount } ?: TravelPlan.UNASSIGNED_DAY
         mutableState.update { current ->
             val addedToVisibleDay = addedPlace != null && (change as? TravelVisitChange.Add)?.dayNumber == current.selectedDay
             val undo =
