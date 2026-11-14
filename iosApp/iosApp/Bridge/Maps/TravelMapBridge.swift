@@ -50,13 +50,13 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
             line.points.forEach { path.add($0.coordinate) }
             let polyline = GMSPolyline(path: path)
             polyline.geodesic = true
-            polyline.strokeColor = .travelRoute
+            polyline.strokeColor = UIColor(argb: line.colorArgb)
             polyline.strokeWidth = 3
             polyline.map = map
         }
         for pin in scene.markers {
             let marker = GMSMarker(position: pin.coordinates.coordinate)
-            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb)
+            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, selected: pin.selected)
             marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
             marker.zIndex = pin.selected ? 1 : 0
             marker.userData = pin.id
@@ -117,27 +117,28 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         surface.removeFromSuperview()
     }
 
-    private func makeIcon(label: String?, colorArgb: Int32) -> UIImage {
-        let size = CGSize(width: 34, height: 34)
+    private func makeIcon(label: String?, colorArgb: Int32, selected: Bool) -> UIImage {
+        let side: CGFloat = selected ? 44 : 26
+        let size = CGSize(width: side, height: side)
         return UIGraphicsImageRenderer(size: size).image { _ in
+            let color = UIColor(argb: colorArgb)
+            if selected {
+                color.withAlphaComponent(0.28).setFill()
+                UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
+            }
+            let diameter: CGFloat = selected ? 32 : 26
+            let frame = CGRect(x: (side - diameter) / 2, y: (side - diameter) / 2, width: diameter, height: diameter)
             UIColor.white.setFill()
-            UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
-            let color = UInt32(bitPattern: colorArgb)
-            UIColor(
-                red: CGFloat((color >> 16) & 0xff) / 255,
-                green: CGFloat((color >> 8) & 0xff) / 255,
-                blue: CGFloat(color & 0xff) / 255,
-                alpha: 1
-            ).setFill()
-            UIBezierPath(ovalIn: CGRect(x: 2, y: 2, width: 30, height: 30)).fill()
+            UIBezierPath(ovalIn: frame).fill()
+            color.setFill()
+            UIBezierPath(ovalIn: frame.insetBy(dx: 2, dy: 2)).fill()
             guard let label else { return }
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: 14),
+            let text = NSAttributedString(string: label, attributes: [
+                .font: UIFont.boldSystemFont(ofSize: selected ? 14 : 12),
                 .foregroundColor: UIColor.white
-            ]
-            let text = NSAttributedString(string: label, attributes: attributes)
+            ])
             let bounds = text.size()
-            text.draw(at: CGPoint(x: (size.width - bounds.width) / 2, y: (size.height - bounds.height) / 2))
+            text.draw(at: CGPoint(x: (side - bounds.width) / 2, y: (side - bounds.height) / 2))
         }
     }
 }
@@ -152,7 +153,13 @@ private final class TravelMapSurface: UIView {
 }
 
 private extension UIColor {
-    static let travelRoute = UIColor(red: 0, green: 0.49, blue: 0.41, alpha: 1)
+    convenience init(argb: Int32) {
+        let color = UInt32(bitPattern: argb)
+        self.init(red: CGFloat((color >> 16) & 0xff) / 255,
+                  green: CGFloat((color >> 8) & 0xff) / 255,
+                  blue: CGFloat(color & 0xff) / 255,
+                  alpha: CGFloat((color >> 24) & 0xff) / 255)
+    }
 }
 
 private extension TravelCoordinates {

@@ -233,6 +233,6 @@ internal fun TravelVisitEditor(
 
 @Composable
 internal fun TravelLeavePendingSave(onLeave: () -> Unit) {
-    Text(stringResource(Res.string.travel_pending_save_preserved), style = MaterialTheme.typography.bodySmall)
+    Text(stringResource(Res.string.travel_pending_save_preserved), style = OguriTheme.typography.bodySmall)
     TravelTextButton(onClick = onLeave) { Text(stringResource(Res.string.travel_leave_pending_save)) }
 }

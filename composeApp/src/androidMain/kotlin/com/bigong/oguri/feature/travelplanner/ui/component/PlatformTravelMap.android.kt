@@ -117,7 +117,7 @@ internal actual fun PlatformTravelMap(
                 renderedMap.addPolyline(
                     PolylineOptions()
                         .addAll(line.points.map { it.toLatLng() })
-                        .color(MAP_LINE_COLOR)
+                        .color(line.colorArgb)
                         .width(3 * density)
                         .geodesic(true),
                 )
@@ -199,5 +199,3 @@ private fun TravelMapMarker.bitmap(density: Float): Bitmap {
     }
     return bitmap
 }
-
-private const val MAP_LINE_COLOR: Int = 0xff007d69.toInt()

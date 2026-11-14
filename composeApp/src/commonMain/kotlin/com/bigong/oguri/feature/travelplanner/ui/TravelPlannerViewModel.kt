@@ -259,7 +259,7 @@ class TravelPlannerViewModel(
                         pendingSave = stored.pending
                     }
                     val savedDay = cached?.let { snapshot ->
-                        snapshot.lastViewedDay?.takeIf { it in 0..snapshot.summary.details.dates.dayCount }
+                        snapshot.lastViewedDay?.takeIf { it in 1..snapshot.summary.details.dates.dayCount }
                     }
                     mutableState.update {
                         it.copy(
@@ -598,6 +598,8 @@ class TravelPlannerViewModel(
                 ?.summary
                 ?.id ?: return
         val search = state.value.placeSearch ?: return
+        val details = state.value.plan?.summary?.details ?: return
+        val city = state.value.searchCity?.takeIf { it in details.cities } ?: details.city
         searchJob?.cancel()
         val canSearch = query.trim().length >= MIN_SEARCH_LENGTH
         mutableState.update {
@@ -608,7 +610,7 @@ class TravelPlannerViewModel(
             viewModelScope.launch {
                 delay(SEARCH_DEBOUNCE_MILLIS)
                 try {
-                    val results = placeRepository.searchInCity(planId, query.trim(), language, state.value.searchCity?.takeIf { it in state.value.plan!!.summary.details.cities } ?: state.value.plan!!.summary.details.city)
+                    val results = placeRepository.searchInCity(planId, query.trim(), language, city)
                     currentCoroutineContext().ensureActive()
                     mutableState.update { it.copy(placeSearch = it.placeSearch?.copy(results = results, isLoading = false)) }
                 } catch (exception: TravelPlanException) {
@@ -784,7 +786,7 @@ class TravelPlannerViewModel(
 
     internal fun applyVisit() {
         val draft = state.value.visitDraft ?: return
-        if ((draft.visit?.details?.googlePlaceId == null && draft.name.isBlank()) || draft.hasInvalidTime) return
+        if ((draft.visit?.details?.googlePlaceId == null && draft.name.isBlank())) return
         val details = draft.toDetails()
         val structureRevision = draft.structureRevision
         val change =
@@ -859,10 +861,10 @@ class TravelPlannerViewModel(
             val addedToVisibleDay = addedPlace != null && (change as? TravelVisitChange.Add)?.dayNumber == current.selectedDay
             val undo =
                 when (change) {
-                    is TravelVisitChange.Remove -> TravelVisitUndoAction(request.requestId, change.visit.dayNumber, change.visit.details.name ?: current.dayPlaces[change.visit.details.googlePlaceId]?.name)
+                    is TravelVisitChange.Remove -> TravelVisitUndoAction(request.requestId, change.visit.dayNumber, change.visit.details.name ?: current.dayPlaces[change.visit.details.googlePlaceId]?.name, current.plan?.visits?.filter { it.dayNumber == change.visit.dayNumber }?.indexOfFirst { it.id == change.visit.id }?.coerceAtLeast(0) ?: 0)
                     is TravelVisitChange.Edit ->
                         if (change.dayNumber != change.visit.dayNumber) {
-                            TravelVisitUndoAction(request.requestId, change.visit.dayNumber, change.visit.details.name ?: current.dayPlaces[change.visit.details.googlePlaceId]?.name)
+                            TravelVisitUndoAction(request.requestId, change.visit.dayNumber, change.visit.details.name ?: current.dayPlaces[change.visit.details.googlePlaceId]?.name, current.plan?.visits?.filter { it.dayNumber == change.visit.dayNumber }?.indexOfFirst { it.id == change.visit.id }?.coerceAtLeast(0) ?: 0)
                         } else {
                             current.visitUndo
                         }

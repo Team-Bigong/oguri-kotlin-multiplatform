@@ -1,5 +1,6 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import com.bigong.oguri.core.designsystem.OguriTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,7 +46,7 @@ internal fun TravelDirectionsButton(
     if (failed) {
         Text(
             stringResource(Res.string.travel_directions_unavailable),
-            color = MaterialTheme.colorScheme.error,
+            color = com.bigong.oguri.core.designsystem.Orange50,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
     }

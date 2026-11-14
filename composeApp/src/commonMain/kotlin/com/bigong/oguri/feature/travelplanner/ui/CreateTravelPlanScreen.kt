@@ -114,6 +114,7 @@ internal fun CreateTravelPlanScreen(
     var cityInput by rememberSaveable { mutableStateOf("") }
     var cityEdited by rememberSaveable { mutableStateOf(false) }
     var selectedCities by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var cityTimeZones by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var timeZoneOverride by rememberSaveable { mutableStateOf<String?>(null) }
     var title by rememberSaveable { mutableStateOf("") }
     var startMillis by rememberSaveable { mutableStateOf(source?.startDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()) }
@@ -128,6 +129,7 @@ internal fun CreateTravelPlanScreen(
             cityInput = details.city
             selectedCities = details.cities
             timeZoneOverride = details.timeZone.id
+            cityTimeZones = mapOf(details.city to details.timeZone.id)
             title = details.title
             startMillis =
                 details.dates.start
@@ -151,7 +153,8 @@ internal fun CreateTravelPlanScreen(
             val primary = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) }
             selectedCities = (primary + chosen).distinct().take(10)
             cityInput = selectedCities.first()
-            if (primary.isEmpty()) timeZoneOverride = citySearch.timeZone?.takeIf { it in TimeZone.availableZoneIds }
+            citySearch.timeZone?.takeIf { it in TimeZone.availableZoneIds }?.let { cityTimeZones = cityTimeZones + (chosen to it) }
+            timeZoneOverride = cityTimeZones[cityInput] ?: suggestedTimeZone(cityInput)
             onCloseCitySearch()
         }
     }
@@ -194,7 +197,7 @@ internal fun CreateTravelPlanScreen(
                         TravelTextButton(enabled = canEdit, onClick = {
                             selectedCities = cities - city
                             cityInput = selectedCities.firstOrNull().orEmpty()
-                            timeZoneOverride = null
+                            timeZoneOverride = cityTimeZones[cityInput] ?: suggestedTimeZone(cityInput)
                         }) { Text("$city ×") }
                     }
                 }
@@ -213,7 +216,7 @@ internal fun CreateTravelPlanScreen(
             if (recommendedStart != null && recommendedEnd != null) {
                 Text(
                     stringResource(Res.string.travel_recommended_dates, travelWeekDate(recommendedStart), travelWeekDate(recommendedEnd)),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = OguriTheme.typography.bodySmall,
                 )
             }
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -223,7 +226,7 @@ internal fun CreateTravelPlanScreen(
             if (hasInvalidDates) {
                 Text(
                     stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
-                    color = MaterialTheme.colorScheme.error,
+                    color = com.bigong.oguri.core.designsystem.Orange50,
                 )
             }
                 OutlinedTextField(

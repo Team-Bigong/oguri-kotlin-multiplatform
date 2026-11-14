@@ -153,7 +153,7 @@ internal fun TravelPrimaryButton(
         modifier = modifier,
         enabled = enabled,
         backgroundColor = if (!enabled) Neutral10 else Mint70,
-        contentColor = Neutral0,
+        contentColor = OguriTheme.colors.textOnMint,
         minHeight = 45.dp,
         textStyle = textStyle,
         content = content,
@@ -293,7 +293,7 @@ internal fun TravelInlineFailure(
                         TravelPlanFailure.CONNECTION -> Res.string.common_network_error_message
                     },
                 ),
-            color = MaterialTheme.colorScheme.error,
+            color = com.bigong.oguri.core.designsystem.Orange50,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
         if (onRetry != null) TravelTextButton(onClick = onRetry) { Text(retryLabel, color = OguriTheme.colors.textPrimary) }

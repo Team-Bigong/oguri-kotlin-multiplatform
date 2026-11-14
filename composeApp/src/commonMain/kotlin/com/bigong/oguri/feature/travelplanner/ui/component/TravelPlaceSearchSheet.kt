@@ -261,7 +261,11 @@ internal fun TravelPlaceSearchSheet(
                             item { GooglePlacesAttribution(search.results.flatMap(TravelPlace::attributions)) }
                         }
                         !search.isLoading && search.query.trim().length >= 2 -> item {
-                            Text(stringResource(Res.string.travel_search_empty), color = colors.textTertiary)
+                            Column(Modifier.fillMaxWidth().padding(vertical = 32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Text(stringResource(Res.string.travel_search_empty), style = OguriTheme.typography.cardTitle)
+                                Text(stringResource(Res.string.travel_search_empty_hint), style = OguriTheme.typography.bodySmall, color = colors.textTertiary)
+                                TravelTextButton(onClick = { onManualAdd(); manual = true }, enabled = canEdit) { Text(stringResource(Res.string.travel_manual_action)) }
+                            }
                         }
                     }
                     if (selected != null) item {
@@ -420,20 +424,18 @@ private fun TravelSearchSelectionMark(selected: Boolean) {
 @Composable
 internal fun GooglePlacesAttribution(attributions: List<TravelPlaceAttribution>) {
     val uriHandler = LocalUriHandler.current
-    val textColor = if (com.bigong.oguri.core.designsystem.OguriTheme.isDarkTheme) Color.White else Color(0xFF5E5E5E)
+    val textColor = OguriTheme.colors.textTertiary
     Column(Modifier.fillMaxWidth().heightIn(min = 24.dp).padding(vertical = 4.dp)) {
         Text(
             stringResource(Res.string.travel_google_maps_attribution),
             color = textColor,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Normal,
-            letterSpacing = 0.sp,
+            style = OguriTheme.typography.caption,
             softWrap = false,
         )
         attributions.distinct().forEach { attribution ->
             val uri = attribution.providerUri
             if (uri == null) {
-                Text(attribution.provider, style = MaterialTheme.typography.bodySmall)
+                Text(attribution.provider, style = OguriTheme.typography.bodySmall)
             } else {
                 TravelTextButton(onClick = { runCatching { uriHandler.openUri(uri) } }) { Text(attribution.provider) }
             }

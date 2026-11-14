@@ -101,6 +101,7 @@ import oguri.composeapp.generated.resources.travel_manage
 import oguri.composeapp.generated.resources.travel_move_down
 import oguri.composeapp.generated.resources.travel_move_up
 import oguri.composeapp.generated.resources.travel_move_visit
+import oguri.composeapp.generated.resources.ic_travel_offline
 import oguri.composeapp.generated.resources.travel_offline_snapshot
 import oguri.composeapp.generated.resources.travel_order_cannot_reapply
 import oguri.composeapp.generated.resources.travel_order_matches
@@ -192,7 +193,10 @@ internal fun TravelPlanScreen(
             } ?: savedVisits
         val canEdit = !state.isSaving && !state.isLoading && !state.canRetrySave && !state.needsLatestPlan && !state.isOffline
         if (state.isOffline) {
-            Text(offlineMessage, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral10).heightIn(min = 42.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(oguri.composeapp.generated.resources.Res.drawable.ic_travel_offline), null, Modifier.size(18.dp), tint = OguriTheme.colors.textSecondary)
+                Text(offlineMessage, style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textSecondary)
+            }
         }
         TravelDaySelector(
             dates = dates,
@@ -289,7 +293,7 @@ internal fun TravelPlanScreen(
                         val sameOrder = !unappliedOrder.isOutsideTrip(plan) && savedIds == unappliedOrder.visitIds
                         val canReapply = unappliedOrder.canApplyTo(plan)
                         Text(stringResource(Res.string.travel_order_mine), style = OguriTheme.typography.cardSubtitle)
-                        Text(travelDayLabel(dates, unappliedOrder.dayNumber), style = MaterialTheme.typography.bodySmall)
+                        Text(travelDayLabel(dates, unappliedOrder.dayNumber), style = OguriTheme.typography.bodySmall)
                         unappliedOrder.visitIds.forEachIndexed { index, id ->
                             val details = latestById[id]?.details
                             val name = details?.name ?: state.dayPlaces[details?.googlePlaceId]?.name
@@ -313,14 +317,7 @@ internal fun TravelPlanScreen(
                         HorizontalDivider()
                     }
                 }
-                state.visitUndo?.let { undo ->
-                    item(key = "removed-visit") {
-                        Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral10, RoundedCornerShape(8.dp)).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(undo.title?.let { stringResource(Res.string.travel_removed_visit, it) } ?: stringResource(Res.string.travel_undo_visit), Modifier.weight(1f), style = OguriTheme.typography.bodySmall)
-                            TravelIconButton(onClick = onUndoVisit, enabled = canEdit) { Icon(painterResource(Res.drawable.ic_travel_undo), stringResource(Res.string.travel_undo_visit), Modifier.size(22.dp), tint = Neutral100) }
-                        }
-                    }
-                }
+                val undo = state.visitUndo?.takeIf { it.dayNumber == state.selectedDay }
                 if (visits.isEmpty()) {
                     item {
                         Text(
@@ -333,6 +330,7 @@ internal fun TravelPlanScreen(
                     }
                 }
                 itemsIndexed(visits, key = { _, visit -> visit.id }) { index, visit ->
+                    if (undo?.position == index) TravelRemovedVisitRow(undo.title, canEdit, onUndoVisit)
                     TravelVisitRow(
                         visit = visit,
                         title =
@@ -382,6 +380,7 @@ internal fun TravelPlanScreen(
                         },
                     )
                 }
+                if (undo != null && undo.position >= visits.size) item(key = "removed-visit") { TravelRemovedVisitRow(undo.title, canEdit, onUndoVisit) }
                 if (state.dayPlaces.isNotEmpty()) {
                     item { GooglePlacesAttribution(state.dayPlaces.values.flatMap { it.attributions }) }
                 }
@@ -476,9 +475,17 @@ private fun TravelVisitRow(
             Modifier.fillMaxWidth().offset(x = if (swiped && canEdit) (-64).dp else 0.dp)
                 .background(if (selected) Mint10 else Neutral5)
                 .pointerInput(visit.id, canEdit) {
-                    if (canEdit) detectHorizontalDragGestures { change, amount ->
-                        change.consume()
-                        if (amount < -8f) swiped = true else if (amount > 8f) swiped = false
+                    if (canEdit) {
+                        var distance = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { distance = 0f },
+                            onHorizontalDrag = { change, amount ->
+                                change.consume()
+                                distance += amount
+                                if (distance < -32.dp.toPx()) swiped = true
+                                else if (distance > 32.dp.toPx()) swiped = false
+                            },
+                        )
                     }
                 }.semantics { this.selected = selected },
             verticalAlignment = Alignment.CenterVertically,
@@ -531,3 +538,11 @@ internal fun travelDayLabel(
     } else {
         stringResource(Res.string.travel_day_outside_trip, dayNumber)
     }
+
+@Composable
+private fun TravelRemovedVisitRow(title: String?, enabled: Boolean, onUndo: () -> Unit) {
+    Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral10, RoundedCornerShape(8.dp)).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(title?.let { stringResource(Res.string.travel_removed_visit, it) } ?: stringResource(Res.string.travel_undo_visit), Modifier.weight(1f), style = OguriTheme.typography.bodySmall)
+        TravelIconButton(onClick = onUndo, enabled = enabled) { Icon(painterResource(Res.drawable.ic_travel_undo), stringResource(Res.string.travel_undo_visit), Modifier.size(22.dp), tint = Neutral100) }
+    }
+}

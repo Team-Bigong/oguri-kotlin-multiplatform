@@ -45,7 +45,7 @@ internal fun TravelVisitDetailsSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(stringResource(Res.string.travel_visit_details), style = OguriTheme.typography.sectionTitle)
-            if (offline) Text(stringResource(Res.string.travel_offline_snapshot), style = MaterialTheme.typography.bodySmall)
+            if (offline) Text(stringResource(Res.string.travel_offline_snapshot), style = OguriTheme.typography.bodySmall)
             SelectionContainer {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(title, style = OguriTheme.typography.cardTitle)
@@ -54,7 +54,7 @@ internal fun TravelVisitDetailsSheet(
                     (visit.details.location ?: place?.address)?.let { Text(it) }
                     visit.details.note?.let { note ->
                         Text(note)
-                        Text(stringResource(Res.string.travel_visit_note_shared), style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(Res.string.travel_visit_note_shared), style = OguriTheme.typography.bodySmall)
                     }
                 }
             }

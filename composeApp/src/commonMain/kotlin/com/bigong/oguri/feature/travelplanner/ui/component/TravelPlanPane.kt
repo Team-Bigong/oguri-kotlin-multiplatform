@@ -46,6 +46,7 @@ import oguri.composeapp.generated.resources.travel_map_fit
 import oguri.composeapp.generated.resources.travel_map_hide
 import oguri.composeapp.generated.resources.travel_map_sequence
 import oguri.composeapp.generated.resources.travel_map_show
+import oguri.composeapp.generated.resources.travel_map_list_available
 import oguri.composeapp.generated.resources.travel_map_unavailable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -81,12 +82,13 @@ internal fun TravelPlanPane(
             Spacer(Modifier.height(16.dp))
             if (showMap) {
                 if (mapUnavailable) {
-                    Text(stringResource(Res.string.travel_map_unavailable), Modifier.padding(horizontal = 16.dp))
-                    TravelTextButton(onClick = {
-                        mapAttempt++
-                        mapUnavailable = false
-                    }, modifier = Modifier.padding(horizontal = 16.dp)) {
-                        Text(stringResource(Res.string.common_retry_button))
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(150.dp)
+                        .background(OguriTheme.colors.backgroundSecondary, RoundedCornerShape(8.dp))
+                        .border(1.dp, OguriTheme.colors.borderSubtle, RoundedCornerShape(8.dp)),
+                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                        Text(stringResource(Res.string.travel_map_unavailable), style = OguriTheme.typography.cardSubtitle)
+                        Text(stringResource(Res.string.travel_map_list_available), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        TravelTextButton(onClick = { mapAttempt++; mapUnavailable = false }) { Text(stringResource(Res.string.common_retry_button)) }
                     }
                 } else {
                     val shape = RoundedCornerShape(8.dp)

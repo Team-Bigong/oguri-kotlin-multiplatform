@@ -63,8 +63,7 @@ internal fun TravelReminderDialog(
                         Text(
                             stringResource(
                                 Res.string.travel_reminder_scheduled,
-                                com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(reminder.scheduledAt.toLocalDateTime(reminder.timeZone).date) + " · " + reminder.scheduledAt.toLocalDateTime(reminder.timeZone).time.toString(),
-                                reminder.timeZone.id,
+                                com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(reminder.scheduledAt.toLocalDateTime(reminder.timeZone).date) + " · " + com.bigong.oguri.feature.travelplanner.ui.travelClockTime(reminder.scheduledAt.toLocalDateTime(reminder.timeZone).time),
                             ),
                         )
                         Text(
@@ -84,13 +83,12 @@ internal fun TravelReminderDialog(
                             Text(date.takeIf { it.isNotBlank() }?.let { com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(kotlinx.datetime.LocalDate.parse(it)) } ?: stringResource(Res.string.travel_reminder_date))
                         }
                         TravelOutlineButton(onClick = { chooseTime = true }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
-                            Text(time.ifBlank { stringResource(Res.string.travel_reminder_time) })
+                            Text(time.takeIf { it.isNotBlank() }?.let { com.bigong.oguri.feature.travelplanner.ui.travelClockTime(kotlinx.datetime.LocalTime.parse(it)) } ?: stringResource(Res.string.travel_reminder_time))
                         }
                         Text(
                             stringResource(
                                 Res.string.travel_reminder_before_departure,
                                 com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(settings.dates.start),
-                                "",
                             ),
                         )
                         if (date.isNotBlank() &&

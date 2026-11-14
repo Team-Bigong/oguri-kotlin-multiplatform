@@ -121,7 +121,7 @@ internal fun TravelPlanRoute(
     LaunchedEffect(dayOverride, plan?.summary?.id) {
         val day = dayOverride
         if (day != null && plan != null) {
-            if (day in 0..plan.summary.details.dates.dayCount) viewModel.selectDay(day)
+            if (day in 1..plan.summary.details.dates.dayCount) viewModel.selectDay(day)
             onDayConsumed()
         }
     }

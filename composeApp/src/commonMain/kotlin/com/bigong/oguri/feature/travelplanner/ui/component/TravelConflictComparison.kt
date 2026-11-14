@@ -49,8 +49,16 @@ internal fun TravelConflictComparison(
             Text(stringResource(label), style = OguriTheme.typography.labelMedium)
             Text(stringResource(Res.string.travel_conflict_saved), style = OguriTheme.typography.labelSmall)
             Text(value, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary)
+            Text(stringResource(Res.string.travel_conflict_mine), style = OguriTheme.typography.labelSmall)
+            val mine = when (field) {
+                TravelVisitField.DAY -> travelDayLabel(dates, draft.dayNumber)
+                TravelVisitField.NAME -> draft.name
+                TravelVisitField.LOCATION -> draft.location
+                TravelVisitField.TIME -> null
+                TravelVisitField.NOTE -> draft.note
+                TravelVisitField.CATEGORY -> draft.category?.let { stringResource(it.label()) }
+            }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
+            Text(mine, style = OguriTheme.typography.bodyMedium)
         }
-        Text(stringResource(Res.string.travel_conflict_mine), style = OguriTheme.typography.labelMedium)
-        Text(draft.note, style = OguriTheme.typography.bodyMedium)
     }
 }

@@ -29,7 +29,9 @@ internal fun travelDayColor(dayNumber: Int?): Int =
 
 data class TravelMapLine(
     val points: List<TravelCoordinates>,
-)
+) {
+    val colorArgb: Int get() = Mint70.toArgb()
+}
 
 data class TravelMapScene(
     val markers: List<TravelMapMarker>,
