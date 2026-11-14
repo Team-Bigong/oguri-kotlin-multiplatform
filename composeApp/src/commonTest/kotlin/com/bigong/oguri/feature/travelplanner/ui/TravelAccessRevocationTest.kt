@@ -62,6 +62,34 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun visitSaveConflictIsRecordedBeforeALaterConfirmedSave() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.openVisit(null)
+            viewModel.updateVisitDraft(requireNotNull(viewModel.state.value.visitDraft).copy(name = "Museum"))
+            plans.saveFailure = TravelPlanFailure.CONFLICT
+            viewModel.applyVisit()
+            advanceUntilIdle()
+            assertEquals(TravelPlanFailure.CONFLICT, viewModel.state.value.failure)
+            assertEquals(listOf("plan" to TravelUsageActivity.VISIT_SAVE_CONFLICT), plans.activities)
+
+            plans.saveFailure = null
+            viewModel.loadPlan("plan", rebaseDraft = true)
+            advanceUntilIdle()
+            assertEquals(1, plans.activities.size)
+            viewModel.applyVisit()
+            advanceUntilIdle()
+            assertEquals(
+                listOf("plan" to TravelUsageActivity.VISIT_SAVE_CONFLICT, "plan" to TravelUsageActivity.VISIT_CONFLICT_RECOVERED),
+                plans.activities,
+            )
+            assertNull(viewModel.state.value.failure)
+        }
+
+    @Test
     fun revokedAccessWaitsForAnActiveDraftWriteBeforeErasingStorage() =
         runTest {
             val plans = AccessPlans(plan)
@@ -492,6 +520,7 @@ private class AccessPlans(
 
     var unavailable: Boolean = false
     var connectionFailure: Boolean = false
+    var saveFailure: TravelPlanFailure? = null
     var readBarrier: CompletableDeferred<Unit>? = null
 
     override suspend fun get(planId: String): TravelPlan {
@@ -521,7 +550,10 @@ private class AccessPlans(
         planId: String,
         requestId: String,
         change: TravelVisitChange,
-    ): TravelPlan = error("Unused")
+    ): TravelPlan {
+        saveFailure?.let { throw TravelPlanException(it) }
+        return plan
+    }
 }
 
 private class AccessRecovery : TravelRecoveryRepository {
@@ -558,12 +590,12 @@ private class AccessRecovery : TravelRecoveryRepository {
         planId: String?,
         request: TravelPendingSave,
         draft: TravelDraft?,
-    ): Unit = error("Unused")
+    ) = Unit
 
     override suspend fun finishRequest(
         planId: String?,
         clearDraft: Boolean,
-    ): Unit = error("Unused")
+    ) = Unit
 }
 
 private class DeniedPlaces : TravelPlaceRepository {

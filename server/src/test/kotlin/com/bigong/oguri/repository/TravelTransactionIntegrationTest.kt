@@ -1101,6 +1101,35 @@ class TravelTransactionIntegrationTest {
         assertEquals((beforeMember["created_trips"] ?: 0L) + 1, member["created_trips"])
     }
 
+    @Test
+    fun `방문 저장 실패와 충돌 복구는 확정 편집과 별도로 집계한다`() {
+        val sql = Files.readString(Path.of("../scripts/report_travel_usage.sql"))
+        fun totals(): Map<String, Long> =
+            jdbc
+                .sql(sql)
+                .query()
+                .listOfRows()
+                .firstOrNull { it["entry_source"] == "DIRECT" }
+                .orEmpty()
+                .filterValues { it is Number }
+                .mapValues { (_, value) -> (value as Number).toLong() }
+        val trip = fixture()
+        val before = totals()
+        for (kind in listOf(
+            TravelUsageActivity.VISIT_SAVE_FAILED,
+            TravelUsageActivity.VISIT_SAVE_CONFLICT,
+            TravelUsageActivity.VISIT_CONFLICT_RECOVERED,
+        )) {
+            tx { service.recordActivity(trip.owner, trip.id, UUID.randomUUID(), kind) }
+        }
+        val after = totals()
+        for (column in listOf("visit_save_failed_memberships", "visit_save_conflict_memberships", "visit_conflict_recovered_memberships")) {
+            assertEquals((before[column] ?: 0L) + 1, after[column])
+        }
+        assertEquals(before["activated_plans"], after["activated_plans"])
+        assertEquals(0L, usageEditCount(trip.id))
+    }
+
     private fun usageCohort(
         memberId: String,
         startedAt: OffsetDateTime,

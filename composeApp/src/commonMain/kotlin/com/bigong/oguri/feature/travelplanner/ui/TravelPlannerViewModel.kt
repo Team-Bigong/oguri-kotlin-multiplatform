@@ -68,6 +68,7 @@ class TravelPlannerViewModel(
     private var resumeRequest: Long = 0
     private var overviewRequest: Long = 0
     private var addedPlaceForSave: TravelPlace? = null
+    private var visitSaveConflictPlanId: String? = null
 
     internal fun recordActivity(
         planId: String,
@@ -846,6 +847,7 @@ class TravelPlannerViewModel(
         val generation = mutationGeneration
         mutableState.update { it.copy(isSaving = true, failure = null, canRetrySave = false) }
         viewModelScope.launch {
+            var visitSaveAttempted = false
             try {
                 draftWrite?.join()
                 val canSubmit =
@@ -864,8 +866,14 @@ class TravelPlannerViewModel(
                     is TravelPendingSave.Visit -> {
                         val id = requireNotNull(planId)
                         if (verifyAccess) repository.get(id)
+                        visitSaveAttempted = true
                         val updated = repository.changeVisit(id, request.requestId, request.change)
+                        visitSaveAttempted = false
                         if (!rememberCurrentPlan(updated, generation)) return@launch
+                        if (visitSaveConflictPlanId == id) {
+                            visitSaveConflictPlanId = null
+                            recordActivity(id, TravelUsageActivity.VISIT_CONFLICT_RECOVERED)
+                        }
                         verifiedAt = TimeSource.Monotonic.markNow()
                         applySavedVisit(updated, request)
                     }
@@ -874,6 +882,7 @@ class TravelPlannerViewModel(
                 recoverSafely { recovery.finishRequest(planId, clearDraft = true) }
             } catch (exception: TravelPlanException) {
                 if (generation != mutationGeneration) return@launch
+                if (planId != null && visitSaveAttempted) recordVisitSaveFailure(planId, exception.failure)
                 when (exception.failure) {
                     TravelPlanFailure.CONNECTION, TravelPlanFailure.SIGN_IN_REQUIRED -> Unit
                     TravelPlanFailure.UNAVAILABLE -> {
@@ -888,10 +897,26 @@ class TravelPlannerViewModel(
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {
+                if (generation != mutationGeneration) return@launch
+                if (planId != null && visitSaveAttempted) recordVisitSaveFailure(planId, TravelPlanFailure.CONNECTION)
                 applyFailure(TravelPlanFailure.CONNECTION)
             } finally {
                 mutableState.update { it.copy(isSaving = false) }
             }
+        }
+    }
+
+    private fun recordVisitSaveFailure(
+        planId: String,
+        failure: TravelPlanFailure,
+    ) {
+        when (failure) {
+            TravelPlanFailure.SIGN_IN_REQUIRED, TravelPlanFailure.UNAVAILABLE -> Unit
+            TravelPlanFailure.CONFLICT, TravelPlanFailure.VISIT_REMOVED -> {
+                visitSaveConflictPlanId = planId
+                recordActivity(planId, TravelUsageActivity.VISIT_SAVE_CONFLICT)
+            }
+            else -> recordActivity(planId, TravelUsageActivity.VISIT_SAVE_FAILED)
         }
     }
 
@@ -907,6 +932,7 @@ class TravelPlannerViewModel(
 
     internal suspend fun forgetUnavailablePlan(planId: String) {
         mutationGeneration++
+        visitSaveConflictPlanId = null
         pendingSave = null
         pendingPlanId = null
         applyFailure(TravelPlanFailure.UNAVAILABLE)
