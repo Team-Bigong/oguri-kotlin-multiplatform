@@ -321,6 +321,36 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun anExpiredSnapshotDoesNotHideTheDraftAfterTheConnectionReturns() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val recovery = AccessRecovery()
+            val editing = createTravelPlannerTestViewModel(plans, recovery)
+            editing.loadPlan("plan")
+            advanceUntilIdle()
+            editing.openVisit(null)
+            editing.updateVisitDraft(requireNotNull(editing.state.value.visitDraft).copy(name = "Museum", note = "My draft"))
+            advanceUntilIdle()
+            recovery.confirmed = null
+            plans.connectionFailure = true
+
+            val reopened = createTravelPlannerTestViewModel(plans, recovery)
+            reopened.loadPlan("plan")
+            advanceUntilIdle()
+            assertNull(reopened.state.value.plan)
+            assertTrue(reopened.state.value.isOffline)
+            assertEquals("My draft", reopened.state.value.visitDraft?.note)
+
+            plans.connectionFailure = false
+            reopened.refreshPlan("plan")
+            advanceUntilIdle()
+            assertEquals(plan, reopened.state.value.plan)
+            assertEquals("My draft", reopened.state.value.visitDraft?.note)
+            assertFalse(reopened.state.value.isOffline)
+            assertTrue(plans.saveAttempts.isEmpty())
+        }
+
+    @Test
     fun offlineInspectionReadsTheConfirmedNoteWithoutCreatingOrClearingADraft() =
         runTest {
             val visit = TravelVisit("visit", 1, TravelVisitDetails("Museum", "Address", null, "Confirmed shared note"), 1)

@@ -253,20 +253,24 @@ class TravelPlannerViewModel(
                         pendingPlanId = planId
                         pendingSave = stored.pending
                     }
-                    if (cached == null) {
-                        mutableState.update { it.copy(plan = null, visitDraft = null, isOffline = true) }
-                        throw exception
+                    val savedDay = cached?.let { snapshot ->
+                        snapshot.lastViewedDay?.takeIf { it in 0..snapshot.summary.details.dates.dayCount }
                     }
-                    val savedDay = cached.lastViewedDay?.takeIf { it in 0..cached.summary.details.dates.dayCount }
                     mutableState.update {
                         it.copy(
                             plan = cached,
                             isOffline = true,
                             failure = TravelPlanFailure.CONNECTION,
                             visitDraft = it.visitDraft ?: stored?.draft?.toVisitDraft(),
-                            unappliedOrder = if (wasLoaded) it.unappliedOrder else stored?.unappliedOrder,
+                            unappliedOrder = if (wasLoaded) it.unappliedOrder else it.unappliedOrder ?: stored?.unappliedOrder,
                             canRetrySave = pendingSave != null,
                             selectedDay = if (wasLoaded) it.selectedDay else savedDay ?: it.selectedDay,
+                            inspectedVisitId = it.inspectedVisitId.takeIf { cached != null },
+                            selectedVisitId = it.selectedVisitId.takeIf { cached != null },
+                            mapFocusedVisitId = it.mapFocusedVisitId.takeIf { cached != null },
+                            placeSearch = it.placeSearch.takeIf { cached != null },
+                            overview = it.overview.takeIf { cached != null },
+                            dayPlaces = if (cached == null) emptyMap() else it.dayPlaces,
                         )
                     }
                     return@load
@@ -324,7 +328,7 @@ class TravelPlannerViewModel(
                             current.selectedDay.takeIf { it in 0..dates.dayCount } ?: initialDay
                         },
                     visitDraft = nextDraft,
-                    unappliedOrder = if (wasLoaded) current.unappliedOrder else stored?.unappliedOrder,
+                    unappliedOrder = if (wasLoaded) current.unappliedOrder else current.unappliedOrder ?: stored?.unappliedOrder,
                     inspectedVisitId = current.inspectedVisitId?.takeIf { id -> nextDraft == null && plan.visits.any { it.id == id } },
                     needsLatestPlan = pendingSave == null && (wasRemoved || changedStructure || (!rebaseDraft && current.needsLatestPlan)),
                     failure =
