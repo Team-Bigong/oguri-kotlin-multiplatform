@@ -184,7 +184,7 @@ internal fun TravelPlaceSearchSheet(
                     }
                 }
                 if (manual) {
-                    if (draft != null) item {
+                    if (draft != null) item(key = "manual-place-form") {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             TravelPlaceField(
                                 draft.name, { onDraftChange(draft.copy(name = it)) }, Res.string.travel_visit_name,
@@ -210,7 +210,7 @@ internal fun TravelPlaceSearchSheet(
                             }
                         }
                     }
-                    item {
+                    item(key = "place-search-input") {
                         TravelPlaceInput(
                             value = search.query,
                             onChange = { if (it.length <= 120) onQuery(it) },
