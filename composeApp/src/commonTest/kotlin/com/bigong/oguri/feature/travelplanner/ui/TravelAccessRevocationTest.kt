@@ -341,13 +341,13 @@ class TravelAccessRevocationTest {
             )
             viewModel.loadPlan("plan")
             advanceUntilIdle()
-            assertEquals(TravelPlan.UNASSIGNED_DAY, viewModel.state.value.selectedDay)
+            assertEquals(1, viewModel.state.value.selectedDay)
             assertEquals(draft, viewModel.state.value.visitDraft)
             assertTrue(viewModel.state.value.needsLatestPlan)
 
             viewModel.loadPlan("plan", rebaseDraft = true)
             advanceUntilIdle()
-            assertEquals(TravelPlan.UNASSIGNED_DAY, viewModel.state.value.visitDraft?.dayNumber)
+            assertEquals(1, viewModel.state.value.visitDraft?.dayNumber)
             assertEquals("Museum", viewModel.state.value.visitDraft?.name)
             assertTrue(plans.saveAttempts.isEmpty())
         }

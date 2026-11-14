@@ -12,6 +12,9 @@ interface TravelPlaceRepository {
 
     suspend fun cityTimeZone(placeId: String): String?
 
+    suspend fun searchInCity(planId: String, query: String, language: String, city: String): List<TravelPlace> =
+        search(planId, query, language)
+
     suspend fun search(
         planId: String,
         query: String,

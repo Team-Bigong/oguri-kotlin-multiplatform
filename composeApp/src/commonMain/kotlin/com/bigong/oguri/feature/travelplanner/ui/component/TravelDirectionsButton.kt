@@ -1,8 +1,8 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import com.bigong.oguri.core.designsystem.OguriTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -31,7 +31,7 @@ internal fun TravelDirectionsButton(
     if (target == null && placeId == null) return
     val uriHandler = LocalUriHandler.current
     var failed by remember(placeId, target) { mutableStateOf(false) }
-    TextButton(enabled = enabled, onClick = {
+    TravelTextButton(enabled = enabled, onClick = {
         val url =
             URLBuilder()
                 .apply {
@@ -46,7 +46,7 @@ internal fun TravelDirectionsButton(
     if (failed) {
         Text(
             stringResource(Res.string.travel_directions_unavailable),
-            color = MaterialTheme.colorScheme.error,
+            color = com.bigong.oguri.core.designsystem.Orange50,
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
     }

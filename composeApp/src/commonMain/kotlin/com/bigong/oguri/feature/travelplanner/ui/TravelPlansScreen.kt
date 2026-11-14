@@ -1,108 +1,171 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Mint90
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral70
+import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.SkeletonBox
+import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
+import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
-import kotlinx.datetime.toLocalDateTime
-import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.travel_create
-import oguri.composeapp.generated.resources.travel_dates_value
-import oguri.composeapp.generated.resources.travel_empty_plans
-import oguri.composeapp.generated.resources.travel_guest_plans
-import oguri.composeapp.generated.resources.travel_list
-import oguri.composeapp.generated.resources.travel_past
-import oguri.composeapp.generated.resources.travel_past_collapsed
-import oguri.composeapp.generated.resources.travel_past_expanded
-import oguri.composeapp.generated.resources.travel_sign_in
-import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toLocalDateTime
+import oguri.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.DrawableResource
+import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun TravelPlansScreen(
     state: TravelPlannerUiState,
     signedIn: Boolean,
     onSignIn: () -> Unit,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onCreate: () -> Unit,
     onOpen: (String) -> Unit,
+    onFindNextHoliday: () -> Unit,
     onRetry: () -> Unit,
 ) {
-    TravelPlannerPage(title = stringResource(Res.string.travel_list), onBack = onBack) {
+    val colors = OguriTheme.colors
+    TravelPlannerPage(
+        title = if (onBack != null) stringResource(Res.string.travel_list) else "",
+        onBack = onBack,
+        modifier = Modifier.floatingNavigationBarsPadding(hasFloatingBottomNavigation = onBack == null),
+    ) {
         val failure = state.failure
         val plans = state.plans
         when {
-            !signedIn ->
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(stringResource(Res.string.travel_guest_plans))
-                    TextButton(onClick = onSignIn) { Text(stringResource(Res.string.travel_sign_in)) }
+            !signedIn -> {
+                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(Res.string.travel_list), style = OguriTheme.typography.sectionTitle)
+                    Text(stringResource(Res.string.travel_list_description), style = OguriTheme.typography.cardSubtitle, color = colors.textTertiary)
                 }
+                HorizontalDivider(color = colors.borderSubtle)
+                TravelPlansEmpty(Res.drawable.img_oguri_hello, stringResource(Res.string.travel_guest_plans), stringResource(Res.string.travel_login_action), onSignIn, stringResource(Res.string.travel_login_title))
+            }
             failure != null -> TravelLoadFailure(failure, onRetry)
-            plans == null -> LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-            plans.isEmpty() -> {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(stringResource(Res.string.travel_empty_plans))
-                    TravelPrimaryButton(onClick = onCreate) { Text(stringResource(Res.string.travel_create)) }
-                }
+            plans == null -> Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SkeletonBox(Modifier.fillMaxWidth().height(134.dp))
+                TravelLoading(Modifier.fillMaxWidth(0.5f))
             }
             else -> {
                 var showPast by rememberSaveable { mutableStateOf(false) }
                 val now = Clock.System.now()
                 val (past, current) = plans.partition { plan -> plan.hasEnded { now.toLocalDateTime(it).date } }
                 val pastState = stringResource(if (showPast) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
-
-                LazyColumn(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+                LazyColumn {
+                    item {
+                        Column(
+                            Modifier.fillMaxWidth().padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 13.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            if (onBack == null) {
+                                Text(stringResource(Res.string.travel_list), style = travelTextStyle(22, 26, FontWeight.Bold), color = Neutral100)
+                            }
+                            Text(
+                                stringResource(Res.string.travel_list_description),
+                                style = travelTextStyle(15, 18, FontWeight.Medium),
+                                color = colors.textTertiary,
+                            )
+                            val shape = CircleShape
+                            if (plans.isNotEmpty()) Row(
+                                Modifier.padding(top = 12.dp).heightIn(min = 44.dp).noRippleClickable(onClick = onCreate)
+                                    .padding(vertical = 7.dp).heightIn(min = 30.dp)
+                                    .background(Mint5, shape).border(1.dp, Mint70, shape).padding(horizontal = 12.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(12.dp), tint = if (OguriTheme.isDarkTheme) Mint90 else Mint70)
+                                Text(stringResource(Res.string.travel_create), style = travelTextStyle(12, 14, FontWeight.Medium), color = if (OguriTheme.isDarkTheme) Mint90 else Mint70)
+                            }
+                        }
+                        HorizontalDivider(color = colors.borderSubtle)
+                    }
+                    if (plans.isEmpty()) item {
+                        TravelPlansEmpty(Res.drawable.img_oguri_parasol, stringResource(Res.string.travel_empty_description), stringResource(Res.string.travel_create), onCreate, stringResource(Res.string.travel_empty_title))
+                    }
                     items(current, key = TravelPlanSummary::id) { plan ->
-                        TravelPlanCard(plan) { onOpen(plan.id) }
+                        TravelPlanCard(plan, now.toLocalDateTime(plan.details.timeZone).date) { onOpen(plan.id) }
                     }
                     if (past.isNotEmpty()) {
                         item {
-                            TextButton(
-                                onClick = { showPast = !showPast },
-                                modifier = Modifier.semantics { stateDescription = pastState },
+                            HorizontalDivider(color = colors.borderSubtle)
+                            Row(
+                                Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics { stateDescription = pastState }
+                                    .noRippleClickable(onClick = { showPast = !showPast }).padding(horizontal = 24.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(stringResource(Res.string.travel_past))
+                                Text(stringResource(Res.string.travel_past), Modifier.weight(1f), style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
+                                Icon(
+                                    painterResource(Res.drawable.ic_right_arrow), null,
+                                    Modifier.rotate(if (showPast) -90f else 90f), tint = colors.textTertiary,
+                                )
                             }
+                            if (!showPast) HorizontalDivider(color = colors.borderSubtle)
                         }
                         if (showPast) {
                             items(past.asReversed(), key = TravelPlanSummary::id) { plan ->
-                                TravelPlanCard(plan) { onOpen(plan.id) }
+                                TravelPlanCard(plan, null) { onOpen(plan.id) }
+                            }
+                            item {
+                                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.End) {
+                                    TravelTextButton(onClick = onFindNextHoliday) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(stringResource(Res.string.travel_find_next_holiday))
+                                            Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp))
+                                        }
+                                    }
+                                }
                             }
                         }
-                    }
-                    item {
-                        TextButton(onClick = onCreate) { Text(stringResource(Res.string.travel_create)) }
                     }
                 }
             }
@@ -111,19 +174,87 @@ internal fun TravelPlansScreen(
 }
 
 @Composable
+private fun TravelPlansEmpty(
+    illustration: DrawableResource,
+    message: String,
+    actionLabel: String,
+    onAction: () -> Unit,
+    title: String = "",
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth().heightIn(min = 480.dp).padding(horizontal = 24.dp, vertical = 60.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Image(painterResource(illustration), contentDescription = null, modifier = Modifier.size(160.dp))
+        if (title.isNotBlank()) Text(title, style = OguriTheme.typography.cardTitle, color = Neutral100, textAlign = TextAlign.Center)
+        Text(message, style = OguriTheme.typography.bodyMedium, color = Neutral70, textAlign = TextAlign.Center)
+        TravelPrimaryButton(onClick = onAction, modifier = Modifier.fillMaxWidth()) { Text(actionLabel) }
+    }
+}
+
+@Composable
 private fun TravelPlanCard(
     plan: TravelPlanSummary,
+    today: LocalDate?,
     onClick: () -> Unit,
 ) {
     val details = plan.details
-    Card(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(details.title, style = MaterialTheme.typography.titleMedium)
-            Text(details.city)
+    val colors = OguriTheme.colors
+    val shape = RoundedCornerShape(8.dp)
+    val dayOffset = today?.let { details.dates.start.toEpochDays() - it.toEpochDays() }
+    val meta = listOfNotNull(details.city, plan.memberCount?.let { stringResource(Res.string.travel_member_count, it) })
+        .joinToString(" · ")
+    if (today == null) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp)
+                .clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderSubtle, shape)
+                .noRippleClickable(onClick = onClick).padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
+                Text(
+                    "${travelCardDates(details.dates, includeYear = true)} · $meta",
+                    style = travelTextStyle(11, 13), color = colors.textTertiary,
+                )
+            }
+            Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = colors.textTertiary)
+        }
+        return
+    }
+    val headingColor = if (OguriTheme.isDarkTheme) Neutral100 else Color.White
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp)
+            .clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderStrong, shape)
+            .noRippleClickable(onClick = onClick),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().background(if (OguriTheme.isDarkTheme) Mint40 else Mint70)
+                .padding(start = 18.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Text(
-                stringResource(Res.string.travel_dates_value, details.dates.start.toString(), details.dates.endInclusive.toString()),
-                style = MaterialTheme.typography.bodySmall,
+                details.title, Modifier.weight(1f), style = travelTextStyle(18, 21, FontWeight.SemiBold),
+                color = headingColor, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
+            Icon(painterResource(Res.drawable.ic_travel_card_arrow), null, Modifier.size(24.dp), tint = headingColor)
+        }
+        Column(
+            Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Text(
+                if (dayOffset != null && dayOffset > 0) stringResource(Res.string.travel_list_countdown, dayOffset.toInt())
+                else stringResource(Res.string.travel_list_in_progress),
+                style = travelTextStyle(12, 14, FontWeight.Medium),
+                color = if (OguriTheme.isDarkTheme) Mint90 else Mint70,
+            )
+            Text(travelCardDates(details.dates, includeYear = true), style = travelTextStyle(15, 18, FontWeight.Medium), color = colors.textPrimary)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = colors.textTertiary)
+                Text(meta, style = travelTextStyle(11, 13), color = colors.textTertiary)
+            }
         }
     }
 }

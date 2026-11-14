@@ -117,7 +117,7 @@ internal actual fun PlatformTravelMap(
                 renderedMap.addPolyline(
                     PolylineOptions()
                         .addAll(line.points.map { it.toLatLng() })
-                        .color(MAP_LINE_COLOR)
+                        .color(line.colorArgb)
                         .width(3 * density)
                         .geodesic(true),
                 )
@@ -177,22 +177,25 @@ internal actual fun PlatformTravelMap(
 private fun TravelCoordinates.toLatLng(): LatLng = LatLng(latitude, longitude)
 
 private fun TravelMapMarker.bitmap(density: Float): Bitmap {
-    val size = (34 * density).toInt().coerceAtLeast(1)
+    val size = ((if (selected) 44 else 26) * density).toInt().coerceAtLeast(1)
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     val middle = size / 2f
+    if (selected) {
+        paint.color = (colorArgb and 0x00ffffff) or 0x47000000
+        canvas.drawCircle(middle, middle, middle, paint)
+    }
+    val radius = (if (selected) 16 else 13) * density
     paint.color = android.graphics.Color.WHITE
-    canvas.drawCircle(middle, middle, middle, paint)
+    canvas.drawCircle(middle, middle, radius, paint)
     paint.color = colorArgb
-    canvas.drawCircle(middle, middle, middle * 0.86f, paint)
+    canvas.drawCircle(middle, middle, radius - 2 * density, paint)
     label?.let {
         paint.color = android.graphics.Color.WHITE
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = middle * 0.84f
+        paint.textSize = (if (selected) 14 else 12) * density
         canvas.drawText(it, middle, middle - (paint.ascent() + paint.descent()) / 2, paint)
     }
     return bitmap
 }
-
-private const val MAP_LINE_COLOR: Int = 0xff007d69.toInt()

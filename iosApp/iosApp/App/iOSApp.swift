@@ -1,6 +1,7 @@
 import SwiftUI
 import ComposeApp
 import KakaoSDKCommon
+import KakaoSDKAuth
 import FirebaseCore
 import FirebaseCrashlytics
 import GoogleMaps
@@ -22,6 +23,7 @@ struct iOSApp: App {
         }
         if let kakaoAppKey = Bundle.main.object(forInfoDictionaryKey: "KEY_KAKAO") as? String, !kakaoAppKey.isEmpty {
             KakaoSDK.initSDK(appKey: kakaoAppKey)
+            KakaoAuthProvider_iosKt.installKakaoLoginHost(host: KakaoLoginBridge())
         }
         AmplitudeBridge.shared.startObserving()
         KakaoShareDispatcher.shared.startObserving()
@@ -39,8 +41,8 @@ struct iOSApp: App {
                 }
                 .onOpenURL { url in
                     let urlText = url.absoluteString
-                    if urlText.hasPrefix("kakao"), urlText.contains("://oauth") {
-                        KakaoAuthProvider_iosKt.handleKakaoLoginOpenUrl(url: urlText)
+                    if AuthApi.isKakaoTalkLoginUrl(url) {
+                        _ = AuthController.handleOpenUrl(url: url)
                     } else {
                         DeepLinkStoreProviderKt.handleIncomingAppUrl(urlText: urlText)
                     }

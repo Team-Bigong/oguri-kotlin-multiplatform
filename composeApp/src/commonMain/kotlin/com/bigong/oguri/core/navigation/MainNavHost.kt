@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -23,8 +24,6 @@ import androidx.navigation.toRoute
 import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
-import com.bigong.oguri.core.network.TRAVEL_PLANNER_ENABLED_IN_RELEASE
-import com.bigong.oguri.core.network.isDebugPlatformBuild
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.domain.model.DisplayThemeMode
@@ -51,6 +50,7 @@ import com.bigong.oguri.feature.travelplanner.ui.TravelMembersRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlanRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
+import com.bigong.oguri.feature.travelplanner.ui.TravelHomeGuide
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 import kotlinx.coroutines.CancellationException
@@ -80,7 +80,6 @@ fun MainNavHost(
     onDisplayThemeModeChange: (DisplayThemeMode) -> Unit,
 ) {
     val navigationScope = rememberCoroutineScope()
-    val travelEnabled = isDebugPlatformBuild() || TRAVEL_PLANNER_ENABLED_IN_RELEASE
     val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
     fun recordRecommendation(source: TravelRecommendationSource, entry: TravelRecommendationEntry) {
         navigationScope.launch {
@@ -236,6 +235,9 @@ fun MainNavHost(
             }
         }
         composable<RouteModel.Home> {
+            val travelViewModel = if (travelEnabled && travelSession.tokens != null) {
+                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
+            } else null
             HomeRoute(
                 homeViewModel = homeViewModelProvider(),
                 snackbarHostState = snackbarHostState,
@@ -250,26 +252,14 @@ fun MainNavHost(
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
                 onSearchClick = navigator::navigateToSearch,
-                onCreateTravelPlan =
-                    if (travelEnabled) {
-                        { startDate, endDate ->
-                            recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
-                            navigator.navigateToCreateTravelPlan(startDate = startDate, endDate = endDate)
-                        }
-                    } else {
-                        null
-                    },
-                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.EXPOSED) },
                 travelResume =
-                    if (travelEnabled && travelSession.tokens != null) {
-                        {
-                            TravelResumeEntry(
-                                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
-                            ) { navigator.navigateToTravelPlan(it) }
-                        }
-                    } else {
-                        null
-                    },
+                    if (travelViewModel != null) {
+                        { TravelResumeEntry(travelViewModel) { navigator.navigateToTravelPlan(it) } }
+                    } else null,
+                travelGuide =
+                    if (travelEnabled) {
+                        { TravelHomeGuide(travelViewModel) { navigator.navigateToCreateTravelPlan() } }
+                    } else null,
                 onLoginRequired = navigator::navigateToLogin,
             )
         }
@@ -329,6 +319,7 @@ fun MainNavHost(
             }
             val route = entry.toRoute<RouteModel.TravelMembers>()
             TravelMembersRoute(
+                cityViewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
                 planId = route.planId,
                 dates = TravelDates(LocalDate.parse(route.startDate), LocalDate.parse(route.endDate)),
                 onSelectDay = navigator::showTravelDay,
@@ -343,17 +334,14 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.TravelPlans> {
-            if (travelSession.tokens == null) {
-                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
-                return@composable
-            }
             TravelPlansRoute(
                 viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
-                onBack = { navigator.popBackStack() },
+                onBack = if (travelEnabled) null else ({ navigator.popBackStack() }),
                 signedIn = travelSession.tokens != null,
                 onSignIn = navigator::navigateToTravelLogin,
                 onCreate = { navigator.navigateToCreateTravelPlan() },
                 onOpen = { navigator.navigateToTravelPlan(it) },
+                onFindNextHoliday = navigator::openCalendarTab,
             )
         }
         composable<RouteModel.CreateTravelPlan> { entry ->
@@ -409,7 +397,6 @@ fun MainNavHost(
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
                 onOpenDisplaySettings = navigator::navigateToDisplaySettings,
-                onOpenTravelPlans = navigator::navigateToTravelPlans.takeIf { travelEnabled },
                 onLoggedOut = onLoggedOut,
                 onWithdrawCompleted = onWithdrawCompleted,
                 onLoginRequired = navigator::navigateToLogin,
@@ -432,6 +419,13 @@ fun MainNavHost(
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->
             val route = navBackStackEntry.toRoute<RouteModel.PlaceDetail>()
+            val travelViewModel = if (travelEnabled && travelSession.tokens != null) {
+                viewModel(key = "travel-destination-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
+            } else null
+            val travelState = travelViewModel?.state?.collectAsStateWithLifecycle()?.value
+            LaunchedEffect(travelViewModel) {
+                travelViewModel?.loadCreationMatches()
+            }
             PlaceDetailRoute(
                 placeDetailViewModelProvider = appGraph.placeDetailViewModelProvider,
                 snackbarHostState = snackbarHostState,
@@ -447,6 +441,8 @@ fun MainNavHost(
                     } else {
                         null
                     },
+                matchingTravelPlans = travelState?.plans.orEmpty(),
+                onOpenTravelPlan = { navigator.navigateToTravelPlan(it) },
                 onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.EXPOSED) },
                 onBackClick = { navigator.popBackStack() },
                 onLoginRequired = navigator::navigateToLogin,

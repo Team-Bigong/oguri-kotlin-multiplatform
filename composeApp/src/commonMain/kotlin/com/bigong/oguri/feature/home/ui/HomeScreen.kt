@@ -11,15 +11,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral5
-import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
@@ -58,7 +55,6 @@ import oguri.composeapp.generated.resources.ic_fire
 import oguri.composeapp.generated.resources.ic_plane
 import oguri.composeapp.generated.resources.ic_shopping_bag
 import oguri.composeapp.generated.resources.ic_trophy
-import oguri.composeapp.generated.resources.travel_create_from_period
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
@@ -74,8 +70,7 @@ fun HomeScreen(
     onSearchClick: () -> Unit,
     scrollToTopTrigger: Int,
     travelResume: (@Composable () -> Unit)? = null,
-    onCreateTravelPlan: ((String, String) -> Unit)? = null,
-    onTravelEntryVisible: (() -> Unit)? = null,
+    travelGuide: (@Composable () -> Unit)? = null,
 ) {
     if (homeUiState.isLoading) {
         HomeSkeletonContent()
@@ -158,21 +153,6 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
-            if (onCreateTravelPlan != null) {
-                item(key = "travel_create_from_period") {
-                    TextButton(
-                        onClick = {
-                            onCreateTravelPlan(currentPeriod.startDate.toString(), currentPeriod.endDate.toString())
-                        },
-                        modifier =
-                            Modifier
-                                .padding(horizontal = 20.dp)
-                                .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
-                    ) {
-                        Text(stringResource(Res.string.travel_create_from_period), color = OguriTheme.colors.textPrimary)
-                    }
-                }
-            }
             if (travelResume != null) {
                 item(key = "travel_resume") { travelResume() }
             }
@@ -201,6 +181,7 @@ fun HomeScreen(
                     )
                 }
             }
+            if (travelGuide != null) item(key = "travel_guide") { travelGuide() }
             if (homeUiState.weeklyTopPlaces.isNotEmpty()) {
                 item {
                     Spacer(modifier = Modifier.height(28.dp))

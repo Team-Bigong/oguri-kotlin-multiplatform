@@ -18,6 +18,7 @@ final class FloatingBottomNavigationStateStore: ObservableObject {
     @Published var backgroundColorArgb: UInt32 = 0
     @Published var homeTabLabel: String = "Home"
     @Published var calendarTabLabel: String = "Calendar"
+    @Published var travelTabLabel: String?
     @Published var myPageTabLabel: String = "My Page"
 
     private var observerToken: NSObjectProtocol?
@@ -52,6 +53,7 @@ final class FloatingBottomNavigationStateStore: ObservableObject {
             }
             self.homeTabLabel = homeTabLabelValue ?? self.homeTabLabel
             self.calendarTabLabel = calendarTabLabelValue ?? self.calendarTabLabel
+            self.travelTabLabel = (userInfo?["travelTabLabel"] as? String).flatMap { $0.isEmpty ? nil : $0 }
             self.myPageTabLabel = myPageTabLabelValue ?? self.myPageTabLabel
         }
     }

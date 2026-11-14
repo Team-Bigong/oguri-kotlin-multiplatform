@@ -42,6 +42,21 @@ class TravelCollaborationRepository(
             .update()
     }
 
+    fun memberCounts(planIds: List<UUID>): Map<UUID, Int> {
+        if (planIds.isEmpty()) return emptyMap()
+        return jdbc.sql(
+            """SELECT plan.id, 1 + count(membership.member_id) AS member_count
+               FROM travel_plans plan
+               LEFT JOIN travel_plan_members membership
+                 ON membership.travel_plan_id = plan.id AND membership.member_id <> plan.owner_id
+               WHERE plan.id IN (:plans)
+               GROUP BY plan.id""",
+        ).param("plans", planIds)
+            .query { row, _ -> row.getObject("id", UUID::class.java) to row.getInt("member_count") }
+            .list()
+            .toMap()
+    }
+
     fun members(
         planId: UUID,
         ownerId: String,
@@ -94,6 +109,10 @@ class TravelCollaborationRepository(
             .param("expiry", expiresAt)
             .update()
     }
+
+    fun hasActiveInvite(planId: UUID, at: OffsetDateTime): Boolean =
+        jdbc.sql("SELECT EXISTS (SELECT 1 FROM travel_plan_invites WHERE travel_plan_id = :plan AND revoked_at IS NULL AND expires_at > :at)")
+            .param("plan", planId).param("at", at).query(Boolean::class.java).single()
 
     fun invite(hash: String): TravelInviteRow? =
         jdbc

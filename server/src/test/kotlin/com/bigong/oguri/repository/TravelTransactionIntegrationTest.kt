@@ -557,31 +557,13 @@ class TravelTransactionIntegrationTest {
     }
 
     @Test
-    fun `날짜 없는 저장은 활성화로 세지 않고 날짜 배정 재전송은 한번만 기록한다`() {
+    fun `여러 도시를 저장한 뒤 다시 조회해도 순서가 유지된다`() {
         val owner = member()
-        val plan = tx { service.create(owner, creation()) }
-        val unassigned = add("Private name").copy(dayNumber = 0)
-        val visit = tx { service.execute(owner, plan.id, unassigned) }.visits.single()
-        tx { service.execute(owner, plan.id, unassigned) }
-        val assigned = edit(visit).copy(dayNumber = 1)
-        tx { service.execute(owner, plan.id, assigned) }
-        tx { service.execute(owner, plan.id, assigned) }
-        val dated =
-            jdbc
-                .sql(
-                    "SELECT e.has_dated_visit FROM travel_usage_edits e JOIN travel_usage_cohorts c ON c.id = e.cohort_id WHERE c.travel_plan_id = :id ORDER BY e.revision",
-                ).param("id", plan.id)
-                .query(Boolean::class.javaObjectType)
-                .list()
-        assertEquals(listOf(false, true), dated)
-        val kinds =
-            jdbc
-                .sql(
-                    "SELECT e.kind FROM travel_usage_edits e JOIN travel_usage_cohorts c ON c.id = e.cohort_id WHERE c.travel_plan_id = :id ORDER BY e.revision",
-                ).param("id", plan.id)
-                .query(String::class.java)
-                .list()
-        assertEquals(listOf("VISIT_ADDED", "VISIT_EDITED"), kinds)
+        val request = creation().let { it.copy(cities = listOf(it.city, "Busan")) }
+        val plan = tx { service.create(owner, request) }
+        val loaded = tx { service.get(owner, plan.id) }
+        assertEquals(request.cities, loaded.summary.cities)
+        assertEquals(request.cities, tx { service.create(owner, request) }.cities)
     }
 
     @Test
