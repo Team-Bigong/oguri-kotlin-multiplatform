@@ -1,5 +1,6 @@
 package com.bigong.oguri.dto.request
 
+import com.bigong.oguri.domain.TravelVisitCategory
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
@@ -17,6 +18,7 @@ data class CreateTravelPlanRequest(
     val endDate: LocalDate,
     @get:JsonInclude(JsonInclude.Include.NON_NULL)
     val source: TravelPlanSourceRequest?,
+    val cities: List<String> = listOf(city),
 )
 
 @JvmRecord
@@ -39,6 +41,8 @@ data class TravelVisitRequest(
     val note: String?,
     @get:JsonInclude(JsonInclude.Include.NON_NULL)
     val googlePlaceId: String?,
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    val category: TravelVisitCategory? = null,
 )
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")

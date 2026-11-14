@@ -1,15 +1,15 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,14 +17,16 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelReminderStatus
 import com.bigong.oguri.domain.model.TravelReminderTime
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelReminderUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.parseTravelReminderTime
-import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
 internal fun TravelReminderDialog(
@@ -37,10 +39,13 @@ internal fun TravelReminderDialog(
     val settings = state.settings
     var date by rememberSaveable { mutableStateOf("") }
     var time by rememberSaveable { mutableStateOf("") }
-    var zone by rememberSaveable { mutableStateOf("") }
-    val effectiveZone = zone.ifBlank { settings?.tripTimeZone?.id.orEmpty() }
+    var chooseDate by remember { mutableStateOf(false) }
+    var chooseTime by remember { mutableStateOf(false) }
+    val effectiveZone = settings?.tripTimeZone?.id.orEmpty()
     val selection = settings?.let { parseTravelReminderTime(date, time, effectiveZone, it, Clock.System.now()) }
-    AlertDialog(
+    TravelFullScreenForm(
+        shape = RoundedCornerShape(8.dp),
+        containerColor = Neutral0,
         onDismissRequest = { if (!state.busy) onDismiss() },
         title = { Text(stringResource(Res.string.travel_my_reminder)) },
         text = {
@@ -48,7 +53,7 @@ internal fun TravelReminderDialog(
                 Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                if (state.busy) LinearProgressIndicator()
+                if (state.busy) TravelLoading(Modifier.fillMaxWidth())
                 if (settings != null) {
                     val reminder = settings.reminder
                     Text(stringResource(Res.string.travel_reminder_explanation))
@@ -58,8 +63,7 @@ internal fun TravelReminderDialog(
                         Text(
                             stringResource(
                                 Res.string.travel_reminder_scheduled,
-                                reminder.scheduledAt.toLocalDateTime(reminder.timeZone).toString(),
-                                reminder.timeZone.id,
+                                com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(reminder.scheduledAt.toLocalDateTime(reminder.timeZone).date) + " · " + com.bigong.oguri.feature.travelplanner.ui.travelClockTime(reminder.scheduledAt.toLocalDateTime(reminder.timeZone).time),
                             ),
                         )
                         Text(
@@ -72,23 +76,19 @@ internal fun TravelReminderDialog(
                                 },
                             ),
                         )
-                        TextButton(enabled = !state.busy, onClick = onCancel) { Text(stringResource(Res.string.travel_reminder_turn_off)) }
+                        TravelTextButton(enabled = !state.busy, onClick = onCancel) { Text(stringResource(Res.string.travel_reminder_turn_off)) }
                     }
                     if (settings.canSchedule) {
-                        OutlinedTextField(date, {
-                            date = it
-                        }, enabled = !state.busy, label = { Text(stringResource(Res.string.travel_reminder_date)) }, singleLine = true)
-                        OutlinedTextField(time, {
-                            time = it
-                        }, enabled = !state.busy, label = { Text(stringResource(Res.string.travel_reminder_time)) }, singleLine = true)
-                        OutlinedTextField(effectiveZone, {
-                            zone = it
-                        }, enabled = !state.busy, label = { Text(stringResource(Res.string.travel_choose_time_zone)) }, singleLine = true)
+                        TravelOutlineButton(onClick = { chooseDate = true }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
+                            Text(date.takeIf { it.isNotBlank() }?.let { com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(kotlinx.datetime.LocalDate.parse(it)) } ?: stringResource(Res.string.travel_reminder_date))
+                        }
+                        TravelOutlineButton(onClick = { chooseTime = true }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
+                            Text(time.takeIf { it.isNotBlank() }?.let { com.bigong.oguri.feature.travelplanner.ui.travelClockTime(kotlinx.datetime.LocalTime.parse(it)) } ?: stringResource(Res.string.travel_reminder_time))
+                        }
                         Text(
                             stringResource(
                                 Res.string.travel_reminder_before_departure,
-                                settings.dates.start.toString(),
-                                settings.tripTimeZone.id,
+                                com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(settings.dates.start),
                             ),
                         )
                         if (date.isNotBlank() &&
@@ -107,11 +107,16 @@ internal fun TravelReminderDialog(
         },
         confirmButton = {
             if (settings?.canSchedule == true) {
-                TextButton(enabled = !state.busy && selection != null, onClick = {
+                TravelTextButton(enabled = !state.busy && selection != null, onClick = {
                     selection?.let(onSchedule)
                 }) { Text(stringResource(Res.string.travel_reminder_save)) }
             }
         },
-        dismissButton = { TextButton(enabled = !state.busy, onClick = onDismiss) { Text(stringResource(Res.string.travel_search_close)) } },
+        dismissButton = { TravelTextButton(enabled = !state.busy, onClick = onDismiss) { Text(stringResource(Res.string.travel_search_close)) } },
     )
+    if (chooseDate && settings != null) TravelSingleDatePicker({ chooseDate = false }) {
+        date = it.toString(); chooseDate = false
+    }
+    if (chooseTime) TravelTimePicker({ chooseTime = false }) { time = it; chooseTime = false }
+
 }

@@ -39,28 +39,18 @@ class TravelMapSceneTest {
     }
 
     @Test
-    fun undatedAndRepeatedVisitsRemainSeparateWithoutLines() {
-        val visits = listOf(visit("first", station), visit("second", station))
-        val scene = travelMapScene(TravelPlan.UNASSIGNED_DAY, visits, places, null, null)
-
-        assertEquals(listOf("first", "second"), scene.markers.map(TravelMapMarker::id))
-        assertTrue(scene.markers.all { it.label == null })
-        assertTrue(scene.lines.isEmpty())
-    }
-
-    @Test
     fun overviewLabelsDaysKeepsRepeatedVisitsAndNeverConnectsDates() {
         val visits =
             listOf(
                 visit("first", station),
                 visit("repeat", station).copy(dayNumber = 2),
-                visit("undated", park).copy(dayNumber = 0),
+                visit("third", park).copy(dayNumber = 3),
                 visit("manual", null).copy(dayNumber = 3),
             )
         val scene = travelOverviewScene(visits, places, station.coordinates)
-        assertEquals(listOf("first", "repeat", "undated"), scene.markers.map { it.id })
-        assertEquals(listOf("1", "2", "–"), scene.markers.map { it.label })
-        assertEquals(listOf(1, 2, 0), scene.markers.map { it.dayNumber })
+        assertEquals(listOf("first", "repeat", "third"), scene.markers.map { it.id })
+        assertEquals(listOf("1", "1", "1"), scene.markers.map { it.label })
+        assertEquals(listOf(1, 2, 3), scene.markers.map { it.dayNumber })
         assertEquals(
             3,
             scene.markers

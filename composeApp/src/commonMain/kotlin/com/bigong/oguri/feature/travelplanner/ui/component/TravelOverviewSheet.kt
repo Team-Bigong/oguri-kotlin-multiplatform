@@ -1,5 +1,10 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import com.bigong.oguri.core.util.extension.noRippleClickable
+import oguri.composeapp.generated.resources.ic_travel_close
+import oguri.composeapp.generated.resources.travel_search_close
+import oguri.composeapp.generated.resources.travel_place_count
+import oguri.composeapp.generated.resources.travel_day_number
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,16 +19,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +36,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
@@ -50,13 +51,13 @@ import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_choose_day
 import oguri.composeapp.generated.resources.travel_empty_day
-import oguri.composeapp.generated.resources.travel_map_fit
 import oguri.composeapp.generated.resources.travel_map_hide
 import oguri.composeapp.generated.resources.travel_map_show
 import oguri.composeapp.generated.resources.travel_map_unavailable
 import oguri.composeapp.generated.resources.travel_overlapping_visits
 import oguri.composeapp.generated.resources.travel_overview
 import oguri.composeapp.generated.resources.travel_overview_legend
+import oguri.composeapp.generated.resources.travel_overview_map_fit
 import oguri.composeapp.generated.resources.travel_place_details_unavailable
 import oguri.composeapp.generated.resources.travel_visit_fallback
 import org.jetbrains.compose.resources.stringResource
@@ -95,22 +96,22 @@ internal fun TravelOverviewSheet(
         state.places[visit.details.googlePlaceId]?.name ?: visit.details.name
             ?: stringResource(Res.string.travel_visit_fallback, plan.visits.indexOf(visit) + 1)
     }
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = com.bigong.oguri.core.designsystem.Neutral5,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+    ) {
         Column(Modifier.fillMaxHeight(0.92f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(Res.string.travel_overview), style = MaterialTheme.typography.titleLarge)
-            Text(stringResource(Res.string.travel_overview_legend), style = MaterialTheme.typography.bodySmall)
-            Row {
-                TextButton(onClick = { showMap = !showMap }) {
-                    Text(stringResource(if (showMap) Res.string.travel_map_hide else Res.string.travel_map_show))
-                }
-                if (showMap && !mapUnavailable) {
-                    TextButton(onClick = { viewportRequest++ }) { Text(stringResource(Res.string.travel_map_fit)) }
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(Res.string.travel_overview), Modifier.weight(1f), style = OguriTheme.typography.cardTitle)
+                Text(stringResource(Res.string.travel_place_count, plan.visits.size), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary)
+                TravelIconButton(onClick = onDismiss) { androidx.compose.material3.Icon(org.jetbrains.compose.resources.painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
             }
             if (showMap) {
                 if (mapUnavailable) {
                     Text(stringResource(Res.string.travel_map_unavailable))
-                    TextButton(onClick = { mapUnavailable = false }) { Text(stringResource(Res.string.common_retry_button)) }
+                    TravelTextButton(onClick = { mapUnavailable = false }) { Text(stringResource(Res.string.common_retry_button)) }
                 } else {
                     PlatformTravelMap(
                         scene = scene,
@@ -119,18 +120,28 @@ internal fun TravelOverviewSheet(
                         onMarkerClick = { id ->
                             val coordinates = scene.markers.firstOrNull { it.id == id }?.coordinates
                             val ids = scene.markers.filter { it.coordinates == coordinates }.map { it.id }
-                            if (ids.size > 1) overlapping = ids else onSelectVisit(id)
+                            onSelectVisit(id)
                         },
                         onUnavailable = { mapUnavailable = true },
-                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        modifier = Modifier.fillMaxWidth().height(170.dp),
                     )
+                    if (scene.markers.isNotEmpty()) {
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            plan.visits.map { it.dayNumber }.distinct().sorted().forEach { day ->
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(Modifier.size(10.dp).background(Color(travelDayColor(day)), CircleShape))
+                                    Text(stringResource(Res.string.travel_day_number, day), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            if (state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (state.loading) TravelLoading(Modifier.fillMaxWidth())
             if (state.incomplete) {
                 Row {
                     Text(stringResource(Res.string.travel_place_details_unavailable), Modifier.weight(1f))
-                    TextButton(onClick = onRetry) { Text(stringResource(Res.string.common_retry_button)) }
+                    TravelTextButton(onClick = onRetry) { Text(stringResource(Res.string.common_retry_button)) }
                 }
             }
             LazyColumn(Modifier.weight(1f)) {
@@ -153,58 +164,21 @@ internal fun TravelOverviewSheet(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Box(Modifier.size(10.dp).background(Color(travelDayColor(day)), CircleShape))
-                                Text(travelDayLabel(dates, day), style = MaterialTheme.typography.titleSmall)
+                                Text(travelDayLabel(dates, day), style = OguriTheme.typography.cardSubtitle)
                             }
                         }
                         items(visits, key = { it.id }) { visit ->
-                            TextButton(onClick = { onSelectVisit(visit.id) }, modifier = Modifier.fillMaxWidth()) {
-                                Text(title(visit), modifier = Modifier.fillMaxWidth())
+                            Row(Modifier.fillMaxWidth().noRippleClickable(onClick = { onSelectVisit(visit.id) }).padding(horizontal = 8.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Box(Modifier.size(24.dp).background(Color(travelDayColor(day)), CircleShape), contentAlignment = Alignment.Center) {
+                                    Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = Neutral0)
+                                }
+                                Text(title(visit), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
+                                visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
                             }
                         }
                     }
                 if (state.places.isNotEmpty()) item { GooglePlacesAttribution(state.places.values.flatMap { it.attributions }) }
             }
-            if (canAdd) {
-                Box {
-                    OutlinedButton(onClick = { chooseDay = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(addDay?.let { travelDayLabel(dates, it) } ?: stringResource(Res.string.travel_choose_day))
-                    }
-                    DropdownMenu(expanded = chooseDay, onDismissRequest = { chooseDay = false }) {
-                        for (day in TravelPlan.UNASSIGNED_DAY..dates.dayCount) {
-                            DropdownMenuItem(
-                                text = { Text(travelDayLabel(dates, day)) },
-                                onClick = {
-                                    addDay = day
-                                    chooseDay = false
-                                },
-                            )
-                        }
-                    }
-                }
-                TravelPrimaryButton(enabled = addDay != null, onClick = { addDay?.let(onAdd) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.travel_add_visit))
-                }
-            }
-            TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_cancel)) }
         }
-    }
-    if (overlapping.isNotEmpty()) {
-        AlertDialog(
-            onDismissRequest = { overlapping = emptyList() },
-            title = { Text(stringResource(Res.string.travel_overlapping_visits)) },
-            text = {
-                LazyColumn(Modifier.heightIn(max = 280.dp)) {
-                    items(plan.visits.filter { it.id in overlapping }, key = { it.id }) { visit ->
-                        TextButton(onClick = {
-                            overlapping = emptyList()
-                            onSelectVisit(visit.id)
-                        }) {
-                            Text("${travelDayLabel(dates, visit.dayNumber)} · ${title(visit)}")
-                        }
-                    }
-                }
-            },
-            confirmButton = { TextButton(onClick = { overlapping = emptyList() }) { Text(stringResource(Res.string.travel_cancel)) } },
-        )
     }
 }

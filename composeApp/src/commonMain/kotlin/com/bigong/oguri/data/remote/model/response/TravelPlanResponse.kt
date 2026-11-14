@@ -1,5 +1,6 @@
 package com.bigong.oguri.data.remote.model.response
 
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -11,6 +12,8 @@ internal data class TravelPlanSummaryResponse(
     val startDate: String,
     val endDate: String,
     val source: TravelPlanSourceResponse? = null,
+    val memberCount: Int? = null,
+    val cities: List<String> = listOf(city),
 )
 
 @Serializable
@@ -45,5 +48,6 @@ internal data class TravelVisitResponse(
     val localTime: String?,
     val note: String?,
     val googlePlaceId: String? = null,
+    val category: TravelVisitCategory? = null,
     val revision: Long,
 )

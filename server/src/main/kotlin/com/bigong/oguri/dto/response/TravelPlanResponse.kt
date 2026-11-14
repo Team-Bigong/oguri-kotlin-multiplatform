@@ -1,5 +1,6 @@
 package com.bigong.oguri.dto.response
 
+import com.bigong.oguri.domain.TravelVisitCategory
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
@@ -12,6 +13,8 @@ data class TravelPlanSummaryResponse(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val source: TravelPlanSourceResponse?,
+    val memberCount: Int? = null,
+    val cities: List<String> = listOf(city),
 )
 
 data class TravelPlanSourceResponse(
@@ -42,6 +45,7 @@ data class TravelVisitResponse(
     val localTime: String?,
     val note: String?,
     val googlePlaceId: String?,
+    val category: TravelVisitCategory? = null,
     val revision: Long,
 )
 

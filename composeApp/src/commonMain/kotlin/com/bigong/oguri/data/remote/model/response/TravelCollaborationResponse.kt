@@ -14,6 +14,7 @@ internal data class TravelMembersResponse(
     val currentMemberId: String,
     val members: List<TravelMemberResponse>,
     val ownershipTarget: String? = null,
+    val hasActiveInvite: Boolean = false,
 )
 
 @Serializable
@@ -32,6 +33,8 @@ internal data class TravelInvitePreviewResponse(
     val startDate: String,
     val endDate: String,
     val invitedBy: String?,
+    val city: String? = null,
+    val memberCount: Int? = null,
 )
 
 @Serializable

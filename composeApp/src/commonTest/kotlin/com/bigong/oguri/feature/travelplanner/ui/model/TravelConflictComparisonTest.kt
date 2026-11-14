@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.travelplanner.ui.model
 
 import com.bigong.oguri.domain.model.TravelDraft
 import com.bigong.oguri.domain.model.TravelVisit
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import kotlinx.datetime.LocalTime
 import kotlinx.serialization.json.Json
@@ -49,5 +50,15 @@ class TravelConflictComparisonTest {
         assertEquals(setOf(TravelVisitField.NOTE), restored.latestDifferences())
         val legacy = rebased.forRecovery().copy(showLatestComparison = false)
         assertFalse(Json.decodeFromString<TravelDraft>(Json.encodeToString(legacy)).showLatestComparison)
+    }
+    @Test
+    fun clearingACategorySurvivesDraftRecoveryAndConcurrentMemoChange() {
+        val categorized = original.copy(details = original.details.copy(category = TravelVisitCategory.SIGHTSEEING))
+        val latest = categorized.copy(revision = 2, details = categorized.details.copy(note = "Shared update"))
+        val draft = TravelVisitDraft(1, categorized, category = null).rebaseOn(latest)
+        val restored = Json.decodeFromString<TravelDraft>(Json.encodeToString(draft.forRecovery())).toVisitDraft()
+        assertEquals(null, restored.toDetails().category)
+        assertEquals("Shared update", restored.note)
+        assertEquals(setOf(TravelVisitField.CATEGORY), restored.latestDifferences())
     }
 }

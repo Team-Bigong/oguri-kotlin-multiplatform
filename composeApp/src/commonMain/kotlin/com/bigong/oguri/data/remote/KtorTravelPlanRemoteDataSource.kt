@@ -156,13 +156,14 @@ internal class KtorTravelPlanRemoteDataSource(
         planId: String,
         query: String,
         language: String,
+        city: String? = null,
     ): List<TravelPlaceResponse> =
         authRequestExecutor.executeForSession(sessionVersion) { token ->
             httpClient
                 .post("$BASE_URL$TRIPS_PATH/$planId/places/search") {
                     attributes.put(RequestAccessToken, token)
                     contentType(ContentType.Application.Json)
-                    setBody(TravelPlaceSearchRequest(query, language))
+                    setBody(TravelPlaceSearchRequest(query, language, city))
                 }.body()
         }
 

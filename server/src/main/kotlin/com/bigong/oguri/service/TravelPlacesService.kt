@@ -29,10 +29,11 @@ class TravelPlacesService(
         tripId: UUID,
         query: String,
         language: String,
+        selectedCity: String? = null,
     ): List<TravelPlaceResponse> {
         val trimmed = query.trim()
         require(trimmed.length in 2..120)
-        val city = plans.cityForPlaces(memberId, tripId)
+        val city = plans.cityForPlaces(memberId, tripId, selectedCity)
         reserve(memberId, 1, TravelPlacesOperation.SEARCH)
         return googleCall { google.search("$trimmed $city", supportedLanguage(language)) }
     }

@@ -1,11 +1,15 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitField
@@ -21,8 +25,8 @@ internal fun TravelConflictComparison(
     val fields = draft.latestDifferences()
     val latest = draft.visit ?: return
     if (fields.isEmpty()) return
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(Res.string.travel_latest_saved_values), style = MaterialTheme.typography.titleSmall)
+    Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint5, androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(Res.string.travel_latest_saved_values), style = OguriTheme.typography.cardSubtitle)
         fields.forEach { field ->
             val label =
                 when (field) {
@@ -31,6 +35,7 @@ internal fun TravelConflictComparison(
                     TravelVisitField.LOCATION -> Res.string.travel_visit_location
                     TravelVisitField.TIME -> Res.string.travel_visit_time
                     TravelVisitField.NOTE -> Res.string.travel_visit_note
+                    TravelVisitField.CATEGORY -> Res.string.travel_category
                 }
             val value =
                 when (field) {
@@ -39,9 +44,21 @@ internal fun TravelConflictComparison(
                     TravelVisitField.LOCATION -> latest.details.location
                     TravelVisitField.TIME -> latest.details.localTime?.toString()
                     TravelVisitField.NOTE -> latest.details.note
+                    TravelVisitField.CATEGORY -> latest.details.category?.let { stringResource(it.label()) }
                 }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
-            Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(label), style = OguriTheme.typography.labelMedium)
+            Text(stringResource(Res.string.travel_conflict_saved), style = OguriTheme.typography.labelSmall)
+            Text(value, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary)
+            Text(stringResource(Res.string.travel_conflict_mine), style = OguriTheme.typography.labelSmall)
+            val mine = when (field) {
+                TravelVisitField.DAY -> travelDayLabel(dates, draft.dayNumber)
+                TravelVisitField.NAME -> draft.name
+                TravelVisitField.LOCATION -> draft.location
+                TravelVisitField.TIME -> null
+                TravelVisitField.NOTE -> draft.note
+                TravelVisitField.CATEGORY -> draft.category?.let { stringResource(it.label()) }
+            }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
+            Text(mine, style = OguriTheme.typography.bodyMedium)
         }
     }
 }

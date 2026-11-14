@@ -55,18 +55,18 @@ fun ConfirmAlertDialog(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 24.dp),
             shape = RoundedCornerShape(8.dp),
             color = Neutral0,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Image(
                     painter = painterResource(iconResource),
                     contentDescription = null,
-                    colorFilter = ColorFilter.tint(WarningAmber),
+                    colorFilter = ColorFilter.tint(Orange50),
                     modifier = Modifier.size(48.dp),
                 )
 
@@ -104,7 +104,7 @@ fun ConfirmAlertDialog(
                         Text(
                             text = confirmButtonText,
                             style = OguriTheme.typography.bodyMedium,
-                            color = Neutral0,
+                            color = OguriTheme.colors.textOnMint,
                         )
                     }
 
