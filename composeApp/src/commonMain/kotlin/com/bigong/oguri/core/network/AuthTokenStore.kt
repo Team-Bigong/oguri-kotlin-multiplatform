@@ -67,6 +67,12 @@ object AuthTokenStore {
         purgeTravelRecovery()
     }
 
+    internal fun expireSession(original: Session) {
+        val current = session
+        if (current != original || current.tokens == null) return
+        saveSession(Session(current.version + 1, null, current.accountKey))
+    }
+
     private fun saveSession(updated: Session) {
         mutableSession.value = updated
         val tokens = updated.tokens
