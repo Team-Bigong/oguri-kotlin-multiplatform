@@ -1,5 +1,11 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
+import org.jetbrains.compose.resources.painterResource
+import oguri.composeapp.generated.resources.ic_pen
+import oguri.composeapp.generated.resources.ic_calendar
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +21,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -66,7 +73,6 @@ import oguri.composeapp.generated.resources.travel_city_tokyo
 import oguri.composeapp.generated.resources.travel_city_unavailable
 import oguri.composeapp.generated.resources.travel_create
 import oguri.composeapp.generated.resources.travel_creation_options
-import oguri.composeapp.generated.resources.travel_date_value
 import oguri.composeapp.generated.resources.travel_default_title
 import oguri.composeapp.generated.resources.travel_end_date
 import oguri.composeapp.generated.resources.travel_invalid_dates
@@ -209,8 +215,10 @@ internal fun CreateTravelPlanScreen(
                     style = MaterialTheme.typography.bodySmall,
                 )
             }
-            TravelDateButton(startLabel, startDate, canEdit) { isDatePickerForStart = true }
-            TravelDateButton(endLabel, endDate, canEdit) { isDatePickerForStart = false }
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                TravelDateButton(startLabel, startDate, canEdit) { isDatePickerForStart = true }
+                TravelDateButton(endLabel, endDate, canEdit) { isDatePickerForStart = false }
+            }
             if (hasInvalidDates) {
                 Text(
                     stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
@@ -382,7 +390,16 @@ private fun TravelDateButton(
     onClick: () -> Unit,
 ) {
     TravelOutlineButton(onClick = onClick, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-        Text(if (date == null) label else stringResource(Res.string.travel_date_value, label, date.toString()))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(painterResource(Res.drawable.ic_calendar), contentDescription = null, modifier = Modifier.size(20.dp))
+            Text(label, Modifier.weight(1f), style = OguriTheme.typography.labelLarge)
+            if (date != null) Text(travelDateLabel(date))
+            Icon(painterResource(Res.drawable.ic_pen), contentDescription = null, modifier = Modifier.size(18.dp))
+        }
     }
 }
 

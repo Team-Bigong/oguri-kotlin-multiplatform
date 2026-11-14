@@ -1,5 +1,6 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -86,24 +87,29 @@ internal fun TravelPlannerPage(
     PlatformBackGestureContainer(enabled = !isSaving && onBack != null, onBack = { onBack?.invoke() }) {
         Box(modifier.fillMaxSize().background(Neutral5)) {
             Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().background(Neutral0).heightIn(min = 48.dp).padding(horizontal = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    if (onBack != null) {
-                        TravelIconButton(onClick = onBack, enabled = !isSaving) {
+                if (onBack == null) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().background(Neutral0).heightIn(min = 48.dp).padding(horizontal = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        TravelPageTitle(title, Modifier.weight(1f).padding(horizontal = 8.dp))
+                        actions()
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().background(Neutral0).heightIn(min = 48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
+                        TravelIconButton(
+                            onClick = onBack,
+                            modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp),
+                            enabled = !isSaving,
+                        ) {
                             Icon(painterResource(Res.drawable.btn_back), stringResource(Res.string.travel_back), tint = Neutral100)
                         }
+                        Row(Modifier.align(Alignment.CenterEnd).padding(end = 8.dp), content = actions)
                     }
-                    Text(
-                        title,
-                        modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
-                        style = OguriTheme.typography.cardTitle,
-                        color = Neutral100,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    actions()
                 }
                 HorizontalDivider(color = Neutral20)
                 content()
@@ -111,6 +117,19 @@ internal fun TravelPlannerPage(
             if (isSaving) CenteredLoadingIndicator()
         }
     }
+}
+
+@Composable
+private fun TravelPageTitle(title: String, modifier: Modifier, textAlign: TextAlign = TextAlign.Start) {
+    Text(
+        title,
+        modifier = modifier,
+        textAlign = textAlign,
+        style = OguriTheme.typography.cardTitle,
+        color = Neutral100,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
 }
 
 @Composable

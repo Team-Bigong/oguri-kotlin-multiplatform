@@ -1,5 +1,8 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
+import com.bigong.oguri.core.designsystem.Mint70
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -72,6 +75,9 @@ import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_menu
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.ic_diary
+import oguri.composeapp.generated.resources.ic_travel_add
+import oguri.composeapp.generated.resources.travel_itinerary
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
@@ -276,16 +282,21 @@ internal fun TravelPlanScreen(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
+                Icon(painterResource(Res.drawable.ic_diary), contentDescription = null, tint = Mint70)
                 Text(
-                    travelDayLabel(dates, state.selectedDay),
+                    stringResource(Res.string.travel_itinerary),
                     modifier = Modifier.weight(1f),
                     color = Neutral100,
                     style = OguriTheme.typography.cardTitle,
                 )
                 TravelPrimaryButton(onClick = onSearchPlaces, enabled = canEdit) {
-                    Text(stringResource(Res.string.travel_add_visit))
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(painterResource(Res.drawable.ic_travel_add), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Text(stringResource(Res.string.travel_add_visit))
+                    }
                 }
             }
             val visitListState = rememberLazyListState()
@@ -302,7 +313,7 @@ internal fun TravelPlanScreen(
             LazyColumn(
                 state = visitListState,
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
             ) {
                 if (unappliedOrder != null) {
                     item(key = "unapplied-visit-order") {
@@ -341,7 +352,8 @@ internal fun TravelPlanScreen(
                             stringResource(Res.string.travel_empty_day),
                             color = OguriTheme.colors.textSecondary,
                             style = OguriTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(vertical = 16.dp),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                            textAlign = TextAlign.Center,
                         )
                     }
                 }

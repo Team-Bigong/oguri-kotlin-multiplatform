@@ -60,7 +60,7 @@ internal fun TravelPlanPane(
         val maxMapHeight = (maxHeight - chromeHeight - (112 * density.fontScale).dp).coerceAtLeast(0.dp)
         val canShowMap = maxMapHeight >= 120.dp
         val showMap = canShowMap && mapExpanded
-        val mapHeight = (maxHeight * 0.48f).coerceAtLeast(120.dp).coerceAtMost(maxMapHeight)
+        val mapHeight = (maxHeight * 0.42f).coerceIn(120.dp, 272.dp).coerceAtMost(maxMapHeight)
         Column(Modifier.fillMaxSize()) {
             if (showMap) {
                 if (mapUnavailable) {
@@ -96,7 +96,7 @@ internal fun TravelPlanPane(
             }
             if (canShowMap) {
                 Row(
-                    modifier = Modifier.fillMaxWidth().onSizeChanged { controlsHeight = it.height }.padding(horizontal = 16.dp),
+                    modifier = Modifier.fillMaxWidth().onSizeChanged { controlsHeight = it.height }.padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     TravelTextButton(onClick = { mapExpanded = !mapExpanded }) {

@@ -182,4 +182,6 @@
     <string name="travel_place_search_unavailable">暂时无法搜索地点。你可以手动添加。</string>
     <string name="travel_all_days_tab">全部</string>
     <string name="travel_manage_title">管理旅行</string>
+    <string name="travel_itinerary">行程安排</string>
+    <string name="travel_calendar_date">%1$d年%2$d月%3$d日</string>
 </resources>

@@ -182,4 +182,6 @@
     <string name="travel_place_search_unavailable">장소를 검색하지 못했어요. 직접 추가할 수 있어요.</string>
     <string name="travel_all_days_tab">전체</string>
     <string name="travel_manage_title">여행 관리</string>
+    <string name="travel_itinerary">방문 일정</string>
+    <string name="travel_calendar_date">%1$d년 %2$d월 %3$d일</string>
 </resources>

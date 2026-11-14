@@ -182,4 +182,6 @@
     <string name="travel_place_search_unavailable">場所を検索できませんでした。手入力で追加できます。</string>
     <string name="travel_all_days_tab">すべて</string>
     <string name="travel_manage_title">旅行の管理</string>
+    <string name="travel_itinerary">訪問予定</string>
+    <string name="travel_calendar_date">%1$d年%2$d月%3$d日</string>
 </resources>

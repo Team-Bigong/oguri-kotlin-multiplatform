@@ -22,7 +22,6 @@ import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.travel_dates_value
 import oguri.composeapp.generated.resources.travel_resume
 import org.jetbrains.compose.resources.stringResource
 
@@ -45,13 +44,7 @@ internal fun TravelResumeEntry(
             Text(stringResource(Res.string.travel_resume), style = OguriTheme.typography.labelLarge, color = Neutral100)
             Text(plan.details.title, style = OguriTheme.typography.cardTitle, color = Neutral100)
             Text(
-                stringResource(
-                    Res.string.travel_dates_value,
-                    plan.details.dates.start
-                        .toString(),
-                    plan.details.dates.endInclusive
-                        .toString(),
-                ),
+                travelDateRange(plan.details.dates),
                 style = OguriTheme.typography.bodySmall,
                 color = Neutral100,
             )

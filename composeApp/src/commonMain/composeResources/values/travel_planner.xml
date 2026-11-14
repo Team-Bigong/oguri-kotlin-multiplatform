@@ -182,4 +182,6 @@
     <string name="travel_place_search_unavailable">Place search is unavailable. You can add a place manually.</string>
     <string name="travel_all_days_tab">All days</string>
     <string name="travel_manage_title">Manage trip</string>
+    <string name="travel_itinerary">Itinerary</string>
+    <string name="travel_calendar_date">%1$d/%2$d/%3$d</string>
 </resources>
