@@ -1063,6 +1063,44 @@ class TravelTransactionIntegrationTest {
         }
     }
 
+    @Test
+    fun `추천 진입은 세션별로 중복을 막고 확인된 여행 생성은 별도로 센다`() {
+        val sql = Files.readString(Path.of("../scripts/report_travel_recommendation_entries.sql"))
+        fun totals(
+            source: TravelRecommendationSource,
+            signedIn: Boolean,
+        ): Map<String, Long> =
+            jdbc
+                .sql(sql)
+                .query()
+                .listOfRows()
+                .firstOrNull { it["source"] == source.name && it["signed_in"] == signedIn }
+                .orEmpty()
+                .filterValues { it is Number }
+                .mapValues { (_, value) -> (value as Number).toLong() }
+        val source = TravelRecommendationSource.PERIOD
+        val beforeGuest = totals(source, false)
+        val beforeMember = totals(source, true)
+        val usage = TravelUsageRepository(jdbc)
+        val session = UUID.randomUUID()
+        repeat(2) {
+            usage.recordRecommendationEntry(session, source, TravelRecommendationEntryKind.EXPOSED, false)
+            usage.recordRecommendationEntry(session, source, TravelRecommendationEntryKind.CLICKED, false)
+            usage.recordRecommendationEntry(session, source, TravelRecommendationEntryKind.LOGIN_RESUMED, true)
+        }
+        val upcoming = LocalDate.now().plusDays(20)
+        val owner = member()
+        val request = creation(upcoming).copy(source = TravelPlanSourceRequest(null, upcoming, upcoming.plusDays(2)))
+        repeat(2) { tx { service.create(owner, request, session) } }
+        val guest = totals(source, false)
+        val member = totals(source, true)
+        assertEquals((beforeGuest["exposed_sessions"] ?: 0L) + 1, guest["exposed_sessions"])
+        assertEquals((beforeGuest["clicked_sessions"] ?: 0L) + 1, guest["clicked_sessions"])
+        assertEquals(0L, guest["created_trips"])
+        assertEquals((beforeMember["resumed_after_login_sessions"] ?: 0L) + 1, member["resumed_after_login_sessions"])
+        assertEquals((beforeMember["created_trips"] ?: 0L) + 1, member["created_trips"])
+    }
+
     private fun usageCohort(
         memberId: String,
         startedAt: OffsetDateTime,

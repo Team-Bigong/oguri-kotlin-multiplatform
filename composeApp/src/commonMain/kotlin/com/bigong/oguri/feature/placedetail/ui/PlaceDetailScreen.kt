@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
@@ -79,6 +80,7 @@ fun PlaceDetailScreen(
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
     onCreateTravelPlan: (() -> Unit)? = null,
+    onTravelEntryVisible: (() -> Unit)? = null,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val isInitialLoading = placeDetail == null && placeDetailUiState.isLoading
@@ -171,7 +173,13 @@ fun PlaceDetailScreen(
                     }
                     if (onCreateTravelPlan != null) {
                         item {
-                            OutlinedButton(onClick = onCreateTravelPlan, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+                            OutlinedButton(
+                                onClick = onCreateTravelPlan,
+                                modifier =
+                                    Modifier
+                                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                                        .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            ) {
                                 Text(stringResource(Res.string.travel_create_from_city))
                             }
                         }

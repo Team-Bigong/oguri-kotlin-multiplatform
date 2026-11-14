@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -71,6 +72,7 @@ fun PeriodDetailScreen(
     onSaveToggleClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
     onCreateTravelPlan: (() -> Unit)? = null,
+    onTravelEntryVisible: (() -> Unit)? = null,
 ) {
     val periodDetail = periodDetailUiState.periodDetail
     val isInitialLoading =
@@ -209,7 +211,10 @@ fun PeriodDetailScreen(
 
                     if (onCreateTravelPlan != null) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            OutlinedButton(onClick = onCreateTravelPlan) {
+                            OutlinedButton(
+                                onClick = onCreateTravelPlan,
+                                modifier = Modifier.onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            ) {
                                 Text(stringResource(Res.string.travel_create_from_period))
                             }
                         }

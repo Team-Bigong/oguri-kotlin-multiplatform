@@ -22,6 +22,7 @@ import com.bigong.oguri.data.repository.DefaultMyPageRepository
 import com.bigong.oguri.data.repository.DefaultPlaceDetailRepository
 import com.bigong.oguri.data.repository.DefaultSearchRepository
 import com.bigong.oguri.data.repository.DefaultTravelPlanRepository
+import com.bigong.oguri.data.repository.DefaultTravelRecommendationUsageRepository
 import com.bigong.oguri.data.repository.DefaultTravelRecoveryRepository
 import com.bigong.oguri.data.repository.DefaultTravelReminderRepository
 import com.bigong.oguri.domain.repository.AuthRepository
@@ -33,6 +34,7 @@ import com.bigong.oguri.domain.repository.SearchRepository
 import com.bigong.oguri.domain.repository.TravelCollaborationRepository
 import com.bigong.oguri.domain.repository.TravelPlaceRepository
 import com.bigong.oguri.domain.repository.TravelPlanRepository
+import com.bigong.oguri.domain.repository.TravelRecommendationUsageRepository
 import com.bigong.oguri.domain.repository.TravelRecoveryRepository
 import com.bigong.oguri.domain.repository.TravelReminderRepository
 import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
@@ -68,6 +70,7 @@ interface AppGraph {
     val travelCollaborationViewModelProvider: Provider<TravelCollaborationViewModel>
     val travelReminderViewModelProvider: Provider<TravelReminderViewModel>
     val travelPlannerViewModelProvider: Provider<TravelPlannerViewModel>
+    val travelRecommendationUsage: TravelRecommendationUsageRepository
 
     @Provides
     fun provideAuthRemoteDataSource(implementation: KtorAuthRemoteDataSource): AuthRemoteDataSource = implementation
@@ -119,6 +122,10 @@ interface AppGraph {
 
     @Provides
     fun provideTravelReminderRepository(implementation: DefaultTravelReminderRepository): TravelReminderRepository = implementation
+
+    @Provides
+    fun provideTravelRecommendationUsage(implementation: DefaultTravelRecommendationUsageRepository): TravelRecommendationUsageRepository =
+        implementation
 
     @Provides
     fun provideTravelRecoveryRepository(implementation: DefaultTravelRecoveryRepository): TravelRecoveryRepository = implementation

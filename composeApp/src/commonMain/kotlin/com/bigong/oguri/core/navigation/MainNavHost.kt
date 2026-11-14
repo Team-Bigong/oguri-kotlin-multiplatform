@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
@@ -25,6 +26,8 @@ import com.bigong.oguri.core.network.isDebugPlatformBuild
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.domain.model.DisplayThemeMode
 import com.bigong.oguri.domain.model.TravelDates
+import com.bigong.oguri.domain.repository.TravelRecommendationEntry
+import com.bigong.oguri.domain.repository.TravelRecommendationSource
 import com.bigong.oguri.feature.calendar.ui.CalendarRoute
 import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
 import com.bigong.oguri.feature.home.ui.HomeRoute
@@ -47,6 +50,7 @@ import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
@@ -75,6 +79,33 @@ fun MainNavHost(
     val navigationScope = rememberCoroutineScope()
     val travelEnabled = isDebugPlatformBuild()
     val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
+    fun recordRecommendation(source: TravelRecommendationSource, entry: TravelRecommendationEntry) {
+        navigationScope.launch {
+            try {
+                appGraph.travelRecommendationUsage.record(source, entry)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                // Measurement must not block navigation.
+            }
+        }
+    }
+
+    fun finishTravelAuthentication() {
+        val previous = navigator.navHostController.previousBackStackEntry
+        val creation = previous?.takeIf { it.destination.hasRoute<RouteModel.CreateTravelPlan>() }?.toRoute<RouteModel.CreateTravelPlan>()
+        onTravelAuthenticationFinished()
+        if (navigator.popBackStack() && creation != null) {
+            val source =
+                when {
+                    creation.destinationId != null -> TravelRecommendationSource.CITY
+                    creation.startDate != null && creation.endDate != null -> TravelRecommendationSource.PERIOD
+                    else -> null
+                }
+            if (source != null) recordRecommendation(source, TravelRecommendationEntry.LOGIN_RESUMED)
+        }
+    }
+
     NavHost(
         navController = navigator.navHostController,
         startDestination = RouteModel.Splash,
@@ -174,8 +205,7 @@ fun MainNavHost(
                 onLoginSucceeded = {},
                 onLoginCompleted = { completed ->
                     if (completed) {
-                        onTravelAuthenticationFinished()
-                        navigator.popBackStack()
+                        finishTravelAuthentication()
                     } else {
                         navigator.navigateToTravelOnboarding()
                     }
@@ -196,8 +226,7 @@ fun MainNavHost(
                     snackbarHostState = snackbarHostState,
                     onBackClick = cancel,
                     onHomeClick = {
-                        onTravelAuthenticationFinished()
-                        navigator.popBackStack()
+                        finishTravelAuthentication()
                     },
                     onOpenWebDocument = navigator::navigateToWebDocument,
                 )
@@ -394,10 +423,14 @@ fun MainNavHost(
                 endDate = route.endDate,
                 onCreateTravelPlan =
                     if (travelEnabled) {
-                        { navigator.navigateToCreateTravelPlan(route.placeId, route.startDate, route.endDate) }
+                        {
+                            recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.CLICKED)
+                            navigator.navigateToCreateTravelPlan(route.placeId, route.startDate, route.endDate)
+                        }
                     } else {
                         null
                     },
+                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.EXPOSED) },
                 onBackClick = { navigator.popBackStack() },
                 onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { targetPlaceId ->
@@ -432,10 +465,14 @@ fun MainNavHost(
                 endDate = route.endDate,
                 onCreateTravelPlan =
                     if (travelEnabled) {
-                        { navigator.navigateToCreateTravelPlan(startDate = route.startDate, endDate = route.endDate) }
+                        {
+                            recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
+                            navigator.navigateToCreateTravelPlan(startDate = route.startDate, endDate = route.endDate)
+                        }
                     } else {
                         null
                     },
+                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.EXPOSED) },
                 onBackClick = { navigator.popBackStack() },
                 onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { placeId ->

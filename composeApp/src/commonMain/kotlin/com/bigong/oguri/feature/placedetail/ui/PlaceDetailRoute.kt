@@ -45,6 +45,7 @@ fun PlaceDetailRoute(
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
     onCreateTravelPlan: (() -> Unit)? = null,
+    onTravelEntryVisible: (() -> Unit)? = null,
 ) {
     val placeDetailViewModel =
         remember {
@@ -122,6 +123,7 @@ fun PlaceDetailRoute(
         placeDetailUiState = placeDetailUiState,
         onBackClick = onBackClick,
         onCreateTravelPlan = onCreateTravelPlan,
+        onTravelEntryVisible = onTravelEntryVisible,
         onRetryClick = {
             placeDetailViewModel.loadPlaceDetail(
                 placeId = placeId,

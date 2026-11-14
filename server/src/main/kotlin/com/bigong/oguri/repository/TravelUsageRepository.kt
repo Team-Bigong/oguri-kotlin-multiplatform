@@ -6,6 +6,10 @@ import org.springframework.stereotype.Repository
 import java.time.ZoneId
 import java.util.UUID
 
+enum class TravelRecommendationSource { CITY, PERIOD }
+
+enum class TravelRecommendationEntryKind { EXPOSED, CLICKED, LOGIN_RESUMED }
+
 enum class TravelUsageEntry { CREATED, JOINED, EXISTING }
 
 enum class TravelUsageActivity {
@@ -26,6 +30,26 @@ enum class TravelUsageEdit { VISIT_ADDED, VISIT_EDITED, VISIT_REMOVED, DAY_REORD
 class TravelUsageRepository(
     private val jdbc: JdbcClient,
 ) {
+    fun recordRecommendationEntry(
+        sessionId: UUID,
+        source: TravelRecommendationSource,
+        kind: TravelRecommendationEntryKind,
+        signedIn: Boolean,
+    ) {
+        jdbc
+            .sql(
+                """
+                INSERT INTO travel_recommendation_entries (session_id, source, kind, signed_in)
+                VALUES (:session, :source, :kind, :signedIn)
+                ON CONFLICT (session_id, source, kind, signed_in) DO NOTHING
+                """,
+            ).param("session", sessionId)
+            .param("source", source.name)
+            .param("kind", kind.name)
+            .param("signedIn", signedIn)
+            .update()
+    }
+
     fun start(
         plan: TravelPlan,
         memberId: String,
@@ -40,15 +64,22 @@ class TravelUsageRepository(
                 .optional()
                 .orElseGet(UUID::randomUUID)
         val zone = ZoneId.of(plan.timeZone)
+        val recommendationSource =
+            when {
+                plan.sourceDestinationId != null -> TravelRecommendationSource.CITY
+                plan.sourceStartDate != null -> TravelRecommendationSource.PERIOD
+                else -> null
+            }
         jdbc
             .sql(
                 """
                 INSERT INTO travel_usage_cohorts
-                    (id, plan_key, travel_plan_id, member_id, entry_kind, entry_source, days_until_start, initial_end_at, start_session_id)
+                    (id, plan_key, travel_plan_id, member_id, entry_kind, entry_source,
+                     days_until_start, initial_end_at, start_session_id, recommendation_source)
                 VALUES (:id, :key, :plan, :member, :entry, :source,
                     CASE WHEN :entry = 'EXISTING' THEN NULL
                          ELSE CAST(:start AS date) - CAST(statement_timestamp() AT TIME ZONE :zone AS date) END,
-                    :end, :session)
+                    :end, :session, :recommendationSource)
                 ON CONFLICT (plan_key, member_id) DO NOTHING
                 """,
             ).param("id", UUID.randomUUID())
@@ -56,7 +87,8 @@ class TravelUsageRepository(
             .param("plan", plan.id)
             .param("member", memberId)
             .param("entry", entry.name)
-            .param("source", if (plan.sourceDestinationId == null && plan.sourceStartDate == null) "DIRECT" else "RECOMMENDATION")
+            .param("source", if (recommendationSource == null) "DIRECT" else "RECOMMENDATION")
+            .param("recommendationSource", recommendationSource?.name, java.sql.Types.VARCHAR)
             .param("session", sessionId, java.sql.Types.OTHER)
             .param("start", plan.startDate)
             .param("zone", plan.timeZone)
