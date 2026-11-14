@@ -40,11 +40,11 @@ internal fun TravelModifiedButton(
             TravelModifiedUnit.DAYS -> stringResource(Res.string.travel_modified_days, age.count)
         }
     Row(
-        modifier.heightIn(min = 28.dp).noRippleClickable(enabled = enabled, onClick = onClick),
+        modifier.heightIn(min = 20.dp).noRippleClickable(enabled = enabled, onClick = onClick),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, style = travelTextStyle(13, 16), color = OguriTheme.colors.textTertiary)
-        Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(12.dp), tint = OguriTheme.colors.textTertiary)
+        Icon(painterResource(Res.drawable.ic_travel_chevron_right), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
     }
 }

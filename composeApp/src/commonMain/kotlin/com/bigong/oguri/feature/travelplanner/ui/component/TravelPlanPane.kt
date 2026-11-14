@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -40,7 +39,9 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapScene
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_retry_button
-import oguri.composeapp.generated.resources.ic_right_arrow
+import oguri.composeapp.generated.resources.ic_travel_chevron_down
+import oguri.composeapp.generated.resources.ic_travel_chevron_up
+import oguri.composeapp.generated.resources.ic_travel_map
 import oguri.composeapp.generated.resources.travel_map_fit
 import oguri.composeapp.generated.resources.travel_map_hide
 import oguri.composeapp.generated.resources.travel_map_sequence
@@ -74,10 +75,10 @@ internal fun TravelPlanPane(
         val maxMapHeight = (maxHeight - chromeHeight - (112 * density.fontScale).dp).coerceAtLeast(0.dp)
         val canShowMap = maxMapHeight >= 120.dp
         val showMap = canShowMap && mapExpanded
-        val mapHeight = 200.dp.coerceAtMost(maxMapHeight)
+        val mapHeight = 202.dp.coerceAtMost(maxMapHeight)
         Column(Modifier.fillMaxSize()) {
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
-            if (showMap) Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(16.dp))
             if (showMap) {
                 if (mapUnavailable) {
                     Text(stringResource(Res.string.travel_map_unavailable), Modifier.padding(horizontal = 16.dp))
@@ -114,7 +115,7 @@ internal fun TravelPlanPane(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 Text(stringResource(Res.string.travel_map_hide), style = travelTextStyle(12, 14), color = OguriTheme.colors.textSecondary)
-                                Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(12.dp).rotate(-90f), tint = OguriTheme.colors.textSecondary)
+                                Icon(painterResource(Res.drawable.ic_travel_chevron_up), null, Modifier.size(14.dp), tint = OguriTheme.colors.textSecondary)
                             }
                         }
                     }
@@ -129,17 +130,30 @@ internal fun TravelPlanPane(
                     }
                 }
             }
-            if (canShowMap && (!showMap || mapUnavailable || scene.markers.isNotEmpty())) {
+            if (canShowMap && (!showMap || mapUnavailable)) {
+                val shape = RoundedCornerShape(8.dp)
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 44.dp)
+                        .background(OguriTheme.colors.surfaceCard, shape)
+                        .border(1.dp, OguriTheme.colors.borderSubtle, shape)
+                        .noRippleClickable(onClick = { mapExpanded = !mapExpanded }),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(painterResource(Res.drawable.ic_travel_map), null, Modifier.size(18.dp), tint = OguriTheme.colors.mint)
+                    Text(
+                        stringResource(if (showMap) Res.string.travel_map_hide else Res.string.travel_map_show),
+                        style = travelTextStyle(13, 16), color = OguriTheme.colors.textSecondary,
+                    )
+                    Icon(painterResource(Res.drawable.ic_travel_chevron_down), null, Modifier.size(16.dp), tint = OguriTheme.colors.textSecondary)
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+            if (canShowMap && showMap && !mapUnavailable && scene.markers.isNotEmpty()) {
                 Row(
                     modifier = Modifier.fillMaxWidth().onSizeChanged { controlsHeight = it.height }.padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    if (!showMap || mapUnavailable) TravelTextButton(onClick = { mapExpanded = !mapExpanded }) {
-                        Text(
-                            stringResource(if (showMap) Res.string.travel_map_hide else Res.string.travel_map_show),
-                            color = OguriTheme.colors.textPrimary,
-                        )
-                    }
                     if (showMap && !mapUnavailable && scene.markers.isNotEmpty()) {
                         TravelTextButton(onClick = onFitMap) { Text(stringResource(Res.string.travel_map_fit)) }
                     }

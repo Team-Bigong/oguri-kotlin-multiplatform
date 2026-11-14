@@ -78,9 +78,10 @@ import kotlin.time.Clock
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_menu
+import oguri.composeapp.generated.resources.ic_travel_more
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.common_retry_button
-import oguri.composeapp.generated.resources.ic_travel_add
+import oguri.composeapp.generated.resources.ic_travel_plus
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
@@ -152,7 +153,7 @@ internal fun TravelPlanScreen(
         actions = {
             if (plan != null) {
                 TravelIconButton(onClick = onMembers, enabled = !state.isSaving && !state.canRetrySave) {
-                    Icon(painterResource(Res.drawable.btn_menu), stringResource(Res.string.travel_manage), tint = Neutral100)
+                    Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), tint = Neutral100)
                 }
             }
         },
@@ -419,7 +420,7 @@ internal fun TravelPlanScreen(
         }
         TravelBottomAction(enabled = canEdit, onClick = onSearchPlaces) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(Res.drawable.ic_travel_add), contentDescription = null, modifier = Modifier.size(18.dp))
+                Icon(painterResource(Res.drawable.ic_travel_plus), contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(Res.string.travel_add_visit))
             }
         }

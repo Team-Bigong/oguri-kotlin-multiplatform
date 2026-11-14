@@ -33,7 +33,7 @@ internal fun TravelDaySelector(
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
         state = listState,
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 4.dp),
+        contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         items(dates.dayCount + 1) { index ->

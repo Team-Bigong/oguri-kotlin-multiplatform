@@ -77,7 +77,7 @@ internal fun TravelChoiceChip(
     segmented: Boolean = false,
 ) {
     val colors = OguriTheme.colors
-    val textSize = if (categoryChip) 13 else 12
+    val textSize = if (categoryChip) { if (selected) 14 else 13 } else 12
     val lineHeight = if (categoryChip) 16 else 14
     val chipHeight = if (categoryChip) 32.dp else if (segmented) 28.dp else 30.dp
     val touchPadding = if (categoryChip) 4.dp else if (segmented) 0.dp else 7.dp
@@ -93,7 +93,7 @@ internal fun TravelChoiceChip(
     ) {
         Text(
             label,
-            style = travelTextStyle(textSize, lineHeight, if (selected) FontWeight.SemiBold else FontWeight.Medium),
+            style = travelTextStyle(textSize, lineHeight, if (categoryChip && selected) FontWeight.SemiBold else if (categoryChip) FontWeight.Normal else FontWeight.Medium),
             color = when {
                 !enabled -> colors.textSecondary
                 !selected -> colors.textTertiary

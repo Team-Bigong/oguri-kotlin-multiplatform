@@ -1,6 +1,5 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -18,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -28,8 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetValue
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -42,10 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -55,7 +51,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.Mint10
-import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral30
@@ -156,14 +151,14 @@ internal fun TravelPlaceSearchSheet(
                 )
                 TravelIconButton(onClick = close, enabled = canDismiss) {
                     Icon(
-                        painterResource(Res.drawable.btn_exit), stringResource(Res.string.travel_search_close),
-                        tint = colors.textPrimary,
+                        painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close),
+                        modifier = Modifier.size(22.dp), tint = colors.textPrimary,
                     )
                 }
             }
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp)
-                    .background(colors.surfaceCard, CircleShape).border(1.dp, colors.borderSubtle, CircleShape).padding(3.dp),
+                    .background(colors.surfaceCard, CircleShape).border(1.dp, colors.borderSubtle, CircleShape).padding(2.dp),
             ) {
                 TravelChoiceChip(stringResource(Res.string.travel_google_search_tab), !manual, canEdit, {
                     focus.clearFocus()
@@ -219,7 +214,7 @@ internal fun TravelPlaceSearchSheet(
                             placeholder = stringResource(Res.string.travel_search_places),
                             enabled = canEdit,
                             leadingIcon = {
-                                Icon(painterResource(Res.drawable.btn_search), null, Modifier.size(20.dp), tint = colors.textTertiary)
+                                Icon(painterResource(Res.drawable.ic_travel_search), null, Modifier.size(20.dp), tint = colors.textTertiary)
                             },
                         )
                     }
@@ -252,8 +247,8 @@ internal fun TravelPlaceSearchSheet(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Column(Modifier.weight(1f)) {
-                                        Text(place.name, style = travelTextStyle(15, 18, if (checked) FontWeight.SemiBold else FontWeight.Medium), color = Neutral100)
-                                        place.address?.let { Text(it, style = travelTextStyle(13, 16), color = colors.textTertiary) }
+                                        Text(place.name, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
+                                        place.address?.let { Text(it, style = travelTextStyle(12, 14), color = colors.textTertiary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                                     }
                                     TravelSearchSelectionMark(checked)
                                 }
@@ -271,12 +266,25 @@ internal fun TravelPlaceSearchSheet(
                                 stringResource(Res.string.travel_keep_google_label),
                                 Modifier.weight(1f), style = travelTextStyle(14, 17), color = Neutral100,
                             )
-                            Switch(
-                                checked = keepGoogleDetails,
-                                onCheckedChange = { keepGoogleDetails = it },
-                                enabled = canEdit,
-                                colors = SwitchDefaults.colors(checkedTrackColor = colors.mint),
-                            )
+                            Box(
+                                Modifier.size(width = 48.dp, height = 48.dp)
+                                    .toggleable(
+                                        value = keepGoogleDetails, enabled = canEdit, role = Role.Switch,
+                                        interactionSource = null, indication = null,
+                                        onValueChange = { keepGoogleDetails = it },
+                                    ),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Box(
+                                    Modifier.size(width = 40.dp, height = 24.dp)
+                                        .background(if (keepGoogleDetails) colors.mint else colors.borderStrong, CircleShape),
+                                ) {
+                                    Box(
+                                        Modifier.align(if (keepGoogleDetails) Alignment.CenterEnd else Alignment.CenterStart)
+                                            .padding(horizontal = 2.dp).size(20.dp).background(Color.White, CircleShape),
+                                    )
+                                }
+                            }
                         }
                         if (!keepGoogleDetails) {
                             TravelPlaceField(
@@ -431,7 +439,7 @@ private fun TravelPlaceInput(
             ) {
                 leadingIcon?.invoke()
                 Box(Modifier.weight(1f)) {
-                    if (value.isEmpty()) Text(placeholder, style = style, color = Neutral50)
+                    if (value.isEmpty()) Text(placeholder, style = style, color = com.bigong.oguri.core.designsystem.Neutral40)
                     innerField()
                 }
             }
@@ -441,19 +449,10 @@ private fun TravelPlaceInput(
 
 @Composable
 private fun TravelSearchSelectionMark(selected: Boolean) {
-    val fill = OguriTheme.colors.mint
-    val outline = OguriTheme.colors.borderStrong
-    val ink = Neutral0
-    Canvas(Modifier.size(18.dp)) {
-        if (selected) {
-            drawCircle(fill)
-            drawLine(ink, Offset(size.width * .27f, size.height * .52f), Offset(size.width * .44f, size.height * .69f), 2.dp.toPx(), StrokeCap.Round)
-            drawLine(ink, Offset(size.width * .44f, size.height * .69f), Offset(size.width * .74f, size.height * .34f), 2.dp.toPx(), StrokeCap.Round)
-        } else {
-            val stroke = 1.5.dp.toPx()
-            drawCircle(outline, radius = size.minDimension / 2 - stroke / 2, style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
-        }
-    }
+    Icon(
+        painterResource(if (selected) Res.drawable.ic_travel_selected else Res.drawable.ic_travel_unselected),
+        null, Modifier.size(22.dp), tint = Color.Unspecified,
+    )
 }
 
 @Composable
