@@ -58,7 +58,7 @@ import oguri.composeapp.generated.resources.home_strategy_day_off_hint
 import oguri.composeapp.generated.resources.home_strategy_holiday_with
 import oguri.composeapp.generated.resources.home_strategy_holiday_with_next_year
 import oguri.composeapp.generated.resources.ic_plane
-import oguri.composeapp.generated.resources.ic_travel_add
+import oguri.composeapp.generated.resources.ic_travel_plus
 import oguri.composeapp.generated.resources.img_oguri_parasol
 import oguri.composeapp.generated.resources.period_detail_empty_places_hint
 import oguri.composeapp.generated.resources.period_detail_holiday_fallback
@@ -267,10 +267,10 @@ fun PeriodDetailScreen(
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
-                                            painterResource(Res.drawable.ic_travel_add), null,
+                                            painterResource(Res.drawable.ic_travel_plus), null,
                                             Modifier.padding(end = 8.dp), tint = OguriTheme.colors.mint,
                                         )
-                                        Text(stringResource(Res.string.travel_create_from_period), style = travelTextStyle(15, 18, FontWeight.Medium))
+                                        Text(stringResource(Res.string.travel_create_from_period), style = travelTextStyle(18, 22, FontWeight.SemiBold))
                                     }
                                 }
                             }

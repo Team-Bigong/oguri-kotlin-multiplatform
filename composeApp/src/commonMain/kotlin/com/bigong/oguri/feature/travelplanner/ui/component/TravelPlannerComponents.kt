@@ -40,11 +40,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Mint90
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral100
@@ -61,9 +63,9 @@ import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.btn_back
 import oguri.composeapp.generated.resources.common_network_error_message
 import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.ic_travel_back
 import oguri.composeapp.generated.resources.travel_back
 import oguri.composeapp.generated.resources.travel_conflict
 import oguri.composeapp.generated.resources.travel_invalid_request
@@ -109,12 +111,12 @@ internal fun TravelPlannerPage(
                         TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
                         TravelIconButton(
                             onClick = onBack,
-                            modifier = Modifier.align(Alignment.CenterStart).padding(start = 8.dp),
+                            modifier = Modifier.align(Alignment.CenterStart),
                             enabled = !isSaving,
                         ) {
-                            Icon(painterResource(Res.drawable.btn_back), stringResource(Res.string.travel_back), tint = Neutral100)
+                            Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_back), tint = Neutral100)
                         }
-                        Row(Modifier.align(Alignment.CenterEnd).padding(end = 8.dp), content = actions)
+                        Row(Modifier.align(Alignment.CenterEnd), content = actions)
                     }
                 }
                 if (showTopDivider && (onBack != null || title.isNotEmpty())) HorizontalDivider(color = Neutral20)
@@ -150,8 +152,9 @@ internal fun TravelPrimaryButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        backgroundColor = if (enabled) Mint40 else Neutral10,
-        borderColor = Mint70.takeIf { enabled },
+        backgroundColor = if (!enabled) Neutral10 else if (OguriTheme.isDarkTheme) Mint40 else Mint70,
+        contentColor = if (OguriTheme.isDarkTheme) Neutral100 else Color.White,
+        minHeight = 45.dp,
         textStyle = textStyle,
         content = content,
     )
@@ -174,7 +177,13 @@ internal fun TravelOutlineButton(
     enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    TravelButton(onClick, modifier, enabled, Mint5, borderColor = Mint70, content = content)
+    TravelButton(
+        onClick, modifier, enabled, Mint5, borderColor = Mint70,
+        textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
+        contentColor = if (OguriTheme.isDarkTheme) Mint90 else Mint70,
+        minHeight = 45.dp,
+        content = content,
+    )
 }
 
 @Composable
@@ -204,11 +213,12 @@ private fun TravelButton(
     borderColor: Color? = null,
     textStyle: TextStyle = OguriTheme.typography.labelLarge,
     contentColor: Color = Neutral100,
+    minHeight: Dp = 48.dp,
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(8.dp)
     Box(
-        modifier = modifier.heightIn(min = 48.dp).background(backgroundColor, shape)
+        modifier = modifier.heightIn(min = minHeight).background(backgroundColor, shape)
             .then(if (borderColor != null) Modifier.border(1.dp, borderColor, shape) else Modifier)
             .semantics { role = Role.Button }
             .noRippleClickable(

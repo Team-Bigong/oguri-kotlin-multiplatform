@@ -96,14 +96,17 @@ internal fun TravelDestinationEntry(
                 onClick = { onOpen(plan.id) },
             )
             TravelTextButton(onClick = onCreate, modifier = Modifier.align(Alignment.End)) {
-                Text(stringResource(Res.string.travel_create_another), color = colors.textTertiary)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(14.dp), tint = colors.textTertiary)
+                    Text(stringResource(Res.string.travel_create_another), style = travelTextStyle(13, 16), color = colors.textTertiary)
+                }
             }
         }
     } else {
         TravelOutlineButton(onClick = onCreate, modifier = modifier.fillMaxWidth()) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(Res.drawable.ic_travel_add), null, Modifier.size(16.dp), tint = colors.mint)
-                Text(stringResource(Res.string.travel_create_from_city), style = travelTextStyle(15, 18, FontWeight.Medium))
+                Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(16.dp), tint = colors.mint)
+                Text(stringResource(Res.string.travel_create_from_city), style = travelTextStyle(18, 22, FontWeight.SemiBold))
             }
         }
     }

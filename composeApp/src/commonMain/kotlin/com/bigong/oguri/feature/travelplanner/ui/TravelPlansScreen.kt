@@ -29,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Mint5
@@ -100,7 +102,7 @@ internal fun TravelPlansScreen(
                 LazyColumn {
                     item {
                         Column(
-                            Modifier.fillMaxWidth().padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 14.dp),
+                            Modifier.fillMaxWidth().padding(start = 20.dp, top = 20.dp, end = 20.dp, bottom = 13.dp),
                             verticalArrangement = Arrangement.spacedBy(6.dp),
                         ) {
                             if (onBack == null) {
@@ -119,8 +121,8 @@ internal fun TravelPlansScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                             ) {
-                                Icon(painterResource(Res.drawable.ic_travel_add), null, Modifier.size(12.dp), tint = Mint90)
-                                Text(stringResource(Res.string.travel_create), style = travelTextStyle(12, 14, FontWeight.Medium), color = Mint90)
+                                Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(12.dp), tint = if (OguriTheme.isDarkTheme) Mint90 else Mint70)
+                                Text(stringResource(Res.string.travel_create), style = travelTextStyle(12, 14, FontWeight.Medium), color = if (OguriTheme.isDarkTheme) Mint90 else Mint70)
                             }
                         }
                         HorizontalDivider(color = colors.borderSubtle)
@@ -208,43 +210,55 @@ private fun TravelPlanCard(
     val dayOffset = today?.let { details.dates.start.toEpochDays() - it.toEpochDays() }
     val meta = listOfNotNull(details.city, plan.memberCount?.let { stringResource(Res.string.travel_member_count, it) })
         .joinToString(" · ")
+    if (today == null) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp)
+                .clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderSubtle, shape)
+                .noRippleClickable(onClick = onClick).padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
+                Text(
+                    "${travelCardDates(details.dates, includeYear = true)} · $meta",
+                    style = travelTextStyle(11, 13), color = colors.textTertiary,
+                )
+            }
+            Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = colors.textTertiary)
+        }
+        return
+    }
+    val headingColor = if (OguriTheme.isDarkTheme) Neutral100 else Color.White
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = if (today == null) 6.dp else 24.dp)
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp)
             .clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderStrong, shape)
             .noRippleClickable(onClick = onClick),
     ) {
         Row(
-            Modifier.fillMaxWidth().then(if (today != null) Modifier.background(Mint40) else Modifier)
-                .padding(horizontal = 18.dp, vertical = if (today == null) 10.dp else 13.dp),
+            Modifier.fillMaxWidth().background(if (OguriTheme.isDarkTheme) Mint40 else Mint70)
+                .padding(start = 18.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(details.title, Modifier.weight(1f),
-                style = if (today == null) travelTextStyle(15, 18, FontWeight.Medium) else travelTextStyle(18, 21, FontWeight.SemiBold),
-                color = Neutral100)
-            Icon(painterResource(Res.drawable.ic_right_arrow), null, tint = colors.textPrimary)
+            Text(
+                details.title, Modifier.weight(1f), style = travelTextStyle(18, 21, FontWeight.SemiBold),
+                color = headingColor, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+            Icon(painterResource(Res.drawable.ic_travel_card_arrow), null, Modifier.size(24.dp), tint = headingColor)
         }
         Column(
-            Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = if (today == null) 0.dp else 12.dp, bottom = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            if (dayOffset != null) {
-                Text(
-                    if (dayOffset > 0) stringResource(Res.string.travel_list_countdown, dayOffset.toInt())
-                    else stringResource(Res.string.travel_list_in_progress),
-                    style = travelTextStyle(12, 14, FontWeight.Medium),
-                    color = Mint90,
-                )
-                Text(travelCardDates(details.dates, includeYear = true), style = travelTextStyle(15, 18, FontWeight.Medium), color = colors.textPrimary)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(14.dp), tint = colors.textTertiary)
-                    Text(meta, style = travelTextStyle(11, 13), color = colors.textTertiary)
-                }
-            } else {
-                Text(
-                    "${travelCardDates(details.dates, includeYear = true)} · $meta",
-                    style = OguriTheme.typography.caption,
-                    color = colors.textTertiary,
-                )
+            Text(
+                if (dayOffset != null && dayOffset > 0) stringResource(Res.string.travel_list_countdown, dayOffset.toInt())
+                else stringResource(Res.string.travel_list_in_progress),
+                style = travelTextStyle(12, 14, FontWeight.Medium),
+                color = if (OguriTheme.isDarkTheme) Mint90 else Mint70,
+            )
+            Text(travelCardDates(details.dates, includeYear = true), style = travelTextStyle(15, 18, FontWeight.Medium), color = colors.textPrimary)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = colors.textTertiary)
+                Text(meta, style = travelTextStyle(11, 13), color = colors.textTertiary)
             }
         }
     }
