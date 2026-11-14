@@ -72,9 +72,14 @@ class TravelHttpIntegrationTest {
         val tripId = created.get("id").asText()
         assertEquals(destinationId, created.get("source").get("destinationId").asInt())
         val trip = "/trips/$tripId"
+        assertTrue(!request("GET", "$trip/members", 200, owner).get("hasActiveInvite").asBoolean())
         val token = request("POST", "$trip/invites", 200, owner).get("token").asText()
+        assertTrue(request("GET", "$trip/members", 200, owner).get("hasActiveInvite").asBoolean())
         val invite = mapOf("token" to token)
-        assertEquals("Trip", request("POST", "/trip-invites/preview", 200, body = invite).get("title").asText())
+        val preview = request("POST", "/trip-invites/preview", 200, body = invite)
+        assertEquals("Trip", preview.get("title").asText())
+        assertEquals("Fukuoka", preview.get("city").asText())
+        assertEquals(1, preview.get("memberCount").asInt())
         request("POST", "/trip-invites/join", 401, body = invite)
         request("GET", trip, 404, member)
         assertEquals(tripId, request("POST", "/trip-invites/join", 200, member, invite).get("planId").asText())
@@ -113,6 +118,7 @@ class TravelHttpIntegrationTest {
 
         val memberId = tokens.getMemberId(member)
         request("DELETE", "$trip/members/$memberId", 204, owner)
+        assertTrue(!request("GET", "$trip/members", 200, owner).get("hasActiveInvite").asBoolean())
         request("GET", "$trip?knownRevision=${updated.get("revision").asLong()}", 404, member)
         request("POST", "$trip/commands", 404, member, edit.copy(requestId = UUID.randomUUID()))
         assertEquals("INVITE_REVOKED", request("POST", "/trip-invites/join", 410, member, invite).get("code").asText())
@@ -175,6 +181,7 @@ class TravelHttpIntegrationTest {
         markReminderSent(thirdId)
         val memberId = tokens.getMemberId(member)
         request("DELETE", "$trip/members/$memberId", 204, owner)
+        assertTrue(!request("GET", "$trip/members", 200, owner).get("hasActiveInvite").asBoolean())
         request("GET", "/travel-reminders/$thirdId", 404, member)
         request("GET", settings, 404, member)
     }

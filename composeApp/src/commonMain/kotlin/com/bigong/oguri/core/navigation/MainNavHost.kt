@@ -319,6 +319,7 @@ fun MainNavHost(
             }
             val route = entry.toRoute<RouteModel.TravelMembers>()
             TravelMembersRoute(
+                cityViewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
                 planId = route.planId,
                 dates = TravelDates(LocalDate.parse(route.startDate), LocalDate.parse(route.endDate)),
                 onSelectDay = navigator::showTravelDay,

@@ -60,7 +60,7 @@ class TravelCollaborationViewModel(
     internal fun revoke(planId: String) =
         perform {
             checkedResult { repository.revoke(planId) }
-            mutableState.update { it.copy(invite = null) }
+            mutableState.update { it.copy(invite = null, members = it.members?.copy(hasActiveInvite = false)) }
         }
 
     internal fun remove(

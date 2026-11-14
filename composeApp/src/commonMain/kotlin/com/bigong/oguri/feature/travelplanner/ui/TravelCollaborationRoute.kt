@@ -53,6 +53,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelReminderDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
+import oguri.composeapp.generated.resources.*
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_travel_member
 import oguri.composeapp.generated.resources.ic_travel_link
@@ -95,6 +96,7 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun TravelMembersRoute(
+    cityViewModel: TravelPlannerViewModel,
     planId: String,
     viewModel: TravelCollaborationViewModel,
     reminderViewModel: TravelReminderViewModel,
@@ -106,9 +108,12 @@ internal fun TravelMembersRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val reminderState by reminderViewModel.state.collectAsStateWithLifecycle()
+    val cityState by cityViewModel.state.collectAsStateWithLifecycle()
+    var showMembers by remember(planId) { mutableStateOf(false) }
     var showReminder by remember(planId) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
     var copied by remember(state.invite) { mutableStateOf(false) }
+    var confirmationKind by remember { mutableStateOf("delete") }
     var confirmation by remember { mutableStateOf<(() -> Unit)?>(null) }
     LaunchedEffect(viewModel, reminderViewModel, planId) {
         viewModel.members(planId)
@@ -118,7 +123,7 @@ internal fun TravelMembersRoute(
     LaunchedEffect(reminderState.failure) {
         reminderState.failure?.let(viewModel::applyAccessFailure)
     }
-    TravelPlannerPage(stringResource(Res.string.travel_manage), onBack, state.busy, showTopDivider = false) {
+    TravelPlannerPage(stringResource(if (showMembers) Res.string.travel_participating_members else Res.string.travel_manage), { if (showMembers) showMembers = false else onBack() }, state.busy, showTopDivider = false) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(top = 16.dp)) {
             if (state.detailsPlan == null) {
                 state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.members(planId) }) }
@@ -129,6 +134,7 @@ internal fun TravelMembersRoute(
                 Spacer(Modifier.height(10.dp))
                 val colors = OguriTheme.colors
                 val shape = RoundedCornerShape(8.dp)
+                if (showMembers) {
                 members.members.forEach { member ->
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(shape).background(colors.surfaceCard)
@@ -146,20 +152,33 @@ internal fun TravelMembersRoute(
                         if (member.owner) {
                             Text(stringResource(Res.string.travel_owner_role), color = colors.textTertiary, style = travelTextStyle(12, 14, FontWeight.Medium))
                         }
-                    }
-                    if (members.isOwner && !member.owner) {
-                        TravelTextButton(enabled = !state.busy, onClick = {
-                            confirmation = { viewModel.remove(planId, member.id) }
-                        }) { Text(stringResource(Res.string.travel_remove_member)) }
-                        if (members.ownershipTarget == member.id) {
-                            Text(stringResource(Res.string.travel_ownership_pending))
-                        } else {
-                            TravelTextButton(enabled = !state.busy, onClick = {
-                                confirmation = { viewModel.offerOwnership(planId, member.id) }
-                            }) { Text(stringResource(Res.string.travel_offer_ownership)) }
+                        if (members.isOwner && !member.owner) {
+                            var menuOpen by remember(member.id) { mutableStateOf(false) }
+                            Box {
+                                com.bigong.oguri.feature.travelplanner.ui.component.TravelIconButton(onClick = { menuOpen = true }, enabled = !state.busy) {
+                                    Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), Modifier.size(24.dp))
+                                }
+                                if (menuOpen) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, onDismissRequest = { menuOpen = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
+                                    androidx.compose.material3.Surface(color = colors.surfaceCard, shape = shape, shadowElevation = 4.dp) {
+                                        Column {
+                                            TravelTextButton(enabled = !state.busy, onClick = { menuOpen = false; confirmationKind = "remove"; confirmation = { viewModel.remove(planId, member.id) } }) {
+                                                Text(stringResource(Res.string.travel_remove_member), color = com.bigong.oguri.core.designsystem.Orange50)
+                                            }
+                                            TravelTextButton(enabled = !state.busy && members.ownershipTarget != member.id, onClick = { menuOpen = false; confirmationKind = "transfer"; confirmation = { viewModel.offerOwnership(planId, member.id) } }) {
+                                                Text(stringResource(if (members.ownershipTarget == member.id) Res.string.travel_ownership_pending else Res.string.travel_offer_ownership))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
+
                 }
+                } else {
+                    TravelManagementRow(stringResource(Res.string.travel_participating_members), !state.busy, trailing = stringResource(Res.string.travel_member_count, members.members.size)) { showMembers = true }
+                }
+                if (!showMembers) {
                 if (members.isOwner) {
                     Spacer(Modifier.height(16.dp))
                     Text(
@@ -189,9 +208,9 @@ internal fun TravelMembersRoute(
                                 }
                             }) { Text(stringResource(if (copied) Res.string.travel_invite_copied else Res.string.travel_copy_invite)) }
                         }
-                        Box(
+                        if (state.invite != null || members.hasActiveInvite) Box(
                             Modifier.heightIn(min = 45.dp)
-                                .noRippleClickable(enabled = !state.busy, onClick = { confirmation = { viewModel.revoke(planId) } })
+                                .noRippleClickable(enabled = !state.busy, onClick = { confirmationKind = "revoke"; confirmation = { viewModel.revoke(planId) } })
                                 .padding(horizontal = 8.dp),
                             contentAlignment = Alignment.Center,
                         ) {
@@ -222,19 +241,20 @@ internal fun TravelMembersRoute(
                     Spacer(Modifier.height(40.dp))
                     HorizontalDivider(color = colors.borderSubtle)
                     TravelManagementRow(stringResource(Res.string.travel_delete_trip), !state.busy, destructive = true) {
-                        confirmation = { viewModel.delete(planId) }
+                        confirmationKind = "delete"; confirmation = { viewModel.delete(planId) }
                     }
                     HorizontalDivider(color = colors.borderSubtle)
                 } else {
                     if (members.ownershipTarget == members.currentMemberId) {
                         TravelPrimaryButton(enabled = !state.busy, onClick = {
-                            confirmation = { viewModel.acceptOwnership(planId) }
+                            confirmationKind = "accept"; confirmation = { viewModel.acceptOwnership(planId) }
                         }) { Text(stringResource(Res.string.travel_accept_ownership)) }
                     }
                     Text(stringResource(Res.string.travel_leave_explanation))
-                    TravelTextButton(enabled = !state.busy, onClick = { confirmation = { viewModel.leave(planId) } }) {
+                    TravelTextButton(enabled = !state.busy, onClick = { confirmationKind = "leave"; confirmation = { viewModel.leave(planId) } }) {
                         Text(stringResource(Res.string.travel_leave_trip))
                     }
+                }
                 }
             }
         }
@@ -253,11 +273,16 @@ internal fun TravelMembersRoute(
             plan,
             state.busy,
             state.failure,
-            viewModel::dismissDetails,
+            { cityViewModel.closeCitySearch(); viewModel.dismissDetails() },
+            citySearch = cityState.citySearch,
+            onOpenCitySearch = cityViewModel::openCitySearch,
+            onCloseCitySearch = cityViewModel::closeCitySearch,
+            onSearchCities = { cityViewModel.searchCities(it, androidx.compose.ui.text.intl.Locale.current.toLanguageTag()) },
+            onChooseCity = cityViewModel::chooseCity,
             onReload = { viewModel.loadDetails(planId) },
             onApply = { details, affected -> viewModel.updateDetails(plan, details, affected) },
             canEdit = state.members?.isOwner == true,
-            startEditing = state.members?.isOwner == true,
+            startEditing = false,
             onOpenSource = { source ->
                 viewModel.dismissDetails()
                 onOpenSource(source)
@@ -266,20 +291,20 @@ internal fun TravelMembersRoute(
     }
     val action = confirmation
     if (action != null) {
-        com.bigong.oguri.feature.travelplanner.ui.component.TravelFormSheet(
-            shape = RoundedCornerShape(8.dp),
-            containerColor = Neutral0,
-            onDismissRequest = { confirmation = null },
-            title = { Text(stringResource(Res.string.travel_confirm_member_action)) },
-            confirmButton = {
-                TravelTextButton(onClick = {
-                    confirmation = null
-                    action()
-                }) { Text(stringResource(Res.string.travel_apply)) }
-            },
-            dismissButton = {
-                TravelTextButton(onClick = { confirmation = null }) { Text(stringResource(Res.string.travel_cancel)) }
-            },
+        val labels = when (confirmationKind) {
+            "leave" -> Triple(Res.string.travel_confirm_leave_title, Res.string.travel_confirm_leave_message, Res.string.travel_action_leave)
+            "remove" -> Triple(Res.string.travel_confirm_remove_title, Res.string.travel_confirm_remove_message, Res.string.travel_action_remove)
+            "revoke" -> Triple(Res.string.travel_confirm_revoke_title, Res.string.travel_confirm_revoke_message, Res.string.travel_action_revoke)
+            "transfer" -> Triple(Res.string.travel_confirm_transfer_title, Res.string.travel_confirm_transfer_message, Res.string.travel_action_request)
+            "accept" -> Triple(Res.string.travel_confirm_accept_title, Res.string.travel_confirm_accept_message, Res.string.travel_accept_ownership)
+            else -> Triple(Res.string.travel_confirm_delete_title, Res.string.travel_confirm_delete_message, Res.string.travel_delete)
+        }
+        com.bigong.oguri.core.ui.component.ConfirmAlertDialog(
+            iconResource = Res.drawable.ic_alert,
+            titleText = stringResource(labels.first), messageText = stringResource(labels.second),
+            confirmButtonText = stringResource(labels.third), cancelButtonText = stringResource(Res.string.travel_cancel),
+            onDismissRequest = { confirmation = null }, onCancelClick = { confirmation = null },
+            onConfirmClick = { confirmation = null; action() },
         )
     }
 }
@@ -309,7 +334,7 @@ private fun TravelManagementRow(
     ) {
         Text(
             label, Modifier.weight(1f), style = travelTextStyle(15, 18, FontWeight.Medium),
-            color = if (destructive) Orange70 else Neutral100,
+            color = if (destructive) com.bigong.oguri.core.designsystem.Orange50 else Neutral100,
         )
         trailing?.let { Text(it, style = OguriTheme.typography.bodySmall, color = colors.textTertiary) }
         if (!destructive) Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(24.dp), tint = colors.textPrimary)
@@ -336,24 +361,31 @@ internal fun TravelInviteRoute(
         onBack = onBack,
         isSaving = state.busy && state.preview != null,
     ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            val preview = state.preview
-            if (token == null) Text(stringResource(Res.string.travel_invite_missing))
-            state.failure?.let {
-                TravelInlineFailure(it, onRetry = if (token == null) null else ({ viewModel.preview(token) }))
-            }
-            if (preview != null && token != null) {
-                Text(preview.title)
-                Text(stringResource(Res.string.travel_dates_value, preview.startDate.toString(), preview.endDate.toString()))
-                preview.invitedBy?.let { Text(stringResource(Res.string.travel_invited_by, it)) }
-                if (state.failure == null || state.failure == com.bigong.oguri.domain.model.TravelPlanFailure.SIGN_IN_REQUIRED) {
-                    TravelPrimaryButton(enabled = !state.busy, onClick = { if (signedIn) viewModel.join(token) else onSignIn() }) {
-                        Text(stringResource(if (signedIn) Res.string.travel_join_trip else Res.string.travel_sign_in))
-                    }
+        val preview = state.preview
+        val terminal = state.failure in listOf(com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_EXPIRED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_REVOKED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_TRIP_DELETED)
+        Column(Modifier.weight(1f).fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            if (terminal) {
+                androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_empty), null, Modifier.size(180.dp))
+                Text(stringResource(Res.string.travel_invite_expired_title), style = OguriTheme.typography.cardTitle, modifier = Modifier.padding(top = 24.dp))
+                Text(stringResource(Res.string.travel_invite_expired_message), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary, modifier = Modifier.padding(vertical = 12.dp))
+                TravelOutlineButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_go_to_plans)) }
+            } else if (preview != null && token != null) {
+                androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_parasol), null, Modifier.size(140.dp))
+                preview.invitedBy?.let { Text(stringResource(Res.string.travel_invited_by, it), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary) }
+                Text(stringResource(Res.string.travel_invite_heading), style = OguriTheme.typography.sectionTitle, modifier = Modifier.padding(vertical = 12.dp))
+                Column(Modifier.fillMaxWidth().padding(vertical = 16.dp).clip(RoundedCornerShape(8.dp)).background(OguriTheme.colors.surfaceCard).border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))) {
+                    Text(preview.title, Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint70).padding(18.dp), style = OguriTheme.typography.cardTitle, color = OguriTheme.colors.textOnMint)
+                    Text(travelCardDates(com.bigong.oguri.domain.model.TravelDates(preview.startDate, preview.endDate), true), Modifier.padding(18.dp), style = OguriTheme.typography.cardSubtitle)
+                    preview.city?.let { Text(it + " · " + stringResource(Res.string.travel_member_count, preview.memberCount ?: 1), Modifier.padding(start = 18.dp, bottom = 18.dp), style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary) }
                 }
-            } else if (state.busy) {
-                TravelLoading(Modifier.fillMaxWidth())
-            }
+                Text(stringResource(Res.string.travel_invite_description), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
+                state.failure?.let { TravelInlineFailure(it) }
+            } else if (state.busy) TravelLoading(Modifier.fillMaxWidth())
+            else if (token == null) Text(stringResource(Res.string.travel_invite_missing))
+            else state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.preview(token) }) }
+        }
+        if (!terminal && preview != null && token != null) com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction(enabled = !state.busy, onClick = { if (signedIn) viewModel.join(token) else onSignIn() }) {
+            Text(stringResource(if (signedIn) Res.string.travel_join_trip else Res.string.travel_sign_in))
         }
     }
 }

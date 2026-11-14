@@ -43,7 +43,7 @@ class TravelCollaborationService(
     ): TravelMembersResponse {
         planService.requireMember(memberId)
         val plan = planService.accessiblePlan(memberId, planId)
-        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId))
+        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId), plan.ownerId == memberId && collaboration.hasActiveInvite(planId, now()))
     }
 
     @Transactional
@@ -109,7 +109,7 @@ class TravelCollaborationService(
         val invite = collaboration.invite(hash) ?: throw TravelInviteException(HttpStatus.NOT_FOUND, "INVITE_UNKNOWN")
         requireActive(invite.expiresAt, invite.revokedAt)
         val inviter = invite.issuedBy?.let { members.findById(it).orElse(null)?.nickname }
-        return TravelInvitePreview(plan.title, plan.startDate, plan.endDate, inviter)
+        return TravelInvitePreview(plan.title, plan.startDate, plan.endDate, inviter, plan.city, collaboration.memberCounts(listOf(plan.id))[plan.id] ?: 1)
     }
 
     @Transactional
@@ -285,6 +285,7 @@ data class TravelMembersResponse(
     val currentMemberId: String,
     val members: List<TravelMemberRow>,
     val ownershipTarget: String?,
+    val hasActiveInvite: Boolean = false,
 )
 
 data class IssuedTravelInvite(
@@ -297,6 +298,8 @@ data class TravelInvitePreview(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val invitedBy: String?,
+    val city: String? = null,
+    val memberCount: Int? = null,
 )
 
 data class JoinedTravelPlan(
