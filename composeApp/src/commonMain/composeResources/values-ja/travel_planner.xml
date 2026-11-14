@@ -20,6 +20,7 @@
     <string name="travel_start_date">出発日</string>
     <string name="travel_end_date">終了日</string>
     <string name="travel_invalid_dates">出発日から%1$d日以内の終了日を選んでください。</string>
+    <string name="travel_creation_options">旅行名とタイムゾーン</string>
     <string name="travel_title">旅行名</string>
     <string name="travel_time_zone">現地の時間帯 · %1$s</string>
     <string name="travel_day">%1$d日目 · %2$s</string>

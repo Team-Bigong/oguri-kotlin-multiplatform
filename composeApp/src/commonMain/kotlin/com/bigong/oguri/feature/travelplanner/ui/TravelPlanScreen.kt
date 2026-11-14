@@ -1,5 +1,6 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -13,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -32,7 +32,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
@@ -45,15 +48,16 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelModifiedButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanPane
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitDetailsSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.canApplyTo
-import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
 import com.bigong.oguri.feature.travelplanner.ui.model.hasTimeOrderMismatch
+import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
@@ -61,13 +65,10 @@ import oguri.composeapp.generated.resources.btn_menu
 import oguri.composeapp.generated.resources.common_retry_button
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
-import oguri.composeapp.generated.resources.travel_discard_draft
-import oguri.composeapp.generated.resources.travel_order_mine
-import oguri.composeapp.generated.resources.travel_order_cannot_reapply
-import oguri.composeapp.generated.resources.travel_order_matches
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_day
 import oguri.composeapp.generated.resources.travel_day_outside_trip
+import oguri.composeapp.generated.resources.travel_discard_draft
 import oguri.composeapp.generated.resources.travel_empty_day
 import oguri.composeapp.generated.resources.travel_find_next_holiday
 import oguri.composeapp.generated.resources.travel_has_note
@@ -77,6 +78,9 @@ import oguri.composeapp.generated.resources.travel_move_down
 import oguri.composeapp.generated.resources.travel_move_up
 import oguri.composeapp.generated.resources.travel_move_visit
 import oguri.composeapp.generated.resources.travel_offline_snapshot
+import oguri.composeapp.generated.resources.travel_order_cannot_reapply
+import oguri.composeapp.generated.resources.travel_order_matches
+import oguri.composeapp.generated.resources.travel_order_mine
 import oguri.composeapp.generated.resources.travel_overlapping_visits
 import oguri.composeapp.generated.resources.travel_place_details_unavailable
 import oguri.composeapp.generated.resources.travel_reload
@@ -211,6 +215,7 @@ internal fun TravelPlanScreen(
         }
         TravelPlanPane(
             scene = scene,
+            hasVisits = visits.isNotEmpty(),
             viewportRequest = state.viewportRequest,
             focusedVisitId = state.mapFocusedVisitId,
             onFitMap = onFitMap,
@@ -302,7 +307,14 @@ internal fun TravelPlanScreen(
                     }
                 }
                 if (visits.isEmpty()) {
-                    item { Text(stringResource(Res.string.travel_empty_day)) }
+                    item {
+                        Text(
+                            stringResource(Res.string.travel_empty_day),
+                            color = OguriTheme.colors.textSecondary,
+                            style = OguriTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(vertical = 16.dp),
+                        )
+                    }
                 }
                 itemsIndexed(visits, key = { _, visit -> visit.id }) { index, visit ->
                     TravelVisitRow(
@@ -369,7 +381,7 @@ internal fun TravelPlanScreen(
                 Text(stringResource(Res.string.travel_find_next_holiday))
             }
         }
-        Button(
+        TravelPrimaryButton(
             enabled = canEdit,
             onClick = onSearchPlaces,
             modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -437,11 +449,13 @@ private fun TravelVisitRow(
     val drag by rememberUpdatedState(onDrag)
     val dragFinished by rememberUpdatedState(onDragFinished)
     var showMenu by remember { mutableStateOf(false) }
-    Row {
+    Row(Modifier.background(if (selected) OguriTheme.colors.mintContainer else OguriTheme.colors.backgroundPrimary)) {
         Column(
             modifier =
                 Modifier
                     .weight(1f)
+                    .heightIn(min = 48.dp)
+                    .semantics { this.selected = selected }
                     .noRippleClickable(
                         onClick = onOpen,
                         interactionSource = remember { MutableInteractionSource() },
@@ -451,8 +465,8 @@ private fun TravelVisitRow(
             val label = if (number == null) title else stringResource(Res.string.travel_visit_number, number, title)
             Text(
                 label,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                style = OguriTheme.typography.bodyLarge,
+                color = OguriTheme.colors.textPrimary,
             )
             if (selected) Text(stringResource(Res.string.travel_visit_selected), style = MaterialTheme.typography.labelSmall)
             visit.details.localTime?.let { Text(it.toString()) }

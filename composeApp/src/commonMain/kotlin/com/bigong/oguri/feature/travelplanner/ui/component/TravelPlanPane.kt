@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapScene
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_retry_button
@@ -60,6 +61,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun TravelPlanPane(
     scene: TravelMapScene,
+    hasVisits: Boolean,
     viewportRequest: Int,
     focusedVisitId: String?,
     onMarkerClick: (String) -> Unit,
@@ -83,7 +85,7 @@ internal fun TravelPlanPane(
             }
         val maxMapHeight = (maxHeight - chromeHeight - (96 * density.fontScale).dp).coerceAtLeast(0.dp)
         val canShowMap = maxMapHeight >= 120.dp
-        val defaultMode = if (density.fontScale > 1.3f || !canShowMap) LIST else SPLIT
+        val defaultMode = if (density.fontScale > 1.3f || !hasVisits) LIST else SPLIT
         val mode = if (canShowMap) savedMode.takeIf { it in LIST..MAP } ?: defaultMode else LIST
         val showMap = mode != LIST
         val mapHeight = if (mode == MAP) maxMapHeight else 180.dp.coerceAtMost(maxMapHeight)
@@ -128,12 +130,13 @@ internal fun TravelPlanPane(
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
-            TravelPaneHandle(
-                mode = mode,
-                canShowMap = canShowMap,
-                onMode = { savedMode = it },
-                modifier = Modifier.onSizeChanged { handleHeight = maxOf(handleHeight, it.height) },
-            )
+            if (canShowMap) {
+                TravelPaneHandle(
+                    mode = mode,
+                    onMode = { savedMode = it },
+                    modifier = Modifier.onSizeChanged { handleHeight = it.height },
+                )
+            }
             Column(Modifier.fillMaxWidth().onSizeChanged { statusHeight = it.height }) {
                 status()
             }
@@ -145,7 +148,6 @@ internal fun TravelPlanPane(
 @Composable
 private fun TravelPaneHandle(
     mode: Int,
-    canShowMap: Boolean,
     onMode: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -161,47 +163,47 @@ private fun TravelPaneHandle(
     val density = LocalDensity.current
     var dragged by remember { mutableFloatStateOf(0f) }
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        IconButton(enabled = mode > LIST, onClick = { onStep(-1) }, modifier = Modifier.size(48.dp)) {
-            Icon(painterResource(Res.drawable.ic_arrow_up), stringResource(Res.string.travel_list_expand))
-        }
         Column(
             modifier =
                 Modifier
                     .weight(1f)
                     .heightIn(min = 48.dp)
                     .semantics { stateDescription = stateLabel }
-                    .clickable(enabled = canShowMap, role = Role.Button) { onMode(if (mode == LIST) SPLIT else LIST) }
-                    .pointerInput(canShowMap, density) {
-                        if (canShowMap) {
-                            detectVerticalDragGestures(
-                                onDragStart = { dragged = 0f },
-                                onDragCancel = { dragged = 0f },
-                                onDragEnd = {
-                                    val threshold = with(density) { 32.dp.toPx() }
-                                    if (dragged <= -threshold) {
-                                        onStep(-1)
-                                    } else if (dragged >= threshold) {
-                                        onStep(1)
-                                    }
-                                    dragged = 0f
-                                },
-                            ) { change, delta ->
-                                change.consume()
-                                dragged += delta
-                            }
+                    .clickable(role = Role.Button) { onStep(if (mode == LIST) 1 else -1) }
+                    .pointerInput(density) {
+                        detectVerticalDragGestures(
+                            onDragStart = { dragged = 0f },
+                            onDragCancel = { dragged = 0f },
+                            onDragEnd = {
+                                val threshold = with(density) { 32.dp.toPx() }
+                                if (dragged <= -threshold) {
+                                    onStep(-1)
+                                } else if (dragged >= threshold) {
+                                    onStep(1)
+                                }
+                                dragged = 0f
+                            },
+                        ) { change, delta ->
+                            change.consume()
+                            dragged += delta
                         }
                     }.padding(vertical = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
         ) {
-            Box(Modifier.size(width = 32.dp, height = 4.dp).background(MaterialTheme.colorScheme.outline, RoundedCornerShape(2.dp)))
+            if (mode != LIST) {
+                Box(Modifier.size(width = 32.dp, height = 4.dp).background(OguriTheme.colors.textTertiary, RoundedCornerShape(2.dp)))
+            }
             Text(
                 stringResource(if (mode == LIST) Res.string.travel_map_show else Res.string.travel_list_expand),
-                style = MaterialTheme.typography.labelMedium,
+                color = OguriTheme.colors.textPrimary,
+                style = OguriTheme.typography.labelLarge,
             )
         }
-        IconButton(enabled = canShowMap && mode < MAP, onClick = { onStep(1) }, modifier = Modifier.size(48.dp)) {
-            Icon(painterResource(Res.drawable.ic_arrow_up), stringResource(Res.string.travel_map_expand), Modifier.rotate(180f))
+        if (mode == SPLIT) {
+            IconButton(onClick = { onMode(MAP) }, modifier = Modifier.size(48.dp)) {
+                Icon(painterResource(Res.drawable.ic_arrow_up), stringResource(Res.string.travel_map_expand), Modifier.rotate(180f))
+            }
         }
     }
 }

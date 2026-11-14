@@ -20,6 +20,7 @@
     <string name="travel_start_date">出发日期</string>
     <string name="travel_end_date">结束日期</string>
     <string name="travel_invalid_dates">请选择出发当天或之后、%1$d 天以内的结束日期。</string>
+    <string name="travel_creation_options">行程名称和时区</string>
     <string name="travel_title">旅行名称</string>
     <string name="travel_time_zone">当地时区 · %1$s</string>
     <string name="travel_day">第 %1$d 天 · %2$s</string>

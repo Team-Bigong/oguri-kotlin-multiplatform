@@ -20,6 +20,7 @@
     <string name="travel_start_date">Start date</string>
     <string name="travel_end_date">End date</string>
     <string name="travel_invalid_dates">Choose an end date on or after the start date, within %1$d days.</string>
+    <string name="travel_creation_options">Trip name and time zone</string>
     <string name="travel_title">Trip name</string>
     <string name="travel_time_zone">Local time · %1$s</string>
     <string name="travel_day">Day %1$d · %2$s</string>

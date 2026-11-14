@@ -1,5 +1,6 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +27,7 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
@@ -64,7 +68,7 @@ internal fun TravelPlannerPage(
         ) {
             Column(modifier = Modifier.safeDrawingPadding().imePadding()) {
                 TopAppBar(
-                    title = { Text(title) },
+                    title = { Text(title, style = OguriTheme.typography.cardTitle) },
                     actions = actions,
                     navigationIcon = {
                         IconButton(enabled = !isSaving, onClick = onBack) {
@@ -77,6 +81,24 @@ internal fun TravelPlannerPage(
             }
         }
     }
+}
+
+@Composable
+internal fun TravelPrimaryButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
+) {
+    val colors = OguriTheme.colors
+    Button(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = ButtonDefaults.buttonColors(containerColor = colors.mintContainer, contentColor = colors.textPrimary),
+        border = if (enabled) BorderStroke(1.dp, colors.textSecondary) else null,
+        content = content,
+    )
 }
 
 @Composable

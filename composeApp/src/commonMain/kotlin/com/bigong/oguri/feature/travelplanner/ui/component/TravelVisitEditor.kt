@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,8 +39,6 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_alert
-import oguri.composeapp.generated.resources.travel_leave_pending_save
-import oguri.composeapp.generated.resources.travel_pending_save_preserved
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
@@ -51,6 +48,8 @@ import oguri.composeapp.generated.resources.travel_discard_draft
 import oguri.composeapp.generated.resources.travel_discard_title
 import oguri.composeapp.generated.resources.travel_edit_visit
 import oguri.composeapp.generated.resources.travel_invalid_time
+import oguri.composeapp.generated.resources.travel_leave_pending_save
+import oguri.composeapp.generated.resources.travel_pending_save_preserved
 import oguri.composeapp.generated.resources.travel_reload
 import oguri.composeapp.generated.resources.travel_visit_location
 import oguri.composeapp.generated.resources.travel_visit_name
@@ -193,7 +192,7 @@ internal fun TravelVisitEditor(
             if (canRetrySave && !isSaving && onLeaveWithPendingSave != null) {
                 TravelLeavePendingSave(onLeaveWithPendingSave)
             }
-            Button(
+            TravelPrimaryButton(
                 enabled = canEdit && (placeId != null || draft.name.isNotBlank()) && !draft.hasInvalidTime,
                 onClick = onApply,
                 modifier = Modifier.fillMaxWidth(),

@@ -3,8 +3,8 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
@@ -34,6 +33,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -126,6 +128,7 @@ internal fun TravelPlaceSearchSheet(
                         Column(
                             Modifier
                                 .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                                 .clickable(enabled = canEdit) {
                                     focusManager.clearFocus()
                                     onSelect(place)
@@ -133,7 +136,12 @@ internal fun TravelPlaceSearchSheet(
                         ) {
                             Text(place.name, style = MaterialTheme.typography.titleMedium)
                             place.address?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-                            if (place.id == search.lastAddedPlaceId) Text(stringResource(Res.string.travel_place_added))
+                            if (place.id == search.lastAddedPlaceId) {
+                                Text(
+                                    stringResource(Res.string.travel_place_added),
+                                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                                )
+                            }
                         }
                         HorizontalDivider()
                     }
@@ -146,6 +154,29 @@ internal fun TravelPlaceSearchSheet(
                         ) { Text(stringResource(Res.string.travel_search_results)) }
                         Text(selected.name, style = MaterialTheme.typography.titleMedium)
                         selected.address?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                        if (existing != null) {
+                            TravelPrimaryButton(onClick = { onShowVisit(existing) }, enabled = canEdit) {
+                                Text(stringResource(Res.string.travel_show_existing_visit))
+                            }
+                            TextButton(onClick = { onAdd(selected, day) }, enabled = canEdit) {
+                                Text(stringResource(Res.string.travel_add_again))
+                            }
+                        } else {
+                            TravelPrimaryButton(onClick = { onAdd(selected, day) }, enabled = canEdit) {
+                                val label =
+                                    if (day == TravelPlan.UNASSIGNED_DAY) {
+                                        stringResource(Res.string.travel_add_without_date)
+                                    } else {
+                                        stringResource(Res.string.travel_add_to_day, day)
+                                    }
+                                Text(label)
+                            }
+                        }
+                        if (day != TravelPlan.UNASSIGNED_DAY) {
+                            TextButton(onClick = { onAdd(selected, TravelPlan.UNASSIGNED_DAY) }, enabled = canEdit) {
+                                Text(stringResource(Res.string.travel_add_without_date))
+                            }
+                        }
                         val coordinates = selected.coordinates
                         if (coordinates != null) {
                             var available by remember(selected.id) { mutableStateOf(true) }
@@ -167,33 +198,10 @@ internal fun TravelPlaceSearchSheet(
                                 }
                             }
                         }
-                        if (existing != null) {
-                            Button(onClick = { onShowVisit(existing) }, enabled = canEdit) {
-                                Text(stringResource(Res.string.travel_show_existing_visit))
-                            }
-                            TextButton(onClick = { onAdd(selected, day) }, enabled = canEdit) {
-                                Text(stringResource(Res.string.travel_add_again))
-                            }
-                        } else {
-                            Button(onClick = { onAdd(selected, day) }, enabled = canEdit) {
-                                val label =
-                                    if (day == TravelPlan.UNASSIGNED_DAY) {
-                                        stringResource(Res.string.travel_add_without_date)
-                                    } else {
-                                        stringResource(Res.string.travel_add_to_day, day)
-                                    }
-                                Text(label)
-                            }
-                        }
-                        if (day != TravelPlan.UNASSIGNED_DAY) {
-                            TextButton(onClick = { onAdd(selected, TravelPlan.UNASSIGNED_DAY) }, enabled = canEdit) {
-                                Text(stringResource(Res.string.travel_add_without_date))
-                            }
-                        }
                     }
                 }
             }
-            if (search.results.isNotEmpty()) {
+            if (selected != null || search.results.isNotEmpty()) {
                 GooglePlacesAttribution(
                     selected?.attributions ?: search.results.flatMap(TravelPlace::attributions),
                 )
@@ -201,7 +209,7 @@ internal fun TravelPlaceSearchSheet(
             if (state.canRetrySave && state.pendingSaveStored && !state.isSaving) {
                 TravelLeavePendingSave(onLeaveWithPendingSave)
             }
-            Row {
+            FlowRow {
                 TextButton(onClick = onManualAdd, enabled = canEdit) { Text(stringResource(Res.string.travel_manual_add)) }
                 TextButton(onClick = onDismiss, enabled = canDismiss) { Text(stringResource(Res.string.travel_search_close)) }
             }

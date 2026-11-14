@@ -1,7 +1,9 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -11,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -25,6 +28,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
@@ -69,19 +73,19 @@ internal fun TravelDaySelector(
                 }
                 items(dates.dayCount) { index ->
                     val day = index + 1
-                    FilterChip(
+                    TravelDayChip(
+                        label = travelDayLabel(dates, day),
                         selected = selectedDay == day,
-                        onClick = { onSelectDay(day) },
                         enabled = enabled,
-                        label = { Text(travelDayLabel(dates, day)) },
+                        onClick = { onSelectDay(day) },
                     )
                 }
                 item {
-                    FilterChip(
+                    TravelDayChip(
+                        label = travelDayLabel(dates, TravelPlan.UNASSIGNED_DAY),
                         selected = selectedDay == TravelPlan.UNASSIGNED_DAY,
-                        onClick = { onSelectDay(TravelPlan.UNASSIGNED_DAY) },
                         enabled = enabled,
-                        label = { Text(travelDayLabel(dates, TravelPlan.UNASSIGNED_DAY)) },
+                        onClick = { onSelectDay(TravelPlan.UNASSIGNED_DAY) },
                     )
                 }
             }
@@ -90,35 +94,69 @@ internal fun TravelDaySelector(
     if (showPicker) {
         val listState = rememberLazyListState()
         LaunchedEffect(selectedDay, dates) {
-            listState.scrollToItem(if (selectedDay == TravelPlan.UNASSIGNED_DAY) dates.dayCount + 1 else selectedDay)
+            listState.scrollToItem(if (selectedDay == TravelPlan.UNASSIGNED_DAY) dates.dayCount else selectedDay - 1)
         }
         AlertDialog(
             onDismissRequest = { showPicker = false },
             title = { Text(stringResource(Res.string.travel_select_day)) },
             text = {
-                LazyColumn(state = listState, modifier = Modifier.heightIn(max = 360.dp)) {
-                    item {
-                        TextButton(enabled = enabled, onClick = {
-                            showPicker = false
-                            onOverview()
-                        }) {
-                            Text(stringResource(Res.string.travel_overview))
-                        }
+                Column {
+                    TextButton(enabled = enabled, onClick = {
+                        showPicker = false
+                        onOverview()
+                    }) {
+                        Text(stringResource(Res.string.travel_overview), color = OguriTheme.colors.textPrimary)
                     }
-                    items(dates.dayCount + 1) { index ->
-                        val day = if (index == dates.dayCount) TravelPlan.UNASSIGNED_DAY else index + 1
-                        TextButton(
-                            enabled = enabled,
-                            onClick = {
-                                showPicker = false
-                                onSelectDay(day)
-                            },
-                            modifier = Modifier.fillMaxWidth().semantics { selected = selectedDay == day },
-                        ) { Text(travelDayLabel(dates, day), Modifier.fillMaxWidth()) }
+                    LazyColumn(state = listState, modifier = Modifier.heightIn(max = 360.dp)) {
+                        items(dates.dayCount + 1) { index ->
+                            val day = if (index == dates.dayCount) TravelPlan.UNASSIGNED_DAY else index + 1
+                            val isSelected = selectedDay == day
+                            TextButton(
+                                enabled = enabled,
+                                onClick = {
+                                    showPicker = false
+                                    onSelectDay(day)
+                                },
+                                modifier = Modifier.fillMaxWidth().semantics { selected = isSelected },
+                            ) {
+                                Text(
+                                    travelDayLabel(dates, day),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    style = if (isSelected) OguriTheme.typography.labelLarge else OguriTheme.typography.bodyMedium,
+                                    color = OguriTheme.colors.textPrimary,
+                                )
+                            }
+                        }
                     }
                 }
             },
             confirmButton = { TextButton(onClick = { showPicker = false }) { Text(stringResource(Res.string.travel_cancel)) } },
         )
     }
+}
+
+@Composable
+private fun TravelDayChip(
+    label: String,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = OguriTheme.colors
+    FilterChip(
+        selected = selected,
+        enabled = enabled,
+        onClick = onClick,
+        modifier = Modifier.heightIn(min = 48.dp),
+        label = {
+            Text(label, style = if (selected) OguriTheme.typography.labelLarge else OguriTheme.typography.bodyMedium)
+        },
+        colors =
+            FilterChipDefaults.filterChipColors(
+                labelColor = colors.textPrimary,
+                selectedLabelColor = colors.textPrimary,
+                selectedContainerColor = colors.mintContainer,
+            ),
+        border = BorderStroke(1.dp, if (selected && enabled) colors.textSecondary else colors.borderSubtle),
+    )
 }

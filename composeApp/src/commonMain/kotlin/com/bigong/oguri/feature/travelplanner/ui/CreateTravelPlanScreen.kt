@@ -10,11 +10,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -31,7 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlanDetails
@@ -40,6 +40,7 @@ import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelCitySearchDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone
@@ -51,7 +52,6 @@ import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_retry_button
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
-import oguri.composeapp.generated.resources.travel_choose_city
 import oguri.composeapp.generated.resources.travel_choose_time_zone
 import oguri.composeapp.generated.resources.travel_city
 import oguri.composeapp.generated.resources.travel_city_jeju
@@ -62,12 +62,15 @@ import oguri.composeapp.generated.resources.travel_city_taipei
 import oguri.composeapp.generated.resources.travel_city_tokyo
 import oguri.composeapp.generated.resources.travel_city_unavailable
 import oguri.composeapp.generated.resources.travel_create
+import oguri.composeapp.generated.resources.travel_creation_options
 import oguri.composeapp.generated.resources.travel_date_value
 import oguri.composeapp.generated.resources.travel_default_title
 import oguri.composeapp.generated.resources.travel_end_date
 import oguri.composeapp.generated.resources.travel_invalid_dates
 import oguri.composeapp.generated.resources.travel_matching_plan
 import oguri.composeapp.generated.resources.travel_open_plan
+import oguri.composeapp.generated.resources.travel_past_collapsed
+import oguri.composeapp.generated.resources.travel_past_expanded
 import oguri.composeapp.generated.resources.travel_recommended_dates
 import oguri.composeapp.generated.resources.travel_search_cities
 import oguri.composeapp.generated.resources.travel_sign_in
@@ -100,7 +103,7 @@ internal fun CreateTravelPlanScreen(
     var title by rememberSaveable { mutableStateOf("") }
     var startMillis by rememberSaveable { mutableStateOf(source?.startDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()) }
     var endMillis by rememberSaveable { mutableStateOf(source?.endDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()) }
-    var isCityMenuOpen by remember { mutableStateOf(false) }
+    var showOptions by rememberSaveable { mutableStateOf(false) }
     var isTimeZoneMenuOpen by remember { mutableStateOf(false) }
     var isDatePickerForStart by rememberSaveable { mutableStateOf<Boolean?>(null) }
 
@@ -128,8 +131,7 @@ internal fun CreateTravelPlanScreen(
     LaunchedEffect(citySearch?.selected, citySearch?.loading) {
         if (citySearch?.selected != null && !citySearch.loading) {
             cityEdited = true
-            // The selected result resolves the time zone. The saved city name is entered by the user.
-            cityInput = citySearch.query.trim().take(TravelPlanDetails.MAX_TEXT_LENGTH)
+            cityInput = citySearch.selected.label.take(TravelPlanDetails.MAX_TEXT_LENGTH)
             timeZoneOverride = citySearch.timeZone?.takeIf { it in TimeZone.availableZoneIds }
             onCloseCitySearch()
         }
@@ -161,7 +163,7 @@ internal fun CreateTravelPlanScreen(
         isSaving = state.isSaving,
     ) {
         Column(
-            modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp),
+            modifier = Modifier.verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             if (!state.creationReady && !state.creationRecoveryFailed) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -182,20 +184,6 @@ internal fun CreateTravelPlanScreen(
                 )
                 TextButton(onClick = onOpenCitySearch, enabled = canEdit) {
                     Text(stringResource(Res.string.travel_search_cities))
-                }
-                TextButton(onClick = { isCityMenuOpen = true }, enabled = canEdit) {
-                    Text(stringResource(Res.string.travel_choose_city))
-                }
-                DropdownMenu(expanded = isCityMenuOpen, onDismissRequest = { isCityMenuOpen = false }) {
-                    TravelCity.entries.forEach { city ->
-                        val label = cityLabel(city)
-                        DropdownMenuItem(text = { Text(label) }, onClick = {
-                            cityEdited = true
-                            cityInput = label
-                            timeZoneOverride = null
-                            isCityMenuOpen = false
-                        })
-                    }
                 }
             }
             if (state.creationCityFailed) {
@@ -219,23 +207,43 @@ internal fun CreateTravelPlanScreen(
                     color = MaterialTheme.colorScheme.error,
                 )
             }
-            OutlinedTextField(
-                value = title,
-                onValueChange = { if (it.length <= TravelPlanDetails.MAX_TEXT_LENGTH) title = it },
-                label = { Text(stringResource(Res.string.travel_title)) },
-                placeholder = { Text(defaultTitle) },
-                singleLine = true,
-                enabled = canEdit,
-                modifier = Modifier.fillMaxWidth(),
-            )
-            OutlinedButton(onClick = { isTimeZoneMenuOpen = true }, enabled = canEdit, modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    if (timeZoneId == null) {
-                        stringResource(Res.string.travel_choose_time_zone)
-                    } else {
-                        stringResource(Res.string.travel_time_zone, timeZoneId)
-                    },
+            val optionsState =
+                stringResource(if (showOptions) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
+            val needsTimeZone = cityName.isNotEmpty() && timeZoneId == null
+            if (needsTimeZone) {
+                OutlinedButton(
+                    onClick = { isTimeZoneMenuOpen = true },
+                    enabled = canEdit,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(Res.string.travel_choose_time_zone))
+                }
+            }
+            TextButton(
+                onClick = { showOptions = !showOptions },
+                modifier = Modifier.semantics { stateDescription = optionsState },
+            ) {
+                Text(stringResource(Res.string.travel_creation_options), color = OguriTheme.colors.textPrimary)
+            }
+            if (showOptions) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { if (it.length <= TravelPlanDetails.MAX_TEXT_LENGTH) title = it },
+                    label = { Text(stringResource(Res.string.travel_title)) },
+                    placeholder = { Text(defaultTitle) },
+                    singleLine = true,
+                    enabled = canEdit,
+                    modifier = Modifier.fillMaxWidth(),
                 )
+                if (timeZoneId != null) {
+                    OutlinedButton(
+                        onClick = { isTimeZoneMenuOpen = true },
+                        enabled = canEdit,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(stringResource(Res.string.travel_time_zone, timeZoneId))
+                    }
+                }
             }
             state.failure?.takeUnless { it == TravelPlanFailure.SIGN_IN_REQUIRED }?.let {
                 TravelInlineFailure(
@@ -254,7 +262,7 @@ internal fun CreateTravelPlanScreen(
                     Text(stringResource(Res.string.travel_open_plan))
                 }
             }
-            Button(
+            TravelPrimaryButton(
                 enabled = canEdit && dates != null && cityName.isNotEmpty() && cityTimeZone != null,
                 onClick = {
                     if (dates != null && cityTimeZone != null) {
@@ -276,7 +284,19 @@ internal fun CreateTravelPlanScreen(
     }
 
     if (citySearch != null) {
-        TravelCitySearchDialog(citySearch, onSearchCities, onChooseCity, onCloseCitySearch)
+        TravelCitySearchDialog(
+            state = citySearch,
+            recommendedCities = TravelCity.entries.map { cityLabel(it) },
+            onQuery = onSearchCities,
+            onChoose = onChooseCity,
+            onChooseRecommendedCity = { city ->
+                cityEdited = true
+                cityInput = city
+                timeZoneOverride = null
+                onCloseCitySearch()
+            },
+            onDismiss = onCloseCitySearch,
+        )
     }
 
     if (isTimeZoneMenuOpen) {

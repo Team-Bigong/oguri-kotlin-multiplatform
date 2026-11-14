@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
@@ -29,6 +28,7 @@ import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelReminderDialog
 import oguri.composeapp.generated.resources.Res
@@ -131,11 +131,11 @@ internal fun TravelMembersRoute(
                 if (members.isOwner) {
                     Text(stringResource(Res.string.travel_invite_explanation))
                     if (state.invite == null) {
-                        Button(enabled = !state.busy, onClick = { viewModel.issue(planId) }) {
+                        TravelPrimaryButton(enabled = !state.busy, onClick = { viewModel.issue(planId) }) {
                             Text(stringResource(Res.string.travel_create_invite))
                         }
                     } else {
-                        Button(enabled = !state.busy, onClick = {
+                        TravelPrimaryButton(enabled = !state.busy, onClick = {
                             state.invite?.let {
                                 clipboard.setText(AnnotatedString(travelInviteLink(it)))
                                 copied = true
@@ -150,7 +150,7 @@ internal fun TravelMembersRoute(
                     }
                 } else {
                     if (members.ownershipTarget == members.currentMemberId) {
-                        Button(enabled = !state.busy, onClick = {
+                        TravelPrimaryButton(enabled = !state.busy, onClick = {
                             confirmation = { viewModel.acceptOwnership(planId) }
                         }) { Text(stringResource(Res.string.travel_accept_ownership)) }
                     }
@@ -246,7 +246,7 @@ internal fun TravelInviteRoute(
                 Text(stringResource(Res.string.travel_dates_value, preview.startDate.toString(), preview.endDate.toString()))
                 preview.invitedBy?.let { Text(stringResource(Res.string.travel_invited_by, it)) }
                 if (state.failure == null || state.failure == com.bigong.oguri.domain.model.TravelPlanFailure.SIGN_IN_REQUIRED) {
-                    Button(enabled = !state.busy, onClick = { if (signedIn) viewModel.join(token) else onSignIn() }) {
+                    TravelPrimaryButton(enabled = !state.busy, onClick = { if (signedIn) viewModel.join(token) else onSignIn() }) {
                         Text(stringResource(if (signedIn) Res.string.travel_join_trip else Res.string.travel_sign_in))
                     }
                 }
