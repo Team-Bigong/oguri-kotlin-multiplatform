@@ -18,6 +18,7 @@ internal fun TravelPlannerUiState.withRefreshedPlan(updated: TravelPlan): Travel
         selectedVisitId = visible(selectedVisitId),
         mapFocusedVisitId = visible(mapFocusedVisitId),
         dayPlaces = if (dayChanged) emptyMap() else dayPlaces,
+        dayPlacesLanguage = if (dayChanged) null else dayPlacesLanguage,
         dayPlacesIncomplete = !dayChanged && dayPlacesIncomplete,
         isLoadingDayPlaces = !dayChanged && isLoadingDayPlaces,
         viewportRequest = if (dayChanged) viewportRequest + 1 else viewportRequest,

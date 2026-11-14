@@ -75,6 +75,17 @@ class TravelPlacesService(
         language: String,
     ): TravelDayPlacesResponse = details(memberId, plans.placeIdsForPlan(memberId, tripId), language)
 
+    fun planPlaceBatch(
+        memberId: String,
+        tripId: UUID,
+        placeIds: List<String>,
+        language: String,
+    ): TravelDayPlacesResponse {
+        val allowed = plans.placeIdsForPlan(memberId, tripId).toSet()
+        require(placeIds.size in 1..MAX_DETAILS_BATCH && placeIds.all { it in allowed })
+        return details(memberId, placeIds.distinct(), language)
+    }
+
     private fun details(
         memberId: String,
         placeIds: List<String>,
@@ -125,6 +136,7 @@ class TravelPlacesService(
         }
 
     private companion object {
+        const val MAX_DETAILS_BATCH: Int = 30
         val CITY_PLACE_ID: Regex = Regex("[A-Za-z0-9_-]{1,512}")
         const val CITY_REQUESTS_PER_CLIENT: Int = 20
         const val CITY_REQUESTS_PER_MINUTE: Int = 90

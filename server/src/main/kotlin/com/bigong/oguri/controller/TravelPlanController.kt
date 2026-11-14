@@ -109,6 +109,16 @@ class TravelPlanController(
             travelPlacesService.planPlaces(request.resolveMemberId(), tripId, language),
         )
 
+    @PostMapping("/{tripId}/places/details")
+    fun planPlaceBatch(
+        request: HttpServletRequest,
+        @PathVariable tripId: UUID,
+        @RequestBody body: TravelPlaceBatchRequest,
+    ): ResponseEntity<TravelDayPlacesResponse> =
+        ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(
+            travelPlacesService.planPlaceBatch(request.resolveMemberId(), tripId, body.placeIds, body.language),
+        )
+
     @ExceptionHandler(IllegalArgumentException::class, HttpMessageNotReadableException::class)
     fun invalidRequest(): ResponseEntity<TravelPlanErrorResponse> =
         ResponseEntity.badRequest().cacheControl(CacheControl.noStore()).body(TravelPlanErrorResponse("INVALID_TRAVEL_PLAN_REQUEST"))
@@ -133,5 +143,11 @@ class TravelPlanController(
 @JvmRecord
 data class TravelPlaceSearchRequest(
     val query: String,
+    val language: String,
+)
+
+@JvmRecord
+data class TravelPlaceBatchRequest(
+    val placeIds: List<String>,
     val language: String,
 )

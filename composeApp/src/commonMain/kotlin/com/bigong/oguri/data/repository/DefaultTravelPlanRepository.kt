@@ -142,9 +142,10 @@ class DefaultTravelPlanRepository internal constructor(
     override suspend fun forPlan(
         planId: String,
         language: String,
+        placeIds: List<String>,
     ): TravelDayPlaces =
         request {
-            val response = remote.planPlaces(planId, language)
+            val response = remote.planPlaces(planId, language, placeIds)
             TravelDayPlaces(response.places.associate { it.id to it.toDomain() }, response.incomplete)
         }
 

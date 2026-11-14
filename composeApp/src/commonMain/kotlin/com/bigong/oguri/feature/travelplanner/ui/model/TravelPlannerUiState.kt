@@ -37,6 +37,7 @@ internal data class TravelPlannerUiState(
     val placeSearch: TravelPlaceSearchState? = null,
     val overview: TravelOverviewState? = null,
     val dayPlaces: Map<String, TravelPlace> = emptyMap(),
+    val dayPlacesLanguage: String? = null,
     val isLoadingDayPlaces: Boolean = false,
     val dayPlacesIncomplete: Boolean = false,
     val inspectedVisitId: String? = null,
@@ -221,4 +222,5 @@ internal data class TravelOverviewState(
     val places: Map<String, TravelPlace> = emptyMap(),
     val loading: Boolean = true,
     val incomplete: Boolean = false,
+    val language: String? = null,
 )

@@ -10,6 +10,7 @@ import com.bigong.oguri.data.remote.model.request.TravelCityTimeZoneRequest
 import com.bigong.oguri.data.remote.model.request.TravelDetailsRequest
 import com.bigong.oguri.data.remote.model.request.TravelInviteRequest
 import com.bigong.oguri.data.remote.model.request.TravelOwnershipRequest
+import com.bigong.oguri.data.remote.model.request.TravelPlaceBatchRequest
 import com.bigong.oguri.data.remote.model.request.TravelPlaceSearchRequest
 import com.bigong.oguri.data.remote.model.request.TravelPlanCommandRequest
 import com.bigong.oguri.data.remote.model.response.IssuedTravelInviteResponse
@@ -112,12 +113,14 @@ internal class KtorTravelPlanRemoteDataSource(
     suspend fun planPlaces(
         planId: String,
         language: String,
+        placeIds: List<String>,
     ): TravelDayPlacesResponse =
         authRequestExecutor.executeForSession(sessionVersion) { token ->
             httpClient
-                .get("$BASE_URL$TRIPS_PATH/$planId/places") {
+                .post("$BASE_URL$TRIPS_PATH/$planId/places/details") {
                     attributes.put(RequestAccessToken, token)
-                    parameter("language", language)
+                    contentType(ContentType.Application.Json)
+                    setBody(TravelPlaceBatchRequest(placeIds, language))
                 }.body()
         }
 

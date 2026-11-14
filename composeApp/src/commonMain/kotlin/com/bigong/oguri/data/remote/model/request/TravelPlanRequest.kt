@@ -122,3 +122,9 @@ internal data class TravelOwnershipRequest(
 internal data class TravelChangesSeenRequest(
     val revision: Long,
 )
+
+@Serializable
+internal data class TravelPlaceBatchRequest(
+    val placeIds: List<String>,
+    val language: String,
+)

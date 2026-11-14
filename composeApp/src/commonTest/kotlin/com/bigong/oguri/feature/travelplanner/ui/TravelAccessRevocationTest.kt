@@ -162,6 +162,103 @@ class TravelAccessRevocationTest {
             assertNull(viewModel.state.value.plan)
         }
 
+    private fun overviewPlan(count: Int): TravelPlan =
+        plan.copy(
+            visits =
+                List(count) { index ->
+                    TravelVisit("visit-$index", index / 30 + 1, TravelVisitDetails(null, null, null, null, "place-$index"), 1)
+                },
+        )
+
+    @Test
+    fun overviewSplitsRequestsAndRetainsEveryBatch() =
+        runTest {
+            val places = BatchOverviewPlaces()
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(overviewPlan(65)), AccessRecovery(), places)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.loadOverviewPlaces("plan", "ko")
+            assertEquals(listOf(30, 30, 5), places.requests.map { it.size })
+            assertEquals(
+                65,
+                viewModel.state.value.overview
+                    ?.places
+                    ?.size,
+            )
+            assertFalse(requireNotNull(viewModel.state.value.overview).incomplete)
+        }
+
+    @Test
+    fun quotaFailureKeepsPreviousBatchesAndRetryOnlyRequestsMissingPlaces() =
+        runTest {
+            val places = BatchOverviewPlaces().apply { failAtCall = 2 }
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(overviewPlan(65)), AccessRecovery(), places)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.loadOverviewPlaces("plan", "ko")
+            val partial = requireNotNull(viewModel.state.value.overview)
+            assertEquals(30, partial.places.size)
+            assertTrue(partial.incomplete)
+            assertFalse(partial.loading)
+            places.failAtCall = null
+            viewModel.loadOverviewPlaces("plan", "ko")
+            assertEquals(
+                65,
+                viewModel.state.value.overview
+                    ?.places
+                    ?.size,
+            )
+            assertFalse(requireNotNull(viewModel.state.value.overview).incomplete)
+            assertTrue(
+                places.requests
+                    .drop(2)
+                    .flatten()
+                    .none { it in partial.places },
+            )
+            assertEquals(listOf(30, 5), places.requests.drop(2).map { it.size })
+        }
+
+    @Test
+    fun overviewReusesTheSameLanguageDayCacheButReloadsForANewLanguage() =
+        runTest {
+            val places = BatchOverviewPlaces().apply { dayIds = (0 until 30).map { "place-$it" } }
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(overviewPlan(65)), AccessRecovery(), places)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.loadDayPlaces("plan", 1, "ko", hasPlaces = true)
+            viewModel.loadOverviewPlaces("plan", "ko")
+            assertEquals(listOf(30, 5), places.requests.map { it.size })
+            assertTrue(places.requests.flatten().none { it in places.dayIds })
+            places.requests.clear()
+            viewModel.loadOverviewPlaces("plan", "en")
+            assertEquals(listOf(30, 30, 5), places.requests.map { it.size })
+            assertTrue(requireNotNull(viewModel.state.value.overview).places.values.all { it.name.startsWith("en:") })
+        }
+
+    @Test
+    fun anOldFailureCannotReplaceTheSuccessfullyReopenedOverview() =
+        runTest {
+            val barrier = CompletableDeferred<Unit>()
+            val places =
+                BatchOverviewPlaces().apply {
+                    firstBarrier = barrier
+                    failAtCall = 1
+                }
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(overviewPlan(1)), AccessRecovery(), places)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            launch { viewModel.loadOverviewPlaces("plan", "ko") }
+            runCurrent()
+            viewModel.closeOverview()
+            viewModel.loadOverviewPlaces("plan", "ko")
+            barrier.complete(Unit)
+            advanceUntilIdle()
+            val overview = requireNotNull(viewModel.state.value.overview)
+            assertEquals(1, overview.places.size)
+            assertFalse(overview.incomplete)
+            assertFalse(overview.loading)
+        }
+
     @Test
     fun loadedOverviewUsesSeparatePlacesAndDoesNotChangeTheSelectedDay() =
         runTest {
@@ -353,6 +450,7 @@ private class DeniedPlaces : TravelPlaceRepository {
     override suspend fun forPlan(
         planId: String,
         language: String,
+        placeIds: List<String>,
     ): TravelDayPlaces = throw TravelPlanException(TravelPlanFailure.UNAVAILABLE)
 
     override suspend fun forDay(
@@ -382,9 +480,44 @@ private class OverviewPlaces(
     override suspend fun forPlan(
         planId: String,
         language: String,
+        placeIds: List<String>,
     ): TravelDayPlaces {
         withContext(NonCancellable) { barrier?.await() }
         if (fail) throw TravelPlanException(TravelPlanFailure.CONNECTION)
         return TravelDayPlaces(mapOf("place" to TravelPlace("place", "Museum", null, TravelCoordinates(37.5, 127.0), emptyList())), false)
     }
+}
+
+private class BatchOverviewPlaces : TravelPlaceRepository by DeniedPlaces() {
+    val requests: MutableList<List<String>> = mutableListOf()
+    var failAtCall: Int? = null
+    var firstBarrier: CompletableDeferred<Unit>? = null
+    var dayIds: List<String> = emptyList()
+
+    override suspend fun forPlan(
+        planId: String,
+        language: String,
+        placeIds: List<String>,
+    ): TravelDayPlaces {
+        requests.add(placeIds)
+        val call = requests.size
+        if (call == 1) withContext(NonCancellable) { firstBarrier?.await() }
+        if (call == failAtCall) throw TravelPlanException(TravelPlanFailure.RATE_LIMIT)
+        return response(placeIds, language)
+    }
+
+    override suspend fun forDay(
+        planId: String,
+        dayNumber: Int,
+        language: String,
+    ): TravelDayPlaces = response(dayIds, language)
+
+    private fun response(
+        ids: List<String>,
+        language: String,
+    ): TravelDayPlaces =
+        TravelDayPlaces(
+            ids.associateWith { TravelPlace(it, "$language:$it", null, TravelCoordinates(37.5, 127.0), emptyList()) },
+            false,
+        )
 }

@@ -52,6 +52,40 @@ class TravelPlacesOverviewTest {
     }
 
     @Test
+    fun `장소 묶음은 상한을 넘기거나 여행 밖 장소를 포함하면 외부 호출 전에 거절한다`() {
+        `when`(plans.placeIdsForPlan("member", trip)).thenReturn(listOf("first"))
+        assertThrows(IllegalArgumentException::class.java) { service.planPlaceBatch("member", trip, List(31) { "first" }, "ko") }
+        assertThrows(IllegalArgumentException::class.java) { service.planPlaceBatch("member", trip, listOf("outside"), "ko") }
+        assertThrows(IllegalArgumentException::class.java) { service.planPlaceBatch("member", trip, emptyList(), "ko") }
+        verifyNoInteractions(google)
+    }
+
+    @Test
+    fun `장소 묶음은 동일 장소를 한 번만 조회한다`() {
+        val place = TravelPlaceResponse("first", "Museum", null, 37.5, 127.0, emptyList())
+        `when`(plans.placeIdsForPlan("member", trip)).thenReturn(listOf("first"))
+        `when`(google.details("first", "ko")).thenReturn(CompletableFuture.completedFuture(place))
+        assertEquals(listOf(place), service.planPlaceBatch("member", trip, listOf("first", "first"), "ko").places)
+        verify(google).details("first", "ko")
+    }
+
+    @Test
+    fun `묶음 조회도 전체 외부 API 예산 제한을 우회하지 않는다`() {
+        `when`(plans.placeIdsForPlan("member", trip)).thenReturn(listOf("first"))
+        val limited = TravelPlacesService(plans, google, 0)
+        val failure = assertThrows(ResponseStatusException::class.java) { limited.planPlaceBatch("member", trip, listOf("first"), "ko") }
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, failure.statusCode)
+        verifyNoInteractions(google)
+    }
+
+    @Test
+    fun `묶음 조회도 접근 종료 시 외부 호출 전에 차단한다`() {
+        doThrow(ResponseStatusException(HttpStatus.NOT_FOUND)).`when`(plans).placeIdsForPlan("removed", trip)
+        assertThrows(ResponseStatusException::class.java) { service.planPlaceBatch("removed", trip, listOf("first"), "ko") }
+        verifyNoInteractions(google)
+    }
+
+    @Test
     fun `외부 장소 없는 계획은 외부 호출 없이 빈 지도를 반환한다`() {
         `when`(plans.placeIdsForPlan("member", trip)).thenReturn(emptyList())
         val result = service.planPlaces("member", trip, "ko")

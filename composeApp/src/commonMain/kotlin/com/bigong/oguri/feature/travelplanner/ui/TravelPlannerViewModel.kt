@@ -3,7 +3,6 @@ package com.bigong.oguri.feature.travelplanner.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.domain.model.TravelCitySuggestion
-import com.bigong.oguri.domain.model.TravelDayPlaces
 import com.bigong.oguri.domain.model.TravelPendingSave
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
@@ -65,6 +64,7 @@ class TravelPlannerViewModel(
     private var pendingPlanId: String? = null
     private val recoveryWriteMutex: Mutex = Mutex()
     private var draftWrite: Job? = null
+    private var overviewRequest: Long = 0
     private var addedPlaceForSave: TravelPlace? = null
 
     internal suspend fun loadResume() {
@@ -357,6 +357,7 @@ class TravelPlannerViewModel(
                     selectedVisitId = null,
                     mapFocusedVisitId = null,
                     dayPlaces = emptyMap(),
+                    dayPlacesLanguage = null,
                     dayPlacesIncomplete = false,
                     isLoadingDayPlaces = false,
                     viewportRequest = it.viewportRequest + 1,
@@ -372,7 +373,9 @@ class TravelPlannerViewModel(
         hasPlaces: Boolean,
     ) {
         if (!hasPlaces) {
-            mutableState.update { it.copy(dayPlaces = emptyMap(), isLoadingDayPlaces = false, dayPlacesIncomplete = false) }
+            mutableState.update {
+                it.copy(dayPlaces = emptyMap(), dayPlacesLanguage = language, isLoadingDayPlaces = false, dayPlacesIncomplete = false)
+            }
             return
         }
         mutableState.update { it.copy(isLoadingDayPlaces = true, dayPlacesIncomplete = false) }
@@ -385,6 +388,7 @@ class TravelPlannerViewModel(
                 } else {
                     it.copy(
                         dayPlaces = result.places,
+                        dayPlacesLanguage = language,
                         isLoadingDayPlaces = false,
                         dayPlacesIncomplete = result.incomplete,
                     )
@@ -406,38 +410,51 @@ class TravelPlannerViewModel(
     ) {
         val plan = state.value.plan?.takeIf { it.summary.id == planId } ?: return
         val generation = mutationGeneration
+        val request = ++overviewRequest
         val placeIds = plan.visits.mapNotNull { it.details.googlePlaceId }.toSet()
         mutableState.update {
-            it.copy(overview = TravelOverviewState((it.overview?.places.orEmpty() + it.dayPlaces).filterKeys { id -> id in placeIds }))
+            val overviewPlaces =
+                it.overview
+                    ?.takeIf { overview -> overview.language == language }
+                    ?.places
+                    .orEmpty()
+            val dayPlaces = if (it.dayPlacesLanguage == language) it.dayPlaces else emptyMap()
+            it.copy(overview = TravelOverviewState((overviewPlaces + dayPlaces).filterKeys { id -> id in placeIds }, language = language))
         }
         try {
-            val result =
-                if (placeIds.isEmpty()) {
-                    TravelDayPlaces(emptyMap(), false)
-                } else {
-                    placeRepository.forPlan(planId, language)
+            val known =
+                state.value.overview
+                    ?.places
+                    .orEmpty()
+                    .keys
+            val missing = placeIds - known
+            for (batch in missing.toList().chunked(30)) {
+                val result = placeRepository.forPlan(planId, language, batch)
+                currentCoroutineContext().ensureActive()
+                if (!isCurrentOverview(planId, generation, request)) return
+                mutableState.update { current ->
+                    val overview = current.overview ?: return@update current
+                    current.copy(
+                        overview =
+                            overview.copy(
+                                places = overview.places + result.places.filterKeys { it in batch },
+                                incomplete = overview.incomplete || result.incomplete,
+                            ),
+                    )
                 }
-            currentCoroutineContext().ensureActive()
-            mutableState.update {
-                if (generation != mutationGeneration ||
-                    it.overview == null ||
-                    it.plan?.summary?.id != planId
-                ) {
-                    it
-                } else {
-                    it.copy(overview = TravelOverviewState(result.places, loading = false, incomplete = result.incomplete))
-                }
+            }
+            if (!isCurrentOverview(planId, generation, request)) return
+            mutableState.update { current ->
+                current.copy(
+                    overview =
+                        current.overview?.let {
+                            it.copy(loading = false, incomplete = it.incomplete || !it.places.keys.containsAll(placeIds))
+                        },
+                )
             }
         } catch (exception: TravelPlanException) {
             currentCoroutineContext().ensureActive()
-            if (generation != mutationGeneration ||
-                state.value.overview == null ||
-                state.value.plan
-                    ?.summary
-                    ?.id != planId
-            ) {
-                return
-            }
+            if (!isCurrentOverview(planId, generation, request)) return
             when (exception.failure) {
                 TravelPlanFailure.UNAVAILABLE -> forgetUnavailablePlan(planId)
                 TravelPlanFailure.SIGN_IN_REQUIRED -> applyFailure(exception.failure)
@@ -446,7 +463,20 @@ class TravelPlannerViewModel(
         }
     }
 
+    private fun isCurrentOverview(
+        planId: String,
+        generation: Long,
+        request: Long,
+    ): Boolean =
+        generation == mutationGeneration &&
+            request == overviewRequest &&
+            state.value.overview != null &&
+            state.value.plan
+                ?.summary
+                ?.id == planId
+
     internal fun closeOverview() {
+        overviewRequest++
         mutableState.update { it.copy(overview = null) }
     }
 
