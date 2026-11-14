@@ -10,51 +10,49 @@ import io.ktor.http.HttpStatusCode
 class AuthRequestExecutor(
     private val authRemoteDataSource: AuthRemoteDataSource,
 ) {
-    suspend fun <T> execute(block: suspend () -> T): T {
+    suspend fun <Result> execute(block: suspend () -> Result): Result {
+        val session = AuthTokenStore.currentSession()
         return try {
             block()
-        } catch (clientRequestException: ClientRequestException) {
-            val statusCode = clientRequestException.response.status
-            val isAuthError = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
-            if (!isAuthError) {
-                throw clientRequestException
-            }
-
-            val staleAccessToken = AuthTokenStore.getAccessToken()
-            var isRefreshTokenAuthenticationFailed = false
-            val refreshedTokenPair =
-                AuthTokenStore.refreshTokens(staleAccessToken = staleAccessToken) {
-                    val storedRefreshToken = AuthTokenStore.getRefreshToken() ?: return@refreshTokens null
-                    try {
-                        val refreshTokenResponse =
-                            authRemoteDataSource.refreshToken(
-                                request = RefreshTokenRequest(refreshToken = storedRefreshToken),
-                            )
-                        AuthTokenStore.TokenPair(
-                            accessToken = refreshTokenResponse.accessToken,
-                            refreshToken = refreshTokenResponse.refreshToken,
-                        )
-                    } catch (refreshRequestException: ClientRequestException) {
-                        val refreshStatusCode = refreshRequestException.response.status
-                        val isRefreshAuthError =
-                            refreshStatusCode == HttpStatusCode.Unauthorized ||
-                                refreshStatusCode == HttpStatusCode.Forbidden
-                        if (isRefreshAuthError) {
-                            isRefreshTokenAuthenticationFailed = true
-                            return@refreshTokens null
-                        }
-                        throw refreshRequestException
-                    }
-                }
-
-            if (refreshedTokenPair == null) {
-                if (isRefreshTokenAuthenticationFailed) {
-                    AuthTokenStore.clearTokens()
-                }
-                throw clientRequestException
-            }
-
+        } catch (exception: ClientRequestException) {
+            val status = exception.response.status
+            if (status != HttpStatusCode.Unauthorized && status != HttpStatusCode.Forbidden) throw exception
+            if (refresh(session) == null || AuthTokenStore.currentSession().version != session.version) throw exception
             block()
         }
     }
+
+    internal suspend fun <Result> executeForSession(
+        sessionVersion: Long,
+        block: suspend (String) -> Result,
+    ): Result {
+        val session = AuthTokenStore.currentSession()
+        if (session.version != sessionVersion) throw AuthSessionChangedException()
+        val accessToken = session.tokens?.accessToken ?: throw AuthSessionChangedException()
+        val result =
+            try {
+                block(accessToken)
+            } catch (exception: ClientRequestException) {
+                if (exception.response.status != HttpStatusCode.Unauthorized) throw exception
+                val refreshed = refresh(session) ?: throw exception
+                if (AuthTokenStore.currentSession().version != session.version) throw AuthSessionChangedException()
+                block(refreshed.accessToken)
+            }
+        if (AuthTokenStore.currentSession().version != session.version) throw AuthSessionChangedException()
+        return result
+    }
+
+    private suspend fun refresh(session: AuthTokenStore.Session): AuthTokenStore.TokenPair? =
+        AuthTokenStore.refreshTokens(session) { refreshToken ->
+            try {
+                val response = authRemoteDataSource.refreshToken(RefreshTokenRequest(refreshToken = refreshToken))
+                AuthTokenStore.TokenPair(response.accessToken, response.refreshToken)
+            } catch (exception: ClientRequestException) {
+                val status = exception.response.status
+                if (status != HttpStatusCode.Unauthorized && status != HttpStatusCode.Forbidden) throw exception
+                null
+            }
+        }
 }
+
+internal class AuthSessionChangedException : Exception()

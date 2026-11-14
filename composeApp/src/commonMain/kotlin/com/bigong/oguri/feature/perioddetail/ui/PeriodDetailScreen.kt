@@ -14,10 +14,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
@@ -55,6 +57,7 @@ import oguri.composeapp.generated.resources.img_oguri_parasol
 import oguri.composeapp.generated.resources.period_detail_empty_places_hint
 import oguri.composeapp.generated.resources.period_detail_holiday_fallback
 import oguri.composeapp.generated.resources.period_detail_title
+import oguri.composeapp.generated.resources.travel_create_from_period
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
@@ -68,6 +71,8 @@ fun PeriodDetailScreen(
     onShareClick: () -> Unit,
     onSaveToggleClick: () -> Unit,
     onPlaceClick: (Long) -> Unit,
+    onCreateTravelPlan: (() -> Unit)? = null,
+    onTravelEntryVisible: (() -> Unit)? = null,
 ) {
     val periodDetail = periodDetailUiState.periodDetail
     val isInitialLoading =
@@ -201,6 +206,17 @@ fun PeriodDetailScreen(
                                 contentDescription = null,
                                 modifier = Modifier.height(132.dp),
                             )
+                        }
+                    }
+
+                    if (onCreateTravelPlan != null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            OutlinedButton(
+                                onClick = onCreateTravelPlan,
+                                modifier = Modifier.onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            ) {
+                                Text(stringResource(Res.string.travel_create_from_period))
+                            }
                         }
                     }
 

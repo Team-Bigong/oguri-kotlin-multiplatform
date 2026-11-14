@@ -20,6 +20,25 @@ require_environment_value() {
   printf "%s" "${ENVIRONMENT_VALUE}"
 }
 
+write_firebase_plist() {
+  variable_name="$1"
+  firebase_bundle_id="$2"
+  target_file="$3"
+  encoded_plist="$(printenv "$variable_name" || true)"
+  if [ -z "$encoded_plist" ]; then
+    return 0
+  fi
+  temporary_plist="$(mktemp "${target_file}.XXXXXXXX")" || return 1
+  if ! printf '%s' "$encoded_plist" | /usr/bin/base64 -D > "$temporary_plist" 2>/dev/null ||
+     ! /usr/bin/plutil -lint "$temporary_plist" >/dev/null 2>&1 ||
+     [ "$(/usr/bin/plutil -extract BUNDLE_ID raw -o - "$temporary_plist" 2>/dev/null)" != "$firebase_bundle_id" ]; then
+    rm -f "$temporary_plist"
+    echo "Invalid Firebase plist or bundle identifier: $variable_name" >&2
+    return 1
+  fi
+  mv -f "$temporary_plist" "$target_file"
+}
+
 ensure_java_runtime() {
   if /usr/libexec/java_home -v 17 >/dev/null 2>&1; then
     JAVA_HOME_VALUE="$(/usr/libexec/java_home -v 17)"
@@ -76,6 +95,13 @@ IOS_TEAM_ID_VALUE="$(require_environment_value "OGURI_IOS_TEAM_ID")"
 IOS_PRODUCT_NAME_VALUE="$(require_environment_value "OGURI_IOS_PRODUCT_NAME")"
 IOS_RELEASE_BUNDLE_IDENTIFIER_VALUE="$(require_environment_value "OGURI_IOS_RELEASE_BUNDLE_IDENTIFIER")"
 
+DEBUG_MAPS_API_KEY_VALUE="${GOOGLE_MAPS_IOS_API_KEY_DEBUG:-}"
+RELEASE_MAPS_API_KEY_VALUE="${GOOGLE_MAPS_IOS_API_KEY:-}"
+write_firebase_plist OGURI_IOS_FIREBASE_DEBUG_PLIST_BASE64 "${IOS_RELEASE_BUNDLE_IDENTIFIER_VALUE}.debug" \
+  "${REPOSITORY_ROOT_PATH}/iosApp/iosApp/GoogleService-Info-Debug.plist"
+write_firebase_plist OGURI_IOS_FIREBASE_RELEASE_PLIST_BASE64 "${IOS_RELEASE_BUNDLE_IDENTIFIER_VALUE}" \
+  "${REPOSITORY_ROOT_PATH}/iosApp/iosApp/GoogleService-Info-Release.plist"
+
 cat > "${LOCAL_PROPERTIES_FILE_PATH}" <<EOF
 debug.base.url=${DEBUG_BASE_URL_VALUE}
 release.base.url=${RELEASE_BASE_URL_VALUE}
@@ -90,6 +116,7 @@ cat > "${DEBUG_XCCONFIG_FILE_PATH}" <<EOF
 #include "../../version.properties"
 
 KEY_KAKAO=${KAKAO_KEY_VALUE}
+GOOGLE_MAPS_IOS_API_KEY=${DEBUG_MAPS_API_KEY_VALUE}
 
 PRODUCT_NAME=${IOS_PRODUCT_NAME_VALUE}
 PRODUCT_BUNDLE_IDENTIFIER=${IOS_RELEASE_BUNDLE_IDENTIFIER_VALUE}.debug
@@ -100,6 +127,7 @@ cat > "${RELEASE_XCCONFIG_FILE_PATH}" <<EOF
 #include "../../version.properties"
 
 KEY_KAKAO=${KAKAO_KEY_VALUE}
+GOOGLE_MAPS_IOS_API_KEY=${RELEASE_MAPS_API_KEY_VALUE}
 
 PRODUCT_NAME=${IOS_PRODUCT_NAME_VALUE}
 PRODUCT_BUNDLE_IDENTIFIER=${IOS_RELEASE_BUNDLE_IDENTIFIER_VALUE}

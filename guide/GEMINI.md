@@ -1,202 +1,281 @@
-# Oguri Server - Gemini Development Guide
+# Oguri Server - Development Guide
 
-> 이 문서는 Oguri 서버 모듈에서 AI(Gemini)가 코드를 제안하거나 수정할 때 반드시 따를 기준을 정의한다.
+> 이 문서는 Oguri 서버 모듈에서 AI가 코드를 제안하거나 수정할 때 반드시 따를 기준을 정의한다.
 
-> 나는 Kotlin + Spring Boot 기반 서버 개발자이며,코드는 "동작하는 코드"가 아니라 **"운영 가능한 코드"**여야 한다.
+> Kotlin + Spring Boot 기반 서버 코드는 "동작하는 코드"가 아니라 **운영 가능한 코드**여야 한다.
 
 ------------------------------------------------------------------------
 
 ## 1. 기본 철학
 
--   요청된 문제만 해결한다.
--   수정은 최소 범위로 한다.
--   기존 구조를 존중한다.
--   불필요한 추상화, 리팩터링, 구조 변경은 하지 않는다.
--   설계 변경이 필요하면 반드시 먼저 이유를 설명한다.
+- 요청된 문제만 해결한다.
+- 수정은 최소 범위로 한다.
+- 기존 구조를 존중한다.
+- 불필요한 추상화, 리팩터링, 구조 변경은 하지 않는다.
+- 설계 변경이 필요하면 먼저 이유와 영향 범위를 설명한다.
 
 코드는 우아하되 과시적이면 안 된다.
 
 ------------------------------------------------------------------------
 
-## 2. 기술 스택 및 아키텍처
+## 2. 현재 기술 스택
 
--   Kotlin
--   Spring Boot
--   Gradle (KTS)
--   JPA (QueryDSL 사용 가능)
--   Layered Architecture
+- Kotlin
+- Spring Boot
+- Gradle Kotlin DSL
+- Java 17 toolchain
+- Spring Web MVC
+- Spring Data JPA
+- PostgreSQL
+- Flyway
+- springdoc-openapi
+- JWT(`jjwt`)
+- Google/Apple/Kakao 인증 연동
+- `shared` Gradle 모듈 의존
 
-Controller → Service → Repository
+------------------------------------------------------------------------
 
--   Controller: 요청/응답 매핑
--   Service: 비즈니스 로직 + 트랜잭션
--   Repository: 데이터 접근 전용
+## 3. 서버 아키텍처
+
+단순한 Layered Architecture를 유지한다.
+
+```text
+Controller -> Service -> Repository -> Domain(Entity)
+```
+
+- Controller: 요청/응답 매핑, HTTP 파라미터/바디 수신
+- Service: 비즈니스 로직, 트랜잭션, 검증, DTO 조립
+- Repository: 데이터 접근 전용
+- Domain: JPA Entity와 Entity가 스스로 수행해야 할 최소 도메인 행동
+- DTO: API request/response 모델
+- Config: interceptor, swagger, CORS, auth context, HTTP client 설정
+- Util: JWT, 외부 identity token verifier 등 기술 유틸리티
 
 비즈니스 로직은 Repository에 두지 않는다.
 
 ------------------------------------------------------------------------
 
-## 3. 코드 수정 원칙 (매우 중요)
+## 4. 코드 수정 원칙
 
-### 3.1 최소 수정 원칙
+### 4.1 최소 수정 원칙
 
--   전체 파일 재작성 금지
--   기존 로직 보존
--   필요한 부분만 정확히 수정
--   import 정리 등 불필요한 변경 금지
--   함수 시그니처 변경 금지 (요청 없는 한)
+- 전체 파일 재작성 금지
+- 기존 로직 보존
+- 필요한 부분만 정확히 수정
+- import 정리 등 불필요한 변경 금지
+- 요청 없는 함수 시그니처 변경 금지
+- 요청 없는 의존성 추가 금지
 
 문제 해결이 목적이지 구조 개선이 목적이 아니다.
 
-### 3.2 안정성과 운영 고려
+### 4.2 안정성과 운영 고려
 
--   Null 안전성 고려
--   예외 처리 누락 금지
--   트랜잭션은 Service 계층에서만 사용
--   로그는 의미 있게 남긴다
--   테스트를 깨뜨리지 않는다
--   성능 영향이 있다면 반드시 명시한다
--   N+1 가능성 항상 고려한다
-
-------------------------------------------------------------------------
-
-## 4. 응답 스타일
-
--   모든 설명은 한국어로 작성한다.
--   불확실하면 추측하지 않는다.
--   모르면 모른다고 말한다.
--   설계 변경이 필요하면 먼저 질문한다.
--   대안이 있으면 장단점을 설명한다.
+- Null 안전성을 고려한다.
+- 예외 처리를 누락하지 않는다.
+- 트랜잭션은 Service 계층에서 관리한다.
+- 로그는 의미 있게 남긴다.
+- 테스트를 깨뜨리지 않는다.
+- 성능 영향이 있으면 반드시 명시한다.
+- N+1 가능성을 항상 고려한다.
 
 ------------------------------------------------------------------------
 
-## 5. 금지 사항
+## 5. 응답 스타일
 
--   과도한 리팩터링
--   전역 설정 변경
--   빌드 설정 대규모 수정
--   의존성 추가 (요청 없는 경우)
--   불필요한 디자인 패턴 도입
--   헥사고날/DDD 풀구조 전환
--   멀티 모듈 구조 변경
+- 모든 설명은 한국어로 작성한다.
+- 불확실하면 추측하지 않는다.
+- 모르면 모른다고 말한다.
+- 설계 변경이 필요하면 먼저 질문하거나 선택지를 제안한다.
+- 대안이 있으면 장단점을 설명한다.
 
 ------------------------------------------------------------------------
 
-## 6. 코드 스타일
+## 6. 금지 사항
 
--   명확한 변수명 (축약어 금지)
--   Early return 선호
--   불필요한 nullable 지양
--   Entity 직접 반환 금지
--   확장 함수 남용 금지
--   단순 변환은 Service에서 처리 (별도 Mapper 분리하지 않음)
-
-------------------------------------------------------------------------
-
-## 7. 예외 처리
-
--   RuntimeException 남발 금지
--   기존 커스텀 예외가 있으면 그것을 사용
--   HTTP 상태 코드 명확히 구분
--   GlobalExceptionHandler가 있다면 활용
+- 과도한 리팩터링
+- 전역 설정 변경
+- 빌드 설정 대규모 수정
+- 요청 없는 의존성 추가
+- 불필요한 디자인 패턴 도입
+- 헥사고날/DDD 풀구조 전환
+- 멀티 모듈 구조 변경
+- feature 단위 서버 패키지 재구성
+- Entity 직접 반환
+- 이미 적용된 Flyway migration 수정
 
 ------------------------------------------------------------------------
 
-## 8. 성능 원칙
+## 7. 코드 스타일
 
--   N+1 문제 고려
--   불필요한 객체 생성 지양
--   컬렉션 처리 시 시간 복잡도 고려
--   Fetch 전략은 의도를 명확히 설명
--   캐시는 근거 기반으로만 제안
-
-------------------------------------------------------------------------
-
-## 9. DB 원칙
-
--   트랜잭션은 Service에서 관리
--   Repository는 비즈니스 로직을 가지지 않는다
--   QueryDSL은 복잡한 동적 조건일 때만 사용
--   Flyway 사용
--   이미 적용된 마이그레이션 수정 금지
+- 명확한 변수명을 사용한다. 축약어를 지양한다.
+- Early return을 선호한다.
+- 불필요한 nullable을 지양한다.
+- Entity를 API 응답으로 직접 반환하지 않는다.
+- 확장 함수를 남용하지 않는다.
+- 단순 변환은 현재 구조에 맞춰 Service 내부 private 함수로 처리한다. 요청 없이 Mapper 패키지를 분리하지 않는다.
+- HTTP 상태 코드는 `ResponseStatusException` 등 기존 방식에 맞춰 명확히 구분한다.
 
 ------------------------------------------------------------------------
 
-## 10. 최종 기준
+## 8. DB 원칙
 
-코드는 "멋있게"가 아니라\
-**"10년 후에도 읽힐 수 있게"** 작성한다.
-
-나는 시니어 개발자다.\
-단순하지만 견고한 코드를 선호한다.
+- 트랜잭션은 Service에서 관리한다.
+- Repository는 비즈니스 로직을 가지지 않는다.
+- Flyway를 사용한다.
+- 이미 배포/적용된 migration은 수정하지 않고 새 migration을 추가한다.
+- JPA `open-in-view`는 false이다. Lazy loading 범위와 fetch 전략을 명확히 고려한다.
+- N+1이 예상되면 repository query 또는 service 조립 방식을 근거와 함께 조정한다.
 
 ------------------------------------------------------------------------
 
-# 11. 프로젝트 컨텍스트 (Oguri)
+## 9. 현재 프로젝트 컨텍스트
 
-Oguri는 **여행지 추천 API 서버**이다.
+Oguri 서버는 모바일 앱과 웹 어드민에 데이터를 제공하는 API 서버이다. 서버는 View 렌더링을 하지 않는다.
 
-모바일 앱에 데이터를 제공하는 서버이며, View 렌더링은 하지 않는다.
+### 핵심 패키지
+
+```text
+server/src/main/kotlin/com/bigong/oguri
+├─ Application.kt
+├─ config
+├─ controller
+├─ domain
+├─ dto
+│  ├─ request
+│  └─ response
+├─ repository
+├─ service
+└─ util
+```
+
+현재 실제 base package는 `com.bigong.oguri`이다.
 
 ### 핵심 도메인
 
-#### Place
+#### Destination
 
--   country
--   city
--   summary
--   description
--   recommendStartMonth (Int)
--   recommendEndMonth (Int)
--   distanceKm
--   averageBudget
--   bigMacIndex
--   createdAt / updatedAt
+- `country`
+- `name`
+- `summary`
+- `description`
+- `recommendStartMonth1`, `recommendEndMonth1`
+- `recommendStartMonth2`, `recommendEndMonth2`
+- `flightTimeMinutes`
+- `flightUrl`
+- `weatherTemp1`, `weatherPrecipitationMm1`
+- `weatherTemp2`, `weatherPrecipitationMm2`
+- `images`
 
-추천 기간은 문자열이 아니라 startMonth / endMonth 정수 컬럼으로
-관리한다.
+추천 기간은 문자열이 아니라 시작/종료 월 정수 컬럼 쌍으로 관리한다.
 
-#### PlaceImage
+#### DestinationImage
 
--   Place와 1:N 관계
--   displayOrder로 정렬
--   isThumbnail 필드 존재
--   응답 시 List`<String>`{=html} 형태로 반환
+- `destination`
+- `imageUrl`
+- `isThumbnail`
+- `sortOrder`
 
-이미지 URL을 문자열로 합쳐 저장하지 않는다.\
-별도 테이블로 정규화한다.
+이미지 URL을 문자열로 합쳐 저장하지 않는다. 별도 테이블로 정규화한다.
+
+#### DestinationExperience
+
+- `destinationId`
+- `title`
+- `description`
+- `thumbnailUrl`
+- `link`
+- `sortOrder`
+
+장소별 액티비티/체험 카드는 destination과 별도 테이블로 관리한다.
+
+#### Country
+
+- `name`
+- `currencyCode`
+- `bigMacIndex`
+
+국가별 통화 코드와 빅맥 지수는 국가 엔티티에서 관리한다.
+
+#### Member
+
+- `id`
+- `nickname`
+- `refreshToken`
+- `preferredDayOff`
+- `remainingDayOff`
+- `onboardingCompleted`
+- `updatedAt`
+
+`updateDayOffInfo`, `completeOnboarding`, `setNicknameOnce`, `updateRefreshToken`처럼 멤버가 스스로 수행해야 하는 상태 변경은 Entity method로 둔다.
+
+#### SavedRecommendation / SavedDestination / SearchLog / PublicHoliday
+
+- 저장 일정, 저장 여행지, 검색 로그, 공휴일은 별도 엔티티로 관리한다.
+- guest 요청은 인증 context에서 `GUEST` member id로 해석될 수 있다.
+
+#### Adjective / Noun
+
+- 랜덤 닉네임 생성을 위한 단어 테이블이다.
+- 닉네임 형식은 `형용사 명사_숫자5자리`이다.
 
 ------------------------------------------------------------------------
 
-# 12. 프로젝트 폴더 구조 기준
+## 10. 현재 API 구조
 
-단순한 Layered 구조를 유지한다.
+### Public/Auth API
 
-com.oguri.server\
-├─ controller\
-├─ service\
-├─ repository\
-├─ domain\
-├─ dto\
-├─ config\
-├─ exception\
-└─ util (필요 시)
+- `POST /api/v1/auth/login/kakao`
+- `POST /api/v1/auth/login/apple`
+- `POST /api/v1/auth/login/google`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/login/mock`
 
-### 구조 원칙
+### Home API
 
--   feature 단위 패키지 재구성 금지
--   domain/application/infrastructure 분리 금지
--   mapper 패키지 분리 금지
--   Entity는 domain에 위치
--   DTO는 dto 패키지에 위치
+- `GET /api/v1/home`
+- `GET /api/v1/home/weekly-top`
+- `GET /api/v1/home/monthly-top-periods`
+- `POST /api/v1/home/search-logs`
+- `GET /api/v1/home/trending-searches`
+- `GET /api/v1/home/search/autocomplete`
 
-예시 (Place):
+### Calendar/Destination/Member API
 
-controller/PlaceController.kt\
-service/PlaceService.kt\
-repository/PlaceRepository.kt\
-domain/Place.kt\
-domain/PlaceImage.kt\
-dto/PlaceResponse.kt
+- `GET /api/v1/calendar`
+- `GET /api/v1/calendar/detail`
+- `GET /api/v1/destinations/{id}`
+- `GET /api/v1/members/me`
+- `POST /api/v1/members/day-off`
+- `POST /api/v1/members/onboarding`
+- `POST /api/v1/members/saved-recommendations`
+- `DELETE /api/v1/members/saved-recommendations`
+- `POST /api/v1/members/saved-destinations/{id}`
+- `DELETE /api/v1/members/saved-destinations/{id}`
+- `DELETE /api/v1/members/me`
 
-파일 이동 및 패키지 구조 변경은 하지 않는다.
+### Admin API
+
+- Prefix: `/api/admin/v1`
+- Admin controller는 `@Hidden`으로 Swagger에서 숨긴다.
+- 인증은 `POST /api/admin/v1/auth/login` 후 `Authorization: Bearer {token}`을 사용한다.
+- 장소/국가: `GET/POST/PUT/DELETE /countries`, `GET/POST/PUT/DELETE /destinations`
+- 사용자: `GET/POST/PUT/DELETE /members`
+- 공휴일: `GET/POST/PUT/DELETE /public-holidays`
+
+------------------------------------------------------------------------
+
+## 11. 인증/인터셉터
+
+- `AuthInterceptor`는 `/api/**`에 적용하되 `/api/admin/**`, 카카오/애플 로그인, refresh 등 일부 경로는 제외한다.
+- Authorization header가 없으면 guest member id로 처리한다.
+- 보호된 member 저장/삭제/온보딩/회원 정보 엔드포인트는 guest 접근 시 `401`을 반환한다.
+- `AdminAuthInterceptor`는 `/api/admin/**`에 적용하고 admin login만 예외로 둔다.
+- CORS는 현재 모든 origin/method/header를 허용한다.
+
+------------------------------------------------------------------------
+
+## 12. 최종 기준
+
+코드는 "멋있게"가 아니라 **10년 후에도 읽힐 수 있게** 작성한다.
+
+단순하지만 견고한 코드를 선호한다.

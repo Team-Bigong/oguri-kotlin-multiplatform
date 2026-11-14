@@ -55,5 +55,18 @@ jobs:
           mkdir -p composeApp/src/debug
           printf '%s' "${GOOGLE_SERVICES_JSON_DEBUG}" > composeApp/src/debug/google-services.json
 
+      - name: Verify mobile state and recovery
+        run: ./gradlew :composeApp:testDebugUnitTest --stacktrace
+
+      - name: Upload mobile test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-reports
+          path: composeApp/build/reports/tests/testDebugUnitTest
+          if-no-files-found: ignore
+
       - name: Build debug app for verification
+        env:
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY_DEBUG }}
         run: ./gradlew :composeApp:assembleDebug --stacktrace

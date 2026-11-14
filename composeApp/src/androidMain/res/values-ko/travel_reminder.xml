@@ -1,0 +1,4 @@
+<resources>
+    <string name="travel_reminder_push_title">여행 알림</string>
+    <string name="travel_reminder_push_body">오구리에서 여행 일정을 확인해 보세요.</string>
+</resources>
