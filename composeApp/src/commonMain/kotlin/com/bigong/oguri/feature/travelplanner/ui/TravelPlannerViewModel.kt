@@ -68,6 +68,7 @@ class TravelPlannerViewModel(
     private var draftWrite: Job? = null
     private var resumeRequest: Long = 0
     private var overviewRequest: Long = 0
+    private var dayPlacesRequest: Long = 0
     private var addedPlaceForSave: TravelPlace? = null
     private var visitSaveConflictPlanId: String? = null
 
@@ -418,34 +419,52 @@ class TravelPlannerViewModel(
         language: String,
         hasPlaces: Boolean,
     ) {
-        if (!hasPlaces) {
+        val current = state.value
+        if (current.plan?.summary?.id != planId || current.selectedDay != dayNumber) return
+        val request = ++dayPlacesRequest
+        if (!hasPlaces || current.isOffline) {
             mutableState.update {
-                it.copy(dayPlaces = emptyMap(), dayPlacesLanguage = language, isLoadingDayPlaces = false, dayPlacesIncomplete = false)
+                it.copy(
+                    dayPlaces = it.dayPlaces.takeIf { _ -> hasPlaces && it.dayPlacesLanguage == language }.orEmpty(),
+                    dayPlacesLanguage = language,
+                    isLoadingDayPlaces = false,
+                    dayPlacesIncomplete = hasPlaces,
+                )
             }
             return
         }
-        mutableState.update { it.copy(isLoadingDayPlaces = true, dayPlacesIncomplete = false) }
+
+        fun isCurrentRequest(): Boolean {
+            val state = state.value
+            return request == dayPlacesRequest && !state.isOffline && state.selectedDay == dayNumber && state.plan?.summary?.id == planId
+        }
+
+        mutableState.update {
+            it.copy(
+                dayPlaces = it.dayPlaces.takeIf { _ -> it.dayPlacesLanguage == language }.orEmpty(),
+                isLoadingDayPlaces = true,
+                dayPlacesIncomplete = false,
+            )
+        }
         try {
             val result = placeRepository.forDay(planId, dayNumber, language)
             currentCoroutineContext().ensureActive()
+            if (!isCurrentRequest()) return
             mutableState.update {
-                if (it.selectedDay != dayNumber || it.plan?.summary?.id != planId) {
-                    it
-                } else {
-                    it.copy(
-                        dayPlaces = result.places,
-                        dayPlacesLanguage = language,
-                        isLoadingDayPlaces = false,
-                        dayPlacesIncomplete = result.incomplete,
-                    )
-                }
+                it.copy(
+                    dayPlaces = result.places,
+                    dayPlacesLanguage = language,
+                    isLoadingDayPlaces = false,
+                    dayPlacesIncomplete = result.incomplete,
+                )
             }
         } catch (exception: TravelPlanException) {
             currentCoroutineContext().ensureActive()
-            if (exception.failure == TravelPlanFailure.SIGN_IN_REQUIRED || exception.failure == TravelPlanFailure.UNAVAILABLE) {
-                if (exception.failure == TravelPlanFailure.UNAVAILABLE) forgetUnavailablePlan(planId) else applyFailure(exception.failure)
-            } else {
-                mutableState.update { it.copy(isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
+            if (!isCurrentRequest()) return
+            when (exception.failure) {
+                TravelPlanFailure.UNAVAILABLE -> forgetUnavailablePlan(planId)
+                TravelPlanFailure.SIGN_IN_REQUIRED -> applyFailure(exception.failure)
+                else -> mutableState.update { it.copy(isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
             }
         }
     }
@@ -454,7 +473,8 @@ class TravelPlannerViewModel(
         planId: String,
         language: String,
     ) {
-        val plan = state.value.plan?.takeIf { it.summary.id == planId } ?: return
+        val current = state.value
+        val plan = current.plan?.takeIf { it.summary.id == planId } ?: return
         val generation = mutationGeneration
         val request = ++overviewRequest
         val placeIds = plan.visits.mapNotNull { it.details.googlePlaceId }.toSet()
@@ -465,8 +485,17 @@ class TravelPlannerViewModel(
                     ?.places
                     .orEmpty()
             val dayPlaces = if (it.dayPlacesLanguage == language) it.dayPlaces else emptyMap()
-            it.copy(overview = TravelOverviewState((overviewPlaces + dayPlaces).filterKeys { id -> id in placeIds }, language = language))
+            val knownPlaces = (overviewPlaces + dayPlaces).filterKeys { id -> id in placeIds }
+            it.copy(
+                overview = TravelOverviewState(
+                    knownPlaces,
+                    language = language,
+                    loading = !current.isOffline,
+                    incomplete = current.isOffline && !knownPlaces.keys.containsAll(placeIds),
+                ),
+            )
         }
+        if (current.isOffline) return
         try {
             val known =
                 state.value.overview
@@ -516,6 +545,7 @@ class TravelPlannerViewModel(
     ): Boolean =
         generation == mutationGeneration &&
             request == overviewRequest &&
+            !state.value.isOffline &&
             state.value.overview != null &&
             state.value.plan
                 ?.summary

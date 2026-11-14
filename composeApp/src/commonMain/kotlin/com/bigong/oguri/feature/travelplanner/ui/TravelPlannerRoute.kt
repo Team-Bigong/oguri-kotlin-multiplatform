@@ -151,13 +151,13 @@ internal fun TravelPlanRoute(
             }
         }
     }
-    LaunchedEffect(viewModel, planId, state.selectedDay, plan?.summary?.id) {
-        if (plan != null) {
+    LaunchedEffect(viewModel, planId, state.selectedDay, plan?.summary?.id, state.isOffline) {
+        if (plan != null && !state.isOffline) {
             delay(250)
             viewModel.recordView(planId, state.selectedDay)
         }
     }
-    LaunchedEffect(viewModel, planId, state.selectedDay, language, placeIds, detailsRetry) {
+    LaunchedEffect(viewModel, planId, state.selectedDay, language, placeIds, detailsRetry, state.isOffline) {
         viewModel.loadDayPlaces(planId, state.selectedDay, language, hasPlaces = placeIds.isNotEmpty())
     }
     val overviewPlaceIds =
@@ -166,7 +166,7 @@ internal fun TravelPlanRoute(
             .orEmpty()
             .mapNotNull { it.details.googlePlaceId }
             .toSet()
-    LaunchedEffect(viewModel, planId, overviewPlaceIds, showOverview, language, overviewRetry) {
+    LaunchedEffect(viewModel, planId, overviewPlaceIds, showOverview, language, overviewRetry, state.isOffline) {
         if (showOverview) viewModel.loadOverviewPlaces(planId, language) else viewModel.closeOverview()
     }
     TravelPlanScreen(

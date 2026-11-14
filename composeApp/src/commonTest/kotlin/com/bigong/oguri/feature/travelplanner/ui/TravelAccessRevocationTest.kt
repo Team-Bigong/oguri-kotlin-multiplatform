@@ -477,6 +477,38 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun placeDetailsKeepLoadedPinsOfflineAndFetchMissingPinsAfterReconnect() =
+        runTest {
+            val plans = AccessPlans(overviewPlan(2))
+            val places = BatchOverviewPlaces().apply { dayIds = listOf("place-0") }
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery(), places)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.loadDayPlaces("plan", 1, "ko", hasPlaces = true)
+
+            plans.connectionFailure = true
+            viewModel.refreshPlan("plan")
+            viewModel.loadDayPlaces("plan", 1, "ko", hasPlaces = true)
+            viewModel.loadOverviewPlaces("plan", "ko")
+            val offline = viewModel.state.value
+            assertEquals(setOf("place-0"), offline.dayPlaces.keys)
+            assertEquals(setOf("place-0"), offline.overview?.places?.keys)
+            assertTrue(requireNotNull(offline.overview).incomplete)
+            assertFalse(offline.overview.loading)
+            assertEquals(1, places.dayRequests)
+            assertTrue(places.requests.isEmpty())
+
+            plans.connectionFailure = false
+            viewModel.refreshPlan("plan")
+            advanceUntilIdle()
+            viewModel.loadDayPlaces("plan", 1, "ko", hasPlaces = true)
+            viewModel.loadOverviewPlaces("plan", "ko")
+            assertEquals(2, places.dayRequests)
+            assertEquals(listOf(listOf("place-1")), places.requests)
+            assertFalse(requireNotNull(viewModel.state.value.overview).incomplete)
+        }
+
+    @Test
     fun overviewReusesTheSameLanguageDayCacheButReloadsForANewLanguage() =
         runTest {
             val places = BatchOverviewPlaces().apply { dayIds = (0 until 30).map { "place-$it" } }
@@ -798,6 +830,7 @@ private class BatchOverviewPlaces : TravelPlaceRepository by DeniedPlaces() {
     var failAtCall: Int? = null
     var firstBarrier: CompletableDeferred<Unit>? = null
     var dayIds: List<String> = emptyList()
+    var dayRequests: Int = 0
 
     override suspend fun forPlan(
         planId: String,
@@ -815,7 +848,10 @@ private class BatchOverviewPlaces : TravelPlaceRepository by DeniedPlaces() {
         planId: String,
         dayNumber: Int,
         language: String,
-    ): TravelDayPlaces = response(dayIds, language)
+    ): TravelDayPlaces {
+        dayRequests++
+        return response(dayIds, language)
+    }
 
     private fun response(
         ids: List<String>,
