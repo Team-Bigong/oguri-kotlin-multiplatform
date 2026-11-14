@@ -1,5 +1,10 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import com.bigong.oguri.core.util.extension.noRippleClickable
+import oguri.composeapp.generated.resources.ic_travel_close
+import oguri.composeapp.generated.resources.travel_search_close
+import oguri.composeapp.generated.resources.travel_place_count
+import oguri.composeapp.generated.resources.travel_day_number
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -97,22 +102,14 @@ internal fun TravelOverviewSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = Neutral0,
+        containerColor = com.bigong.oguri.core.designsystem.Neutral5,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     ) {
         Column(Modifier.fillMaxHeight(0.92f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(stringResource(Res.string.travel_overview), style = OguriTheme.typography.sectionTitle)
-            Row {
-                TravelTextButton(onClick = { showMap = !showMap }) {
-                    Text(
-                        stringResource(if (showMap) Res.string.travel_map_hide else Res.string.travel_map_show),
-                        color = OguriTheme.colors.textPrimary,
-                    )
-                }
-                if (showMap && !mapUnavailable && scene.markers.isNotEmpty()) {
-                    TravelTextButton(onClick = { viewportRequest++ }) {
-                        Text(stringResource(Res.string.travel_overview_map_fit), color = OguriTheme.colors.textPrimary)
-                    }
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(Res.string.travel_overview), Modifier.weight(1f), style = OguriTheme.typography.cardTitle)
+                Text(stringResource(Res.string.travel_place_count, plan.visits.size), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary)
+                TravelIconButton(onClick = onDismiss) { androidx.compose.material3.Icon(org.jetbrains.compose.resources.painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
             }
             if (showMap) {
                 if (mapUnavailable) {
@@ -129,10 +126,17 @@ internal fun TravelOverviewSheet(
                             onSelectVisit(id)
                         },
                         onUnavailable = { mapUnavailable = true },
-                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        modifier = Modifier.fillMaxWidth().height(170.dp),
                     )
                     if (scene.markers.isNotEmpty()) {
-                        Text(stringResource(Res.string.travel_overview_legend), style = OguriTheme.typography.bodySmall)
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            plan.visits.map { it.dayNumber }.distinct().sorted().forEach { day ->
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(Modifier.size(10.dp).background(Color(travelDayColor(day)), CircleShape))
+                                    Text(stringResource(Res.string.travel_day_number, day), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -167,35 +171,17 @@ internal fun TravelOverviewSheet(
                             }
                         }
                         items(visits, key = { it.id }) { visit ->
-                            TravelTextButton(onClick = { onSelectVisit(visit.id) }, modifier = Modifier.fillMaxWidth()) {
-                                Text(title(visit), modifier = Modifier.fillMaxWidth())
+                            Row(Modifier.fillMaxWidth().noRippleClickable(onClick = { onSelectVisit(visit.id) }).padding(horizontal = 8.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Box(Modifier.size(24.dp).background(Color(travelDayColor(day)), CircleShape), contentAlignment = Alignment.Center) {
+                                    Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = Neutral0)
+                                }
+                                Text(title(visit), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
+                                visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
                             }
                         }
                     }
                 if (state.places.isNotEmpty()) item { GooglePlacesAttribution(state.places.values.flatMap { it.attributions }) }
             }
-            if (canAdd) {
-                Box {
-                    TravelOutlineButton(onClick = { chooseDay = true }, modifier = Modifier.fillMaxWidth()) {
-                        Text(addDay?.let { travelDayLabel(dates, it) } ?: stringResource(Res.string.travel_choose_day))
-                    }
-                    DropdownMenu(expanded = chooseDay, onDismissRequest = { chooseDay = false }) {
-                        for (day in TravelPlan.UNASSIGNED_DAY..dates.dayCount) {
-                            DropdownMenuItem(
-                                text = { Text(travelDayLabel(dates, day)) },
-                                onClick = {
-                                    addDay = day
-                                    chooseDay = false
-                                },
-                            )
-                        }
-                    }
-                }
-                TravelPrimaryButton(enabled = addDay != null, onClick = { addDay?.let(onAdd) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(Res.string.travel_add_visit))
-                }
-            }
-            TravelTextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_cancel)) }
         }
     }
 }

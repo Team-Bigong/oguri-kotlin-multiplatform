@@ -794,6 +794,13 @@ class TravelPlannerViewModel(
         changeVisit(TravelVisitChange.Remove(visit, state.value.visitDraft?.structureRevision ?: return))
     }
 
+    internal fun removeVisitFromList(visit: TravelVisit) {
+        val current = state.value
+        val plan = current.plan ?: return
+        if (current.visitDraft != null || current.placeSearch != null || current.isOffline || current.canRetrySave) return
+        changeVisit(TravelVisitChange.Remove(visit, plan.structureRevision))
+    }
+
     internal fun moveVisit(
         visit: TravelVisit,
         offset: Int,
@@ -845,10 +852,10 @@ class TravelPlannerViewModel(
             val addedToVisibleDay = addedPlace != null && (change as? TravelVisitChange.Add)?.dayNumber == current.selectedDay
             val undo =
                 when (change) {
-                    is TravelVisitChange.Remove -> TravelVisitUndoAction(request.requestId, change.visit.dayNumber)
+                    is TravelVisitChange.Remove -> TravelVisitUndoAction(request.requestId, change.visit.dayNumber, change.visit.details.name ?: current.dayPlaces[change.visit.details.googlePlaceId]?.name)
                     is TravelVisitChange.Edit ->
                         if (change.dayNumber != change.visit.dayNumber) {
-                            TravelVisitUndoAction(request.requestId, change.visit.dayNumber)
+                            TravelVisitUndoAction(request.requestId, change.visit.dayNumber, change.visit.details.name ?: current.dayPlaces[change.visit.details.googlePlaceId]?.name)
                         } else {
                             current.visitUndo
                         }

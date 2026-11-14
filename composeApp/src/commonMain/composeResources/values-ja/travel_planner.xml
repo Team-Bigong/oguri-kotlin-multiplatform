@@ -215,4 +215,8 @@
     <string name="travel_reminder_status_on">オン</string>
     <string name="travel_card_date_range">%1$s - %2$s</string>
     <string name="travel_manual_note_placeholder">同行するメンバーにも表示されます</string>
+    <string name="travel_removed_visit">%1$sを削除しました</string>
+    <string name="travel_save_failed_label">保存できませんでした</string>
+    <string name="travel_place_count">%1$dか所</string>
+    <string name="travel_day_number">%1$d日目</string>
 </resources>

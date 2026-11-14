@@ -189,6 +189,7 @@ internal fun TravelPlanRoute(
         onDraftChange = viewModel::updateVisitDraft,
         onApplyVisit = viewModel::applyVisit,
         onRemoveVisit = viewModel::removeVisit,
+        onRemoveFromList = viewModel::removeVisitFromList,
         onSearchPlaces = viewModel::openPlaceSearch,
         onMarkerClick = { id ->
             viewModel.selectVisitFromMap(id)

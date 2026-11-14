@@ -64,6 +64,7 @@ internal fun TravelVisitChange.Reorder.canApplyTo(plan: TravelPlan): Boolean =
 internal data class TravelVisitUndoAction(
     val originalRequestId: String,
     val dayNumber: Int,
+    val title: String? = null,
 )
 
 internal data class TravelVisitDraft(

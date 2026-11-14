@@ -1,5 +1,14 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import oguri.composeapp.generated.resources.ic_travel_drag
+import oguri.composeapp.generated.resources.ic_travel_note
+import oguri.composeapp.generated.resources.ic_travel_undo
+import oguri.composeapp.generated.resources.travel_removed_visit
+import oguri.composeapp.generated.resources.travel_save_failed_label
+import oguri.composeapp.generated.resources.travel_delete
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -31,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -130,6 +140,7 @@ internal fun TravelPlanScreen(
     onDraftChange: (TravelVisitDraft?) -> Unit,
     onApplyVisit: () -> Unit,
     onRemoveVisit: () -> Unit,
+    onRemoveFromList: (TravelVisit) -> Unit,
     onSearchPlaces: () -> Unit,
     onMarkerClick: (String) -> Unit,
     onDirectionsOpened: () -> Unit,
@@ -233,11 +244,6 @@ internal fun TravelPlanScreen(
                     )
                 }
 
-                if (state.visitUndo != null && state.visitDraft == null && state.placeSearch == null) {
-                    TravelTextButton(onClick = onUndoVisit, enabled = canEdit, modifier = Modifier.padding(horizontal = 12.dp)) {
-                        Text(stringResource(Res.string.travel_undo_visit))
-                    }
-                }
             },
         ) {
             Row(
@@ -251,6 +257,10 @@ internal fun TravelPlanScreen(
                     color = Neutral100,
                     style = travelTextStyle(15, 18, FontWeight.Medium),
                 )
+                if (state.canRetrySave) {
+                    Text(stringResource(Res.string.travel_save_failed_label), color = com.bigong.oguri.core.designsystem.Orange50, style = OguriTheme.typography.bodySmall)
+                    TravelTextButton(onClick = onRetrySave, enabled = !state.isSaving) { Text(stringResource(Res.string.common_retry_button)) }
+                }
                 if (!state.isOffline && !state.isSaving && failure == null) {
                     Text(
                         stringResource(Res.string.travel_saved_status),
@@ -273,7 +283,7 @@ internal fun TravelPlanScreen(
             LazyColumn(
                 state = visitListState,
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             ) {
                 if (unappliedOrder != null) {
                     item(key = "unapplied-visit-order") {
@@ -306,6 +316,14 @@ internal fun TravelPlanScreen(
                         HorizontalDivider()
                     }
                 }
+                state.visitUndo?.let { undo ->
+                    item(key = "removed-visit") {
+                        Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral10, RoundedCornerShape(8.dp)).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(undo.title?.let { stringResource(Res.string.travel_removed_visit, it) } ?: stringResource(Res.string.travel_undo_visit), Modifier.weight(1f), style = OguriTheme.typography.bodySmall)
+                            TravelIconButton(onClick = onUndoVisit, enabled = canEdit) { Icon(painterResource(Res.drawable.ic_travel_undo), stringResource(Res.string.travel_undo_visit), Modifier.size(22.dp), tint = Neutral100) }
+                        }
+                    }
+                }
                 if (visits.isEmpty()) {
                     item {
                         Text(
@@ -329,6 +347,7 @@ internal fun TravelPlanScreen(
                         canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
                         canMoveUp = index > 0,
                         canMoveDown = index < visits.lastIndex,
+                        onRemove = { onRemoveFromList(visit) },
                         onOpen = { if (canEdit) onOpenVisit(visit) else onInspectVisit(visit.id) },
                         onMove = { offset -> onMoveVisit(visit, offset) },
                         onDragStart = {
@@ -438,6 +457,7 @@ private fun TravelVisitRow(
     canMoveUp: Boolean,
     canMoveDown: Boolean,
     onOpen: () -> Unit,
+    onRemove: () -> Unit,
     onMove: (Int) -> Unit,
     onDragStart: () -> Unit,
     onDrag: (Float) -> Unit,
@@ -447,79 +467,58 @@ private fun TravelVisitRow(
     val drag by rememberUpdatedState(onDrag)
     val dragFinished by rememberUpdatedState(onDragFinished)
     var showMenu by remember { mutableStateOf(false) }
-    Row(Modifier.background(if (selected) Mint10 else Neutral5)) {
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .heightIn(min = 48.dp)
-                    .semantics { this.selected = selected }
-                    .noRippleClickable(
-                        onClick = onOpen,
-                        interactionSource = remember { MutableInteractionSource() },
-                        enabled = canOpen,
-                    ).padding(vertical = 12.dp, horizontal = 4.dp),
+    var swiped by remember(visit.id) { mutableStateOf(false) }
+    val shape = RoundedCornerShape(8.dp)
+    Box(Modifier.fillMaxWidth().clip(shape)) {
+        if (swiped && canEdit) Box(
+            Modifier.align(Alignment.CenterEnd).width(64.dp).heightIn(min = 60.dp)
+                .background(com.bigong.oguri.core.designsystem.Orange50)
+                .noRippleClickable(onClick = onRemove), contentAlignment = Alignment.Center,
+        ) { Text(stringResource(Res.string.travel_delete), color = com.bigong.oguri.core.designsystem.Neutral0, style = OguriTheme.typography.labelLarge) }
+        Row(
+            Modifier.fillMaxWidth().offset(x = if (swiped && canEdit) (-64).dp else 0.dp)
+                .background(if (selected) Mint10 else Neutral5)
+                .pointerInput(visit.id, canEdit) {
+                    if (canEdit) detectHorizontalDragGestures { change, amount ->
+                        change.consume()
+                        if (amount < -8f) swiped = true else if (amount > 8f) swiped = false
+                    }
+                }.semantics { this.selected = selected },
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            val label = if (number == null) title else stringResource(Res.string.travel_visit_number, number, title)
-            Text(
-                label,
-                style = OguriTheme.typography.bodyLarge,
-                color = OguriTheme.colors.textPrimary,
-            )
-            if (selected) Text(stringResource(Res.string.travel_visit_selected), style = MaterialTheme.typography.labelSmall)
-            visit.details.category?.let {
-                Text(stringResource(it.label()), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
-            }
-            if (visit.details.note != null) {
-                Text(stringResource(Res.string.travel_has_note), style = MaterialTheme.typography.labelMedium)
-            }
-        }
-        if (canMoveUp || canMoveDown) {
-            Box {
-                TravelIconButton(
-                    onClick = { showMenu = true },
-                    enabled = canEdit,
-                    modifier =
-                        Modifier.pointerInput(visit.id, canEdit) {
-                            if (canEdit) {
-                                detectDragGesturesAfterLongPress(
-                                    onDragStart = { dragStart() },
-                                    onDragEnd = { dragFinished(true) },
-                                    onDragCancel = { dragFinished(false) },
-                                ) { change, delta ->
-                                    change.consume()
-                                    drag(delta.y)
-                                }
-                            }
-                        },
-                ) {
-                    Icon(
-                        painterResource(Res.drawable.btn_menu),
-                        stringResource(Res.string.travel_move_visit, title),
-                    )
+            Row(
+                Modifier.weight(1f).heightIn(min = 60.dp).noRippleClickable(enabled = canOpen, onClick = onOpen).padding(horizontal = 12.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(Modifier.size(24.dp).background(Mint70, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                    Text(number?.toString().orEmpty(), style = OguriTheme.typography.labelMedium, color = com.bigong.oguri.core.designsystem.Neutral0)
                 }
-                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.travel_move_up)) },
-                        enabled = canMoveUp,
-                        onClick = {
-                            showMenu = false
-                            onMove(-1)
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.travel_move_down)) },
-                        enabled = canMoveDown,
-                        onClick = {
-                            showMenu = false
-                            onMove(1)
-                        },
-                    )
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
+                        if (!visit.details.note.isNullOrBlank()) Icon(painterResource(Res.drawable.ic_travel_note), stringResource(Res.string.travel_has_note), Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
+                    }
+                }
+            }
+            if (canEdit && (canMoveUp || canMoveDown)) Box {
+                TravelIconButton(onClick = { showMenu = true }, enabled = canEdit,
+                    modifier = Modifier.pointerInput(visit.id, canEdit) {
+                        detectDragGesturesAfterLongPress(onDragStart = { dragStart() }, onDragEnd = { dragFinished(true) }, onDragCancel = { dragFinished(false) }) { change, delta -> change.consume(); drag(delta.y) }
+                    },
+                ) { Icon(painterResource(Res.drawable.ic_travel_drag), stringResource(Res.string.travel_move_visit, title), Modifier.size(20.dp), tint = OguriTheme.colors.textTertiary) }
+                if (showMenu) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, onDismissRequest = { showMenu = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
+                    androidx.compose.material3.Surface(shape = shape, color = Neutral0, shadowElevation = 4.dp) {
+                        Column {
+                            TravelTextButton(enabled = canMoveUp, onClick = { showMenu = false; onMove(-1) }) { Text(stringResource(Res.string.travel_move_up)) }
+                            TravelTextButton(enabled = canMoveDown, onClick = { showMenu = false; onMove(1) }) { Text(stringResource(Res.string.travel_move_down)) }
+                            TravelTextButton(onClick = { showMenu = false; onRemove() }) { Text(stringResource(Res.string.travel_delete), color = com.bigong.oguri.core.designsystem.Orange50) }
+                        }
+                    }
                 }
             }
         }
     }
-    HorizontalDivider()
 }
 
 @Composable

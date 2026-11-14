@@ -1,5 +1,7 @@
 package com.bigong.oguri.feature.travelplanner.ui.model
 
+import androidx.compose.ui.graphics.toArgb
+import com.bigong.oguri.core.designsystem.*
 import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
@@ -13,22 +15,17 @@ data class TravelMapMarker(
     val dayNumber: Int? = null,
 ) {
     val colorArgb: Int
-        get() = if (selected) 0xff244da5.toInt() else travelDayColor(dayNumber)
+        get() = if (selected) Mint80.toArgb() else travelDayColor(dayNumber)
 }
 
 internal fun travelDayColor(dayNumber: Int?): Int =
-    when (dayNumber) {
-        null -> 0xff007d69.toInt()
-        0 -> 0xff616161.toInt()
-        else ->
-            when ((dayNumber - 1) % 5) {
-                0 -> 0xff007d69.toInt()
-                1 -> 0xff244da5.toInt()
-                2 -> 0xff9c3e00.toInt()
-                3 -> 0xff78429c.toInt()
-                else -> 0xffa12655.toInt()
-            }
-    }
+    when (((dayNumber ?: 1).coerceAtLeast(1) - 1) % 5) {
+        0 -> Mint70
+        1 -> Orange40
+        2 -> Mint90
+        3 -> Orange70
+        else -> Neutral70
+    }.toArgb()
 
 data class TravelMapLine(
     val points: List<TravelCoordinates>,
@@ -78,7 +75,7 @@ internal fun travelOverviewScene(
                     TravelMapMarker(
                         visit.id,
                         coordinates,
-                        if (visit.dayNumber == TravelPlan.UNASSIGNED_DAY) "–" else visit.dayNumber.toString(),
+                        (visits.filter { it.dayNumber == visit.dayNumber }.indexOf(visit) + 1).toString(),
                         selected = false,
                         dayNumber = visit.dayNumber,
                     )

@@ -75,7 +75,7 @@ internal fun TravelPlanPane(
         val maxMapHeight = (maxHeight - chromeHeight - (112 * density.fontScale).dp).coerceAtLeast(0.dp)
         val canShowMap = maxMapHeight >= 120.dp
         val showMap = canShowMap && mapExpanded
-        val mapHeight = 202.dp.coerceAtMost(maxMapHeight)
+        val mapHeight = 182.dp.coerceAtMost(maxMapHeight)
         Column(Modifier.fillMaxSize()) {
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
             Spacer(Modifier.height(16.dp))

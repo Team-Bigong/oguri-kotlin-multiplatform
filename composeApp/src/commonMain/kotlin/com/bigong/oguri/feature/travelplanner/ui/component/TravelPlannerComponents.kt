@@ -152,8 +152,8 @@ internal fun TravelPrimaryButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        backgroundColor = if (!enabled) Neutral10 else if (OguriTheme.isDarkTheme) Mint40 else Mint70,
-        contentColor = if (OguriTheme.isDarkTheme) Neutral100 else Color.White,
+        backgroundColor = if (!enabled) Neutral10 else Mint70,
+        contentColor = Neutral0,
         minHeight = 45.dp,
         textStyle = textStyle,
         content = content,
@@ -180,7 +180,7 @@ internal fun TravelOutlineButton(
     TravelButton(
         onClick, modifier, enabled, Mint5, borderColor = Mint70,
         textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
-        contentColor = if (OguriTheme.isDarkTheme) Mint90 else Mint70,
+        contentColor = Mint70,
         minHeight = 45.dp,
         content = content,
     )
@@ -320,9 +320,18 @@ internal fun TravelBottomAction(
 
 @Composable
 internal fun travelTextStyle(size: Int, lineHeight: Int, weight: FontWeight = FontWeight.Normal): TextStyle =
-    OguriTheme.typography.bodyMedium.copy(
-        fontSize = size.sp,
-        lineHeight = lineHeight.sp,
-        fontWeight = weight,
-        letterSpacing = 0.sp,
-    )
+    with(OguriTheme.typography) {
+        when {
+            size >= 28 -> heroTitle
+            size >= 22 -> sectionTitle
+            size >= 18 -> cardTitle
+            size >= 15 && weight >= FontWeight.Medium -> cardSubtitle
+            size >= 15 -> bodyLarge
+            size == 14 && weight >= FontWeight.SemiBold -> labelLarge
+            size == 14 -> bodyMedium
+            size == 13 -> bodySmall
+            size == 12 && weight >= FontWeight.Medium -> labelMedium
+            size == 12 -> caption
+            else -> labelSmall
+        }
+    }

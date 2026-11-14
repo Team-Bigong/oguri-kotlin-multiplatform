@@ -215,4 +215,8 @@
     <string name="travel_reminder_status_on">켜짐</string>
     <string name="travel_card_date_range">%1$s - %2$s</string>
     <string name="travel_manual_note_placeholder">함께 가는 멤버에게도 보여요</string>
+    <string name="travel_removed_visit">%1$s을 삭제했어요</string>
+    <string name="travel_save_failed_label">저장하지 못했어요</string>
+    <string name="travel_place_count">%1$d곳</string>
+    <string name="travel_day_number">%1$d일차</string>
 </resources>
