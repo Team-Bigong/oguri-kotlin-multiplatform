@@ -1,5 +1,18 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.material3.Icon
+import androidx.compose.ui.text.font.FontWeight
+import org.jetbrains.compose.resources.painterResource
+import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.designsystem.*
+import com.bigong.oguri.feature.travelplanner.ui.TravelDateButton
+import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
+import com.bigong.oguri.feature.travelplanner.ui.travelCardDates
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -118,51 +131,75 @@ internal fun TravelDetailsDialog(
         containerColor = Neutral0,
         onDismissRequest = { if (!busy) onDismiss() },
         title = { Text(stringResource(if (showEditor) Res.string.travel_edit_trip else Res.string.travel_trip_info)) },
+        showBottomActions = showEditor,
+        actions = {
+            if (!showEditor && canEdit) TravelTextButton(enabled = !busy, onClick = { editing = true }) { Text(stringResource(Res.string.travel_edit_action)) }
+            else Spacer(Modifier.size(48.dp))
+        },
         text = {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 if (showEditor) {
-                    OutlinedTextField(
-                        title,
-                        { title = it },
-                        label = { Text(stringResource(Res.string.travel_title)) },
-                        enabled = !busy,
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        textStyle = OguriTheme.typography.bodyLarge,
-                        colors = TravelFieldColors(),
-                    )
-                    cities.forEach { selected ->
-                        TravelOutlineButton(enabled = !busy && cities.size > 1, onClick = { cities = cities - selected }, modifier = Modifier.fillMaxWidth()) {
-                            Text(selected + if (cities.size > 1) " ×" else "")
+                    TravelPlaceField(title, { title = it }, Res.string.travel_title, Res.string.travel_title, TravelPlanDetails.MAX_TEXT_LENGTH, !busy)
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(Res.string.travel_city), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(Neutral0, RoundedCornerShape(8.dp))
+                            .border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
+                            .noRippleClickable(enabled = !busy && cities.size < 10, onClick = onOpenCitySearch).padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = Mint40)
+                            Text(cities.joinToString(" · "), Modifier.weight(1f), style = OguriTheme.typography.bodyLarge)
+                            Text(stringResource(Res.string.travel_search_cities), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        }
+                        if (cities.size > 1) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                cities.forEach { selected -> TravelTextButton(enabled = !busy, onClick = { cities = cities - selected }) { Text("$selected ×") } }
+                            }
+                            Text(stringResource(Res.string.travel_primary_city), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         }
                     }
-                    TravelOutlineButton(onClick = onOpenCitySearch, enabled = !busy && cities.size < 10, modifier = Modifier.fillMaxWidth()) {
-                        Text(stringResource(Res.string.travel_add_city))
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(Res.string.travel_actual_dates), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            TravelDateButton(stringResource(Res.string.travel_start_date), dates?.start, !busy, Modifier.weight(1f)) { chooseDates = true }
+                            TravelDateButton(stringResource(Res.string.travel_end_date), dates?.endInclusive, !busy, Modifier.weight(1f)) { chooseDates = true }
+                        }
                     }
-                    TravelOutlineButton(onClick = { chooseDates = true }, enabled = !busy, modifier = Modifier.fillMaxWidth()) {
-                        dates?.let { Text(com.bigong.oguri.feature.travelplanner.ui.travelDateRange(it)) }
+                    if (dates != null && dates.dayCount < current.dates.dayCount) {
+                        val shape = RoundedCornerShape(8.dp)
+                        Column(Modifier.fillMaxWidth().background(Orange5, shape).border(1.dp, Orange20, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(stringResource(Res.string.travel_shortened_title, current.dates.dayCount, dates.dayCount), style = OguriTheme.typography.cardSubtitle)
+                            if (affected > 0) {
+                                val affectedDays = plan.visits.filter { it.dayNumber > dates.dayCount }.map { it.dayNumber }.distinct().sorted().map { day -> stringResource(Res.string.travel_day_number, day) }
+                                val days = if (affectedDays.size == 2) stringResource(Res.string.travel_two_days, affectedDays[0], affectedDays[1]) else affectedDays.joinToString(", ")
+                                Text(stringResource(Res.string.travel_shortened_visits, days, affected, dates.dayCount), style = OguriTheme.typography.caption, color = OguriTheme.colors.textSecondary)
+                            }
+                        }
                     }
-                    if (affected > 0) Text(stringResource(Res.string.travel_details_move_unassigned, affected))
                 } else {
-                    Text(current.title, style = OguriTheme.typography.cardTitle)
-                    Text(current.cities.joinToString(" · "))
-                    Text(
-                        stringResource(
-                            Res.string.travel_dates_value,
-                            com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(current.dates.start),
-                            com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(current.dates.endInclusive),
-                        ),
-                    )
-                    current.source?.let { source ->
-                        Text(stringResource(Res.string.travel_source), style = OguriTheme.typography.cardSubtitle)
-                        if (source.startDate != null && source.endDate != null) {
-                            Text(
-                                stringResource(Res.string.travel_recommended_dates, com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(source.startDate), com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(source.endDate)),
-                            )
+                    val shape = RoundedCornerShape(8.dp)
+                    Column(Modifier.fillMaxWidth().clip(shape).background(Neutral0).border(1.dp, OguriTheme.colors.borderStrong, shape)) {
+                        Text(current.title, Modifier.fillMaxWidth().background(Mint70).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = Neutral0)
+                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(stringResource(Res.string.travel_info_dates, travelCardDates(current.dates, includeYear = true), current.dates.dayCount), style = OguriTheme.typography.cardSubtitle)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
+                                Text(current.cities.joinToString(" · "), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                            }
                         }
-                        Text(stringResource(Res.string.travel_source_explanation))
-                        TravelTextButton(enabled = !busy, onClick = { onOpenSource(source) }) {
-                            Text(stringResource(Res.string.travel_open_source))
+                    }
+                    current.source?.let { source ->
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(painterResource(Res.drawable.ic_calendar), null, Modifier.size(24.dp), tint = Mint40)
+                                Text(stringResource(Res.string.travel_source), style = OguriTheme.typography.cardSubtitle)
+                            }
+                            Column(Modifier.fillMaxWidth().background(Mint5, shape).border(1.dp, Mint40, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                if (source.startDate != null && source.endDate != null) Text(stringResource(Res.string.travel_card_date_range, travelWeekDate(source.startDate), travelWeekDate(source.endDate)), style = OguriTheme.typography.cardSubtitle)
+                                Text(stringResource(Res.string.travel_source_explanation), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                    TravelTextButton(enabled = !busy, onClick = { onOpenSource(source) }) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Text(stringResource(Res.string.travel_open_source)); Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(16.dp)) } }
+                                }
+                            }
                         }
                     }
                 }
@@ -171,7 +208,7 @@ internal fun TravelDetailsDialog(
         },
         confirmButton = {
             if (showEditor) {
-                TravelPrimaryButton(enabled = !busy && valid && failure != TravelPlanFailure.CONFLICT, onClick = {
+                TravelPrimaryButton(modifier = Modifier.fillMaxWidth(), enabled = !busy && valid && failure != TravelPlanFailure.CONFLICT, onClick = {
                     if (dates != null && timeZone != null) {
                         onApply(TravelPlanDetails(city.trim(), timeZone, title.trim(), dates, current.source, cities), affected)
                     }
@@ -180,11 +217,7 @@ internal fun TravelDetailsDialog(
                 TravelPrimaryButton(enabled = !busy, onClick = { editing = true }) { Text(stringResource(Res.string.travel_edit_trip)) }
             }
         },
-        dismissButton = {
-            TravelTextButton(enabled = !busy, onClick = { if (showEditor) editing = false else onDismiss() }) {
-                Text(stringResource(if (showEditor) Res.string.travel_cancel else Res.string.travel_search_close))
-            }
-        },
+
     )
     if (citySearch != null) TravelCitySearchDialog(
         state = citySearch, recommendedCities = current.cities, selectedCities = cities,

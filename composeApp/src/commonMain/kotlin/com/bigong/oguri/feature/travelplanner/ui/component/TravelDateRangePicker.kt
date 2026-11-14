@@ -72,26 +72,41 @@ internal fun TravelDateRangePicker(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun TravelTimePicker(onDismiss: () -> Unit, onSelected: (String) -> Unit) {
-    val state = rememberTimePickerState(initialHour = 20, is24Hour = false)
+internal fun TravelTimePicker(onDismiss: () -> Unit, initialTime: LocalTime? = null, onSelected: (String) -> Unit) {
+    val state = rememberTimePickerState(initialHour = initialTime?.hour ?: 20, initialMinute = initialTime?.minute ?: 0, is24Hour = false)
     TravelFormSheet(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.travel_reminder_time)) },
-        text = { TimePicker(state = state) },
+        text = { TimePicker(state = state, colors = TimePickerDefaults.colors(
+            clockDialColor = OguriTheme.colors.backgroundSecondary,
+            clockDialSelectedContentColor = com.bigong.oguri.core.designsystem.Neutral0,
+            clockDialUnselectedContentColor = OguriTheme.colors.textPrimary,
+            selectorColor = Mint70, containerColor = OguriTheme.colors.backgroundSecondary,
+            periodSelectorBorderColor = Mint70,
+            periodSelectorSelectedContainerColor = Mint70,
+            periodSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
+            periodSelectorSelectedContentColor = com.bigong.oguri.core.designsystem.Neutral0,
+            periodSelectorUnselectedContentColor = OguriTheme.colors.textSecondary,
+            timeSelectorSelectedContainerColor = Mint5,
+            timeSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
+            timeSelectorSelectedContentColor = OguriTheme.colors.textPrimary,
+            timeSelectorUnselectedContentColor = OguriTheme.colors.textSecondary,
+        )) },
         confirmButton = { TravelPrimaryButton(onClick = { onSelected(state.hour.toString().padStart(2, '0') + ":" + state.minute.toString().padStart(2, '0')) }) { Text(stringResource(Res.string.travel_apply)) } },
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun TravelSingleDatePicker(onDismiss: () -> Unit, onSelected: (LocalDate) -> Unit) {
-    val state = rememberDatePickerState()
+internal fun TravelSingleDatePicker(onDismiss: () -> Unit, initialDate: LocalDate? = null, onSelected: (LocalDate) -> Unit) {
+    var selected by remember { mutableStateOf(initialDate) }
+    var month by remember { mutableStateOf((initialDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date).let { LocalDate(it.year, it.month, 1) }) }
     TravelFullScreenForm(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(Res.string.travel_reminder_date)) },
-        text = { DatePicker(state, title = null, headline = null, showModeToggle = false) },
+        text = { TravelMonthCalendar(month, selected, selected, null, null, onMonth = { month = it }, onDate = { selected = it }) },
         confirmButton = {
-            TravelPrimaryButton(enabled = state.selectedDateMillis != null, onClick = { state.selectedDateMillis?.let { onSelected(Instant.fromEpochMilliseconds(it).toLocalDateTime(TimeZone.UTC).date) } }, modifier = Modifier.fillMaxWidth()) {
+            TravelPrimaryButton(enabled = selected != null, onClick = { selected?.let(onSelected) }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(Res.string.travel_apply))
             }
         },

@@ -127,7 +127,7 @@
     <string name="travel_undo_unavailable">The deletion or move can no longer be undone.</string>
     <string name="travel_change_visit_undone">Visit change undone</string>
     <string name="travel_my_reminder">My reminder</string>
-    <string name="travel_reminder_explanation">One reminder before departure, sent to this device. Changing trip dates cancels it.</string>
+    <string name="travel_reminder_explanation">We’ll notify you once on this device</string>
     <string name="travel_reminder_off">Off</string>
     <string name="travel_reminder_scheduled">%1$s</string>
     <string name="travel_reminder_pending">Scheduled</string>
@@ -135,8 +135,8 @@
     <string name="travel_reminder_sent">Sent</string>
     <string name="travel_reminder_failed">Could not deliver. Choose a new time to try again.</string>
     <string name="travel_reminder_turn_off">Turn off reminder</string>
-    <string name="travel_reminder_date">Reminder date (YYYY-MM-DD)</string>
-    <string name="travel_reminder_time">Reminder time (HH:mm)</string>
+    <string name="travel_reminder_date">Reminder date</string>
+    <string name="travel_reminder_time">Reminder time</string>
     <string name="travel_reminder_before_departure">Choose a future time before departure on %1$s.</string>
     <string name="travel_reminder_invalid_time">Check the date, time and time zone. The reminder must be in the future and before departure.</string>
     <string name="travel_reminder_not_available">Reminders are currently unavailable or the trip has already started.</string>
@@ -154,8 +154,8 @@
     <string name="travel_modified_days">Updated %1$d days ago</string>
     <string name="travel_changes_trip">Trip settings</string>
     <string name="travel_trip_info">Trip information</string>
-    <string name="travel_source">Recommendation source</string>
-    <string name="travel_source_explanation">These are the original recommendation details. Your trip dates and personal leave balance are separate.</string>
+    <string name="travel_source">Originally recommended dates</string>
+    <string name="travel_source_explanation">Separate from your actual travel dates and remaining leave.</string>
     <string name="travel_open_source">Open original recommendation</string>
     <string name="travel_latest_saved_values">Currently saved values (your input is kept below)</string>
     <string name="travel_value_not_set">Not set</string>
@@ -296,4 +296,12 @@
     <string name="travel_delete_visit_action">Delete visit</string>
     <string name="travel_directions_compact">Directions ↗</string>
     <string name="travel_note_label">Note</string>
+    <string name="travel_edit_action">Edit</string>
+    <string name="travel_info_dates">%1$s (%2$d days)</string>
+    <string name="travel_shortened_title">Your trip shortens from %1$d to %2$d days</string>
+    <string name="travel_shortened_visits">The %2$d visits on %1$s move to the end of day %3$d without being deleted.</string>
+    <string name="travel_reminder_heading">Remind you before departure?</string>
+    <string name="travel_reminder_toggle">Departure reminder</string>
+    <string name="travel_reminder_date_hint">Choose a time before departure on %1$s. Changing the trip dates cancels the reminder.</string>
+    <string name="travel_two_days">%1$s and %2$s</string>
 </resources>

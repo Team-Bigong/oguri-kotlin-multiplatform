@@ -366,7 +366,7 @@ internal fun CreateTravelPlanScreen(
 }
 
 @Composable
-private fun TravelDateButton(
+internal fun TravelDateButton(
     label: String,
     date: LocalDate?,
     enabled: Boolean,
