@@ -422,11 +422,11 @@ private fun TravelSearchSelectionMark(selected: Boolean) {
 }
 
 @Composable
-internal fun GooglePlacesAttribution(attributions: List<TravelPlaceAttribution>) {
+internal fun GooglePlacesAttribution(attributions: List<TravelPlaceAttribution>, includeGoogleBranding: Boolean = true) {
     val uriHandler = LocalUriHandler.current
     val textColor = OguriTheme.colors.textTertiary
     Column(Modifier.fillMaxWidth().heightIn(min = 24.dp).padding(vertical = 4.dp)) {
-        Text(
+        if (includeGoogleBranding) Text(
             stringResource(Res.string.travel_google_maps_attribution),
             color = textColor,
             style = OguriTheme.typography.caption,

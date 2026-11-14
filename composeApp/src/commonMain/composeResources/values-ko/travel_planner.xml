@@ -60,7 +60,7 @@
     <string name="travel_map_show">지도 펼치기</string>
     <string name="travel_map_hide">지도 접기</string>
     <string name="travel_map_fit">이 날짜 전체 보기</string>
-    <string name="travel_map_unavailable">지도를 불러오지 못했어요. 일정은 계속 볼 수 있어요.</string>
+    <string name="travel_map_unavailable">지도를 불러오지 못했어요</string>
     <string name="travel_map_sequence">연결선은 방문 순서를 보여줘요.</string>
     <string name="travel_place_details_unavailable">일부 장소 정보를 불러오지 못했어요.</string>
     <string name="travel_visit_fallback">방문 장소 %1$d</string>
@@ -279,4 +279,12 @@
     <string name="travel_selected_range">%1$s - %2$s · %3$d일</string>
     <string name="travel_confirm_dates">이 날짜로 정하기</string>
     <string name="travel_calendar_recommendation">점이 찍힌 날부터 %1$d일까지가 추천받은 기간이에요</string>
+    <string name="travel_total_place_count">장소 %1$d곳</string>
+    <string name="travel_order_save_failed">순서를 저장하지 못했어요</string>
+    <string name="travel_order_conflict_description">다른 사람이 방문 목록을 바꿨어요. 내가 정한 순서는 아래에 그대로 있어요.</string>
+    <string name="travel_discard_order">내 순서 버리기</string>
+    <string name="travel_apply_order">이 순서로 적용</string>
+    <string name="travel_saved_day_order">%1$d일차 · 지금 저장된 순서</string>
+    <string name="travel_just_added">방금 추가됨</string>
+    <string name="travel_retry">다시 시도</string>
 </resources>

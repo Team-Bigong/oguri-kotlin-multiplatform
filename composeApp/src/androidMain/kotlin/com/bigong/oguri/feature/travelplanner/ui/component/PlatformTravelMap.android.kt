@@ -127,6 +127,7 @@ internal actual fun PlatformTravelMap(
                     .addMarker(
                         MarkerOptions()
                             .position(marker.coordinates.toLatLng())
+                            .title(marker.title ?: marker.label)
                             .anchor(0.5f, 0.5f)
                             .zIndex(if (marker.selected) 1f else 0f)
                             .icon(BitmapDescriptorFactory.fromBitmap(marker.bitmap(density))),

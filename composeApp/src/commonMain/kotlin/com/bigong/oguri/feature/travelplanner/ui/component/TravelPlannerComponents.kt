@@ -64,7 +64,7 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_network_error_message
-import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.ic_travel_back
 import oguri.composeapp.generated.resources.travel_back
 import oguri.composeapp.generated.resources.travel_conflict
@@ -268,7 +268,7 @@ internal fun TravelLoadFailure(
 internal fun TravelInlineFailure(
     failure: TravelPlanFailure,
     onRetry: (() -> Unit)? = null,
-    retryLabel: String = stringResource(Res.string.common_retry_button),
+    retryLabel: String = stringResource(Res.string.travel_retry),
     message: String? = null,
 ) {
     Column(

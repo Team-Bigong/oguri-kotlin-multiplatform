@@ -60,7 +60,7 @@
     <string name="travel_map_show">Show map</string>
     <string name="travel_map_hide">Hide map</string>
     <string name="travel_map_fit">Show all stops</string>
-    <string name="travel_map_unavailable">The map could not load. You can still use the itinerary.</string>
+    <string name="travel_map_unavailable">Couldn’t load the map</string>
     <string name="travel_map_sequence">Lines show the order of your visits.</string>
     <string name="travel_place_details_unavailable">Some place details could not load.</string>
     <string name="travel_visit_fallback">Place %1$d</string>
@@ -279,4 +279,12 @@
     <string name="travel_selected_range">%1$s - %2$s · %3$d days</string>
     <string name="travel_confirm_dates">Use these dates</string>
     <string name="travel_calendar_recommendation">The dotted dates through the %1$d are the recommended period.</string>
+    <string name="travel_total_place_count">%1$d places</string>
+    <string name="travel_order_save_failed">Couldn’t save the order</string>
+    <string name="travel_order_conflict_description">Someone else changed the visits. Your order is preserved below.</string>
+    <string name="travel_discard_order">Discard my order</string>
+    <string name="travel_apply_order">Apply this order</string>
+    <string name="travel_saved_day_order">Day %1$d · Saved order</string>
+    <string name="travel_just_added">Just added</string>
+    <string name="travel_retry">Try again</string>
 </resources>

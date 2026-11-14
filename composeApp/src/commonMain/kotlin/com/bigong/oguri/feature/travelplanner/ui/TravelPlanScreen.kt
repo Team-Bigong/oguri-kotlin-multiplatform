@@ -9,6 +9,7 @@ import oguri.composeapp.generated.resources.ic_travel_undo
 import oguri.composeapp.generated.resources.travel_removed_visit
 import oguri.composeapp.generated.resources.travel_save_failed_label
 import oguri.composeapp.generated.resources.travel_delete
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -85,7 +86,7 @@ import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_menu
 import oguri.composeapp.generated.resources.ic_travel_more
 import oguri.composeapp.generated.resources.calendar_month_day
-import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.ic_travel_plus
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
@@ -105,7 +106,12 @@ import oguri.composeapp.generated.resources.ic_travel_offline
 import oguri.composeapp.generated.resources.travel_offline_snapshot
 import oguri.composeapp.generated.resources.travel_order_cannot_reapply
 import oguri.composeapp.generated.resources.travel_order_matches
-import oguri.composeapp.generated.resources.travel_order_mine
+import oguri.composeapp.generated.resources.travel_order_save_failed
+import oguri.composeapp.generated.resources.travel_order_conflict_description
+import oguri.composeapp.generated.resources.travel_discard_order
+import oguri.composeapp.generated.resources.travel_apply_order
+import oguri.composeapp.generated.resources.travel_saved_day_order
+import oguri.composeapp.generated.resources.travel_just_added
 import oguri.composeapp.generated.resources.travel_overlapping_visits
 import oguri.composeapp.generated.resources.travel_place_details_unavailable
 import oguri.composeapp.generated.resources.travel_reload
@@ -202,10 +208,11 @@ internal fun TravelPlanScreen(
             dates = dates,
             selectedDay = state.selectedDay,
             enabled = !state.isSaving && !state.canRetrySave,
-            onSelectDay = onSelectDay,
+            onSelectDay = { day -> if (day == state.selectedDay) onFitMap() else onSelectDay(day) },
             onOverview = onOverview,
         )
 
+        val unappliedOrder = state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay || it.isOutsideTrip(plan) }
         val cityCenter = TravelCity.centerOf(plan.summary.details.city)
         val scene =
             remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter) {
@@ -213,21 +220,21 @@ internal fun TravelPlanScreen(
             }
         TravelPlanPane(
             scene = scene,
+            hideMap = unappliedOrder != null,
             viewportRequest = state.viewportRequest,
             focusedVisitId = state.mapFocusedVisitId,
-            onFitMap = onFitMap,
             onMarkerClick = onMarkerClick,
             modifier = Modifier.weight(1f),
             status = {
                 if (state.isLoadingDayPlaces) TravelLoading(Modifier.fillMaxWidth())
-                if (state.dayPlacesIncomplete) {
+                if (state.dayPlacesIncomplete && !state.isOffline) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                         Text(stringResource(Res.string.travel_place_details_unavailable), Modifier.weight(1f))
-                        TravelTextButton(onClick = onRetryPlaces) { Text(stringResource(Res.string.common_retry_button)) }
+                        TravelTextButton(onClick = onRetryPlaces) { Text(stringResource(Res.string.travel_retry)) }
                     }
                 }
 
-                if (failure != null && state.visitDraft == null && state.placeSearch == null) {
+                if (failure != null && !(failure == TravelPlanFailure.CONNECTION && (state.isOffline || state.canRetrySave)) && !(failure == TravelPlanFailure.CONFLICT && unappliedOrder != null) && state.visitDraft == null && state.placeSearch == null) {
                     TravelInlineFailure(
                         failure = failure,
                         onRetry =
@@ -238,31 +245,75 @@ internal fun TravelPlanScreen(
                             },
                         retryLabel =
                             if (state.canRetrySave) {
-                                stringResource(Res.string.common_retry_button)
+                                stringResource(Res.string.travel_retry)
                             } else {
                                 stringResource(Res.string.travel_reload)
                             },
                     )
                 }
 
+                if (unappliedOrder != null) {
+                    val latestById = plan.visits.associateBy(TravelVisit::id)
+                    val sameOrder = !unappliedOrder.isOutsideTrip(plan) && savedVisits.map(TravelVisit::id) == unappliedOrder.visitIds
+                    val canReapply = unappliedOrder.canApplyTo(plan)
+                    val shape = RoundedCornerShape(8.dp)
+                    Column(
+                        Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
+                            .background(com.bigong.oguri.core.designsystem.Orange5, shape)
+                            .border(1.dp, com.bigong.oguri.core.designsystem.Orange20, shape).padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(stringResource(Res.string.travel_order_save_failed), style = OguriTheme.typography.cardSubtitle, color = Neutral100)
+                        Text(stringResource(Res.string.travel_order_conflict_description), style = OguriTheme.typography.caption, color = OguriTheme.colors.textSecondary)
+                        Column(Modifier.fillMaxWidth().background(Neutral0, shape).padding(12.dp)) {
+                            unappliedOrder.visitIds.forEachIndexed { index, id ->
+                                val details = latestById[id]?.details
+                                val name = details?.name ?: state.dayPlaces[details?.googlePlaceId]?.name
+                                Text(
+                                    if (name == null) stringResource(Res.string.travel_visit_fallback, index + 1)
+                                    else stringResource(Res.string.travel_visit_number, index + 1, name),
+                                    style = OguriTheme.typography.bodyMedium, color = Neutral100,
+                                )
+                            }
+                        }
+                        if (!state.needsLatestPlan) {
+                            when {
+                                sameOrder -> Text(stringResource(Res.string.travel_order_matches), style = OguriTheme.typography.caption)
+                                !canReapply -> Text(stringResource(Res.string.travel_order_cannot_reapply), style = OguriTheme.typography.caption)
+                            }
+                        }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TravelTextButton(onClick = onDiscardUnappliedOrder, enabled = !state.isSaving && !state.canRetrySave) {
+                                Text(stringResource(Res.string.travel_discard_order), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
+                            }
+                            if (state.needsLatestPlan) {
+                                TravelTextButton(onClick = onReload, enabled = !state.isLoading) { Text(stringResource(Res.string.travel_reload)) }
+                            } else if (!sameOrder && canReapply) {
+                                TravelTextButton(onClick = onApplyUnappliedOrder, enabled = canEdit) {
+                                    Text(stringResource(Res.string.travel_apply_order), style = OguriTheme.typography.labelMedium, color = Mint70)
+                                }
+                            }
+                        }
+                    }
+                }
             },
-        ) {
+        ) { mapVisible ->
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    travelDayLabel(dates, state.selectedDay),
+                    if (unappliedOrder != null) stringResource(Res.string.travel_saved_day_order, state.selectedDay) else travelDayLabel(dates, state.selectedDay),
                     modifier = Modifier.weight(1f),
                     color = Neutral100,
                     style = travelTextStyle(15, 18, FontWeight.Medium),
                 )
                 if (state.canRetrySave) {
                     Text(stringResource(Res.string.travel_save_failed_label), color = com.bigong.oguri.core.designsystem.Orange50, style = OguriTheme.typography.bodySmall)
-                    TravelTextButton(onClick = onRetrySave, enabled = !state.isSaving) { Text(stringResource(Res.string.common_retry_button)) }
+                    TravelTextButton(onClick = onRetrySave, enabled = !state.isSaving) { Text(stringResource(Res.string.travel_retry)) }
                 }
-                if (!state.isOffline && !state.isSaving && failure == null) {
+                if (!state.isOffline && !state.isSaving && (failure == null || (unappliedOrder != null && !state.needsLatestPlan))) {
                     Text(
                         stringResource(Res.string.travel_saved_status),
                         color = OguriTheme.colors.textTertiary,
@@ -273,12 +324,10 @@ internal fun TravelPlanScreen(
             val visitListState = rememberLazyListState()
             var draggedId by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf<String?>(null) }
             var dragPosition by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf(0f) }
-            val unappliedOrder =
-                state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay || it.isOutsideTrip(plan) }
             LaunchedEffect(state.listFocusRequest) {
                 val index = visits.indexOfFirst { it.id == state.selectedVisitId }
                 if (state.listFocusRequest > 0 && index >= 0) {
-                    visitListState.scrollToItem(index + if (unappliedOrder == null) 0 else 1)
+                    visitListState.scrollToItem(index)
                 }
             }
             LazyColumn(
@@ -286,37 +335,6 @@ internal fun TravelPlanScreen(
                 modifier = Modifier.weight(1f),
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
             ) {
-                if (unappliedOrder != null) {
-                    item(key = "unapplied-visit-order") {
-                        val savedIds = savedVisits.map(TravelVisit::id)
-                        val latestById = plan.visits.associateBy(TravelVisit::id)
-                        val sameOrder = !unappliedOrder.isOutsideTrip(plan) && savedIds == unappliedOrder.visitIds
-                        val canReapply = unappliedOrder.canApplyTo(plan)
-                        Text(stringResource(Res.string.travel_order_mine), style = OguriTheme.typography.cardSubtitle)
-                        Text(travelDayLabel(dates, unappliedOrder.dayNumber), style = OguriTheme.typography.bodySmall)
-                        unappliedOrder.visitIds.forEachIndexed { index, id ->
-                            val details = latestById[id]?.details
-                            val name = details?.name ?: state.dayPlaces[details?.googlePlaceId]?.name
-                            Text(
-                                if (name == null) stringResource(Res.string.travel_visit_fallback, index + 1)
-                                else stringResource(Res.string.travel_visit_number, index + 1, name),
-                            )
-                        }
-                        if (!state.needsLatestPlan) {
-                            when {
-                                sameOrder -> Text(stringResource(Res.string.travel_order_matches))
-                                !canReapply -> Text(stringResource(Res.string.travel_order_cannot_reapply))
-                                else -> TravelTextButton(onClick = onApplyUnappliedOrder, enabled = canEdit) {
-                                    Text(stringResource(Res.string.travel_apply))
-                                }
-                            }
-                        }
-                        TravelTextButton(onClick = onDiscardUnappliedOrder, enabled = !state.isSaving && !state.canRetrySave) {
-                            Text(stringResource(Res.string.travel_discard_draft))
-                        }
-                        HorizontalDivider()
-                    }
-                }
                 val undo = state.visitUndo?.takeIf { it.dayNumber == state.selectedDay }
                 if (visits.isEmpty()) {
                     item {
@@ -338,7 +356,8 @@ internal fun TravelPlanScreen(
                                 ?: stringResource(Res.string.travel_visit_fallback, index + 1),
                         number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
                         selected = state.selectedVisitId == visit.id,
-                        canEdit = canEdit,
+                        canEdit = canEdit && unappliedOrder == null,
+                        addedAfterConflict = unappliedOrder != null && visit.id !in unappliedOrder.visitIds,
                         canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
                         canMoveUp = index > 0,
                         canMoveDown = index < visits.lastIndex,
@@ -381,8 +400,9 @@ internal fun TravelPlanScreen(
                     )
                 }
                 if (undo != null && undo.position >= visits.size) item(key = "removed-visit") { TravelRemovedVisitRow(undo.title, canEdit, onUndoVisit) }
-                if (state.dayPlaces.isNotEmpty()) {
-                    item { GooglePlacesAttribution(state.dayPlaces.values.flatMap { it.attributions }) }
+                val attributions = state.dayPlaces.values.flatMap { it.attributions }
+                if (attributions.isNotEmpty() || (!mapVisible && state.dayPlaces.isNotEmpty())) {
+                    item { GooglePlacesAttribution(attributions, includeGoogleBranding = !mapVisible) }
                 }
             }
         }
@@ -448,6 +468,7 @@ private fun TravelVisitRow(
     title: String,
     number: Int?,
     selected: Boolean,
+    addedAfterConflict: Boolean,
     canEdit: Boolean,
     canOpen: Boolean,
     canMoveUp: Boolean,
@@ -500,7 +521,7 @@ private fun TravelVisitRow(
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
+                        visit.details.category?.let { Text(stringResource(it.label()) + if (addedAfterConflict) " · " + stringResource(Res.string.travel_just_added) else "", style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
                         if (!visit.details.note.isNullOrBlank()) Icon(painterResource(Res.drawable.ic_travel_note), stringResource(Res.string.travel_has_note), Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
                     }
                 }

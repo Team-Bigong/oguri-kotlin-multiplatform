@@ -60,7 +60,7 @@
     <string name="travel_map_show">地図を表示</string>
     <string name="travel_map_hide">地図を閉じる</string>
     <string name="travel_map_fit">この日の訪問先をすべて表示</string>
-    <string name="travel_map_unavailable">地図を読み込めませんでした。予定は引き続き確認できます。</string>
+    <string name="travel_map_unavailable">地図を読み込めませんでした</string>
     <string name="travel_map_sequence">線は訪問する順番を示します。</string>
     <string name="travel_place_details_unavailable">一部の場所情報を読み込めませんでした。</string>
     <string name="travel_visit_fallback">訪問先 %1$d</string>
@@ -279,4 +279,12 @@
     <string name="travel_selected_range">%1$s - %2$s · %3$d日間</string>
     <string name="travel_confirm_dates">この日程にする</string>
     <string name="travel_calendar_recommendation">点のある日から%1$d日までがおすすめの期間です。</string>
+    <string name="travel_total_place_count">場所%1$d件</string>
+    <string name="travel_order_save_failed">順序を保存できませんでした</string>
+    <string name="travel_order_conflict_description">ほかの人が訪問リストを変更しました。決めた順序は下にそのまま残っています。</string>
+    <string name="travel_discard_order">自分の順序を破棄</string>
+    <string name="travel_apply_order">この順序を適用</string>
+    <string name="travel_saved_day_order">%1$d日目 · 現在保存された順序</string>
+    <string name="travel_just_added">追加されたばかり</string>
+    <string name="travel_retry">再試行</string>
 </resources>

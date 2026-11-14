@@ -60,7 +60,7 @@
     <string name="travel_map_show">显示地图</string>
     <string name="travel_map_hide">收起地图</string>
     <string name="travel_map_fit">查看当天所有地点</string>
-    <string name="travel_map_unavailable">地图加载失败，仍可查看行程。</string>
+    <string name="travel_map_unavailable">无法加载地图</string>
     <string name="travel_map_sequence">连线表示到访顺序。</string>
     <string name="travel_place_details_unavailable">部分地点信息加载失败。</string>
     <string name="travel_visit_fallback">到访地点 %1$d</string>
@@ -279,4 +279,12 @@
     <string name="travel_selected_range">%1$s - %2$s · %3$d天</string>
     <string name="travel_confirm_dates">确定此日期</string>
     <string name="travel_calendar_recommendation">从标有圆点的日期至 %1$d 日为推荐时段。</string>
+    <string name="travel_total_place_count">%1$d 个地点</string>
+    <string name="travel_order_save_failed">无法保存顺序</string>
+    <string name="travel_order_conflict_description">其他人更改了到访列表。您设置的顺序仍保留在下方。</string>
+    <string name="travel_discard_order">放弃我的顺序</string>
+    <string name="travel_apply_order">应用此顺序</string>
+    <string name="travel_saved_day_order">第%1$d天 · 当前保存的顺序</string>
+    <string name="travel_just_added">刚刚添加</string>
+    <string name="travel_retry">重试</string>
 </resources>

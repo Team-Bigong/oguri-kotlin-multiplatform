@@ -79,7 +79,7 @@ import com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone
 import oguri.composeapp.generated.resources.travel_add_city
 import oguri.composeapp.generated.resources.travel_primary_city
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_choose_time_zone
@@ -251,7 +251,7 @@ internal fun CreateTravelPlanScreen(
             }
             if (state.creationCityFailed) {
                 Text(stringResource(Res.string.travel_city_unavailable))
-                TravelTextButton(onClick = onRetryDestination) { Text(stringResource(Res.string.common_retry_button)) }
+                TravelTextButton(onClick = onRetryDestination) { Text(stringResource(Res.string.travel_retry)) }
             }
             Spacer(Modifier.height(24.dp))
             Text(stringResource(Res.string.travel_actual_dates), style = OguriTheme.typography.labelMedium, color = colors.textTertiary)

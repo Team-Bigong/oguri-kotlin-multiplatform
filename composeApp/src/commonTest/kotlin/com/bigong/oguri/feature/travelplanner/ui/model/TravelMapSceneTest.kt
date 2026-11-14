@@ -62,6 +62,15 @@ class TravelMapSceneTest {
         assertTrue(scene.lines.isEmpty())
     }
 
+    @Test
+    fun markerTitlesIdentifyThePlaceAndPreserveCustomNames() {
+        val original = visit("station", station)
+        val custom = visit("museum", museum).copy(details = visit("museum", museum).details.copy(name = "Meeting point"))
+        val visits = listOf(original, custom)
+        assertEquals(listOf("station", "Meeting point"), travelMapScene(1, visits, places, null, null).markers.map { it.title })
+        assertEquals(listOf("station", "Meeting point"), travelOverviewScene(visits, places, null).markers.map { it.title })
+    }
+
     private fun place(
         id: String,
         latitude: Double,

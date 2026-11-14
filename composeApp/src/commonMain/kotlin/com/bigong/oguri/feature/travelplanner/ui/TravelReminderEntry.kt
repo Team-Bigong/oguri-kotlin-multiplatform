@@ -18,7 +18,7 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.travel_my_reminder
 import oguri.composeapp.generated.resources.travel_search_close
 import oguri.composeapp.generated.resources.travel_sign_in
@@ -69,7 +69,7 @@ internal fun TravelReminderEntry(
                     TravelTextButton(onClick = onSignIn) { Text(stringResource(Res.string.travel_sign_in)) }
                 } else if (failure == TravelPlanFailure.CONNECTION) {
                     TravelTextButton(enabled = !state.busy, onClick = { reminderId?.let(viewModel::open) }) {
-                        Text(stringResource(Res.string.common_retry_button))
+                        Text(stringResource(Res.string.travel_retry))
                     }
                 }
             },
