@@ -27,7 +27,7 @@ import kotlinx.datetime.LocalDate
 @Composable
 internal fun TravelPlansRoute(
     viewModel: TravelPlannerViewModel,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     signedIn: Boolean,
     onSignIn: () -> Unit,
     onCreate: () -> Unit,
@@ -35,7 +35,8 @@ internal fun TravelPlansRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.loadList() }
-    TravelPlansScreen(state, signedIn, onSignIn, onBack, onCreate, onOpen, viewModel::loadList)
+    val loadCover = remember(viewModel) { viewModel::loadCover }
+    TravelPlansScreen(state, loadCover, signedIn, onSignIn, onBack, onCreate, onOpen, viewModel::loadList)
 }
 
 @Composable

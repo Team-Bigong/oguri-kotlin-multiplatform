@@ -1,20 +1,23 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.notification.consumeTravelReminderOpening
 import com.bigong.oguri.core.notification.travelReminderOpening
 import com.bigong.oguri.core.notification.travelReminderTokenVersion
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_retry_button
 import oguri.composeapp.generated.resources.travel_my_reminder
@@ -57,19 +60,21 @@ internal fun TravelReminderEntry(
             viewModel.clearOpening()
         }
         AlertDialog(
+            shape = RoundedCornerShape(8.dp),
+            containerColor = Neutral0,
             onDismissRequest = dismiss,
             title = { Text(stringResource(Res.string.travel_my_reminder)) },
             text = { TravelInlineFailure(if (needsSignIn) TravelPlanFailure.SIGN_IN_REQUIRED else requireNotNull(failure)) },
             confirmButton = {
                 if (needsSignIn) {
-                    TextButton(onClick = onSignIn) { Text(stringResource(Res.string.travel_sign_in)) }
+                    TravelTextButton(onClick = onSignIn) { Text(stringResource(Res.string.travel_sign_in)) }
                 } else if (failure == TravelPlanFailure.CONNECTION) {
-                    TextButton(enabled = !state.busy, onClick = { reminderId?.let(viewModel::open) }) {
+                    TravelTextButton(enabled = !state.busy, onClick = { reminderId?.let(viewModel::open) }) {
                         Text(stringResource(Res.string.common_retry_button))
                     }
                 }
             },
-            dismissButton = { TextButton(onClick = dismiss) { Text(stringResource(Res.string.travel_search_close)) } },
+            dismissButton = { TravelTextButton(onClick = dismiss) { Text(stringResource(Res.string.travel_search_close)) } },
         )
     }
 }

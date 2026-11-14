@@ -6,6 +6,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitField
@@ -22,7 +23,7 @@ internal fun TravelConflictComparison(
     val latest = draft.visit ?: return
     if (fields.isEmpty()) return
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(stringResource(Res.string.travel_latest_saved_values), style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(Res.string.travel_latest_saved_values), style = OguriTheme.typography.cardSubtitle)
         fields.forEach { field ->
             val label =
                 when (field) {

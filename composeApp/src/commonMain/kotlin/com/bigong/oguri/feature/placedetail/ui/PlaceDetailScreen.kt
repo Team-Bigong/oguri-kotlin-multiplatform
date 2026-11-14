@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -50,6 +49,7 @@ import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailSkeletonCont
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTravelInformationCard
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
@@ -171,25 +171,25 @@ fun PlaceDetailScreen(
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }
-                    if (onCreateTravelPlan != null) {
-                        item {
-                            OutlinedButton(
-                                onClick = onCreateTravelPlan,
-                                modifier =
-                                    Modifier
-                                        .padding(horizontal = 20.dp, vertical = 8.dp)
-                                        .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
-                            ) {
-                                Text(stringResource(Res.string.travel_create_from_city))
-                            }
-                        }
-                    }
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
                         PlaceDetailTravelInformationCard(
                             travelInformation = placeDetail.travelInformation,
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
+                    }
+                    if (onCreateTravelPlan != null) {
+                        item {
+                            TravelOutlineButton(
+                                onClick = onCreateTravelPlan,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)
+                                        .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            ) {
+                                Text(stringResource(Res.string.travel_create_from_city))
+                            }
+                        }
                     }
                     item {
                         Spacer(modifier = Modifier.height(28.dp))

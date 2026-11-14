@@ -164,12 +164,17 @@ internal enum class TravelCity(
     OSAKA(TimeZone.of("Asia/Tokyo"), TravelCoordinates(34.6937, 135.5023), "Osaka", "오사카", "大阪"),
     TOKYO(TimeZone.of("Asia/Tokyo"), TravelCoordinates(35.6762, 139.6503), "Tokyo", "도쿄", "東京", "东京"),
     TAIPEI(TimeZone.of("Asia/Taipei"), TravelCoordinates(25.0330, 121.5654), "Taipei", "타이베이", "台北"),
+    HO_CHI_MINH(
+        TimeZone.of("Asia/Ho_Chi_Minh"), TravelCoordinates(10.82302, 106.62965), "Ho Chi Minh City", "호치민", "ホーチミン", "胡志明市",
+    ),
+    SYDNEY(TimeZone.of("Australia/Sydney"), TravelCoordinates(-33.86785, 151.20732), "Sydney", "시드니", "シドニー", "悉尼"),
+    BARCELONA(TimeZone.of("Europe/Madrid"), TravelCoordinates(41.38879, 2.15899), "Barcelona", "바르셀로나", "バルセロナ", "巴塞罗那"),
     PARIS(TimeZone.of("Europe/Paris"), TravelCoordinates(48.8566, 2.3522), "Paris", "파리", "パリ", "巴黎"),
     ;
 
     companion object {
         fun centerOf(name: String): TravelCoordinates? =
-            entries.firstOrNull { city -> city.localizedNames.any { it.equals(name, ignoreCase = true) } }?.coordinates
+            entries.firstOrNull { city -> city.localizedNames.any { it.equals(name.substringBefore(',').trim(), ignoreCase = true) } }?.coordinates
     }
 }
 
@@ -192,15 +197,12 @@ private val catalogueTimeZones: Map<String, String> =
         "상하이" to "Asia/Shanghai",
         "베이징" to "Asia/Shanghai",
         "칭다오" to "Asia/Shanghai",
-        "바르셀로나" to "Europe/Madrid",
         "마드리드" to "Europe/Madrid",
         "LA" to "America/Los_Angeles",
         "샌프란시스코" to "America/Los_Angeles",
         "뉴욕" to "America/New_York",
         "다낭" to "Asia/Ho_Chi_Minh",
-        "호치민" to "Asia/Ho_Chi_Minh",
         "브리즈번" to "Australia/Brisbane",
-        "시드니" to "Australia/Sydney",
         "멜버른" to "Australia/Melbourne",
         "니스" to "Europe/Paris",
         "부산" to "Asia/Seoul",

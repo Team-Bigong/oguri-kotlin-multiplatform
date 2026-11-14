@@ -165,11 +165,6 @@
     <string name="travel_overview">查看所有日期</string>
     <string name="travel_overview_legend">图钉数字表示旅行天数，–表示未定日期。选择到访地点即可打开对应日期。</string>
     <string name="travel_choose_day">选择添加地点的日期</string>
-    <string name="travel_list_expand">展开列表</string>
-    <string name="travel_map_expand">展开地图</string>
-    <string name="travel_pane_list">列表视图</string>
-    <string name="travel_pane_split">地图和列表视图</string>
-    <string name="travel_pane_map">地图展开视图</string>
     <string name="travel_select_day">选择日期</string>
     <string name="travel_visit_details">到访信息</string>
     <string name="travel_visit_local_time">当地时间 · %1$s</string>
@@ -180,4 +175,11 @@
     <string name="travel_leave_pending_save">退出并稍后重试</string>
     <string name="travel_pending_save_preserved">重新打开此行程后，可以重试保存。</string>
     <string name="bottom_navigation_travel">旅行</string>
+    <string name="travel_city_ho_chi_minh">胡志明市</string>
+    <string name="travel_city_sydney">悉尼</string>
+    <string name="travel_city_barcelona">巴塞罗那</string>
+    <string name="travel_overview_map_fit">查看所有地点</string>
+    <string name="travel_place_search_unavailable">暂时无法搜索地点。你可以手动添加。</string>
+    <string name="travel_all_days_tab">全部</string>
+    <string name="travel_manage_title">管理旅行</string>
 </resources>

@@ -7,19 +7,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -29,6 +27,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
@@ -106,6 +106,7 @@ internal fun TravelVisitEditor(
             },
         )
     ModalBottomSheet(
+        containerColor = Neutral0,
         onDismissRequest = { if (canDismiss) dismissDraft() },
         sheetState = sheetState,
     ) {
@@ -115,10 +116,10 @@ internal fun TravelVisitEditor(
         ) {
             Text(
                 stringResource(if (draft.visit == null) Res.string.travel_add_visit else Res.string.travel_edit_visit),
-                style = MaterialTheme.typography.titleLarge,
+                style = OguriTheme.typography.sectionTitle,
             )
             TravelConflictComparison(draft, dates)
-            if (isSaving) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            if (isSaving) TravelLoading(modifier = Modifier.fillMaxWidth())
             if (placeId == null) {
                 OutlinedTextField(
                     value = draft.name,
@@ -127,12 +128,15 @@ internal fun TravelVisitEditor(
                     singleLine = true,
                     enabled = canEdit,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    textStyle = OguriTheme.typography.bodyLarge,
+                    colors = TravelFieldColors(),
                 )
             } else if (draft.placeTitle != null) {
-                Text(draft.placeTitle, style = MaterialTheme.typography.titleMedium)
+                Text(draft.placeTitle, style = OguriTheme.typography.cardTitle)
                 GooglePlacesAttribution(attributions)
             }
-            OutlinedButton(onClick = { showDayMenu = true }, enabled = canEdit, modifier = Modifier.fillMaxWidth()) {
+            TravelOutlineButton(onClick = { showDayMenu = true }, enabled = canEdit, modifier = Modifier.fillMaxWidth()) {
                 Text(travelDayLabel(dates, draft.dayNumber))
             }
             DropdownMenu(expanded = showDayMenu, onDismissRequest = { showDayMenu = false }) {
@@ -162,6 +166,9 @@ internal fun TravelVisitEditor(
                 isError = draft.hasInvalidTime,
                 enabled = canEdit,
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                textStyle = OguriTheme.typography.bodyLarge,
+                colors = TravelFieldColors(),
             )
             if (placeId == null) {
                 OutlinedTextField(
@@ -171,6 +178,9 @@ internal fun TravelVisitEditor(
                     singleLine = true,
                     enabled = canEdit,
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    textStyle = OguriTheme.typography.bodyLarge,
+                    colors = TravelFieldColors(),
                 )
             }
             OutlinedTextField(
@@ -181,6 +191,9 @@ internal fun TravelVisitEditor(
                 maxLines = 4,
                 enabled = canEdit,
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                textStyle = OguriTheme.typography.bodyLarge,
+                colors = TravelFieldColors(),
             )
             failure?.let {
                 if (it == TravelPlanFailure.CONFLICT || (it == TravelPlanFailure.CONNECTION && !canRetrySave)) {
@@ -207,11 +220,11 @@ internal fun TravelVisitEditor(
             )
             Row {
                 if (draft.visit != null) {
-                    TextButton(enabled = canEdit, onClick = { confirmRemoval = true }) {
+                    TravelTextButton(enabled = canEdit, onClick = { confirmRemoval = true }) {
                         Text(stringResource(Res.string.travel_delete), color = MaterialTheme.colorScheme.error)
                     }
                 }
-                TextButton(enabled = canDismiss, onClick = dismissDraft) {
+                TravelTextButton(enabled = canDismiss, onClick = dismissDraft) {
                     Text(stringResource(Res.string.travel_cancel))
                 }
             }
@@ -220,16 +233,18 @@ internal fun TravelVisitEditor(
 
     if (confirmDiscard) {
         AlertDialog(
+            shape = RoundedCornerShape(8.dp),
+            containerColor = Neutral0,
             onDismissRequest = { confirmDiscard = false },
             title = { Text(stringResource(Res.string.travel_discard_title)) },
             confirmButton = {
-                TextButton(onClick = {
+                TravelTextButton(onClick = {
                     confirmDiscard = false
                     onDraftChange(null)
                 }) { Text(stringResource(Res.string.travel_discard_draft)) }
             },
             dismissButton = {
-                TextButton(onClick = { confirmDiscard = false }) { Text(stringResource(Res.string.travel_cancel)) }
+                TravelTextButton(onClick = { confirmDiscard = false }) { Text(stringResource(Res.string.travel_cancel)) }
             },
         )
     }
@@ -253,5 +268,5 @@ internal fun TravelVisitEditor(
 @Composable
 internal fun TravelLeavePendingSave(onLeave: () -> Unit) {
     Text(stringResource(Res.string.travel_pending_save_preserved), style = MaterialTheme.typography.bodySmall)
-    TextButton(onClick = onLeave) { Text(stringResource(Res.string.travel_leave_pending_save)) }
+    TravelTextButton(onClick = onLeave) { Text(stringResource(Res.string.travel_leave_pending_save)) }
 }

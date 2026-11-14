@@ -165,11 +165,6 @@
     <string name="travel_overview">All dates</string>
     <string name="travel_overview_legend">Pin numbers indicate trip days; – means no date. Select a visit to open its day.</string>
     <string name="travel_choose_day">Choose a date to add a place</string>
-    <string name="travel_list_expand">Expand list</string>
-    <string name="travel_map_expand">Expand map</string>
-    <string name="travel_pane_list">List view</string>
-    <string name="travel_pane_split">Map and list view</string>
-    <string name="travel_pane_map">Expanded map view</string>
     <string name="travel_select_day">Select date</string>
     <string name="travel_visit_details">Visit details</string>
     <string name="travel_visit_local_time">Local time · %1$s</string>
@@ -180,4 +175,11 @@
     <string name="travel_leave_pending_save">Leave and try later</string>
     <string name="travel_pending_save_preserved">You can retry this save when you return to the trip.</string>
     <string name="bottom_navigation_travel">Trips</string>
+    <string name="travel_city_ho_chi_minh">Ho Chi Minh City</string>
+    <string name="travel_city_sydney">Sydney</string>
+    <string name="travel_city_barcelona">Barcelona</string>
+    <string name="travel_overview_map_fit">Show all stops</string>
+    <string name="travel_place_search_unavailable">Place search is unavailable. You can add a place manually.</string>
+    <string name="travel_all_days_tab">All days</string>
+    <string name="travel_manage_title">Manage trip</string>
 </resources>

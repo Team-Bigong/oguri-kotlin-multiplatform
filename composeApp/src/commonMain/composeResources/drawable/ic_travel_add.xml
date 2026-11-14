@@ -1,0 +1,8 @@
+<!-- SVG Repo, CC0: https://www.svgrepo.com/svg/447037/plus -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path android:fillColor="#000000" android:pathData="m12.75 5c0-.41421-.3358-.75-.75-.75s-.75.33579-.75.75v6.25h-6.25c-.41421 0-.75.3358-.75.75s.33579.75.75.75h6.25v6.25c0 .4142.3358.75.75.75s.75-.3358.75-.75v-6.25h6.25c.4142 0 .75-.3358.75-.75s-.3358-.75-.75-.75h-6.25z"/>
+</vector>

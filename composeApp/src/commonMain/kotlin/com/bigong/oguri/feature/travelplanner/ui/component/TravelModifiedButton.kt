@@ -2,7 +2,6 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import com.bigong.oguri.domain.model.TravelPlan
@@ -27,5 +26,5 @@ internal fun TravelModifiedButton(
             TravelModifiedUnit.HOURS -> stringResource(Res.string.travel_modified_hours, age.count)
             TravelModifiedUnit.DAYS -> stringResource(Res.string.travel_modified_days, age.count)
         }
-    TextButton(enabled = enabled, onClick = onClick) { Text(label, style = MaterialTheme.typography.bodySmall) }
+    TravelTextButton(enabled = enabled, onClick = onClick) { Text(label, style = MaterialTheme.typography.bodySmall) }
 }

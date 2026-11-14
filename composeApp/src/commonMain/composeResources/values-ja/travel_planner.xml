@@ -165,11 +165,6 @@
     <string name="travel_overview">すべての日程</string>
     <string name="travel_overview_legend">ピンの数字は旅行の日数、–は日付未定です。訪問先を選ぶとその日程に移動します。</string>
     <string name="travel_choose_day">場所を追加する日付を選択</string>
-    <string name="travel_list_expand">リストを広げる</string>
-    <string name="travel_map_expand">地図を広げる</string>
-    <string name="travel_pane_list">リスト表示</string>
-    <string name="travel_pane_split">地図とリスト表示</string>
-    <string name="travel_pane_map">地図を拡大表示</string>
     <string name="travel_select_day">日付を選択</string>
     <string name="travel_visit_details">訪問情報</string>
     <string name="travel_visit_local_time">現地時刻 · %1$s</string>
@@ -180,4 +175,11 @@
     <string name="travel_leave_pending_save">閉じて後で再試行</string>
     <string name="travel_pending_save_preserved">旅行を開き直すと、保存を再試行できます。</string>
     <string name="bottom_navigation_travel">旅行</string>
+    <string name="travel_city_ho_chi_minh">ホーチミン</string>
+    <string name="travel_city_sydney">シドニー</string>
+    <string name="travel_city_barcelona">バルセロナ</string>
+    <string name="travel_overview_map_fit">すべての訪問先を表示</string>
+    <string name="travel_place_search_unavailable">場所を検索できませんでした。手入力で追加できます。</string>
+    <string name="travel_all_days_tab">すべて</string>
+    <string name="travel_manage_title">旅行の管理</string>
 </resources>

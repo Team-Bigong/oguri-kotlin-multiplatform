@@ -165,11 +165,6 @@
     <string name="travel_overview">전체 날짜 보기</string>
     <string name="travel_overview_legend">핀 숫자는 여행 일차, –는 날짜 없음을 뜻해요. 방문을 선택하면 해당 날짜로 이동해요.</string>
     <string name="travel_choose_day">장소를 추가할 날짜 선택</string>
-    <string name="travel_list_expand">목록 펼치기</string>
-    <string name="travel_map_expand">지도 넓히기</string>
-    <string name="travel_pane_list">목록 중심 보기</string>
-    <string name="travel_pane_split">지도와 목록 함께 보기</string>
-    <string name="travel_pane_map">지도 중심 보기</string>
     <string name="travel_select_day">날짜 선택</string>
     <string name="travel_visit_details">방문 정보</string>
     <string name="travel_visit_local_time">현지 시각 · %1$s</string>
@@ -180,4 +175,11 @@
     <string name="travel_leave_pending_save">나중에 다시 시도하기</string>
     <string name="travel_pending_save_preserved">여행을 다시 열면 이 저장을 다시 시도할 수 있어요.</string>
     <string name="bottom_navigation_travel">여행</string>
+    <string name="travel_city_ho_chi_minh">호치민</string>
+    <string name="travel_city_sydney">시드니</string>
+    <string name="travel_city_barcelona">바르셀로나</string>
+    <string name="travel_overview_map_fit">모든 장소 보기</string>
+    <string name="travel_place_search_unavailable">장소를 검색하지 못했어요. 직접 추가할 수 있어요.</string>
+    <string name="travel_all_days_tab">전체</string>
+    <string name="travel_manage_title">여행 관리</string>
 </resources>

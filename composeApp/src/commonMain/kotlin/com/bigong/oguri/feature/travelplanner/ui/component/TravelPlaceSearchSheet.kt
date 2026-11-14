@@ -1,6 +1,5 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
@@ -12,15 +11,14 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,9 +37,12 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
 import com.bigong.oguri.domain.model.TravelPlan
+import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapMarker
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapScene
@@ -55,6 +56,7 @@ import oguri.composeapp.generated.resources.travel_add_without_date
 import oguri.composeapp.generated.resources.travel_google_maps_attribution
 import oguri.composeapp.generated.resources.travel_manual_add
 import oguri.composeapp.generated.resources.travel_place_added
+import oguri.composeapp.generated.resources.travel_place_search_unavailable
 import oguri.composeapp.generated.resources.travel_reload
 import oguri.composeapp.generated.resources.travel_search_city
 import oguri.composeapp.generated.resources.travel_search_close
@@ -91,9 +93,9 @@ internal fun TravelPlaceSearchSheet(
             skipPartiallyExpanded = true,
             confirmValueChange = { it != SheetValue.Hidden || canDismiss },
         )
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
+    ModalBottomSheet(containerColor = OguriTheme.colors.backgroundPrimary, onDismissRequest = onDismiss, sheetState = sheet) {
         Column(Modifier.fillMaxWidth().imePadding().padding(horizontal = 16.dp)) {
-            Text(stringResource(Res.string.travel_add_visit), style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(Res.string.travel_add_visit), style = OguriTheme.typography.sectionTitle)
             Text(travelDayLabel(dates, day), style = MaterialTheme.typography.bodyMedium)
             OutlinedTextField(
                 value = search.query,
@@ -103,10 +105,21 @@ internal fun TravelPlaceSearchSheet(
                 singleLine = true,
                 enabled = canEdit,
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(8.dp),
+                textStyle = OguriTheme.typography.bodyLarge,
+                colors = TravelFieldColors(),
             )
-            if (search.isLoading || state.isSaving) LinearProgressIndicator(Modifier.fillMaxWidth())
+            if (search.isLoading || state.isSaving) TravelLoading(Modifier.fillMaxWidth())
             if (search.failure != null) {
-                TravelInlineFailure(search.failure, onRetry = if (canEdit) ({ onQuery(search.query) }) else null)
+                TravelInlineFailure(
+                    failure = search.failure,
+                    onRetry = if (canEdit) ({ onQuery(search.query) }) else null,
+                    message = if (search.failure == TravelPlanFailure.CONNECTION) {
+                        stringResource(Res.string.travel_place_search_unavailable)
+                    } else {
+                        null
+                    },
+                )
             } else if (!search.isLoading && search.query.trim().length >= 2 && search.results.isEmpty()) {
                 Text(stringResource(Res.string.travel_search_empty), modifier = Modifier.padding(vertical = 8.dp))
             }
@@ -129,12 +142,12 @@ internal fun TravelPlaceSearchSheet(
                             Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp)
-                                .clickable(enabled = canEdit) {
+                                .noRippleClickable(enabled = canEdit, onClick = {
                                     focusManager.clearFocus()
                                     onSelect(place)
-                                }.padding(vertical = 8.dp),
+                                }).padding(vertical = 8.dp),
                         ) {
-                            Text(place.name, style = MaterialTheme.typography.titleMedium)
+                            Text(place.name, style = OguriTheme.typography.cardTitle)
                             place.address?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                             if (place.id == search.lastAddedPlaceId) {
                                 Text(
@@ -148,17 +161,17 @@ internal fun TravelPlaceSearchSheet(
                 } else {
                     item {
                         val existing = plan.visits.firstOrNull { it.dayNumber == day && it.details.googlePlaceId == selected.id }
-                        TextButton(
+                        TravelTextButton(
                             onClick = { onSelect(null) },
                             enabled = canEdit,
                         ) { Text(stringResource(Res.string.travel_search_results)) }
-                        Text(selected.name, style = MaterialTheme.typography.titleMedium)
+                        Text(selected.name, style = OguriTheme.typography.cardTitle)
                         selected.address?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
                         if (existing != null) {
                             TravelPrimaryButton(onClick = { onShowVisit(existing) }, enabled = canEdit) {
                                 Text(stringResource(Res.string.travel_show_existing_visit))
                             }
-                            TextButton(onClick = { onAdd(selected, day) }, enabled = canEdit) {
+                            TravelTextButton(onClick = { onAdd(selected, day) }, enabled = canEdit) {
                                 Text(stringResource(Res.string.travel_add_again))
                             }
                         } else {
@@ -173,7 +186,7 @@ internal fun TravelPlaceSearchSheet(
                             }
                         }
                         if (day != TravelPlan.UNASSIGNED_DAY) {
-                            TextButton(onClick = { onAdd(selected, TravelPlan.UNASSIGNED_DAY) }, enabled = canEdit) {
+                            TravelTextButton(onClick = { onAdd(selected, TravelPlan.UNASSIGNED_DAY) }, enabled = canEdit) {
                                 Text(stringResource(Res.string.travel_add_without_date))
                             }
                         }
@@ -210,8 +223,13 @@ internal fun TravelPlaceSearchSheet(
                 TravelLeavePendingSave(onLeaveWithPendingSave)
             }
             FlowRow {
-                TextButton(onClick = onManualAdd, enabled = canEdit) { Text(stringResource(Res.string.travel_manual_add)) }
-                TextButton(onClick = onDismiss, enabled = canDismiss) { Text(stringResource(Res.string.travel_search_close)) }
+                TravelTextButton(onClick = onManualAdd, enabled = canEdit) {
+                    Text(
+                        stringResource(Res.string.travel_manual_add),
+                        color = if (canEdit) OguriTheme.colors.textPrimary else Color.Unspecified,
+                    )
+                }
+                TravelTextButton(onClick = onDismiss, enabled = canDismiss) { Text(stringResource(Res.string.travel_search_close)) }
             }
         }
     }
@@ -235,7 +253,7 @@ internal fun GooglePlacesAttribution(attributions: List<TravelPlaceAttribution>)
             if (uri == null) {
                 Text(attribution.provider, style = MaterialTheme.typography.bodySmall)
             } else {
-                TextButton(onClick = { runCatching { uriHandler.openUri(uri) } }) { Text(attribution.provider) }
+                TravelTextButton(onClick = { runCatching { uriHandler.openUri(uri) } }) { Text(attribution.provider) }
             }
         }
     }

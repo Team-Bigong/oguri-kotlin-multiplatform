@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,9 +38,7 @@ import com.bigong.oguri.domain.model.Place
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailSkeletonContent
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_d_day_after
 import oguri.composeapp.generated.resources.calendar_d_day_before
@@ -61,6 +58,9 @@ import oguri.composeapp.generated.resources.travel_create_from_period
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun PeriodDetailScreen(
@@ -209,17 +209,6 @@ fun PeriodDetailScreen(
                         }
                     }
 
-                    if (onCreateTravelPlan != null) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            OutlinedButton(
-                                onClick = onCreateTravelPlan,
-                                modifier = Modifier.onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
-                            ) {
-                                Text(stringResource(Res.string.travel_create_from_period))
-                            }
-                        }
-                    }
-
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         GuideHeader(
                             iconResource = Res.drawable.ic_plane,
@@ -253,6 +242,17 @@ fun PeriodDetailScreen(
                             }
                         }
                     }
+                    if (onCreateTravelPlan != null && pagedPlaces.loadState.append is LoadState.NotLoading) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            TravelOutlineButton(
+                                onClick = onCreateTravelPlan,
+                                modifier = Modifier.onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            ) {
+                                Text(stringResource(Res.string.travel_create_from_period))
+                            }
+                        }
+                    }
+
                     if (pagedPlaces.loadState.append is LoadState.Loading) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             SkeletonBox(

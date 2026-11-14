@@ -9,6 +9,7 @@ import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanException
 import com.bigong.oguri.domain.model.TravelPlanFailure
+import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.domain.model.TravelVisitChange
@@ -17,16 +18,22 @@ import com.bigong.oguri.domain.repository.TravelPlaceRepository
 import com.bigong.oguri.domain.repository.TravelPlanRepository
 import com.bigong.oguri.domain.repository.TravelRecoveryRepository
 import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
+import com.bigong.oguri.domain.usecase.GetSearchAutocompleteListUseCase
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCitySearchState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelOverviewState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlaceSearchState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitUndoAction
-import com.bigong.oguri.feature.travelplanner.ui.model.toVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.canApplyTo
+import com.bigong.oguri.feature.travelplanner.ui.model.toVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.withRefreshedPlan
 import dev.zacsweers.metro.Inject
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.TimeSource
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
@@ -43,11 +50,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toLocalDateTime
-import kotlin.time.Clock
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.TimeSource
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 @Inject
 class TravelPlannerViewModel(
@@ -55,6 +57,7 @@ class TravelPlannerViewModel(
     private val placeRepository: TravelPlaceRepository,
     private val getPlaceDetail: GetPlaceDetailUseCase,
     private val recovery: TravelRecoveryRepository,
+    private val searchDestinations: GetSearchAutocompleteListUseCase,
 ) : ViewModel() {
     private val mutableState: MutableStateFlow<TravelPlannerUiState> = MutableStateFlow(TravelPlannerUiState())
     internal val state: StateFlow<TravelPlannerUiState> = mutableState.asStateFlow()
@@ -110,6 +113,21 @@ class TravelPlannerViewModel(
         currentCoroutineContext().ensureActive()
         if (request == resumeRequest && generation == mutationGeneration) {
             mutableState.update { it.copy(resumePlan = plan) }
+        }
+    }
+
+    internal suspend fun loadCover(plan: TravelPlanSummary): String? {
+        val city = plan.details.city.substringBefore(',').trim()
+        return try {
+            val destinationId = plan.details.source?.destinationId ?: searchDestinations(city)
+                .filter { it.destinationName.equals(city, ignoreCase = true) }
+                .singleOrNull()?.id ?: return null
+            val destination = getPlaceDetail(destinationId)
+            destination.thumbnailUrls.firstOrNull()?.takeIf { destination.city.equals(city, ignoreCase = true) }
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Exception) {
+            null
         }
     }
 
