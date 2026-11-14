@@ -55,3 +55,5 @@ bash scripts/verify_ios_simulator.sh
 로컬 설정은 `iosApp/iosApp/GoogleService-Info-Debug.plist`와 `iosApp/iosApp/GoogleService-Info-Release.plist`에 둔다. 각 파일의 `BUNDLE_ID`가 해당 `iosApp/Configuration/Debug.xcconfig` 또는 `Release.xcconfig`의 `PRODUCT_BUNDLE_IDENTIFIER`와 일치해야 한다. Xcode의 동기화 리소스 폴더에서 앱에 포함되므로 별도 참조를 추가하지 않는다. 설정 파일의 내용은 로그나 커밋에 남기지 않는다.
 
 빌드 후 선택한 시뮬레이터에 `Oguri.app`을 설치하고 Debug 번들 식별자로 실행한다. 앱 번들에 Debug plist가 실제로 존재하고 앱과 Firebase 번들 식별자가 같은지 확인한 뒤 로그인 화면 표시까지 검증한다. 이 단계만으로 회원 로그인·Google 지도 표시·실제 APNs/FCM 수신이 검증되지는 않는다.
+
+여행 지표의 수집 경계와 읽기 전용 기초 집계는 [지표 가이드](TRAVEL_PLANNER_METRICS.md)를 따른다. PostgreSQL 검증에는 생성·참여 재시도/재참여 중복 방지, 날짜 미배정/배정 저장, 참여 전후 편집, 기간 변경·삭제·탈퇴 후 관찰 분모 보존, 전체 롤백, 기존 여행의 시작 미상 구분과 실제 보고서 SQL 실행이 포함된다.

@@ -7,6 +7,7 @@ import com.bigong.oguri.domain.TravelPlanMembership
 import com.bigong.oguri.domain.TravelVisit
 import com.bigong.oguri.dto.request.CreateTravelPlanRequest
 import com.bigong.oguri.dto.request.TravelPlanCommand
+import com.bigong.oguri.dto.request.TravelPlanSourceRequest
 import com.bigong.oguri.dto.request.TravelVisitRequest
 import com.bigong.oguri.dto.response.TravelPlanResponse
 import com.bigong.oguri.dto.response.TravelVisitResponse
@@ -40,6 +41,8 @@ import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.server.ResponseStatusException
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -125,9 +128,10 @@ class TravelTransactionIntegrationTest {
                 mock(DestinationRepository::class.java),
                 TravelPlanViewRepository(jdbc),
                 changes,
+                TravelUsageRepository(jdbc),
             )
         reminders = TravelReminderRepository(jdbc)
-        collaboration = TravelCollaborationService(service, plans, members, changes, reminders, 7)
+        collaboration = TravelCollaborationService(service, plans, members, changes, reminders, TravelUsageRepository(jdbc), 7)
         val delivery = mock(TravelReminderDelivery::class.java)
         `when`(delivery.configured).thenReturn(true)
         reminderService = TravelReminderService(service, reminders, delivery)
@@ -168,6 +172,7 @@ class TravelTransactionIntegrationTest {
             ),
         )
         assertEquals(first.get(), second.get())
+        assertEquals(1L, count("travel_usage_cohorts", first.get()))
         assertEquals(
             1L,
             jdbc
@@ -207,6 +212,7 @@ class TravelTransactionIntegrationTest {
         )
         assertEquals(2L, count("travel_plan_changes", trip.id))
         assertEquals(2L, count("travel_plan_member_commands", trip.id))
+        assertEquals(2L, usageEditCount(trip.id))
     }
 
     @Test
@@ -222,6 +228,7 @@ class TravelTransactionIntegrationTest {
         assertEquals(listOf("Only once"), read(trip).visits.map { it.name })
         assertEquals(1L, count("travel_plan_changes", trip.id))
         assertEquals(1L, count("travel_plan_member_commands", trip.id))
+        assertEquals(1L, usageEditCount(trip.id))
     }
 
     @Test
@@ -518,6 +525,236 @@ class TravelTransactionIntegrationTest {
         assertEquals(TravelReminderStatus.CANCELLED, reminders.find(alarm.row.id)?.status)
     }
 
+    @Test
+    fun `생성 참여 재시도와 재참여는 관찰 시작을 중복 기록하지 않는다`() {
+        val owner = member()
+        val friend = member()
+        val request = creation(LocalDate.now().plusDays(20))
+        val plan = tx { service.create(owner, request) }
+        tx { service.create(owner, request) }
+        val token = tx { collaboration.issue(owner, plan.id).token }
+        tx { collaboration.join(friend, token) }
+        tx { collaboration.join(friend, token) }
+        tx { collaboration.leave(friend, plan.id) }
+        val nextToken = tx { collaboration.issue(owner, plan.id).token }
+        tx { collaboration.join(friend, nextToken) }
+        val entries =
+            jdbc
+                .sql("SELECT entry_kind FROM travel_usage_cohorts WHERE travel_plan_id = :id ORDER BY entry_kind")
+                .param("id", plan.id)
+                .query(String::class.java)
+                .list()
+        assertEquals(listOf("CREATED", "JOINED"), entries)
+        assertEquals(
+            1L,
+            jdbc
+                .sql("SELECT count(DISTINCT plan_key) FROM travel_usage_cohorts WHERE travel_plan_id = :id")
+                .param("id", plan.id)
+                .query(Long::class.javaObjectType)
+                .single(),
+        )
+    }
+
+    @Test
+    fun `날짜 없는 저장은 활성화로 세지 않고 날짜 배정 재전송은 한번만 기록한다`() {
+        val owner = member()
+        val plan = tx { service.create(owner, creation()) }
+        val unassigned = add("Private name").copy(dayNumber = 0)
+        val visit = tx { service.execute(owner, plan.id, unassigned) }.visits.single()
+        tx { service.execute(owner, plan.id, unassigned) }
+        val assigned = edit(visit).copy(dayNumber = 1)
+        tx { service.execute(owner, plan.id, assigned) }
+        tx { service.execute(owner, plan.id, assigned) }
+        val dated =
+            jdbc
+                .sql(
+                    "SELECT e.has_dated_visit FROM travel_usage_edits e JOIN travel_usage_cohorts c ON c.id = e.cohort_id WHERE c.travel_plan_id = :id ORDER BY e.revision",
+                ).param("id", plan.id)
+                .query(Boolean::class.javaObjectType)
+                .list()
+        assertEquals(listOf(false, true), dated)
+        val kinds =
+            jdbc
+                .sql(
+                    "SELECT e.kind FROM travel_usage_edits e JOIN travel_usage_cohorts c ON c.id = e.cohort_id WHERE c.travel_plan_id = :id ORDER BY e.revision",
+                ).param("id", plan.id)
+                .query(String::class.java)
+                .list()
+        assertEquals(listOf("VISIT_ADDED", "VISIT_EDITED"), kinds)
+    }
+
+    @Test
+    fun `협업 편집은 링크 발급과 구분하고 참여 이후에만 기록한다`() {
+        val owner = member()
+        val friend = member()
+        val plan = tx { service.create(owner, creation()) }
+        val token = tx { collaboration.issue(owner, plan.id).token }
+        tx { service.execute(owner, plan.id, add("Before join")) }
+        tx { collaboration.join(friend, token) }
+        tx { service.execute(friend, plan.id, add("After join")) }
+        val collaborative =
+            jdbc
+                .sql(
+                    "SELECT e.after_participation FROM travel_usage_edits e JOIN travel_usage_cohorts c ON c.id = e.cohort_id WHERE c.travel_plan_id = :id ORDER BY e.revision",
+                ).param("id", plan.id)
+                .query(Boolean::class.javaObjectType)
+                .list()
+        assertEquals(listOf(false, true), collaborative)
+    }
+
+    @Test
+    fun `기간 변경 나가기 삭제와 탈퇴로 관찰 분모를 유리하게 바꾸지 않는다`() {
+        val owner = member()
+        val friend = member()
+        val start = LocalDate.now().plusDays(20)
+        val plan = tx { service.create(owner, creation(start)) }
+        val token = tx { collaboration.issue(owner, plan.id).token }
+        tx { collaboration.join(friend, token) }
+        val before =
+            jdbc
+                .sql(
+                    "SELECT id, started_at, days_until_start, initial_end_at FROM travel_usage_cohorts WHERE travel_plan_id = :id ORDER BY id",
+                ).param("id", plan.id)
+                .query()
+                .listOfRows()
+        tx {
+            collaboration.updateDetails(
+                owner,
+                plan.id,
+                TravelDetailsChange("Seoul", "Private title", "Asia/Seoul", start.plusDays(3), start.plusDays(5), 0, 0),
+            )
+        }
+        tx { collaboration.leave(friend, plan.id) }
+        val after =
+            jdbc
+                .sql(
+                    "SELECT id, started_at, days_until_start, initial_end_at FROM travel_usage_cohorts WHERE travel_plan_id = :id ORDER BY id",
+                ).param("id", plan.id)
+                .query()
+                .listOfRows()
+        assertEquals(before, after)
+        tx { collaboration.delete(owner, plan.id) }
+        jdbc
+            .sql("DELETE FROM members WHERE id IN (:owner, :friend)")
+            .param("owner", owner)
+            .param("friend", friend)
+            .update()
+        before.forEach { row ->
+            val saved =
+                jdbc
+                    .sql("SELECT travel_plan_id, member_id, started_at, days_until_start FROM travel_usage_cohorts WHERE id = :id")
+                    .param("id", row.getValue("id"))
+                    .query()
+                    .singleRow()
+            assertNull(saved["travel_plan_id"])
+            assertNull(saved["member_id"])
+            assertEquals(row["started_at"], saved["started_at"])
+            assertEquals(row["days_until_start"], saved["days_until_start"])
+        }
+    }
+
+    @Test
+    fun `취소된 생성과 편집은 지표에도 남지 않는다`() {
+        val owner = member()
+        val request = creation()
+        assertThrows(IllegalStateException::class.java) {
+            tx {
+                service.create(owner, request)
+                throw IllegalStateException("abort creation")
+            }
+        }
+        assertEquals(
+            0L,
+            jdbc
+                .sql("SELECT count(*) FROM travel_usage_cohorts WHERE member_id = :id")
+                .param("id", owner)
+                .query(Long::class.javaObjectType)
+                .single(),
+        )
+        val plan = tx { service.create(owner, request) }
+        assertThrows(IllegalStateException::class.java) {
+            tx {
+                service.execute(owner, plan.id, add("Aborted edit"))
+                throw IllegalStateException("abort edit")
+            }
+        }
+        assertEquals(
+            0L,
+            jdbc
+                .sql(
+                    "SELECT count(*) FROM travel_usage_edits e JOIN travel_usage_cohorts c ON c.id = e.cohort_id WHERE c.travel_plan_id = :id",
+                ).param("id", plan.id)
+                .query(Long::class.javaObjectType)
+                .single(),
+        )
+    }
+
+    @Test
+    fun `기초 지표 집계는 추천 출처와 활성화와 관찰 미완료를 구분한다`() {
+        val sql = Files.readString(Path.of("../scripts/report_travel_usage.sql"))
+
+        fun report() =
+            jdbc
+                .sql(sql)
+                .query()
+                .listOfRows()
+                .associateBy { it.getValue("entry_source") }
+        val before = report()["RECOMMENDATION"].orEmpty()
+        val owner = member()
+        val start = LocalDate.now().plusDays(20)
+        val request = creation(start).copy(source = TravelPlanSourceRequest(null, start, start.plusDays(2)))
+        val plan = tx { service.create(owner, request) }
+        tx { service.execute(owner, plan.id, add("Private name")) }
+        val pending = report().getValue("RECOMMENDATION")
+        for (key in listOf("created_plans", "activated_plans", "pending_memberships")) {
+            assertEquals((before[key] as? Number)?.toLong().orZero() + 1L, (pending.getValue(key) as Number).toLong())
+        }
+        assertEquals(
+            (before["eligible_matured_memberships"] as? Number)?.toLong().orZero(),
+            (pending.getValue("eligible_matured_memberships") as Number).toLong(),
+        )
+        jdbc
+            .sql("UPDATE travel_usage_cohorts SET started_at = started_at - interval '8 days' WHERE travel_plan_id = :id")
+            .param("id", plan.id)
+            .update()
+        val matured = report().getValue("RECOMMENDATION")
+        assertEquals(
+            (before["eligible_matured_memberships"] as? Number)?.toLong().orZero() + 1L,
+            (matured.getValue("eligible_matured_memberships") as Number).toLong(),
+        )
+        assertEquals(
+            (before["pending_memberships"] as? Number)?.toLong().orZero(),
+            (matured.getValue("pending_memberships") as Number).toLong(),
+        )
+    }
+
+    @Test
+    fun `기존 여행의 첫 관측 편집을 신규 생성이나 참여로 바꾸지 않는다`() {
+        val owner = member()
+        val plan = tx { service.create(owner, creation()) }
+        // Model a plan that predates usage collection, without fabricating historical events.
+        jdbc.sql("DELETE FROM travel_usage_cohorts WHERE travel_plan_id = :id").param("id", plan.id).update()
+        tx { service.execute(owner, plan.id, add("Existing trip edit")) }
+        val cohort =
+            jdbc
+                .sql("SELECT entry_kind, days_until_start FROM travel_usage_cohorts WHERE travel_plan_id = :id")
+                .param("id", plan.id)
+                .query()
+                .singleRow()
+        assertEquals("EXISTING", cohort["entry_kind"])
+        assertNull(cohort["days_until_start"])
+        assertEquals(1L, usageEditCount(plan.id))
+    }
+
+    private fun Long?.orZero(): Long = this ?: 0L
+
+    private fun usageEditCount(planId: UUID): Long =
+        jdbc
+            .sql("SELECT count(*) FROM travel_usage_edits e JOIN travel_usage_cohorts c ON c.id = e.cohort_id WHERE c.travel_plan_id = :id")
+            .param("id", planId)
+            .query(Long::class.javaObjectType)
+            .single()
+
     private fun reminderFixture(forOwner: Boolean = true): ReminderFixture {
         val trip = fixture(startDate = LocalDate.now().plusDays(10))
         val member = if (forOwner) trip.owner else trip.other
@@ -596,7 +833,7 @@ class TravelTransactionIntegrationTest {
         table: String,
         plan: UUID,
     ): Long {
-        require(table in setOf("travel_plans", "travel_plan_changes", "travel_plan_member_commands"))
+        require(table in setOf("travel_plans", "travel_plan_changes", "travel_plan_member_commands", "travel_usage_cohorts"))
         val column = if (table == "travel_plans") "id" else "travel_plan_id"
         return jdbc
             .sql("SELECT count(*) FROM $table WHERE $column = :id")

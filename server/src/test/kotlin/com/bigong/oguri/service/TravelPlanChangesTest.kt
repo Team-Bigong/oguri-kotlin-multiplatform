@@ -9,6 +9,7 @@ import com.bigong.oguri.repository.MemberRepository
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelPlanViewRepository
+import com.bigong.oguri.repository.TravelUsageRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -32,6 +33,7 @@ class TravelPlanChangesTest {
             mock(DestinationRepository::class.java),
             mock(TravelPlanViewRepository::class.java),
             collaboration,
+            mock(TravelUsageRepository::class.java),
         )
     private val member = "change-author"
     private val plan =

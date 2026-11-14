@@ -17,6 +17,9 @@ import com.bigong.oguri.repository.MemberRepository
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelPlanViewRepository
+import com.bigong.oguri.repository.TravelUsageEdit
+import com.bigong.oguri.repository.TravelUsageEntry
+import com.bigong.oguri.repository.TravelUsageRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -36,6 +39,7 @@ class TravelPlanService(
     private val destinations: DestinationRepository,
     private val views: TravelPlanViewRepository,
     private val collaboration: TravelCollaborationRepository,
+    private val usage: TravelUsageRepository,
 ) {
     @Transactional
     fun create(
@@ -56,23 +60,26 @@ class TravelPlanService(
             return existing.toSummary()
         }
         request.source?.destinationId?.let { require(destinations.existsById(it)) }
-        return plans
-            .save(
-                TravelPlan(
-                    id = UUID.randomUUID(),
-                    ownerId = memberId,
-                    creationRequestId = request.requestId,
-                    creationFingerprint = fingerprint,
-                    city = request.city.trim(),
-                    timeZone = request.timeZone.trim(),
-                    title = request.title.trim(),
-                    startDate = request.startDate,
-                    endDate = request.endDate,
-                    sourceDestinationId = request.source?.destinationId,
-                    sourceStartDate = request.source?.startDate,
-                    sourceEndDate = request.source?.endDate,
-                ),
-            ).toSummary()
+        val plan =
+            plans
+                .saveAndFlush(
+                    TravelPlan(
+                        id = UUID.randomUUID(),
+                        ownerId = memberId,
+                        creationRequestId = request.requestId,
+                        creationFingerprint = fingerprint,
+                        city = request.city.trim(),
+                        timeZone = request.timeZone.trim(),
+                        title = request.title.trim(),
+                        startDate = request.startDate,
+                        endDate = request.endDate,
+                        sourceDestinationId = request.source?.destinationId,
+                        sourceStartDate = request.source?.startDate,
+                        sourceEndDate = request.source?.endDate,
+                    ),
+                )
+        usage.start(plan, memberId, TravelUsageEntry.CREATED)
+        return plan.toSummary()
     }
 
     @Transactional(readOnly = true)
@@ -236,19 +243,22 @@ class TravelPlanService(
                 is TravelPlanCommand.UndoVisit -> undo?.second?.dayNumber
             }
 
+        val changeKind =
+            when (command) {
+                is TravelPlanCommand.AddVisit -> TravelUsageEdit.VISIT_ADDED
+                is TravelPlanCommand.EditVisit -> TravelUsageEdit.VISIT_EDITED
+                is TravelPlanCommand.ReorderDay -> TravelUsageEdit.DAY_REORDERED
+                is TravelPlanCommand.RemoveVisit -> TravelUsageEdit.VISIT_REMOVED
+                is TravelPlanCommand.UndoVisit -> TravelUsageEdit.VISIT_UNDONE
+            }
+        usage.recordEdit(plan, memberId, changeKind)
         collaboration.recordMemberCommand(planId, memberId, command.requestId, fingerprint)
         collaboration.recordChange(
             planId,
             memberId,
             plan.revision,
             changeDay,
-            when (command) {
-                is TravelPlanCommand.AddVisit -> "VISIT_ADDED"
-                is TravelPlanCommand.EditVisit -> "VISIT_EDITED"
-                is TravelPlanCommand.ReorderDay -> "DAY_REORDERED"
-                is TravelPlanCommand.RemoveVisit -> "VISIT_REMOVED"
-                is TravelPlanCommand.UndoVisit -> "VISIT_UNDONE"
-            },
+            changeKind.name,
             visitId =
                 when (command) {
                     is TravelPlanCommand.AddVisit -> plan.orderedVisits().single { it.revision == plan.revision }.id

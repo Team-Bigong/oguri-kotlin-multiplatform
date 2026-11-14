@@ -7,6 +7,9 @@ import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelMemberRow
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelReminderRepository
+import com.bigong.oguri.repository.TravelUsageEdit
+import com.bigong.oguri.repository.TravelUsageEntry
+import com.bigong.oguri.repository.TravelUsageRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -28,6 +31,7 @@ class TravelCollaborationService(
     private val members: MemberRepository,
     private val collaboration: TravelCollaborationRepository,
     private val reminders: TravelReminderRepository,
+    private val usage: TravelUsageRepository,
     @param:Value("\${TRAVEL_INVITE_TTL_DAYS:7}") private val inviteTtlDays: Long,
 ) {
     private val random: SecureRandom = SecureRandom()
@@ -122,6 +126,8 @@ class TravelCollaborationService(
         val invite = collaboration.invite(hash) ?: throw TravelInviteException(HttpStatus.NOT_FOUND, "INVITE_UNKNOWN")
         requireActive(invite.expiresAt, invite.revokedAt)
         collaboration.join(planId, memberId)
+        usage.start(plan, plan.ownerId, TravelUsageEntry.EXISTING)
+        usage.start(plan, memberId, TravelUsageEntry.JOINED)
         return JoinedTravelPlan(planId)
     }
 
@@ -144,6 +150,7 @@ class TravelCollaborationService(
         )
         if (reminderTimeChanged) reminders.cancelForPlan(planId)
         collaboration.recordChange(planId, memberId, plan.revision, null, "TRIP_UPDATED")
+        usage.recordEdit(plan, memberId, TravelUsageEdit.TRIP_UPDATED)
     }
 
     @Transactional
