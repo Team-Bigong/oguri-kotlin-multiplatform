@@ -29,6 +29,7 @@ jetbrains-navigation = "2.9.1"
 metro = "0.9.4"
 coil = "3.3.0"
 kotlinx-datetime = "0.7.1"
+kotlinx-coroutines = "1.10.2"
 jjwt = "0.12.6"
 googleApiClient = "2.7.0"
 googleOAuthClient = "1.36.0"
@@ -42,8 +43,13 @@ google-services-plugin = "4.4.4"
 firebase-crashlytics-gradle = "3.0.6"
 firebase-crashlytics-ktx = "19.4.4"
 firebase-analytics-ktx = "22.5.0"
+firebase-messaging = "24.1.2"
+
+googleMapsAndroid = "20.0.0"
 
 [libraries]
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "googleMapsAndroid" }
 analytics-android = { module = "com.amplitude:analytics-android", version.ref = "analyticsAndroid" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -86,6 +92,7 @@ androidx-credentials = { module = "androidx.credentials:credentials", version.re
 androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "androidx-credentials" }
 google-android-googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
 firebase-crashlytics-ktx = { module = "com.google.firebase:firebase-crashlytics-ktx", version.ref = "firebase-crashlytics-ktx" }
+firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging" }
 firebase-analytics-ktx = { module = "com.google.firebase:firebase-analytics-ktx", version.ref = "firebase-analytics-ktx" }
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 plugin-session-replay-android = { module = "com.amplitude:plugin-session-replay-android", version.ref = "pluginSessionReplayAndroid" }

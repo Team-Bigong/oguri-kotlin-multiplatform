@@ -9,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 class WebConfig(
     private val authInterceptor: AuthInterceptor,
     private val adminAuthInterceptor: AdminAuthInterceptor,
+    private val travelOperationInterceptor: TravelOperationInterceptor,
 ) : WebMvcConfigurer {
     override fun addCorsMappings(registry: CorsRegistry) {
         registry
@@ -33,5 +34,6 @@ class WebConfig(
                 "/api/v1/auth/login/apple",
                 "/api/v1/auth/refresh",
             )
+        registry.addInterceptor(travelOperationInterceptor).addPathPatterns("/api/v1/**")
     }
 }

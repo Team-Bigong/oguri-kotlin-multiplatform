@@ -10,12 +10,27 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.di.AppGraph
+import com.bigong.oguri.core.network.AuthTokenStore
+import com.bigong.oguri.core.network.TRAVEL_PLANNER_ENABLED_IN_RELEASE
+import com.bigong.oguri.core.network.isDebugPlatformBuild
+import com.bigong.oguri.core.platform.PlatformBackGestureContainer
+import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.domain.model.DisplayThemeMode
+import com.bigong.oguri.domain.model.TravelDates
+import com.bigong.oguri.domain.repository.TravelRecommendationEntry
+import com.bigong.oguri.domain.repository.TravelRecommendationSource
 import com.bigong.oguri.feature.calendar.ui.CalendarRoute
 import com.bigong.oguri.feature.calendar.ui.CalendarViewModel
 import com.bigong.oguri.feature.home.ui.HomeRoute
@@ -30,7 +45,17 @@ import com.bigong.oguri.feature.photodetail.ui.PhotoDetailRoute
 import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.search.ui.SearchRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
+import com.bigong.oguri.feature.travelplanner.ui.CreateTravelPlanRoute
+import com.bigong.oguri.feature.travelplanner.ui.TravelInviteRoute
+import com.bigong.oguri.feature.travelplanner.ui.TravelMembersRoute
+import com.bigong.oguri.feature.travelplanner.ui.TravelPlanRoute
+import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
+import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 private const val NAVIGATION_FADE_DURATION_MILLIS = 180
 private const val NAVIGATION_SLIDE_DURATION_MILLIS = 240
@@ -48,11 +73,42 @@ fun MainNavHost(
     calendarTabReselectTrigger: Int,
     myPageTabReselectTrigger: Int,
     onLoginSucceeded: () -> Unit,
+    onTravelAuthenticationFinished: () -> Unit,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
     currentDisplayThemeMode: DisplayThemeMode,
     onDisplayThemeModeChange: (DisplayThemeMode) -> Unit,
 ) {
+    val navigationScope = rememberCoroutineScope()
+    val travelEnabled = isDebugPlatformBuild() || TRAVEL_PLANNER_ENABLED_IN_RELEASE
+    val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
+    fun recordRecommendation(source: TravelRecommendationSource, entry: TravelRecommendationEntry) {
+        navigationScope.launch {
+            try {
+                appGraph.travelRecommendationUsage.record(source, entry)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                // Measurement must not block navigation.
+            }
+        }
+    }
+
+    fun finishTravelAuthentication() {
+        val previous = navigator.navHostController.previousBackStackEntry
+        val creation = previous?.takeIf { it.destination.hasRoute<RouteModel.CreateTravelPlan>() }?.toRoute<RouteModel.CreateTravelPlan>()
+        onTravelAuthenticationFinished()
+        if (navigator.popBackStack() && creation != null) {
+            val source =
+                when {
+                    creation.destinationId != null -> TravelRecommendationSource.CITY
+                    creation.startDate != null && creation.endDate != null -> TravelRecommendationSource.PERIOD
+                    else -> null
+                }
+            if (source != null) recordRecommendation(source, TravelRecommendationEntry.LOGIN_RESUMED)
+        }
+    }
+
     NavHost(
         navController = navigator.navHostController,
         startDestination = RouteModel.Splash,
@@ -145,6 +201,40 @@ fun MainNavHost(
                 onOpenWebDocument = navigator::navigateToWebDocument,
             )
         }
+        composable<RouteModel.TravelLogin> {
+            LoginRoute(
+                loginViewModelProvider = appGraph.loginViewModelProvider,
+                snackbarHostState = snackbarHostState,
+                onLoginSucceeded = {},
+                onLoginCompleted = { completed ->
+                    if (completed) {
+                        finishTravelAuthentication()
+                    } else {
+                        navigator.navigateToTravelOnboarding()
+                    }
+                },
+                onGuestBrowseClick = { navigator.popBackStack() },
+                isReturnToTravel = true,
+            )
+        }
+        composable<RouteModel.TravelOnboarding> {
+            val cancel = {
+                AuthTokenStore.clearTokens()
+                navigator.popBackStack()
+                Unit
+            }
+            PlatformBackGestureContainer(enabled = true, onBack = cancel) {
+                OnboardingRoute(
+                    onboardingViewModelProvider = appGraph.onboardingViewModelProvider,
+                    snackbarHostState = snackbarHostState,
+                    onBackClick = cancel,
+                    onHomeClick = {
+                        finishTravelAuthentication()
+                    },
+                    onOpenWebDocument = navigator::navigateToWebDocument,
+                )
+            }
+        }
         composable<RouteModel.Home> {
             HomeRoute(
                 homeViewModel = homeViewModelProvider(),
@@ -160,6 +250,26 @@ fun MainNavHost(
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
                 onSearchClick = navigator::navigateToSearch,
+                onCreateTravelPlan =
+                    if (travelEnabled) {
+                        { startDate, endDate ->
+                            recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
+                            navigator.navigateToCreateTravelPlan(startDate = startDate, endDate = endDate)
+                        }
+                    } else {
+                        null
+                    },
+                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.EXPOSED) },
+                travelResume =
+                    if (travelEnabled && travelSession.tokens != null) {
+                        {
+                            TravelResumeEntry(
+                                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
+                            ) { navigator.navigateToTravelPlan(it) }
+                        }
+                    } else {
+                        null
+                    },
                 onLoginRequired = navigator::navigateToLogin,
             )
         }
@@ -187,6 +297,109 @@ fun MainNavHost(
                 onOpenPeriodDetail = navigator::navigateToPeriodDetail,
             )
         }
+        composable<RouteModel.TravelInvite> { entry ->
+            val token by TravelInviteIntent.token.collectAsStateWithLifecycle()
+            val inviteViewModel =
+                viewModel<com.bigong.oguri.feature.travelplanner.ui.TravelCollaborationViewModel>(
+                    key = "travel-invite-${travelSession.version}",
+                ) { appGraph.travelCollaborationViewModelProvider() }
+            val closeInvite: () -> Unit = {
+                if (token?.let(TravelInviteIntent::clear) != false) navigator.popBackStack()
+            }
+            val lifecycleState by entry.lifecycle.currentStateFlow.collectAsStateWithLifecycle()
+            val isCurrent = lifecycleState == Lifecycle.State.RESUMED
+            PlatformBackHandler(enabled = isCurrent, onBack = closeInvite)
+            PlatformBackGestureContainer(enabled = isCurrent, onBack = closeInvite) {
+                TravelInviteRoute(
+                    token = token,
+                    signedIn = travelSession.tokens != null,
+                    viewModel = inviteViewModel,
+                    onSignIn = navigator::navigateToTravelLogin,
+                    onBack = closeInvite,
+                    onJoined = {
+                        if (token?.let(TravelInviteIntent::clear) == true) navigator.openJoinedTravelPlan(it)
+                    },
+                )
+            }
+        }
+        composable<RouteModel.TravelMembers> { entry ->
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
+            val route = entry.toRoute<RouteModel.TravelMembers>()
+            TravelMembersRoute(
+                planId = route.planId,
+                dates = TravelDates(LocalDate.parse(route.startDate), LocalDate.parse(route.endDate)),
+                onSelectDay = navigator::showTravelDay,
+                viewModel = viewModel(key = "travel-members-${travelSession.version}") { appGraph.travelCollaborationViewModelProvider() },
+                reminderViewModel =
+                    viewModel(
+                        key = "travel-reminder-${travelSession.version}",
+                    ) { appGraph.travelReminderViewModelProvider() },
+                onBack = { navigator.popBackStack() },
+                onClosed = navigator::closeManagedTravelPlan,
+                onOpenSource = { source -> source.toRecommendationRoute()?.let(navigator::navigateToRouteModel) },
+            )
+        }
+        composable<RouteModel.TravelPlans> {
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
+            TravelPlansRoute(
+                viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
+                onBack = { navigator.popBackStack() },
+                signedIn = travelSession.tokens != null,
+                onSignIn = navigator::navigateToTravelLogin,
+                onCreate = { navigator.navigateToCreateTravelPlan() },
+                onOpen = { navigator.navigateToTravelPlan(it) },
+            )
+        }
+        composable<RouteModel.CreateTravelPlan> { entry ->
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
+            val route = entry.toRoute<RouteModel.CreateTravelPlan>()
+            CreateTravelPlanRoute(
+                viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
+                destinationId = route.destinationId,
+                recommendedStartDate = route.startDate,
+                recommendedEndDate = route.endDate,
+                signedIn = travelSession.tokens != null,
+                onSignIn = navigator::navigateToTravelLogin,
+                onOpenExisting = { navigator.navigateToTravelPlan(it, fromCreation = true) },
+                onBack = { navigator.popBackStack() },
+                onCreated = { navigator.navigateToTravelPlan(it, fromCreation = true) },
+            )
+        }
+        composable<RouteModel.TravelPlan> { entry ->
+            if (travelSession.tokens == null) {
+                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
+                return@composable
+            }
+            val planId = entry.toRoute<RouteModel.TravelPlan>().planId
+            val travelViewModel =
+                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
+            TravelPlanRoute(
+                collaborationViewModel =
+                    viewModel(
+                        key = "travel-changes-${travelSession.version}",
+                    ) { appGraph.travelCollaborationViewModelProvider() },
+                viewModel = travelViewModel,
+                planId = planId,
+                requestedDay = entry.savedStateHandle.getStateFlow(TRAVEL_DAY_REQUEST, null),
+                onDayConsumed = { entry.savedStateHandle.set<Int?>(TRAVEL_DAY_REQUEST, null) },
+                onMembers = { start, end -> navigator.navigateToTravelMembers(planId, start, end) },
+                onFindNextHoliday = {
+                    navigator.openCalendarTab()
+                    navigationScope.launch { travelViewModel.recordNextHolidayOpened(planId) }
+                },
+                onSignIn = navigator::navigateToTravelLogin,
+                onBack = { navigator.popBackStack() },
+            )
+        }
         composable<RouteModel.MyPage> {
             MyPageRoute(
                 myPageViewModel = myPageViewModelProvider(),
@@ -196,6 +409,7 @@ fun MainNavHost(
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
                 onOpenDisplaySettings = navigator::navigateToDisplaySettings,
+                onOpenTravelPlans = navigator::navigateToTravelPlans.takeIf { travelEnabled },
                 onLoggedOut = onLoggedOut,
                 onWithdrawCompleted = onWithdrawCompleted,
                 onLoginRequired = navigator::navigateToLogin,
@@ -224,6 +438,16 @@ fun MainNavHost(
                 placeId = route.placeId,
                 startDate = route.startDate,
                 endDate = route.endDate,
+                onCreateTravelPlan =
+                    if (travelEnabled) {
+                        {
+                            recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.CLICKED)
+                            navigator.navigateToCreateTravelPlan(route.placeId, route.startDate, route.endDate)
+                        }
+                    } else {
+                        null
+                    },
+                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.EXPOSED) },
                 onBackClick = { navigator.popBackStack() },
                 onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { targetPlaceId ->
@@ -256,6 +480,16 @@ fun MainNavHost(
                 snackbarHostState = snackbarHostState,
                 startDate = route.startDate,
                 endDate = route.endDate,
+                onCreateTravelPlan =
+                    if (travelEnabled) {
+                        {
+                            recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
+                            navigator.navigateToCreateTravelPlan(startDate = route.startDate, endDate = route.endDate)
+                        }
+                    } else {
+                        null
+                    },
+                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.EXPOSED) },
                 onBackClick = { navigator.popBackStack() },
                 onLoginRequired = navigator::navigateToLogin,
                 onPlaceClick = { placeId ->
