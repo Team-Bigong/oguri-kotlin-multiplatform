@@ -1,0 +1,40 @@
+name: ios-ci
+
+on:
+  pull_request:
+    paths:
+      - "composeApp/**"
+      - "shared/**"
+      - "gradle/**"
+      - "*.gradle.kts"
+      - "gradle.properties"
+      - "version.properties"
+      - ".github/workflows/ios-ci.yml"
+  push:
+    branches:
+      - develop-mobile
+
+jobs:
+  simulator-tests:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Execute iOS simulator tests
+        run: ./gradlew :composeApp:iosSimulatorArm64Test --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-test-reports
+          path: composeApp/build/reports/tests/iosSimulatorArm64Test
+          if-no-files-found: ignore

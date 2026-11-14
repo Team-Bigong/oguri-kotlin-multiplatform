@@ -2,8 +2,8 @@ package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.Member
 import com.bigong.oguri.dto.request.AdminMemberCreateRequest
-import com.bigong.oguri.dto.response.AdminMemberResponse
 import com.bigong.oguri.dto.request.AdminMemberUpdateRequest
+import com.bigong.oguri.dto.response.AdminMemberResponse
 import com.bigong.oguri.repository.MemberRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException
 @Transactional
 class AdminMemberService(
     private val memberRepository: MemberRepository,
+    private val travelCollaborationService: TravelCollaborationService,
 ) {
     @Transactional(readOnly = true)
     fun getMemberList(): List<AdminMemberResponse> =
@@ -66,6 +67,7 @@ class AdminMemberService(
     }
 
     fun deleteMember(memberId: String) {
+        travelCollaborationService.prepareAccountRemoval(memberId, administrative = true)
         if (!memberRepository.existsById(memberId)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "회원을 찾을 수 없습니다. id=$memberId")
         }

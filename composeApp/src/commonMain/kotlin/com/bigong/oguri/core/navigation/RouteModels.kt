@@ -42,6 +42,37 @@ sealed interface RouteModel {
     data object MyPage : RouteModel
 
     @Serializable
+    data object TravelPlans : RouteModel
+
+    @Serializable
+    data class CreateTravelPlan(
+        val destinationId: Long? = null,
+        val startDate: String? = null,
+        val endDate: String? = null,
+    ) : RouteModel
+
+    @Serializable
+    data class TravelMembers(
+        val planId: String,
+        val startDate: String,
+        val endDate: String,
+    ) : RouteModel
+
+    @Serializable
+    data object TravelInvite : RouteModel
+
+    @Serializable
+    data object TravelLogin : RouteModel
+
+    @Serializable
+    data object TravelOnboarding : RouteModel
+
+    @Serializable
+    data class TravelPlan(
+        val planId: String,
+    ) : RouteModel
+
+    @Serializable
     data object DisplaySettings : RouteModel
 
     @Serializable

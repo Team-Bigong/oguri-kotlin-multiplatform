@@ -23,11 +23,16 @@ import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
 import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
 import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
 import com.bigong.oguri.core.analytics.initializeOguriAnalytics
+import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
+import com.bigong.oguri.core.deeplink.parseTravelInvite
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
@@ -47,6 +52,7 @@ import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.data.local.provideDisplayThemeModeLocalDataSource
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import com.bigong.oguri.domain.model.DisplayThemeMode
+import com.bigong.oguri.feature.travelplanner.ui.TravelReminderEntry
 import dev.zacsweers.metro.createGraphFactory
 import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
@@ -98,6 +104,35 @@ fun NavDisplay(
                     httpClient = httpClient,
                 )
             }
+        val reminderSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
+        val routeName = currentDestination?.route?.substringBefore('/')?.substringBefore('?')
+        val reminderReady =
+            routeName != null &&
+                routeName !in
+                setOf(
+                    RouteModel.Splash
+                        .serializer()
+                        .descriptor.serialName,
+                    RouteModel.Login
+                        .serializer()
+                        .descriptor.serialName,
+                    RouteModel.Onboarding
+                        .serializer()
+                        .descriptor.serialName,
+                    RouteModel.TravelLogin
+                        .serializer()
+                        .descriptor.serialName,
+                    RouteModel.TravelOnboarding
+                        .serializer()
+                        .descriptor.serialName,
+                )
+        TravelReminderEntry(
+            viewModel = viewModel(key = "travel-reminder-entry-${reminderSession.version}") { appGraph.travelReminderViewModelProvider() },
+            ready = reminderReady,
+            signedIn = reminderSession.tokens != null,
+            onSignIn = navigator::navigateToTravelLogin,
+            onOpen = { navigator.navigateToTravelPlan(it) },
+        )
         val homeViewModelLazy =
             remember(authSessionVersion) {
                 lazy(LazyThreadSafetyMode.NONE) {
@@ -176,10 +211,30 @@ fun NavDisplay(
             }
         }
 
-        LaunchedEffect(incomingDeepLinkUrl) {
+        LaunchedEffect(incomingDeepLinkUrl, currentDestination?.route) {
             val deepLinkUrl = incomingDeepLinkUrl ?: return@LaunchedEffect
+            if (currentDestination?.route == null ||
+                currentDestination.route ==
+                RouteModel.Splash
+                    .serializer()
+                    .descriptor.serialName
+            ) {
+                return@LaunchedEffect
+            }
+            val invite = parseTravelInvite(deepLinkUrl)
+            if (invite != null &&
+                (currentDestination.hasRoute<RouteModel.TravelLogin>() ||
+                    currentDestination.hasRoute<RouteModel.TravelOnboarding>() ||
+                    currentDestination.hasRoute<RouteModel.Onboarding>())
+            ) {
+                return@LaunchedEffect
+            }
             appGraph.deepLinkStore.clearConsumed(urlText = deepLinkUrl)
-
+            if (invite != null) {
+                TravelInviteIntent.receive(invite)
+                navigator.navigateToTravelInvite()
+                return@LaunchedEffect
+            }
             val targetRoute = parseAppDeepLinkRoute(urlText = deepLinkUrl) ?: return@LaunchedEffect
             navigator.navigateToRouteModel(targetRoute)
         }
@@ -234,7 +289,12 @@ fun NavDisplay(
             if (currentRouteText != null && previousRoute != null) {
                 if (!hasCompletedInitialMainTabEntry && isMainTabRoute(currentRouteText)) {
                     hasCompletedInitialMainTabEntry = true
-                } else if (hasCompletedInitialMainTabEntry && previousRoute != currentRouteText) {
+                } else if (
+                    hasCompletedInitialMainTabEntry &&
+                    previousRoute != currentRouteText &&
+                    !isTravelPlannerRoute(previousRoute) &&
+                    !isTravelPlannerRoute(currentRouteText)
+                ) {
                     tryShowAppOpenAdAfterScreenMove()
                 }
 
@@ -306,7 +366,7 @@ fun NavDisplay(
         }
 
         PlatformBackGestureContainer(
-            enabled = !shouldHandleDoubleBackToExit,
+            enabled = !shouldHandleDoubleBackToExit && !isTravelPlannerRoute(currentDestination?.route),
             onBack = { navigator.popBackStack() },
         ) {
             Box(
@@ -359,6 +419,7 @@ fun NavDisplay(
                                 )
                             }
                         },
+                        onTravelAuthenticationFinished = { authSessionVersion += 1 },
                         onLoggedOut = {
                             authSessionVersion += 1
                             navigator.navigateToLoginAndClearBackStack()
@@ -411,3 +472,30 @@ fun NavDisplay(
         }
     }
 }
+
+private val travelRouteNames: Set<String> =
+    setOf(
+        RouteModel.TravelPlans
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.CreateTravelPlan
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelPlan
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelInvite
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelMembers
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelLogin
+            .serializer()
+            .descriptor.serialName,
+        RouteModel.TravelOnboarding
+            .serializer()
+            .descriptor.serialName,
+    )
+
+private fun isTravelPlannerRoute(routeText: String?): Boolean = routeText?.substringBefore('/')?.substringBefore('?') in travelRouteNames

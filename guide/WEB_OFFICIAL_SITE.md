@@ -2,15 +2,23 @@
 
 ## 목적
 - 오구리 공식 웹(`/`)에서 앱 핵심 가치를 빠르게 전달하고 스토어 설치로 자연스럽게 전환한다.
-- 앱 내 UX 라이팅 톤(`...해볼까요?`, `부담 없는 제안형`)을 웹에서도 일관되게 사용한다.
+- 앱 내 UX 라이팅 톤(`...해볼까요?`, 부담 없는 제안형)을 웹에서도 일관되게 사용한다.
+- 공식 웹은 어드민 웹과 같은 Vite 앱 안에서 path/hash 기준으로 분기된다.
 
-## 반영된 구조
+## 현재 구조
+- 라우팅 분기: `web/src/App.tsx`, `web/src/features/routing/pathResolver.ts`
+- 공식 홈: `web/src/features/official/OfficialHomePage.tsx`
+- 스토어 버튼: `web/src/features/official/components/StoreButtons.tsx`
+- 문구/링크 데이터: `web/src/features/official/data/officialContent.ts`
+- 스타일: `web/src/features/official/official.css`
+
+## 반영된 화면 구성
 - Sticky Navigation: 브랜드 + 섹션 앵커 + 스토어 CTA
-- Dark Hero: 강한 대비의 대형 카피 + 이중 디바이스 비주얼
-- Highlight Band: 핵심 한 줄 메시지 강조
+- Dark Hero: 대형 카피 + 이중 디바이스 비주얼
+- Highlight Band: 핵심 메시지 강조
 - Feature Grid: 3단계 핵심 기능
-- Preview Split Section: 설명 + 실제 화면 카드
-- FAQ: 아코디언
+- Preview Section: 앱 화면 카드 3개
+- FAQ: `details/summary` 기반 아코디언
 - Final CTA + Footer
 
 ## UX 라이팅 기준
@@ -21,12 +29,21 @@
   - 명령형보다 제안형 문장 사용
   - 과장보다 "쉽게/부담 없이" 뉘앙스 유지
   - 한 문장 길이를 짧게 유지
+  - 앱의 "연차 조합 추천" 포지셔닝을 흐리지 않는다.
 
 ## 스토어 링크 설정
-- 공식 웹은 아래 환경변수를 읽는다. 값이 없으면 각 스토어 메인으로 fallback 된다.
+- 공식 웹은 아래 환경변수를 읽는다.
   - `VITE_PLAY_STORE_URL`
   - `VITE_APP_STORE_URL`
-- 코드 위치: `web/src/config/env.ts`, `web/src/features/official/OfficialHomePage.tsx`
+- 값이 없으면 코드의 실제 스토어 상세 페이지 URL로 fallback 된다.
+- 현재 Google Play fallback은 `com.bigong.oguri` package 상세 페이지이다.
+- 현재 App Store fallback은 오구리 App Store 상세 페이지이다.
+- 코드 위치: `web/src/config/env.ts`, `web/src/features/official/data/officialContent.ts`
+
+## 환경 변수 주의
+- `web/src/config/env.ts`는 `VITE_API_BASE_URL`과 Firebase 관련 필수 env도 함께 검증한다.
+- 공식 웹만 열더라도 현재 구조상 필수 env가 비어 있으면 앱 초기화가 실패할 수 있다.
+- Render 배포 환경에는 공식 웹/어드민 웹에서 쓰는 env를 모두 설정한다.
 
 ## 홍보 에셋 교체 경로
 - `web/public/assets/official/screenshots/home-screen.png`
@@ -39,13 +56,19 @@
 - `web/public/assets/official/share-thumbnail.png`
 - 상세 가이드: `web/public/assets/official/README.md`
 
+## 푸터 외부 링크
+- 건의하기: Google Form
+- 서비스 이용약관: Notion
+- 개인정보 처리방침: Notion
+- 링크 상수는 `web/src/features/official/data/officialContent.ts`에 둔다.
+
 ## 운영 체크리스트
 - 실제 스토어 상세 페이지 URL로 `VITE_PLAY_STORE_URL`, `VITE_APP_STORE_URL` 설정
 - 배포 후 모바일/데스크톱에서 CTA 클릭 동작 확인
-- 푸터 외부 링크 확인:
-  - 건의하기(Google Form)
-  - 서비스 이용약관(Notion)
-  - 개인정보 처리방침(Notion)
+- `/admin` 직접 접근을 위해 Render rewrite rule 확인
+- `/#/admin` fallback 진입 확인
+- `public/app-ads.txt` 배포 결과 확인
+- 푸터 외부 링크 확인
 
 ## 레퍼런스 반영 포인트
 - 참고 사이트:
@@ -55,5 +78,5 @@
 - 반영 의도:
   - 첫 화면에서 즉시 CTA가 보이는 구조
   - Hero/Feature/Preview/CTA/Footer의 명확한 랜딩 흐름
-  - 다크 히어로와 라이트 본문 대비로 임팩트 강화
+  - 다크 히어로와 라이트 본문 대비
   - 문구는 오구리 앱 `strings.xml` 톤(제안형, 부담 없는 문장) 유지

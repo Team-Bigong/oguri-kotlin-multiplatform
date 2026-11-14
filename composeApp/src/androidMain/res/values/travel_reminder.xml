@@ -1,0 +1,4 @@
+<resources>
+    <string name="travel_reminder_push_title">Trip reminder</string>
+    <string name="travel_reminder_push_body">Open Oguri to review your trip.</string>
+</resources>

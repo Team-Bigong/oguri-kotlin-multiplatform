@@ -51,7 +51,7 @@ final class AmplitudeBridge {
         if amplitude != nil {
             return
         }
-        amplitude = Amplitude(apiKey: apiKey)
+        amplitude = Amplitude(configuration: Configuration(apiKey: apiKey, autocapture: [], enableAutoCaptureRemoteConfig: false))
     }
 
     @objc
