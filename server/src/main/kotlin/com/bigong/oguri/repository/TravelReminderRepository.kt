@@ -89,12 +89,11 @@ class TravelReminderRepository(private val jdbc: JdbcClient) {
         ).param("plan", planId).param("member", memberId).update()
     }
 
-    fun cancelVersion(planId: UUID, memberId: String, reminderId: UUID) {
+    fun cancelVersion(planId: UUID, memberId: String, reminderId: UUID): Boolean =
         jdbc.sql(
             """UPDATE travel_reminders SET status = 'CANCELLED', updated_at = statement_timestamp()
                WHERE travel_plan_id = :plan AND member_id = :member AND id = :id AND status <> 'CANCELLED'""",
-        ).param("plan", planId).param("member", memberId).param("id", reminderId).update()
-    }
+        ).param("plan", planId).param("member", memberId).param("id", reminderId).update() > 0
 
     fun cancelForPlan(planId: UUID) {
         jdbc.sql(

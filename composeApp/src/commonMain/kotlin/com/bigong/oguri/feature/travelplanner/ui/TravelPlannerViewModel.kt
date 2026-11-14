@@ -73,16 +73,25 @@ class TravelPlannerViewModel(
         planId: String,
         kind: TravelUsageActivity,
     ) {
+        viewModelScope.launch { recordCurrentActivity(planId, kind) }
+    }
+
+    internal suspend fun recordNextHolidayOpened(planId: String) {
+        recordCurrentActivity(planId, TravelUsageActivity.NEXT_HOLIDAY_OPENED)
+    }
+
+    private suspend fun recordCurrentActivity(
+        planId: String,
+        kind: TravelUsageActivity,
+    ) {
         val current = state.value
         if (current.isOffline || current.plan?.summary?.id != planId) return
-        viewModelScope.launch {
-            try {
-                repository.recordActivity(planId, kind)
-            } catch (exception: CancellationException) {
-                throw exception
-            } catch (_: Exception) {
-                // Measurement is best effort and must not change access/edit/recovery state.
-            }
+        try {
+            repository.recordActivity(planId, kind)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (_: Exception) {
+            // Measurement is best effort and must not change access/edit/recovery state.
         }
     }
 

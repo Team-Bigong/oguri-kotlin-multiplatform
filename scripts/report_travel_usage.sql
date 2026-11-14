@@ -6,12 +6,22 @@ WITH plan_edits AS (
            min(occurred_at) FILTER (WHERE after_participation) AS first_collaborative_save_at
     FROM travel_usage_edits
     GROUP BY plan_key
+), change_activity AS (
+    SELECT cohort_id,
+           bool_or(kind = 'CHANGES_VIEWED') AS viewed_changes,
+           bool_or(kind = 'CHANGE_DAY_OPENED') AS opened_changed_day
+    FROM travel_usage_activity
+    WHERE kind IN ('CHANGES_VIEWED', 'CHANGE_DAY_OPENED')
+    GROUP BY cohort_id
 )
 SELECT c.entry_source,
        count(*) FILTER (WHERE c.entry_kind = 'CREATED') AS created_plans,
        count(*) FILTER (WHERE c.entry_kind = 'CREATED' AND e.first_dated_save_at IS NOT NULL) AS activated_plans,
        count(*) FILTER (WHERE c.entry_kind = 'CREATED' AND e.first_collaborative_save_at IS NOT NULL) AS collaborative_plans,
        count(*) FILTER (WHERE c.entry_kind = 'JOINED') AS joined_memberships,
+       count(*) FILTER (WHERE a.viewed_changes OR a.opened_changed_day) AS changes_viewed_memberships,
+       count(*) FILTER (WHERE a.opened_changed_day) AS changed_day_opened_memberships,
+       count(*) FILTER (WHERE c.first_reminder_opt_out_at IS NOT NULL) AS reminder_opt_out_memberships,
        count(*) FILTER (WHERE c.days_until_start >= 8 AND c.started_at + interval '7 days' <= statement_timestamp()) AS eligible_matured_memberships,
        count(*) FILTER (WHERE c.days_until_start >= 8 AND c.started_at + interval '7 days' > statement_timestamp()) AS pending_memberships,
        count(*) FILTER (WHERE c.days_until_start BETWEEN 1 AND 7) AS imminent_memberships,
@@ -20,5 +30,6 @@ SELECT c.entry_source,
        count(*) FILTER (WHERE c.entry_kind = 'EXISTING') AS unknown_start_memberships
 FROM travel_usage_cohorts c
 LEFT JOIN plan_edits e ON e.plan_key = c.plan_key
+LEFT JOIN change_activity a ON a.cohort_id = c.id
 GROUP BY c.entry_source
 ORDER BY c.entry_source;

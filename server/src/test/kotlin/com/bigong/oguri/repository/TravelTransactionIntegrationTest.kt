@@ -120,6 +120,7 @@ class TravelTransactionIntegrationTest {
         val plans = repositories.getRepository(TravelPlanRepository::class.java)
         val members = repositories.getRepository(MemberRepository::class.java)
         changes = TravelCollaborationRepository(jdbc)
+        val usage = TravelUsageRepository(jdbc)
         service =
             TravelPlanService(
                 plans,
@@ -128,13 +129,13 @@ class TravelTransactionIntegrationTest {
                 mock(DestinationRepository::class.java),
                 TravelPlanViewRepository(jdbc),
                 changes,
-                TravelUsageRepository(jdbc),
+                usage,
             )
         reminders = TravelReminderRepository(jdbc)
-        collaboration = TravelCollaborationService(service, plans, members, changes, reminders, TravelUsageRepository(jdbc), 7)
+        collaboration = TravelCollaborationService(service, plans, members, changes, reminders, usage, 7)
         val delivery = mock(TravelReminderDelivery::class.java)
         `when`(delivery.configured).thenReturn(true)
-        reminderService = TravelReminderService(service, reminders, delivery)
+        reminderService = TravelReminderService(service, reminders, delivery, usage)
     }
 
     @AfterAll
@@ -918,6 +919,174 @@ class TravelTransactionIntegrationTest {
         )
         assertEquals(before["session_known_memberships"], after["session_known_memberships"])
         assertEquals(before["reused_memberships"], after["reused_memberships"])
+    }
+
+    @Test
+    fun `다음 여행 탐색은 종료 여행에서만 기록하고 준비 기간 재사용에 넣지 않는다`() {
+        val owner = member()
+        val today = LocalDate.now(java.time.ZoneId.of("Asia/Seoul"))
+        val upcoming = tx { service.create(owner, creation(today.plusDays(20)), UUID.randomUUID()) }
+        val session = UUID.randomUUID()
+        val kind = TravelUsageActivity.NEXT_HOLIDAY_OPENED
+        val error =
+            assertThrows(ResponseStatusException::class.java) {
+                tx { service.recordActivity(owner, upcoming.id, session, kind) }
+            }
+        assertEquals(HttpStatus.BAD_REQUEST, error.statusCode)
+        val ended = tx { service.create(owner, creation(today.minusDays(10)), UUID.randomUUID()) }
+        repeat(2) { tx { service.recordActivity(owner, ended.id, session, kind) } }
+        val planActivity =
+            jdbc
+                .sql(
+                    """
+                    SELECT count(*) FROM travel_usage_activity a JOIN travel_usage_cohorts c ON c.id = a.cohort_id
+                    WHERE c.travel_plan_id = :plan AND a.kind = :kind
+                    """,
+                ).param("plan", ended.id)
+                .param("kind", kind.name)
+                .query(Long::class.javaObjectType)
+                .single()
+        assertEquals(1L, planActivity)
+        val sql = Files.readString(Path.of("../scripts/report_travel_preparation_reuse.sql"))
+        fun reused(): Any =
+            jdbc
+                .sql(sql)
+                .query()
+                .listOfRows()
+                .first { it["entry_source"] == "ALL" }
+                .getValue("reused_memberships")
+        val before = reused()
+        jdbc
+            .sql(
+                """
+                UPDATE travel_usage_cohorts c
+                SET days_until_start = 8, started_at = a.occurred_at - interval '10 days'
+                FROM travel_usage_activity a WHERE a.cohort_id = c.id AND c.travel_plan_id = :plan
+                """,
+            ).param("plan", ended.id)
+            .update()
+        jdbc
+            .sql(
+                """
+                UPDATE travel_usage_activity a
+                SET occurred_at = c.started_at + interval '2 days'
+                FROM travel_usage_cohorts c WHERE a.cohort_id = c.id AND c.travel_plan_id = :plan
+                """,
+            ).param("plan", ended.id)
+            .update()
+        assertEquals(before, reused())
+    }
+
+    @Test
+    fun `다음 여행 집계는 회원별 첫 종료와 90일 경계에서 관찰 결과를 나눈다`() {
+        val sql = Files.readString(Path.of("../scripts/report_travel_next_trip_reuse.sql"))
+        tx {
+            jdbc.sql("SET LOCAL oguri.travel_observation_start = '2025-01-01T00:00:00Z'").update()
+            jdbc.sql("SET LOCAL oguri.travel_observation_end = '2025-05-01T00:00:00Z'").update()
+            val firstEnd = OffsetDateTime.parse("2025-01-15T00:00:00Z")
+            val owner = member()
+            val pendingOwner = member()
+            val unlinkedOwner = member()
+            val nonqualifyingOwner = member()
+            val endedPlan = usageCohort(owner, firstEnd.minusDays(12), firstEnd)
+            usageCohort(owner, firstEnd.minusDays(60), firstEnd.minusDays(40))
+            usageCohort(owner, firstEnd.minusDays(10), firstEnd.plusDays(4))
+            usageCohort(pendingOwner, firstEnd.plusDays(57), firstEnd.plusDays(70))
+            usageCohort(unlinkedOwner, firstEnd.minusDays(12), firstEnd)
+            usageCohort(nonqualifyingOwner, firstEnd.minusDays(2), firstEnd, leadDays = 0)
+            jdbc.sql("DELETE FROM members WHERE id = :member").param("member", unlinkedOwner).update()
+
+            val boundary = firstEnd.plusDays(90)
+            usageCohort(owner, firstEnd, boundary, entry = TravelUsageEntry.CREATED, leadDays = 0)
+            usageCohort(owner, boundary.plusSeconds(1), boundary.plusDays(14), entry = TravelUsageEntry.JOINED)
+            jdbc
+                .sql(
+                    """
+                    INSERT INTO travel_usage_activity (cohort_id, session_id, kind, occurred_at)
+                    VALUES (:cohort, :session, 'NEXT_HOLIDAY_OPENED', :time)
+                    """,
+                ).param("cohort", endedPlan)
+                .param("session", UUID.randomUUID())
+                .param("time", boundary)
+                .update()
+            fun totals(): Map<String, Long> =
+                jdbc
+                    .sql(sql)
+                    .query()
+                    .singleRow()
+                    .mapValues { (_, value) -> (value as Number).toLong() }
+            assertEquals(
+                mapOf(
+                    "eligible_linked_users" to 1L,
+                    "pending_linked_users" to 1L,
+                    "explored_linked_users" to 1L,
+                    "created_linked_users" to 0L,
+                    "joined_linked_users" to 0L,
+                    "started_next_trip_linked_users" to 0L,
+                    "unlinked_ended_memberships" to 1L,
+                ),
+                totals(),
+            )
+            usageCohort(owner, boundary, boundary.plusDays(20), entry = TravelUsageEntry.CREATED)
+            usageCohort(owner, boundary, boundary.plusDays(20), entry = TravelUsageEntry.JOINED)
+            val after = totals()
+            assertEquals(1L, after["created_linked_users"])
+            assertEquals(1L, after["joined_linked_users"])
+            assertEquals(1L, after["started_next_trip_linked_users"])
+        }
+    }
+
+    @Test
+    fun `변경에서 날짜 열기와 명시적 알림 해제를 사용자 여행별로 한 번 센다`() {
+        val sql = Files.readString(Path.of("../scripts/report_travel_usage.sql"))
+        fun totals(): Map<String, Long> =
+            jdbc
+                .sql(sql)
+                .query()
+                .listOfRows()
+                .firstOrNull { it["entry_source"] == "DIRECT" }
+                .orEmpty()
+                .filterValues { it is Number }
+                .mapValues { (_, value) -> (value as Number).toLong() }
+        val before = totals()
+        val alarm = reminderFixture()
+        val (planId, owner) = alarm.trip
+        repeat(2) {
+            tx { service.recordActivity(owner, planId, UUID.randomUUID(), TravelUsageActivity.CHANGE_DAY_OPENED) }
+        }
+        tx { reminderService.cancel(owner, planId, UUID.randomUUID()) }
+        assertEquals(before["reminder_opt_out_memberships"] ?: 0L, totals().getValue("reminder_opt_out_memberships"))
+        repeat(2) { tx { reminderService.cancel(owner, planId, alarm.row.id) } }
+        val after = totals()
+        for (column in listOf("changes_viewed_memberships", "changed_day_opened_memberships", "reminder_opt_out_memberships")) {
+            assertEquals((before[column] ?: 0L) + 1, after[column])
+        }
+    }
+
+    private fun usageCohort(
+        memberId: String,
+        startedAt: OffsetDateTime,
+        endedAt: OffsetDateTime,
+        entry: TravelUsageEntry = TravelUsageEntry.CREATED,
+        leadDays: Int = 8,
+    ): UUID {
+        val id = UUID.randomUUID()
+        jdbc
+            .sql(
+                """
+                INSERT INTO travel_usage_cohorts (id, plan_key, member_id, entry_kind, entry_source,
+                    started_at, days_until_start, initial_end_at)
+                VALUES (:id, :key, :member, :entry, 'DIRECT', :started, :lead, :ended)
+                """,
+            ).param("id", id)
+            .param("key", UUID.randomUUID())
+            .param("member", memberId)
+            .param("entry", entry.name)
+            .param("started", startedAt)
+            .param("lead", leadDays)
+            .param("ended", endedAt)
+            .update()
+        return id
     }
 
     private fun reminderFixture(forOwner: Boolean = true): ReminderFixture {

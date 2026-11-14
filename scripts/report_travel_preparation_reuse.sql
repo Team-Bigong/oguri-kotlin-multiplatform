@@ -6,7 +6,7 @@ WITH observed AS (
            EXISTS (
                SELECT 1 FROM travel_usage_activity a
                WHERE a.cohort_id = c.id AND a.session_id <> c.start_session_id
-                 AND a.kind <> 'PLAN_DISPLAYED'
+                 AND a.kind IN ('OVERVIEW_VIEWED', 'DAY_SELECTED', 'PIN_SELECTED', 'CHANGES_VIEWED', 'CHANGE_DAY_OPENED', 'DIRECTIONS_OPENED')
                  AND a.occurred_at >= c.started_at + interval '24 hours'
                  AND a.occurred_at <= c.started_at + interval '7 days'
            ) OR EXISTS (

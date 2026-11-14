@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,6 +47,7 @@ import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 private const val NAVIGATION_FADE_DURATION_MILLIS = 180
@@ -70,6 +72,7 @@ fun MainNavHost(
     currentDisplayThemeMode: DisplayThemeMode,
     onDisplayThemeModeChange: (DisplayThemeMode) -> Unit,
 ) {
+    val navigationScope = rememberCoroutineScope()
     val travelEnabled = isDebugPlatformBuild()
     val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
     NavHost(
@@ -330,17 +333,23 @@ fun MainNavHost(
                 TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
                 return@composable
             }
+            val planId = entry.toRoute<RouteModel.TravelPlan>().planId
+            val travelViewModel =
+                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
             TravelPlanRoute(
                 collaborationViewModel =
                     viewModel(
                         key = "travel-changes-${travelSession.version}",
                     ) { appGraph.travelCollaborationViewModelProvider() },
-                viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
-                planId = entry.toRoute<RouteModel.TravelPlan>().planId,
+                viewModel = travelViewModel,
+                planId = planId,
                 requestedDay = entry.savedStateHandle.getStateFlow(TRAVEL_DAY_REQUEST, null),
                 onDayConsumed = { entry.savedStateHandle.set<Int?>(TRAVEL_DAY_REQUEST, null) },
-                onMembers = { start, end -> navigator.navigateToTravelMembers(entry.toRoute<RouteModel.TravelPlan>().planId, start, end) },
-                onFindNextHoliday = navigator::openCalendarTab,
+                onMembers = { start, end -> navigator.navigateToTravelMembers(planId, start, end) },
+                onFindNextHoliday = {
+                    navigator.openCalendarTab()
+                    navigationScope.launch { travelViewModel.recordNextHolidayOpened(planId) }
+                },
                 onSignIn = navigator::navigateToTravelLogin,
                 onBack = { navigator.popBackStack() },
             )

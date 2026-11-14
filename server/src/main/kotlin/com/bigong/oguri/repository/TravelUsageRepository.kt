@@ -8,7 +8,16 @@ import java.util.UUID
 
 enum class TravelUsageEntry { CREATED, JOINED, EXISTING }
 
-enum class TravelUsageActivity { PLAN_DISPLAYED, OVERVIEW_VIEWED, DAY_SELECTED, PIN_SELECTED, CHANGES_VIEWED, DIRECTIONS_OPENED }
+enum class TravelUsageActivity {
+    PLAN_DISPLAYED,
+    OVERVIEW_VIEWED,
+    DAY_SELECTED,
+    PIN_SELECTED,
+    CHANGES_VIEWED,
+    CHANGE_DAY_OPENED,
+    DIRECTIONS_OPENED,
+    NEXT_HOLIDAY_OPENED,
+}
 
 enum class TravelUsageEdit { VISIT_ADDED, VISIT_EDITED, VISIT_REMOVED, DAY_REORDERED, VISIT_UNDONE, TRIP_UPDATED }
 
@@ -89,6 +98,22 @@ class TravelUsageRepository(
             .param("kind", kind.name)
             .param("dated", plan.orderedVisits().any { it.dayNumber > 0 })
             .param("plan", plan.id)
+            .param("member", memberId)
+            .update()
+    }
+
+    fun recordReminderOptOut(
+        plan: TravelPlan,
+        memberId: String,
+    ) {
+        start(plan, memberId, TravelUsageEntry.EXISTING)
+        jdbc
+            .sql(
+                """
+                UPDATE travel_usage_cohorts SET first_reminder_opt_out_at = statement_timestamp()
+                WHERE travel_plan_id = :plan AND member_id = :member AND first_reminder_opt_out_at IS NULL
+                """,
+            ).param("plan", plan.id)
             .param("member", memberId)
             .update()
     }

@@ -5,6 +5,7 @@ import com.bigong.oguri.domain.TravelReminderTime
 import com.bigong.oguri.repository.TravelReminderRepository
 import com.bigong.oguri.repository.TravelReminderRow
 import com.bigong.oguri.repository.TravelReminderStatus
+import com.bigong.oguri.repository.TravelUsageRepository
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -22,6 +23,7 @@ class TravelReminderService(
     private val plans: TravelPlanService,
     private val reminders: TravelReminderRepository,
     private val delivery: TravelReminderDelivery,
+    private val usage: TravelUsageRepository,
 ) {
     @Transactional(readOnly = true)
     fun settings(memberId: String, planId: UUID): TravelReminderSettings {
@@ -66,8 +68,8 @@ class TravelReminderService(
     @Transactional
     fun cancel(memberId: String, planId: UUID, reminderId: UUID) {
         plans.requireMember(memberId)
-        plans.accessiblePlan(memberId, planId, write = true)
-        reminders.cancelVersion(planId, memberId, reminderId)
+        val plan = plans.accessiblePlan(memberId, planId, write = true)
+        if (reminders.cancelVersion(planId, memberId, reminderId)) usage.recordReminderOptOut(plan, memberId)
     }
 
     @Transactional

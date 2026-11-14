@@ -283,6 +283,10 @@ class TravelPlanService(
     ) {
         requireMember(memberId)
         val plan = accessiblePlan(memberId, planId, write = true)
+        if (kind == TravelUsageActivity.NEXT_HOLIDAY_OPENED) {
+            val today = Instant.now().atZone(ZoneId.of(plan.timeZone)).toLocalDate()
+            if (!plan.endDate.isBefore(today)) throw ResponseStatusException(HttpStatus.BAD_REQUEST)
+        }
         usage.recordActivity(plan, memberId, sessionId, kind)
     }
 

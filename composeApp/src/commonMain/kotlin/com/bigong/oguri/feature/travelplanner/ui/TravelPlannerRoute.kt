@@ -238,7 +238,7 @@ internal fun TravelPlanRoute(
     }
     if (plan != null && showChanges) {
         LaunchedEffect(changesState.recentChanges, changesState.busy, changesState.failure) {
-            if (changesState.recentChanges != null && !changesState.busy && changesState.failure == null) {
+            if (changesState.recentChanges?.changes?.isNotEmpty() == true && !changesState.busy && changesState.failure == null) {
                 viewModel.recordActivity(planId, TravelUsageActivity.CHANGES_VIEWED)
             }
         }
@@ -255,7 +255,7 @@ internal fun TravelPlanRoute(
             onDismiss = dismissChanges,
             onSelectDay = { day ->
                 viewModel.selectDay(day)
-                viewModel.recordActivity(planId, TravelUsageActivity.DAY_SELECTED)
+                viewModel.recordActivity(planId, TravelUsageActivity.CHANGE_DAY_OPENED)
                 dismissChanges()
             },
         )
