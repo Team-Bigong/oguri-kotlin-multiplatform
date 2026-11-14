@@ -3,6 +3,7 @@ package com.bigong.oguri.service
 import com.bigong.oguri.repository.TravelReminderRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.auth.oauth2.GoogleCredentials
+import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
@@ -73,6 +74,7 @@ class TravelReminderDispatcher(
     private val reminders: TravelReminderRepository,
     private val service: TravelReminderService,
     private val delivery: TravelReminderDelivery,
+    private val metrics: MeterRegistry,
 ) {
     @Scheduled(fixedDelayString = "PT15S")
     fun sendDue() {
@@ -83,22 +85,30 @@ class TravelReminderDispatcher(
         val authorization = try {
             delivery.prepare()
         } catch (failure: Exception) {
+            metrics.counter("oguri.travel.reminder.authorization.failures").increment()
             logger.warn("Could not authorize travel reminder delivery ({})", failure.javaClass.simpleName)
             return
         }
         for (candidate in due) {
             val token = service.beginHandoff(candidate) ?: continue
-            val accepted = try {
-                delivery.send(candidate.id, token, authorization)
-            } catch (interrupted: InterruptedException) {
-                Thread.currentThread().interrupt()
-                return
-            } catch (failure: Exception) {
-                logger.warn("Travel reminder delivery failed ({})", failure.javaClass.simpleName)
-                false
-            }
-            reminders.finishHandoff(candidate.id, accepted)
+            val outcome =
+                try {
+                    if (delivery.send(candidate.id, token, authorization)) "accepted" else "rejected"
+                } catch (interrupted: InterruptedException) {
+                    recordHandoff("interrupted")
+                    Thread.currentThread().interrupt()
+                    return
+                } catch (failure: Exception) {
+                    logger.warn("Travel reminder delivery failed ({})", failure.javaClass.simpleName)
+                    "failed"
+                }
+            recordHandoff(outcome)
+            reminders.finishHandoff(candidate.id, outcome == "accepted")
         }
+    }
+
+    private fun recordHandoff(outcome: String) {
+        metrics.counter("oguri.travel.reminder.handoff", "outcome", outcome).increment()
     }
 
     private companion object {

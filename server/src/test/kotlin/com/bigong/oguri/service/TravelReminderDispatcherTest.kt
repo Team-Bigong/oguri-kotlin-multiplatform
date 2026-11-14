@@ -3,6 +3,8 @@ package com.bigong.oguri.service
 import com.bigong.oguri.repository.TravelReminderRepository
 import com.bigong.oguri.repository.TravelReminderRow
 import com.bigong.oguri.repository.TravelReminderStatus
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -15,7 +17,8 @@ class TravelReminderDispatcherTest {
     private val reminders = mock(TravelReminderRepository::class.java)
     private val service = mock(TravelReminderService::class.java)
     private val delivery = mock(TravelReminderDelivery::class.java)
-    private val dispatcher = TravelReminderDispatcher(reminders, service, delivery)
+    private val metrics = SimpleMeterRegistry()
+    private val dispatcher = TravelReminderDispatcher(reminders, service, delivery, metrics)
     private val candidate =
         TravelReminderRow(
             UUID.randomUUID(),
@@ -69,6 +72,7 @@ class TravelReminderDispatcherTest {
         order.verify(service).beginHandoff(candidate)
         order.verify(delivery).send(candidate.id, "push-token", "authorization")
         order.verify(reminders).finishHandoff(candidate.id, true)
+        assertEquals(1.0, metrics.get("oguri.travel.reminder.handoff").tag("outcome", "accepted").counter().count())
     }
 
     @Test
@@ -77,6 +81,7 @@ class TravelReminderDispatcherTest {
         dispatcher.sendDue()
         verify(delivery, times(1)).send(candidate.id, "push-token", "authorization")
         verify(reminders).finishHandoff(candidate.id, false)
+        assertEquals(1.0, metrics.get("oguri.travel.reminder.handoff").tag("outcome", "rejected").counter().count())
     }
 
     @Test

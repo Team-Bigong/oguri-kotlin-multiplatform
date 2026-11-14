@@ -2,6 +2,7 @@ package com.bigong.oguri.service
 
 import com.bigong.oguri.dto.response.TravelPlaceAttribution
 import com.bigong.oguri.dto.response.TravelPlaceResponse
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -20,7 +21,7 @@ import java.util.concurrent.CompletableFuture
 class TravelPlacesOverviewTest {
     private val plans = mock(TravelPlanService::class.java)
     private val google = mock(GoogleTravelPlacesClient::class.java)
-    private val service = TravelPlacesService(plans, google, 300)
+    private val service = TravelPlacesService(plans, google, SimpleMeterRegistry(), 300)
     private val trip = UUID.randomUUID()
 
     @Test
@@ -71,10 +72,17 @@ class TravelPlacesOverviewTest {
 
     @Test
     fun `묶음 조회도 전체 외부 API 예산 제한을 우회하지 않는다`() {
-        `when`(plans.placeIdsForPlan("member", trip)).thenReturn(listOf("first"))
-        val limited = TravelPlacesService(plans, google, 0)
-        val failure = assertThrows(ResponseStatusException::class.java) { limited.planPlaceBatch("member", trip, listOf("first"), "ko") }
+        val places = listOf("first", "second")
+        `when`(plans.placeIdsForPlan("member", trip)).thenReturn(places)
+        val metrics = SimpleMeterRegistry()
+        val limited = TravelPlacesService(plans, google, metrics, 0)
+        val failure = assertThrows(ResponseStatusException::class.java) { limited.planPlaceBatch("member", trip, places, "ko") }
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, failure.statusCode)
+        assertThrows(ResponseStatusException::class.java) { limited.cityTimeZone("member", "city") }
+        fun rejected(operation: String): Double =
+            metrics.get("oguri.travel.places.rejected").tags("reason", "budget", "operation", operation).counter().count()
+        assertEquals(2.0, rejected("details"))
+        assertEquals(1.0, rejected("city_time_zone"))
         verifyNoInteractions(google)
     }
 

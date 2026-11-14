@@ -3,6 +3,7 @@ package com.bigong.oguri.service
 import com.bigong.oguri.dto.response.TravelCitySuggestion
 import com.bigong.oguri.dto.response.TravelDayPlacesResponse
 import com.bigong.oguri.dto.response.TravelPlaceResponse
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -15,6 +16,7 @@ import java.util.concurrent.CompletionException
 class TravelPlacesService(
     private val plans: TravelPlanService,
     private val google: GoogleTravelPlacesClient,
+    private val metrics: MeterRegistry,
     @param:Value("\${GOOGLE_PLACES_REQUESTS_PER_MINUTE:300}") private val requestsPerMinute: Int,
 ) {
     private var currentMinute: Long = Long.MIN_VALUE
@@ -31,7 +33,7 @@ class TravelPlacesService(
         val trimmed = query.trim()
         require(trimmed.length in 2..120)
         val city = plans.cityForPlaces(memberId, tripId)
-        reserve(memberId, 1)
+        reserve(memberId, 1, TravelPlacesOperation.SEARCH)
         return googleCall { google.search("$trimmed $city", supportedLanguage(language)) }
     }
 
@@ -42,7 +44,7 @@ class TravelPlacesService(
     ): List<TravelCitySuggestion> {
         val trimmed = query.trim()
         require(trimmed.length in 2..120)
-        reserve(clientKey, 1, cityLookup = true)
+        reserve(clientKey, 1, TravelPlacesOperation.CITY_SEARCH)
         return googleCall { google.cities(trimmed, supportedLanguage(language)) }
     }
 
@@ -51,7 +53,7 @@ class TravelPlacesService(
         placeId: String,
     ): String? {
         require(CITY_PLACE_ID.matches(placeId))
-        reserve(clientKey, 1, cityLookup = true)
+        reserve(clientKey, 1, TravelPlacesOperation.CITY_TIME_ZONE)
         return googleCall { google.cityTimeZone(placeId) }
     }
 
@@ -92,7 +94,7 @@ class TravelPlacesService(
         language: String,
     ): TravelDayPlacesResponse {
         if (placeIds.isEmpty()) return TravelDayPlacesResponse(emptyList(), false)
-        reserve(memberId, placeIds.size)
+        reserve(memberId, placeIds.size, TravelPlacesOperation.DETAILS)
         val locale = supportedLanguage(language)
         val results =
             placeIds
@@ -105,7 +107,7 @@ class TravelPlacesService(
     private fun reserve(
         memberId: String,
         count: Int,
-        cityLookup: Boolean = false,
+        operation: TravelPlacesOperation,
     ) {
         val minute = Instant.now().epochSecond / SECONDS_PER_MINUTE
         if (minute != currentMinute) {
@@ -115,15 +117,16 @@ class TravelPlacesService(
             memberRequests.clear()
         }
         val memberTotal = memberRequests[memberId] ?: 0
-        val memberLimit = if (cityLookup) CITY_REQUESTS_PER_CLIENT else MEMBER_REQUESTS_PER_MINUTE
+        val memberLimit = if (operation.cityLookup) CITY_REQUESTS_PER_CLIENT else MEMBER_REQUESTS_PER_MINUTE
         if (totalRequests + count > requestsPerMinute ||
             memberTotal + count > memberLimit ||
-            (cityLookup && cityRequests + count > CITY_REQUESTS_PER_MINUTE)
+            (operation.cityLookup && cityRequests + count > CITY_REQUESTS_PER_MINUTE)
         ) {
+            metrics.counter("oguri.travel.places.rejected", "operation", operation.tag, "reason", "budget").increment(count.toDouble())
             throw ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS)
         }
         totalRequests += count
-        if (cityLookup) cityRequests += count
+        if (operation.cityLookup) cityRequests += count
         memberRequests[memberId] = memberTotal + count
     }
 
