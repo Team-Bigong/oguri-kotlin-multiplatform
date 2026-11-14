@@ -1,8 +1,5 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
-import com.bigong.oguri.core.designsystem.Mint70
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -15,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,8 +36,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
+import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
@@ -51,6 +51,7 @@ import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.component.GooglePlacesAttribution
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelDaySelector
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelIconButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
@@ -59,10 +60,10 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelModifiedButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanPane
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitDetailsSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
+import com.bigong.oguri.feature.travelplanner.ui.component.label
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
@@ -71,13 +72,13 @@ import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
 import com.bigong.oguri.feature.travelplanner.ui.model.hasTimeOrderMismatch
 import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
+import kotlin.time.Clock
+import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_menu
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.common_retry_button
-import oguri.composeapp.generated.resources.ic_diary
 import oguri.composeapp.generated.resources.ic_travel_add
-import oguri.composeapp.generated.resources.travel_itinerary
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
@@ -99,6 +100,7 @@ import oguri.composeapp.generated.resources.travel_order_mine
 import oguri.composeapp.generated.resources.travel_overlapping_visits
 import oguri.composeapp.generated.resources.travel_place_details_unavailable
 import oguri.composeapp.generated.resources.travel_reload
+import oguri.composeapp.generated.resources.travel_saved_status
 import oguri.composeapp.generated.resources.travel_sign_in
 import oguri.composeapp.generated.resources.travel_unassigned
 import oguri.composeapp.generated.resources.travel_undo_visit
@@ -107,8 +109,6 @@ import oguri.composeapp.generated.resources.travel_visit_number
 import oguri.composeapp.generated.resources.travel_visit_selected
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Clock
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 internal fun TravelPlanScreen(
@@ -146,6 +146,7 @@ internal fun TravelPlanScreen(
         title = plan?.summary?.details?.title ?: stringResource(Res.string.travel_list),
         onBack = onBack,
         isSaving = state.isSaving,
+        showTopDivider = false,
         actions = {
             if (plan != null) {
                 TravelIconButton(onClick = onMembers, enabled = !state.isSaving && !state.canRetrySave) {
@@ -169,7 +170,10 @@ internal fun TravelPlanScreen(
             return@TravelPlannerPage
         }
 
-        TravelModifiedButton(plan, enabled = !state.isSaving && !state.canRetrySave, onClick = onRecentChanges)
+        TravelModifiedButton(
+            plan, enabled = !state.isSaving && !state.canRetrySave,
+            onClick = onRecentChanges, modifier = Modifier.align(Alignment.CenterHorizontally),
+        )
         val dates = plan.summary.details.dates
         val savedVisits = plan.visits.filter { it.dayNumber == state.selectedDay }
         val orderRevision = plan.orderRevision(state.selectedDay)
@@ -215,7 +219,7 @@ internal fun TravelPlanScreen(
                                     overlappingVisits = emptyList()
                                     onMarkerClick(visit.id)
                                 }) {
-                                    val title = state.dayPlaces[visit.details.googlePlaceId]?.name ?: visit.details.name
+                                    val title = visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
                                     Text(
                                         if (title == null) {
                                             stringResource(Res.string.travel_visit_fallback, index + 1)
@@ -281,22 +285,22 @@ internal fun TravelPlanScreen(
             },
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(painterResource(Res.drawable.ic_diary), contentDescription = null, tint = Mint70)
                 Text(
-                    stringResource(Res.string.travel_itinerary),
+                    travelDayLabel(dates, state.selectedDay),
                     modifier = Modifier.weight(1f),
                     color = Neutral100,
-                    style = OguriTheme.typography.cardTitle,
+                    style = OguriTheme.typography.cardSubtitle,
                 )
-                TravelPrimaryButton(onClick = onSearchPlaces, enabled = canEdit) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(painterResource(Res.drawable.ic_travel_add), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Text(stringResource(Res.string.travel_add_visit))
-                    }
+                if (!state.isOffline && !state.isSaving && failure == null) {
+                    Text(
+                        stringResource(Res.string.travel_saved_status),
+                        color = OguriTheme.colors.textTertiary,
+                        style = OguriTheme.typography.bodySmall,
+                    )
                 }
             }
             val visitListState = rememberLazyListState()
@@ -325,7 +329,7 @@ internal fun TravelPlanScreen(
                         Text(travelDayLabel(dates, unappliedOrder.dayNumber), style = MaterialTheme.typography.bodySmall)
                         unappliedOrder.visitIds.forEachIndexed { index, id ->
                             val details = latestById[id]?.details
-                            val name = state.dayPlaces[details?.googlePlaceId]?.name ?: details?.name
+                            val name = details?.name ?: state.dayPlaces[details?.googlePlaceId]?.name
                             Text(
                                 if (name == null) stringResource(Res.string.travel_visit_fallback, index + 1)
                                 else stringResource(Res.string.travel_visit_number, index + 1, name),
@@ -361,7 +365,7 @@ internal fun TravelPlanScreen(
                     TravelVisitRow(
                         visit = visit,
                         title =
-                            state.dayPlaces[visit.details.googlePlaceId]?.name ?: visit.details.name
+                            visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
                                 ?: stringResource(Res.string.travel_visit_fallback, index + 1),
                         number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
                         selected = state.selectedVisitId == visit.id,
@@ -411,6 +415,12 @@ internal fun TravelPlanScreen(
                 }
             }
         }
+        TravelBottomAction(enabled = canEdit, onClick = onSearchPlaces) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(Res.drawable.ic_travel_add), contentDescription = null, modifier = Modifier.size(18.dp))
+                Text(stringResource(Res.string.travel_add_visit))
+            }
+        }
         if (plan.summary.hasEnded {
                 Clock.System
                     .now()
@@ -427,7 +437,7 @@ internal fun TravelPlanScreen(
                 TravelVisitDetailsSheet(
                     visit = visit,
                     title =
-                        state.dayPlaces[visit.details.googlePlaceId]?.name ?: visit.details.name
+                        visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
                             ?: stringResource(
                                 Res.string.travel_visit_fallback,
                                 plan.visits.filter { it.dayNumber == visit.dayNumber }.indexOf(visit) + 1,
@@ -440,7 +450,7 @@ internal fun TravelPlanScreen(
                 )
             }
         }
-        state.visitDraft?.let { draft ->
+        state.visitDraft?.takeIf { state.placeSearch == null }?.let { draft ->
             TravelVisitEditor(
                 draft = draft,
                 dates = dates,
@@ -502,6 +512,9 @@ private fun TravelVisitRow(
                 color = OguriTheme.colors.textPrimary,
             )
             if (selected) Text(stringResource(Res.string.travel_visit_selected), style = MaterialTheme.typography.labelSmall)
+            visit.details.category?.let {
+                Text(stringResource(it.label()), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
+            }
             visit.details.localTime?.let { Text(it.toString()) }
             if (visit.details.note != null) {
                 Text(stringResource(Res.string.travel_has_note), style = MaterialTheme.typography.labelMedium)

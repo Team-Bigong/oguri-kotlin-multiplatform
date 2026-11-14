@@ -9,6 +9,7 @@ import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.domain.model.TravelVisit
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import com.bigong.oguri.domain.model.TravelVisitChange
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import kotlinx.datetime.LocalDate
@@ -26,6 +27,7 @@ internal data class TravelPlannerUiState(
     val needsLatestPlan: Boolean = false,
     val plans: List<TravelPlanSummary>? = null,
     val resumePlan: TravelPlanSummary? = null,
+    val resumeLoaded: Boolean = false,
     val creationReady: Boolean = false,
     val creationRecoveryFailed: Boolean = false,
     val recoveredCreation: TravelPlanDetails? = null,
@@ -79,11 +81,12 @@ internal data class TravelVisitDraft(
             .orEmpty(),
     val note: String = visit?.details?.note.orEmpty(),
     val showLatestComparison: Boolean = false,
+    val category: TravelVisitCategory? = visit?.details?.category,
 ) {
     val hasInvalidTime: Boolean
         get() = localTime.isNotBlank() && parsedTime() == null
 
-    fun forRecovery(): TravelDraft = TravelDraft(dayNumber, visit, structureRevision, name, location, localTime, note, showLatestComparison)
+    fun forRecovery(): TravelDraft = TravelDraft(dayNumber, visit, structureRevision, name, location, localTime, note, showLatestComparison, category)
 
     fun toDetails(): TravelVisitDetails =
         TravelVisitDetails(
@@ -92,6 +95,7 @@ internal data class TravelVisitDraft(
             localTime = parsedTime(),
             note = note.trim().ifEmpty { null },
             googlePlaceId = visit?.details?.googlePlaceId,
+            category = category,
         )
 
     fun rebaseOn(latest: TravelVisit): TravelVisitDraft {
@@ -115,6 +119,7 @@ internal data class TravelVisitDraft(
                     localTime
                 },
             note = if (note == previous.details.note.orEmpty()) latest.details.note.orEmpty() else note,
+            category = if (category == previous.details.category) latest.details.category else category,
         )
     }
 
@@ -132,6 +137,7 @@ internal data class TravelVisitDraft(
                 add(TravelVisitField.TIME)
             }
             if (note.trim() != latest.details.note.orEmpty()) add(TravelVisitField.NOTE)
+            if (category != latest.details.category) add(TravelVisitField.CATEGORY)
         }
     }
 
@@ -151,7 +157,6 @@ internal data class TravelPlaceSearchState(
     val selected: TravelPlace? = null,
     val isLoading: Boolean = false,
     val failure: TravelPlanFailure? = null,
-    val lastAddedPlaceId: String? = null,
 )
 
 internal enum class TravelCity(
@@ -228,9 +233,10 @@ internal fun TravelDraft.toVisitDraft(): TravelVisitDraft =
         localTime = localTime,
         note = note,
         showLatestComparison = showLatestComparison,
+        category = category,
     )
 
-internal enum class TravelVisitField { DAY, NAME, LOCATION, TIME, NOTE }
+internal enum class TravelVisitField { DAY, NAME, LOCATION, TIME, NOTE, CATEGORY }
 
 internal data class TravelOverviewState(
     val places: Map<String, TravelPlace> = emptyMap(),

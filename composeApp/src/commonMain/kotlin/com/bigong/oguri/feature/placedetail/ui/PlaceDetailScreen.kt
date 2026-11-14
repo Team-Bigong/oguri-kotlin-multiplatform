@@ -41,6 +41,7 @@ import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
+import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.feature.placedetail.ui.component.ExperienceCard
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailDescriptionSection
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailImagePager
@@ -49,7 +50,7 @@ import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailSkeletonCont
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTravelInformationCard
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
+import com.bigong.oguri.feature.travelplanner.ui.TravelDestinationEntry
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
@@ -81,6 +82,8 @@ fun PlaceDetailScreen(
     onPhotoClick: (List<String>, Int) -> Unit,
     onCreateTravelPlan: (() -> Unit)? = null,
     onTravelEntryVisible: (() -> Unit)? = null,
+    matchingTravelPlans: List<TravelPlanSummary> = emptyList(),
+    onOpenTravelPlan: ((String) -> Unit)? = null,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val isInitialLoading = placeDetail == null && placeDetailUiState.isLoading
@@ -180,15 +183,15 @@ fun PlaceDetailScreen(
                     }
                     if (onCreateTravelPlan != null) {
                         item {
-                            TravelOutlineButton(
-                                onClick = onCreateTravelPlan,
+                            TravelDestinationEntry(
+                                plans = matchingTravelPlans,
+                                onOpen = onOpenTravelPlan,
+                                onCreate = onCreateTravelPlan,
                                 modifier =
                                     Modifier
                                         .fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)
                                         .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
-                            ) {
-                                Text(stringResource(Res.string.travel_create_from_city))
-                            }
+                            )
                         }
                     }
                     item {

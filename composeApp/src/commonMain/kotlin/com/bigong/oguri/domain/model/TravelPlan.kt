@@ -58,6 +58,7 @@ data class TravelPlanSource(
 data class TravelPlanSummary(
     val id: String,
     val details: TravelPlanDetails,
+    val memberCount: Int? = null,
 )
 
 @Serializable
@@ -92,6 +93,7 @@ data class TravelVisitDetails(
     val localTime: LocalTime?,
     val note: String?,
     val googlePlaceId: String? = null,
+    val category: TravelVisitCategory? = null,
 ) {
     companion object {
         const val MAX_NAME_LENGTH: Int = 150

@@ -1,48 +1,48 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
-import oguri.composeapp.generated.resources.img_oguri_walking
-import oguri.composeapp.generated.resources.img_oguri_hello
-import org.jetbrains.compose.resources.DrawableResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint10
-import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Mint90
 import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.ui.component.NetworkImage
 import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelIconButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
@@ -50,45 +50,30 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
-import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.ic_right_arrow
-import oguri.composeapp.generated.resources.ic_travel_add
-import oguri.composeapp.generated.resources.travel_create
-import oguri.composeapp.generated.resources.travel_empty_plans
-import oguri.composeapp.generated.resources.travel_guest_plans
-import oguri.composeapp.generated.resources.travel_list
-import oguri.composeapp.generated.resources.travel_past
-import oguri.composeapp.generated.resources.travel_past_collapsed
-import oguri.composeapp.generated.resources.travel_past_expanded
-import oguri.composeapp.generated.resources.travel_sign_in
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.toLocalDateTime
+import oguri.composeapp.generated.resources.*
+import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Clock
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 internal fun TravelPlansScreen(
     state: TravelPlannerUiState,
-    loadCover: suspend (TravelPlanSummary) -> String?,
     signedIn: Boolean,
     onSignIn: () -> Unit,
     onBack: (() -> Unit)?,
     onCreate: () -> Unit,
     onOpen: (String) -> Unit,
+    onFindNextHoliday: () -> Unit,
     onRetry: () -> Unit,
 ) {
-    val canCreate = signedIn && state.plans != null && state.failure == null
+    val colors = OguriTheme.colors
     TravelPlannerPage(
-        title = stringResource(Res.string.travel_list),
+        title = if (onBack != null) stringResource(Res.string.travel_list) else "",
         onBack = onBack,
         modifier = Modifier.floatingNavigationBarsPadding(hasFloatingBottomNavigation = onBack == null),
-        actions = {
-            if (canCreate && state.plans.isNotEmpty()) {
-                TravelIconButton(onClick = onCreate) {
-                    Icon(painterResource(Res.drawable.ic_travel_add), stringResource(Res.string.travel_create), tint = Neutral100)
-                }
-            }
-        },
     ) {
         val failure = state.failure
         val plans = state.plans
@@ -104,37 +89,82 @@ internal fun TravelPlansScreen(
                 SkeletonBox(Modifier.fillMaxWidth().height(134.dp))
                 TravelLoading(Modifier.fillMaxWidth(0.5f))
             }
-            plans.isEmpty() -> TravelPlansEmpty(
-                illustration = Res.drawable.img_oguri_walking,
-                message = stringResource(Res.string.travel_empty_plans),
-                actionLabel = stringResource(Res.string.travel_create),
-                onAction = onCreate,
-            )
             else -> {
                 var showPast by rememberSaveable { mutableStateOf(false) }
                 val now = Clock.System.now()
                 val (past, current) = plans.partition { plan -> plan.hasEnded { now.toLocalDateTime(it).date } }
                 val pastState = stringResource(if (showPast) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
-
-                LazyColumn(
-                    contentPadding = PaddingValues(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
+                LazyColumn {
+                    item {
+                        Column(
+                            Modifier.fillMaxWidth().padding(20.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            if (onBack == null) {
+                                Text(stringResource(Res.string.travel_list), style = OguriTheme.typography.sectionTitle, color = colors.textPrimary)
+                            }
+                            Text(
+                                stringResource(Res.string.travel_list_description),
+                                style = OguriTheme.typography.bodyMedium,
+                                color = colors.textTertiary,
+                            )
+                            val shape = CircleShape
+                            TravelTextButton(
+                                onClick = onCreate,
+                                modifier = Modifier.padding(top = 12.dp).clip(shape).background(Mint5).border(1.dp, Mint70, shape),
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Icon(painterResource(Res.drawable.ic_travel_add), null, Modifier.size(14.dp), tint = Mint90)
+                                    Text(stringResource(Res.string.travel_create), color = Mint90)
+                                }
+                            }
+                        }
+                        HorizontalDivider(color = colors.borderSubtle)
+                    }
+                    if (plans.isEmpty()) {
+                        item {
+                            Column(
+                                Modifier.fillMaxWidth().padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Image(painterResource(Res.drawable.img_oguri_walking), null, Modifier.size(112.dp))
+                                Text(stringResource(Res.string.travel_empty_plans), color = colors.textTertiary, textAlign = TextAlign.Center)
+                            }
+                        }
+                    }
                     items(current, key = TravelPlanSummary::id) { plan ->
-                        TravelPlanCard(plan, loadCover) { onOpen(plan.id) }
+                        TravelPlanCard(plan, now.toLocalDateTime(plan.details.timeZone).date) { onOpen(plan.id) }
                     }
                     if (past.isNotEmpty()) {
                         item {
-                            TravelTextButton(
-                                onClick = { showPast = !showPast },
-                                modifier = Modifier.semantics { stateDescription = pastState },
+                            HorizontalDivider(color = colors.borderSubtle)
+                            Row(
+                                Modifier.fillMaxWidth().heightIn(min = 48.dp).semantics { stateDescription = pastState }
+                                    .noRippleClickable(onClick = { showPast = !showPast }).padding(horizontal = 24.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(stringResource(Res.string.travel_past))
+                                Text(stringResource(Res.string.travel_past), Modifier.weight(1f), style = OguriTheme.typography.bodyLarge, color = colors.textPrimary)
+                                Icon(
+                                    painterResource(Res.drawable.ic_right_arrow), null,
+                                    Modifier.rotate(if (showPast) -90f else 90f), tint = colors.textTertiary,
+                                )
                             }
+                            if (!showPast) HorizontalDivider(color = colors.borderSubtle)
                         }
                         if (showPast) {
                             items(past.asReversed(), key = TravelPlanSummary::id) { plan ->
-                                TravelPlanCard(plan, loadCover) { onOpen(plan.id) }
+                                TravelPlanCard(plan, null) { onOpen(plan.id) }
+                            }
+                            item {
+                                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), horizontalArrangement = Arrangement.End) {
+                                    TravelTextButton(onClick = onFindNextHoliday) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(stringResource(Res.string.travel_find_next_holiday))
+                                            Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -165,33 +195,48 @@ private fun TravelPlansEmpty(
 @Composable
 private fun TravelPlanCard(
     plan: TravelPlanSummary,
-    loadCover: suspend (TravelPlanSummary) -> String?,
+    today: LocalDate?,
     onClick: () -> Unit,
 ) {
     val details = plan.details
-    val coverUrl by produceState<String?>(null, plan.details, loadCover) {
-        value = loadCover(plan)
-    }
+    val colors = OguriTheme.colors
+    val shape = RoundedCornerShape(8.dp)
+    val dayOffset = today?.let { details.dates.start.toEpochDays() - it.toEpochDays() }
+    val meta = listOfNotNull(details.city, plan.memberCount?.let { stringResource(Res.string.travel_member_count, it) })
+        .joinToString(" · ")
     Column(
-        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).background(Mint10)
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = if (today == null) 6.dp else 16.dp)
+            .clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderStrong, shape)
             .noRippleClickable(onClick = onClick),
     ) {
-        coverUrl?.let {
-            NetworkImage(it, Modifier.fillMaxWidth().height(134.dp))
-        }
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            Modifier.fillMaxWidth().then(if (today != null) Modifier.background(Mint40) else Modifier)
+                .padding(horizontal = 18.dp, vertical = if (today == null) 10.dp else 13.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(details.title, style = OguriTheme.typography.cardTitle, color = Neutral100)
+            Text(details.title, Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = colors.textPrimary)
+            Icon(painterResource(Res.drawable.ic_right_arrow), null, tint = colors.textPrimary)
+        }
+        Column(
+            Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = if (today == null) 0.dp else 12.dp, bottom = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            if (dayOffset != null) {
                 Text(
-                    travelDateRange(details.dates),
+                    if (dayOffset > 0) stringResource(Res.string.travel_list_countdown, dayOffset.toInt())
+                    else stringResource(Res.string.travel_list_in_progress),
                     style = OguriTheme.typography.labelMedium,
-                    color = Neutral70,
+                    color = Mint90,
+                )
+                Text(travelCardDates(details.dates, includeYear = true), style = OguriTheme.typography.bodyLarge, color = colors.textPrimary)
+                Text(meta, style = OguriTheme.typography.caption, color = colors.textTertiary)
+            } else {
+                Text(
+                    "${travelCardDates(details.dates, includeYear = true)} · $meta",
+                    style = OguriTheme.typography.caption,
+                    color = colors.textTertiary,
                 )
             }
-            Icon(painterResource(Res.drawable.ic_right_arrow), contentDescription = null, tint = Neutral100)
         }
     }
 }

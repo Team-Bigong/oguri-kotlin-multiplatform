@@ -306,6 +306,7 @@ class DefaultTravelPlanRepository internal constructor(
     private fun TravelPlanSummaryResponse.toDomain(): TravelPlanSummary =
         TravelPlanSummary(
             id = id,
+            memberCount = memberCount,
             details =
                 TravelPlanDetails(
                     city,
@@ -338,6 +339,7 @@ class DefaultTravelPlanRepository internal constructor(
                                 localTime = visit.localTime?.let(LocalTime::parse),
                                 note = visit.note,
                                 googlePlaceId = visit.googlePlaceId,
+                                category = visit.category,
                             ),
                         revision = visit.revision,
                     )
@@ -345,5 +347,5 @@ class DefaultTravelPlanRepository internal constructor(
         )
 
     private fun TravelVisitDetails.toRequest(): TravelVisitRequest =
-        TravelVisitRequest(name, location, localTime?.toString(), note, googlePlaceId)
+        TravelVisitRequest(name, location, localTime?.toString(), note, googlePlaceId, category)
 }

@@ -32,6 +32,7 @@ internal fun TravelConflictComparison(
                     TravelVisitField.LOCATION -> Res.string.travel_visit_location
                     TravelVisitField.TIME -> Res.string.travel_visit_time
                     TravelVisitField.NOTE -> Res.string.travel_visit_note
+                    TravelVisitField.CATEGORY -> Res.string.travel_category
                 }
             val value =
                 when (field) {
@@ -40,6 +41,7 @@ internal fun TravelConflictComparison(
                     TravelVisitField.LOCATION -> latest.details.location
                     TravelVisitField.TIME -> latest.details.localTime?.toString()
                     TravelVisitField.NOTE -> latest.details.note
+                    TravelVisitField.CATEGORY -> latest.details.category?.let { stringResource(it.label()) }
                 }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
             Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
             Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

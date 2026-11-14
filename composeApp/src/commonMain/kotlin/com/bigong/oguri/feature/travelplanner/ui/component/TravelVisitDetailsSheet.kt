@@ -50,8 +50,9 @@ internal fun TravelVisitDetailsSheet(
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(title, style = OguriTheme.typography.cardTitle)
                     Text(travelDayLabel(dates, visit.dayNumber))
+                    visit.details.category?.let { Text(stringResource(it.label())) }
                     visit.details.localTime?.let { Text(stringResource(Res.string.travel_visit_local_time, it.toString())) }
-                    (place?.address ?: visit.details.location)?.let { Text(it) }
+                    (visit.details.location ?: place?.address)?.let { Text(it) }
                     visit.details.note?.let { note ->
                         Text(note)
                         Text(stringResource(Res.string.travel_visit_note_shared), style = MaterialTheme.typography.bodySmall)

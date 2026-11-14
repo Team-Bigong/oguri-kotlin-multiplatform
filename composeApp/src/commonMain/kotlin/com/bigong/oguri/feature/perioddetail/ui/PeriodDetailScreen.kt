@@ -11,15 +11,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -39,6 +42,10 @@ import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailSkeletonCo
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
+import kotlin.time.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.calendar_d_day_after
 import oguri.composeapp.generated.resources.calendar_d_day_before
@@ -50,17 +57,15 @@ import oguri.composeapp.generated.resources.home_strategy_day_off_hint
 import oguri.composeapp.generated.resources.home_strategy_holiday_with
 import oguri.composeapp.generated.resources.home_strategy_holiday_with_next_year
 import oguri.composeapp.generated.resources.ic_plane
+import oguri.composeapp.generated.resources.ic_travel_add
 import oguri.composeapp.generated.resources.img_oguri_parasol
 import oguri.composeapp.generated.resources.period_detail_empty_places_hint
 import oguri.composeapp.generated.resources.period_detail_holiday_fallback
 import oguri.composeapp.generated.resources.period_detail_title
 import oguri.composeapp.generated.resources.travel_create_from_period
+import oguri.composeapp.generated.resources.travel_period_plan_hint
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-import kotlin.time.Clock
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @Composable
 fun PeriodDetailScreen(
@@ -152,6 +157,7 @@ fun PeriodDetailScreen(
                     }
                 val dDayColor = if (isNextYearPeriod) Orange50 else Mint70
 
+                val featuredPlaceCount = if (onCreateTravelPlan != null) minOf(2, pagedPlaces.itemCount) else pagedPlaces.itemCount
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(count = 2),
                     modifier = Modifier.weight(weight = 1f),
@@ -198,7 +204,7 @@ fun PeriodDetailScreen(
                                 Text(
                                     text = leaveDayHintText,
                                     style = OguriTheme.typography.caption,
-                                    color = Neutral50,
+                                    color = OguriTheme.colors.textTertiary,
                                 )
                             }
                             Image(
@@ -227,7 +233,7 @@ fun PeriodDetailScreen(
                             )
                         }
                     } else {
-                        for (index in 0 until pagedPlaces.itemCount) {
+                        for (index in 0 until featuredPlaceCount) {
                             val place: Place = pagedPlaces[index] ?: continue
                             item(
                                 key = place.id,
@@ -242,14 +248,39 @@ fun PeriodDetailScreen(
                             }
                         }
                     }
-                    if (onCreateTravelPlan != null && pagedPlaces.loadState.append is LoadState.NotLoading) {
+                    if (onCreateTravelPlan != null) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
-                            TravelOutlineButton(
-                                onClick = onCreateTravelPlan,
-                                modifier = Modifier.onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
-                            ) {
-                                Text(stringResource(Res.string.travel_create_from_period))
+                            Column(Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                                Text(
+                                    stringResource(Res.string.travel_period_plan_hint),
+                                    Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                                    style = OguriTheme.typography.bodySmall,
+                                    color = OguriTheme.colors.textTertiary,
+                                    textAlign = TextAlign.Center,
+                                )
+                                TravelOutlineButton(
+                                    onClick = onCreateTravelPlan,
+                                    modifier = Modifier.fillMaxWidth().onVisibilityChanged { visible ->
+                                        if (visible) onTravelEntryVisible?.invoke()
+                                    },
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            painterResource(Res.drawable.ic_travel_add), null,
+                                            Modifier.padding(end = 8.dp), tint = OguriTheme.colors.mint,
+                                        )
+                                        Text(stringResource(Res.string.travel_create_from_period))
+                                    }
+                                }
                             }
+                        }
+                    }
+
+                    for (index in featuredPlaceCount until pagedPlaces.itemCount) {
+                        val place: Place = pagedPlaces[index] ?: continue
+                        item(key = place.id, span = { GridItemSpan(1) }) {
+                            PlaceCard(place = place, modifier = Modifier.fillMaxWidth(), onClick = { onPlaceClick(place.id) })
+                            Spacer(Modifier.height(6.dp))
                         }
                     }
 

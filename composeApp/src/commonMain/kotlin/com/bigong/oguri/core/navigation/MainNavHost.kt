@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -49,6 +50,7 @@ import com.bigong.oguri.feature.travelplanner.ui.TravelMembersRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlanRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
+import com.bigong.oguri.feature.travelplanner.ui.TravelHomeGuide
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 import kotlinx.coroutines.CancellationException
@@ -233,6 +235,9 @@ fun MainNavHost(
             }
         }
         composable<RouteModel.Home> {
+            val travelViewModel = if (travelEnabled && travelSession.tokens != null) {
+                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
+            } else null
             HomeRoute(
                 homeViewModel = homeViewModelProvider(),
                 snackbarHostState = snackbarHostState,
@@ -248,15 +253,13 @@ fun MainNavHost(
                 },
                 onSearchClick = navigator::navigateToSearch,
                 travelResume =
-                    if (travelEnabled && travelSession.tokens != null) {
-                        {
-                            TravelResumeEntry(
-                                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
-                            ) { navigator.navigateToTravelPlan(it) }
-                        }
-                    } else {
-                        null
-                    },
+                    if (travelViewModel != null) {
+                        { TravelResumeEntry(travelViewModel) { navigator.navigateToTravelPlan(it) } }
+                    } else null,
+                travelGuide =
+                    if (travelEnabled) {
+                        { TravelHomeGuide(travelViewModel) { navigator.navigateToCreateTravelPlan() } }
+                    } else null,
                 onLoginRequired = navigator::navigateToLogin,
             )
         }
@@ -337,6 +340,7 @@ fun MainNavHost(
                 onSignIn = navigator::navigateToTravelLogin,
                 onCreate = { navigator.navigateToCreateTravelPlan() },
                 onOpen = { navigator.navigateToTravelPlan(it) },
+                onFindNextHoliday = navigator::openCalendarTab,
             )
         }
         composable<RouteModel.CreateTravelPlan> { entry ->
@@ -414,6 +418,13 @@ fun MainNavHost(
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->
             val route = navBackStackEntry.toRoute<RouteModel.PlaceDetail>()
+            val travelViewModel = if (travelEnabled && travelSession.tokens != null) {
+                viewModel(key = "travel-destination-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
+            } else null
+            val travelState = travelViewModel?.state?.collectAsStateWithLifecycle()?.value
+            LaunchedEffect(travelViewModel) {
+                travelViewModel?.loadCreationMatches()
+            }
             PlaceDetailRoute(
                 placeDetailViewModelProvider = appGraph.placeDetailViewModelProvider,
                 snackbarHostState = snackbarHostState,
@@ -429,6 +440,8 @@ fun MainNavHost(
                     } else {
                         null
                     },
+                matchingTravelPlans = travelState?.plans.orEmpty(),
+                onOpenTravelPlan = { navigator.navigateToTravelPlan(it) },
                 onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.EXPOSED) },
                 onBackClick = { navigator.popBackStack() },
                 onLoginRequired = navigator::navigateToLogin,

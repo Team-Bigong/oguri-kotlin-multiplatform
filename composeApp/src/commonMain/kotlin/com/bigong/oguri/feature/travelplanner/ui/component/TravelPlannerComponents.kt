@@ -1,6 +1,5 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -37,8 +36,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral10
@@ -80,6 +82,7 @@ internal fun TravelPlannerPage(
     onBack: (() -> Unit)?,
     isSaving: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
+    showTopDivider: Boolean = true,
     modifier: Modifier = Modifier,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -87,17 +90,17 @@ internal fun TravelPlannerPage(
     PlatformBackGestureContainer(enabled = !isSaving && onBack != null, onBack = { onBack?.invoke() }) {
         Box(modifier.fillMaxSize().background(Neutral5)) {
             Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
-                if (onBack == null) {
+                if (onBack == null && title.isNotEmpty()) {
                     Row(
-                        modifier = Modifier.fillMaxWidth().background(Neutral0).heightIn(min = 48.dp).padding(horizontal = 12.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         TravelPageTitle(title, Modifier.weight(1f).padding(horizontal = 8.dp))
                         actions()
                     }
-                } else {
+                } else if (onBack != null) {
                     Box(
-                        modifier = Modifier.fillMaxWidth().background(Neutral0).heightIn(min = 48.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
@@ -111,7 +114,7 @@ internal fun TravelPlannerPage(
                         Row(Modifier.align(Alignment.CenterEnd).padding(end = 8.dp), content = actions)
                     }
                 }
-                HorizontalDivider(color = Neutral20)
+                if (showTopDivider && (onBack != null || title.isNotEmpty())) HorizontalDivider(color = Neutral20)
                 content()
             }
             if (isSaving) CenteredLoadingIndicator()
@@ -143,8 +146,9 @@ internal fun TravelPrimaryButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        backgroundColor = if (enabled) Mint70 else Neutral10,
-        contentColor = if (OguriTheme.isDarkTheme) Neutral0 else Neutral100,
+        backgroundColor = if (enabled) Mint40 else Neutral10,
+        borderColor = Mint70.takeIf { enabled },
+        textStyle = OguriTheme.typography.cardSubtitle,
         content = content,
     )
 }
@@ -166,7 +170,7 @@ internal fun TravelOutlineButton(
     enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    TravelButton(onClick, modifier, enabled, Neutral0, outlined = true, content = content)
+    TravelButton(onClick, modifier, enabled, Mint5, borderColor = Mint70, content = content)
 }
 
 @Composable
@@ -193,14 +197,15 @@ private fun TravelButton(
     modifier: Modifier,
     enabled: Boolean,
     backgroundColor: Color,
-    outlined: Boolean = false,
+    borderColor: Color? = null,
+    textStyle: androidx.compose.ui.text.TextStyle = OguriTheme.typography.labelLarge,
     contentColor: Color = Neutral100,
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(8.dp)
     Box(
         modifier = modifier.heightIn(min = 48.dp).background(backgroundColor, shape)
-            .then(if (outlined) Modifier.border(1.dp, Neutral20, shape) else Modifier)
+            .then(if (borderColor != null) Modifier.border(1.dp, borderColor, shape) else Modifier)
             .semantics { role = Role.Button }
             .noRippleClickable(
                 onClick = onClick,
@@ -210,7 +215,7 @@ private fun TravelButton(
         contentAlignment = Alignment.Center,
     ) {
         CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else Neutral50) {
-            ProvideTextStyle(OguriTheme.typography.labelLarge, content)
+            ProvideTextStyle(textStyle, content)
         }
     }
 }
@@ -224,6 +229,8 @@ internal fun TravelFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedLabelColor = Neutral90,
     unfocusedLabelColor = Neutral50,
     cursorColor = Neutral90,
+    focusedContainerColor = Neutral0,
+    unfocusedContainerColor = Neutral0,
 )
 
 @Composable
@@ -276,5 +283,22 @@ internal fun TravelInlineFailure(
             modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
         )
         if (onRetry != null) TravelTextButton(onClick = onRetry) { Text(retryLabel, color = OguriTheme.colors.textPrimary) }
+    }
+}
+
+@Composable
+internal fun TravelBottomAction(
+    enabled: Boolean,
+    onClick: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+        TravelPrimaryButton(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+            content = content,
+        )
     }
 }

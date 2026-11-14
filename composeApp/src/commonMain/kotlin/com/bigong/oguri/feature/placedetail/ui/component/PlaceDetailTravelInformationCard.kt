@@ -1,6 +1,6 @@
 package com.bigong.oguri.feature.placedetail.ui.component
 
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -23,18 +23,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
-import com.bigong.oguri.core.designsystem.Mint50
-import com.bigong.oguri.core.designsystem.Mint60
+import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.toCurrencyDisplayName
 import com.bigong.oguri.domain.model.PlaceDetailTravelInformation
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.ic_coin
-import oguri.composeapp.generated.resources.ic_hamburger
-import oguri.composeapp.generated.resources.ic_place_calendar
-import oguri.composeapp.generated.resources.ic_weather
 import oguri.composeapp.generated.resources.place_detail_information_cost_index
 import oguri.composeapp.generated.resources.place_detail_information_cost_index_source
 import oguri.composeapp.generated.resources.place_detail_information_exchange_rate
@@ -47,8 +43,6 @@ import oguri.composeapp.generated.resources.place_detail_precipitation_heavy_rai
 import oguri.composeapp.generated.resources.place_detail_precipitation_mostly_clear
 import oguri.composeapp.generated.resources.place_detail_precipitation_often_rainy_season
 import oguri.composeapp.generated.resources.place_detail_precipitation_sometimes_rain
-import org.jetbrains.compose.resources.DrawableResource
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
@@ -90,24 +84,21 @@ fun PlaceDetailTravelInformationCard(
             modifier
                 .fillMaxWidth()
                 .background(color = Mint5, shape = RoundedCornerShape(8.dp))
-                .border(width = 1.dp, color = Mint50, shape = RoundedCornerShape(8.dp))
-                .padding(horizontal = 12.dp, vertical = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+                .border(width = 1.dp, color = Mint40, shape = RoundedCornerShape(8.dp))
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         TravelInformationRow(
-            iconResource = Res.drawable.ic_place_calendar,
             text = recommendPeriodText,
             highlightedText = recommendPeriodHighlightedText,
         )
 
         TravelInformationRow(
-            iconResource = Res.drawable.ic_weather,
             text = weatherText,
             highlightedText = "${travelInformation.averageTemperature}°C",
         )
 
         TravelInformationRow(
-            iconResource = Res.drawable.ic_coin,
             text =
                 stringResource(
                     Res.string.place_detail_information_exchange_rate,
@@ -119,7 +110,6 @@ fun PlaceDetailTravelInformationCard(
         )
 
         TravelInformationRow(
-            iconResource = Res.drawable.ic_hamburger,
             text =
                 stringResource(
                     Res.string.place_detail_information_cost_index,
@@ -132,7 +122,6 @@ fun PlaceDetailTravelInformationCard(
 
 @Composable
 private fun TravelInformationRow(
-    iconResource: DrawableResource,
     text: String,
     supportingText: String? = null,
     highlightedText: String? = null,
@@ -144,14 +133,9 @@ private fun TravelInformationRow(
     Row(
         modifier = Modifier.fillMaxWidth().heightIn(min = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
-        Image(
-            painter = painterResource(iconResource),
-            contentDescription = null,
-            modifier = Modifier.size(24.dp),
-            colorFilter = ColorFilter.tint(Mint60),
-        )
+        Box(Modifier.padding(top = 8.dp).size(6.dp).background(Mint70, CircleShape))
         Text(
             text =
                 buildAnnotatedString {

@@ -70,6 +70,7 @@ fun HomeScreen(
     onSearchClick: () -> Unit,
     scrollToTopTrigger: Int,
     travelResume: (@Composable () -> Unit)? = null,
+    travelGuide: (@Composable () -> Unit)? = null,
 ) {
     if (homeUiState.isLoading) {
         HomeSkeletonContent()
@@ -180,6 +181,7 @@ fun HomeScreen(
                     )
                 }
             }
+            if (travelGuide != null) item(key = "travel_guide") { travelGuide() }
             if (homeUiState.weeklyTopPlaces.isNotEmpty()) {
                 item {
                     Spacer(modifier = Modifier.height(28.dp))

@@ -12,6 +12,7 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.domain.model.TravelVisit
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import com.bigong.oguri.domain.model.TravelVisitChange
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import com.bigong.oguri.domain.repository.TravelPlaceRepository
@@ -112,22 +113,7 @@ class TravelPlannerViewModel(
             }
         currentCoroutineContext().ensureActive()
         if (request == resumeRequest && generation == mutationGeneration) {
-            mutableState.update { it.copy(resumePlan = plan) }
-        }
-    }
-
-    internal suspend fun loadCover(plan: TravelPlanSummary): String? {
-        val city = plan.details.city.substringBefore(',').trim()
-        return try {
-            val destinationId = plan.details.source?.destinationId ?: searchDestinations(city)
-                .filter { it.destinationName.equals(city, ignoreCase = true) }
-                .singleOrNull()?.id ?: return null
-            val destination = getPlaceDetail(destinationId)
-            destination.thumbnailUrls.firstOrNull()?.takeIf { destination.city.equals(city, ignoreCase = true) }
-        } catch (exception: CancellationException) {
-            throw exception
-        } catch (_: Exception) {
-            null
+            mutableState.update { it.copy(resumePlan = plan, resumeLoaded = true) }
         }
     }
 
@@ -642,14 +628,18 @@ class TravelPlannerViewModel(
     internal fun addPlace(
         place: TravelPlace,
         dayNumber: Int,
+        category: TravelVisitCategory? = null,
+        name: String? = null,
+        location: String? = null,
     ) {
         changeVisit(
             change =
                 TravelVisitChange.Add(
                     dayNumber,
-                    TravelVisitDetails(null, null, null, null, place.id),
+                    TravelVisitDetails(name, location, null, null, place.id, category),
                     state.value.plan?.structureRevision ?: return,
                 ),
+            selectedDayAfterSave = dayNumber,
             addedPlace = place,
         )
     }
@@ -695,6 +685,7 @@ class TravelPlannerViewModel(
     }
 
     internal fun openExistingPlace(visit: TravelVisit) {
+        if (state.value.visitDraft != null) updateVisitDraft(null)
         closePlaceSearch()
         selectVisitFromMap(visit.id)
     }
@@ -904,10 +895,7 @@ class TravelPlannerViewModel(
                     } else {
                         current.viewportRequest
                     },
-                placeSearch =
-                    current.placeSearch?.let { search ->
-                        search.copy(selected = null, lastAddedPlaceId = addedPlace?.id)
-                    },
+                placeSearch = current.placeSearch.takeUnless { change is TravelVisitChange.Add },
             )
         }
     }

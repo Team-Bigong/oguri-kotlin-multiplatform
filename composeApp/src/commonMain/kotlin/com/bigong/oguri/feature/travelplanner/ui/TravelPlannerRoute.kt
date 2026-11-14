@@ -32,11 +32,11 @@ internal fun TravelPlansRoute(
     onSignIn: () -> Unit,
     onCreate: () -> Unit,
     onOpen: (String) -> Unit,
+    onFindNextHoliday: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.loadList() }
-    val loadCover = remember(viewModel) { viewModel::loadCover }
-    TravelPlansScreen(state, loadCover, signedIn, onSignIn, onBack, onCreate, onOpen, viewModel::loadList)
+    TravelPlansScreen(state, signedIn, onSignIn, onBack, onCreate, onOpen, onFindNextHoliday, viewModel::loadList)
 }
 
 @Composable
@@ -275,10 +275,9 @@ internal fun TravelPlanRoute(
             onRetrySave = viewModel::retrySave,
             onLeaveWithPendingSave = onBack,
             onReload = { viewModel.loadPlan(planId, rebaseDraft = true) },
-            onManualAdd = {
-                viewModel.closePlaceSearch()
-                viewModel.openVisit(null)
-            },
+            onManualAdd = { if (state.visitDraft == null) viewModel.openVisit(null) },
+            onDraftChange = viewModel::updateVisitDraft,
+            onApplyManual = viewModel::applyVisit,
         )
     }
 }

@@ -34,6 +34,7 @@ fun HomeRoute(
     onSearchClick: () -> Unit = {},
     onLoginRequired: () -> Unit,
     travelResume: (@Composable () -> Unit)? = null,
+    travelGuide: (@Composable () -> Unit)? = null,
 ) {
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
     val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
@@ -107,6 +108,7 @@ fun HomeRoute(
         onMoveToCalendarClick = onMoveToCalendarClick,
         onSearchClick = onSearchClick,
         travelResume = travelResume,
+        travelGuide = travelGuide,
         scrollToTopTrigger = scrollToTopTrigger,
     )
 

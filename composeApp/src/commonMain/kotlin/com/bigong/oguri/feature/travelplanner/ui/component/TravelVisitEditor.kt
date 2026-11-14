@@ -81,7 +81,7 @@ internal fun TravelVisitEditor(
     var confirmDiscard by remember { mutableStateOf(false) }
     val original = draft.visit
     val changed = original?.details != draft.toDetails() || original.dayNumber != draft.dayNumber || draft.hasInvalidTime
-    val hasInput = draft.name.isNotBlank() || draft.location.isNotBlank() || draft.localTime.isNotBlank() || draft.note.isNotBlank()
+    val hasInput = draft.name.isNotBlank() || draft.location.isNotBlank() || draft.localTime.isNotBlank() || draft.note.isNotBlank() || draft.category != null
     val needsDiscardConfirmation by rememberUpdatedState(changed && (original != null || hasInput))
     val dismissDraft = {
         if (needsDiscardConfirmation) confirmDiscard = true else onDraftChange(null)
@@ -120,7 +120,7 @@ internal fun TravelVisitEditor(
             )
             TravelConflictComparison(draft, dates)
             if (isSaving) TravelLoading(modifier = Modifier.fillMaxWidth())
-            if (placeId == null) {
+            if (placeId == null || original.details.name != null) {
                 OutlinedTextField(
                     value = draft.name,
                     onValueChange = { if (it.length <= TravelVisitDetails.MAX_NAME_LENGTH) onDraftChange(draft.copy(name = it)) },
@@ -170,7 +170,7 @@ internal fun TravelVisitEditor(
                 textStyle = OguriTheme.typography.bodyLarge,
                 colors = TravelFieldColors(),
             )
-            if (placeId == null) {
+            if (placeId == null || original.details.location != null) {
                 OutlinedTextField(
                     value = draft.location,
                     onValueChange = { if (it.length <= TravelVisitDetails.MAX_LOCATION_LENGTH) onDraftChange(draft.copy(location = it)) },
@@ -195,6 +195,7 @@ internal fun TravelVisitEditor(
                 textStyle = OguriTheme.typography.bodyLarge,
                 colors = TravelFieldColors(),
             )
+            TravelCategoryPicker(draft.category, canEdit) { onDraftChange(draft.copy(category = it)) }
             failure?.let {
                 if (it == TravelPlanFailure.CONFLICT || (it == TravelPlanFailure.CONNECTION && !canRetrySave)) {
                     TravelInlineFailure(it, onReload, stringResource(Res.string.travel_reload))
