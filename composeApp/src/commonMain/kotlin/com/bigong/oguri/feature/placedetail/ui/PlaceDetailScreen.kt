@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
@@ -61,6 +63,7 @@ import oguri.composeapp.generated.resources.place_detail_relevant_places_highlig
 import oguri.composeapp.generated.resources.place_detail_section_experience
 import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
+import oguri.composeapp.generated.resources.travel_create_from_city
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -76,6 +79,8 @@ fun PlaceDetailScreen(
     onFlightClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
+    onCreateTravelPlan: (() -> Unit)? = null,
+    onTravelEntryVisible: (() -> Unit)? = null,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val isInitialLoading = placeDetail == null && placeDetailUiState.isLoading
@@ -154,6 +159,7 @@ fun PlaceDetailScreen(
                                 SaveToggleButton(
                                     checked = placeDetailUiState.isSaved,
                                     onCheckedChange = { onSaveToggleClick() },
+                                    modifier = Modifier.padding(end = 12.dp),
                                 )
                             }
                         }
@@ -164,6 +170,19 @@ fun PlaceDetailScreen(
                             description = placeDetail.description,
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
+                    }
+                    if (onCreateTravelPlan != null) {
+                        item {
+                            OutlinedButton(
+                                onClick = onCreateTravelPlan,
+                                modifier =
+                                    Modifier
+                                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                                        .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            ) {
+                                Text(stringResource(Res.string.travel_create_from_city))
+                            }
+                        }
                     }
                     item {
                         Spacer(modifier = Modifier.height(24.dp))

@@ -1,0 +1,4 @@
+<resources>
+    <string name="travel_reminder_push_title">旅行のリマインダー</string>
+    <string name="travel_reminder_push_body">Oguriで旅行の予定を確認しましょう。</string>
+</resources>

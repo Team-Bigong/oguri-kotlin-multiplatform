@@ -2,8 +2,10 @@ package com.bigong.oguri
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.scheduling.annotation.EnableScheduling
 import java.io.File
 
+@EnableScheduling
 @SpringBootApplication
 class Application {
     companion object {
@@ -36,4 +38,3 @@ class Application {
         }
     }
 }
-

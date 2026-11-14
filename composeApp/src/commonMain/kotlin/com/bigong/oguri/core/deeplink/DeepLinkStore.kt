@@ -24,8 +24,6 @@ class DefaultDeepLinkStore : DeepLinkStore {
     }
 
     override fun clearConsumed(urlText: String) {
-        if (mutableIncomingUrl.value == urlText) {
-            mutableIncomingUrl.value = null
-        }
+        mutableIncomingUrl.compareAndSet(urlText, null)
     }
 }

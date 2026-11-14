@@ -9,4 +9,5 @@ expect fun LoginScreen(
     onKakaoLoginClick: () -> Unit,
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
+    isReturnToTravel: Boolean = false,
 )

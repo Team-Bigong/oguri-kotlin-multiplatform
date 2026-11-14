@@ -1,76 +1,130 @@
 # WEB_ADMIN_SETUP
 
 ## 목적
-- React Native 기반 Web에서 공식 웹(`/`)과 어드민 웹(`/admin`)을 함께 운영한다.
-- 어드민 웹은 장소/사용자/공휴일 DB를 CRUD로 관리한다.
-- 장소 이미지는 업로드 시 가로 1280px 리사이즈 + 800KB 이하 압축 후 Firebase Storage로 업로드한다.
-- Firebase Storage 저장 경로는 `places/{country}/{city}/{index}.jpg` 규칙을 사용한다.
-- 장소 experience 썸네일은 `places/{country}/{city}/experiences/{index}.jpg` 경로로 업로드한다.
-- 어드민 장소 폼의 국가/Storage 경로(`country`, `city`)는 각각 단일 입력칸에서 추천 목록 선택 + 직접 입력을 함께 지원한다.
-- Storage 경로(`country`, `city`)는 영문 소문자 slug만 허용한다. (`a-z`, `0-9`, `-`)
-- Storage 경로 추천 목록은 하드코딩이 아니라 DB에 저장된 장소 이미지/체험 썸네일 URL에서 추출한 실제 경로를 사용한다.
-- 어드민 장소 폼에서 `체험 관리(Experience)` 섹션으로 제목/설명/링크/썸네일을 추가·수정·삭제할 수 있다.
-- 어드민 장소 폼에서 추천 기간별 날씨(평균 온도, 강수량)를 추가·수정할 수 있다.
-- 어드민 나라 폼에서 국가별 빅맥지수를 추가·수정할 수 있다.
-- 장소 수정 시 폼에서 제거된 기존 이미지는 저장 완료 후 Firebase에서도 함께 삭제한다.
-- 장소 수정 시 폼에서 제거된 기존 experience 썸네일도 저장 완료 후 Firebase에서 함께 삭제한다.
-- 장소 삭제 시 연결된 모든 장소 이미지 + experience 썸네일을 Firebase에서 함께 삭제한다.
-- 장소 편집 중 새로 업로드한 이미지는 폼 초기화/다른 장소 불러오기 시 Firebase에서 정리한다.
-- 장소 편집 중 새로 업로드한 experience 썸네일도 폼 초기화/다른 장소 불러오기 시 Firebase에서 정리한다.
-- 장소 수정 시 삭제 대상 판정은 URL 토큰이 아닌 Storage object path 기준으로 처리한다.
+- Vite + React + React Native Web 기반 Web에서 공식 웹(`/`)과 어드민 웹(`/admin`, `#/admin`)을 함께 운영한다.
+- 어드민 웹은 장소/국가/사용자/공휴일 DB를 CRUD로 관리한다.
+- 어드민은 서버 API와 Firebase Storage를 함께 사용한다.
+- 공식 웹과 어드민은 같은 `web` 앱 안에서 path/hash 기준으로 분기한다.
 
-## 구조
+## 현재 구조
+
 ```text
 web/
+├─ public/
+│  ├─ app-ads.txt
+│  └─ assets/official/
 ├─ src/
+│  ├─ App.tsx
+│  ├─ main.tsx
+│  ├─ config/env.ts
 │  ├─ features/
-│  │  ├─ official/OfficialHomePage.tsx
-│  │  └─ admin/AdminApp.tsx
+│  │  ├─ routing/pathResolver.ts
+│  │  ├─ official/
+│  │  └─ admin/
+│  │     ├─ AdminApp.tsx
+│  │     ├─ components/
+│  │     ├─ hooks/
+│  │     ├─ styles/
+│  │     ├─ types/
+│  │     └─ utils/
 │  ├─ lib/
 │  │  ├─ apiClient.ts
 │  │  ├─ firebase.ts
 │  │  └─ imageProcessing.ts
-│  ├─ config/env.ts
 │  └─ types/admin.ts
-├─ .env.example
-└─ package.json
+├─ package.json
+├─ tsconfig.json
+└─ vite.config.ts
 ```
 
+## 라우팅
+- `web/src/App.tsx`에서 공식 웹과 어드민 웹을 분기한다.
+- `window.location.pathname.startsWith("/admin")` 또는 `window.location.hash.startsWith("#/admin")`이면 `AdminApp`을 표시한다.
+- 그 외 경로는 `OfficialHomePage`를 표시한다.
+- Render rewrite 설정 전 직접 접근 fallback으로 `/#/admin`을 사용할 수 있다.
+
+## 어드민 인증
+- 어드민 로그인 API는 `POST /api/admin/v1/auth/login`이다.
+- 로그인 응답의 `accessToken`을 `sessionStorage`의 `oguri_admin_access_token`에 저장한다.
+- 이후 어드민 API 요청에는 `Authorization: Bearer {token}`을 주입한다.
+- `401`이 포함된 API 에러를 받으면 token을 지우고 로그인 화면으로 되돌린다.
+- 서버 어드민 컨트롤러는 `@Hidden`으로 Swagger에 노출하지 않는다.
+
 ## 어드민 UI 레이아웃
-- PC 최적화 대시보드형 UI:
-  - 좌측 사이드바(기능 탭)
-  - 상단 헤더(현재 섹션 + 빠른 액션)
-  - 상단 요약 카드(장소/체험/이미지/사용자/공휴일)
-  - 본문 작업 영역(CRUD 폼 + 목록)
-- 컬러 톤은 오구리 공식 웹과 맞춘 블루/민트 계열로 통일한다.
+- PC 최적화 대시보드형 UI를 사용한다.
+- 넓은 레이아웃 기준은 `windowWidth >= 1360`이다.
+- 주요 탭은 `destinations`, `countries`, `members`, `holidays`이다.
+- 각 목록은 검색어 state로 필터링한다.
+- 장소 폼은 국가 선택, Storage slug, 추천 기간 2개, 비행 시간/링크, 기간별 날씨, 이미지, 체험을 함께 관리한다.
+
+## Firebase 이미지 정책
+- 장소 이미지는 crop/압축 후 Firebase Storage에 업로드한다.
+- 장소 이미지 출력 폭은 1280px이다.
+- 체험 썸네일 출력 폭은 1200px이다.
+- 압축 목표는 800KB 이하이고, 최소 품질은 0.45, 최대 품질은 0.92이다.
+- 장소 이미지 경로는 `places/{countrySlug}/{citySlug}/{index}.jpg`이다.
+- 체험 썸네일 경로는 `places/{countrySlug}/{citySlug}/experiences/{index}.jpg`이다.
+- `{countrySlug}`, `{citySlug}`는 `^[a-z0-9]+(?:-[a-z0-9]+)*$`만 허용한다.
+- Storage slug 추천 목록은 하드코딩하지 않고 DB에 저장된 장소 이미지/체험 썸네일 URL에서 추출한다.
+- 새 파일명 번호는 현재 폼의 이미지/체험 URL에서 읽은 최대 번호 + 1을 사용한다.
+- 삭제 대상 판정은 URL token이 아니라 Firebase object path 기준으로 처리한다.
+
+## 이미지 정리 정책
+- 장소 수정 시 폼에서 제거된 기존 장소 이미지와 체험 썸네일은 저장 성공 후 Firebase에서 삭제한다.
+- 장소 삭제 시 해당 장소의 모든 장소 이미지와 체험 썸네일을 Firebase에서 삭제한다.
+- 장소 편집 중 새로 업로드한 이미지는 폼 초기화 또는 다른 장소 불러오기 시 Firebase에서 정리한다.
+- 새로 업로드한 이미지를 저장 전 교체/삭제하면 즉시 Firebase에서 삭제한다.
+- Firebase 삭제 실패는 장소 저장/삭제 완료 메시지에 실패 건수로 표시한다.
 
 ## 서버 어드민 API
 - Prefix: `/api/admin/v1`
 - 인증: `POST /api/admin/v1/auth/login`으로 토큰 발급 후 `Authorization: Bearer {token}` 사용
-- Swagger 노출 제외: 어드민 컨트롤러에 `@Hidden` 적용
 
 ### 인증
 - `POST /api/admin/v1/auth/login`
 
-### 장소
+### 국가
 - `GET /api/admin/v1/countries`
+- `POST /api/admin/v1/countries`
+- `PUT /api/admin/v1/countries/{countryId}`
+- `DELETE /api/admin/v1/countries/{countryId}`
+
+국가 요청/응답 필드:
+- `name`
+- `currencyCode`
+- `bigMacIndex`
+
+### 장소
 - `GET /api/admin/v1/destinations`
 - `POST /api/admin/v1/destinations`
 - `PUT /api/admin/v1/destinations/{destinationId}`
 - `DELETE /api/admin/v1/destinations/{destinationId}`
 
-#### 장소 요청/응답 스펙(요약)
-- `POST/PUT /api/admin/v1/destinations`의 body에 `experiences`를 포함한다.
-- `POST/PUT /api/admin/v1/destinations`의 body에 `flightUrl`을 포함해 스카이스캐너 링크를 저장한다.
-- `POST/PUT /api/admin/v1/destinations`의 body에 `weatherTemp1`, `weatherPrecipitationMm1`, `weatherTemp2`, `weatherPrecipitationMm2`를 포함해 추천 기간별 날씨를 저장한다.
-- `experiences` 항목 필드:
-  - `title`: 액티비티 제목
-  - `description`: 액티비티 설명
-  - `thumbnailUrl`: 액티비티 썸네일 URL
-  - `link`: 외부 이동 링크
-  - `sortOrder`: 정렬 순서(1 이상)
-- `GET /api/admin/v1/destinations` 응답에도 `flightUrl`, `experiences`가 포함된다.
-- `GET /api/admin/v1/destinations` 응답에도 추천 기간별 날씨가 포함된다.
+장소 요청/응답 주요 필드:
+- `countryId`
+- `name`
+- `summary`
+- `description`
+- `recommendStartMonth1`, `recommendEndMonth1`
+- `recommendStartMonth2`, `recommendEndMonth2`
+- `flightTimeMinutes`
+- `flightUrl`
+- `weatherTemp1`, `weatherPrecipitationMm1`
+- `weatherTemp2`, `weatherPrecipitationMm2`
+- `images`
+- `experiences`
+
+`images` 항목:
+- `imageUrl`
+- `isThumbnail`
+- `sortOrder`
+
+`experiences` 항목:
+- `title`
+- `description`
+- `thumbnailUrl`
+- `link`
+- `sortOrder`
 
 ### 사용자
 - `GET /api/admin/v1/members`
@@ -78,51 +132,79 @@ web/
 - `PUT /api/admin/v1/members/{memberId}`
 - `DELETE /api/admin/v1/members/{memberId}`
 
+사용자 요청/응답 필드:
+- `id`
+- `nickname`
+- `preferredDayOff`
+- `remainingDayOff`
+- `onboardingCompleted`
+- `updatedAt`(응답)
+
 ### 공휴일
 - `GET /api/admin/v1/public-holidays`
 - `POST /api/admin/v1/public-holidays`
 - `PUT /api/admin/v1/public-holidays/{holidayId}`
 - `DELETE /api/admin/v1/public-holidays/{holidayId}`
 
+공휴일 요청/응답 필드:
+- `holidayDate`
+- `name`
+- `isActualHoliday`
+
 ## 환경 변수 작성 위치
 - 위치: 프로젝트 루트 `.env` 파일
-- Vite 설정(`web/vite.config.ts`)에서 `envDir: ".."`로 지정하여 웹도 루트 `.env`를 사용한다.
+- `web/vite.config.ts`에서 `envDir: ".."`를 지정하므로 웹 앱도 루트 `.env`를 사용한다.
+- `web/src/config/env.ts`는 필수 env가 없으면 앱 초기화 시 에러를 던진다.
 
 ### 서버 변수
-- `SPRING_DATASOURCE_URL`: Render PostgreSQL 접속 URL
-- `SPRING_DATASOURCE_USERNAME`: Render PostgreSQL 사용자명
-- `SPRING_DATASOURCE_PASSWORD`: Render PostgreSQL 비밀번호
-- `KAKAO_REST_API_KEY`: 카카오 로그인 REST API 키
-- `APPLE_CLIENT_ID`: Apple 로그인 client id
-- `ADMIN_USERNAME`: 어드민 로그인 아이디
-- `ADMIN_PASSWORD`: 어드민 로그인 비밀번호
-- `ADMIN_SESSION_SECRET`: 어드민 토큰 서명 시크릿(최소 32바이트)
-- `ADMIN_SESSION_VALIDITY_SECONDS`: 어드민 토큰 만료 시간(초)
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE`
+- `SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE`
+- `SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT`
+- `SPRING_DATASOURCE_HIKARI_MAX_LIFETIME`
+- `SPRING_DATASOURCE_HIKARI_LEAK_DETECTION_THRESHOLD`
+- `SPRING_MAIN_LAZY_INITIALIZATION`
+- `SPRING_DATA_JPA_REPOSITORIES_BOOTSTRAP_MODE`
+- `SPRING_JPA_HIBERNATE_DDL_AUTO`
+- `PORT`
+- `JWT_SECRET`
+- `JWT_ACCESS_TOKEN_VALIDITY_SECONDS`
+- `JWT_REFRESH_TOKEN_VALIDITY_SECONDS`
+- `APPLE_CLIENT_ID`
+- `GOOGLE_WEB_CLIENT_ID`
+- `AUTH_HTTP_CONNECT_TIMEOUT_MILLIS`
+- `AUTH_HTTP_READ_TIMEOUT_MILLIS`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`
+- `ADMIN_SESSION_VALIDITY_SECONDS`
 
 ### 웹 변수
-- `VITE_API_BASE_URL`: 서버 API 주소 (예: `https://api.example.com`)
-- `VITE_FIREBASE_API_KEY`: Firebase Web API Key
-- `VITE_FIREBASE_AUTH_DOMAIN`: Firebase Auth 도메인
-- `VITE_FIREBASE_PROJECT_ID`: Firebase 프로젝트 ID
-- `VITE_FIREBASE_STORAGE_BUCKET`: Firebase Storage 버킷
-- `VITE_FIREBASE_MESSAGING_SENDER_ID`: Firebase Sender ID
-- `VITE_FIREBASE_APP_ID`: Firebase App ID
-- `VITE_FIREBASE_MEASUREMENT_ID`: (선택) Analytics ID
+- `VITE_API_BASE_URL`
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `VITE_FIREBASE_MEASUREMENT_ID` (선택)
+- `VITE_PLAY_STORE_URL` (선택)
+- `VITE_APP_STORE_URL` (선택)
 
 ## Render Static Web 배포
 - Root Directory: `web`
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `dist`
 - Rewrite Rule: `/* -> /index.html`
-- 경로 fallback: rewrite 설정 전에는 `/#/admin` 해시 경로로도 어드민 진입 가능
 
 ## 주의 사항
-- 어드민 API는 Swagger에 노출하지 않는다.
-- 어드민 비밀값은 서버 `.env`에만 둔다.
-- 보안 강화를 위해 추후 IP 제한 또는 별도 Admin Auth(예: Firebase Auth + 서버 검증)로 확장한다.
+- 어드민 비밀값은 서버 환경변수에만 둔다.
+- 웹의 Firebase 값은 공개 가능한 client config이지만, Storage 보안 규칙은 별도로 관리해야 한다.
+- 보안 강화를 위해 추후 IP 제한 또는 별도 Admin Auth로 확장할 수 있다.
 
 ## Firebase 이미지 경로 예시
 - 공개 URL 예시: `https://firebasestorage.googleapis.com/v0/b/oguri-74e46.firebasestorage.app/o/places%2Faustralia%2Fbrisbane%2F1.jpg?alt=media&token=...`
-- GS 경로 예시: `gs://oguri-74e46.firebasestorage.app/places/australia/brisbane`
-- 파일명 번호는 업로드 시 경로 내 기존 최대 번호를 기준으로 `1, 2, 3, ...` 순차 증가 규칙을 사용한다.
-- experience 썸네일 경로 예시: `gs://oguri-74e46.firebasestorage.app/places/australia/brisbane/experiences/1.jpg`
+- object path 예시: `places/australia/brisbane/1.jpg`
+- 체험 썸네일 object path 예시: `places/australia/brisbane/experiences/1.jpg`

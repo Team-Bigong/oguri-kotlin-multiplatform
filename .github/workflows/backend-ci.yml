@@ -4,31 +4,28 @@ on:
   push:
     branches:
       - release-backend
-    paths:
-      - "server/**"
-      - "shared/**"
-      - "gradle/**"
-      - "gradlew"
-      - "gradlew.bat"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - ".github/workflows/backend-ci.yml"
-  pull_request:
-    branches:
-      - release-backend
-    paths:
-      - "server/**"
-      - "shared/**"
-      - "gradle/**"
-      - "gradlew"
-      - "gradlew.bat"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - ".github/workflows/backend-ci.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oguri_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d oguri_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      TRAVEL_TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/oguri_test
+      TRAVEL_TEST_DATABASE_USER: postgres
+      TRAVEL_TEST_DATABASE_PASSWORD: postgres
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -42,6 +39,17 @@ jobs:
 
       - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
+
+      - name: Verify backend rules and PostgreSQL migrations
+        run: ./gradlew :server:test --stacktrace
+
+      - name: Upload backend test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: server/build/reports/tests/test
+          if-no-files-found: ignore
 
       - name: Build backend artifact
         run: ./gradlew :server:bootJar --stacktrace

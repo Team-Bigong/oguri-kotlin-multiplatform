@@ -12,6 +12,7 @@ import com.bigong.oguri.domain.repository.AuthRepository
 import dev.zacsweers.metro.Inject
 import io.ktor.client.plugins.ClientRequestException
 import io.ktor.http.HttpStatusCode
+import kotlinx.coroutines.CancellationException
 
 @Inject
 class DefaultAuthRepository(
@@ -63,9 +64,9 @@ class DefaultAuthRepository(
     }
 
     override suspend fun getAutoLoginState(): AutoLoginState {
-        val accessToken = AuthTokenStore.getAccessToken()
-        val refreshToken = AuthTokenStore.getRefreshToken()
-        if (accessToken.isNullOrBlank() || refreshToken.isNullOrBlank()) {
+        val session = AuthTokenStore.currentSession()
+        val tokens = session.tokens
+        if (tokens == null || tokens.accessToken.isBlank() || tokens.refreshToken.isBlank()) {
             return AutoLoginState(
                 isLoggedIn = false,
                 isOnboardingCompleted = false,
@@ -78,18 +79,19 @@ class DefaultAuthRepository(
                 isLoggedIn = true,
                 isOnboardingCompleted = memberMeResponse.onboardingCompleted,
             )
-        } catch (throwable: Throwable) {
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (throwable: Exception) {
             if (throwable is ClientRequestException) {
                 val statusCode = throwable.response.status
                 val isUnauthorized = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
                 if (isUnauthorized) {
-                    return when (val refreshTokenResult = refreshTokensFromRefreshToken()) {
+                    return when (val refreshTokenResult = refreshTokensFromRefreshToken(session)) {
                         is RefreshTokenResult.Success -> {
                             refreshTokenResult.state
                         }
 
                         RefreshTokenResult.AuthenticationFailed -> {
-                            AuthTokenStore.clearTokens()
                             AutoLoginState(
                                 isLoggedIn = false,
                                 isOnboardingCompleted = false,
@@ -145,32 +147,29 @@ class DefaultAuthRepository(
         )
     }
 
-    private suspend fun refreshTokensFromRefreshToken(): RefreshTokenResult {
-        val storedRefreshToken = AuthTokenStore.getRefreshToken()
-        if (storedRefreshToken.isNullOrBlank()) {
-            return RefreshTokenResult.AuthenticationFailed
-        }
-
-        val refreshResponse =
+    private suspend fun refreshTokensFromRefreshToken(original: AuthTokenStore.Session): RefreshTokenResult {
+        val refreshed =
             try {
-                authRemoteDataSource.refreshToken(
-                    request = RefreshTokenRequest(refreshToken = storedRefreshToken),
-                )
-            } catch (clientRequestException: ClientRequestException) {
-                val statusCode = clientRequestException.response.status
-                val isUnauthorized = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
-                if (isUnauthorized) {
-                    return RefreshTokenResult.AuthenticationFailed
-                }
-                return RefreshTokenResult.TemporaryFailure
-            } catch (throwable: Throwable) {
+                AuthTokenStore.refreshTokens(original) { refreshToken ->
+                    try {
+                        val response = authRemoteDataSource.refreshToken(RefreshTokenRequest(refreshToken))
+                        AuthTokenStore.TokenPair(response.accessToken, response.refreshToken)
+                    } catch (exception: ClientRequestException) {
+                        val status = exception.response.status
+                        if (status != HttpStatusCode.Unauthorized && status != HttpStatusCode.Forbidden) throw exception
+                        null
+                    }
+                } ?: return RefreshTokenResult.AuthenticationFailed
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
                 return RefreshTokenResult.TemporaryFailure
             }
 
-        saveTokens(
-            accessToken = refreshResponse.accessToken,
-            refreshToken = refreshResponse.refreshToken,
-        )
+        val refreshedSession = AuthTokenStore.currentSession()
+        if (refreshedSession.version != original.version || refreshedSession.tokens != refreshed) {
+            return RefreshTokenResult.TemporaryFailure
+        }
 
         val refreshedMemberMeResponse =
             try {
@@ -179,10 +178,13 @@ class DefaultAuthRepository(
                 val statusCode = clientRequestException.response.status
                 val isUnauthorized = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden
                 if (isUnauthorized) {
+                    AuthTokenStore.expireSession(refreshedSession)
                     return RefreshTokenResult.AuthenticationFailed
                 }
                 return RefreshTokenResult.TemporaryFailure
-            } catch (throwable: Throwable) {
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
                 return RefreshTokenResult.TemporaryFailure
             }
 

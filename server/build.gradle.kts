@@ -55,6 +55,12 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEa
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    val verifyTravelPostgres = providers.environmentVariable("TRAVEL_TEST_DATABASE_URL")
+        .map { it.startsWith("jdbc:postgresql:") }
+        .getOrElse(false)
+    inputs.property("travelPostgresIntegrationEnabled", verifyTravelPostgres)
+    outputs.upToDateWhen { !verifyTravelPostgres }
+    outputs.doNotCacheIf("PostgreSQL integration tests require a live database") { verifyTravelPostgres }
 }
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
