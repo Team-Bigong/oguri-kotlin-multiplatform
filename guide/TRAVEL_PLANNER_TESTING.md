@@ -83,3 +83,12 @@ bash scripts/verify_ios_simulator.sh
 - Android CI 디버그 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY_DEBUG`, Android 배포 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY`를 GitHub Actions 시크릿으로 전달한다.
 - Xcode Cloud에는 각각 `GOOGLE_MAPS_IOS_API_KEY_DEBUG`와 `GOOGLE_MAPS_IOS_API_KEY`를 전달한다. `ci_post_clone.sh`에서 각 환경의 `GOOGLE_MAPS_IOS_API_KEY` 빌드 설정에 적용한다.
 - Xcode Cloud의 `OGURI_IOS_FIREBASE_DEBUG_PLIST_BASE64`와 `OGURI_IOS_FIREBASE_RELEASE_PLIST_BASE64`에는 해당 plist의 Base64 값을 전달한다. 파일 구조와 번들 식별자가 일치하면 앱 리소스 경로에 기록한다.
+
+## Galaxy S25 API 36 회귀 검증
+
+- 홈 추천 카드를 확인하고, 하단 `여행`으로 내 여행을 연다. 사진이 등록된 여행 카드와 상단 추가 아이콘을 확인한다. 추가 아이콘으로 여행 만들기를 열고 도시와 날짜를 고르면 버튼이 활성화되는지 확인한다. 로그인 전에는 여행 탭의 설명과 로그인 버튼을 확인한다.
+- 추천 도시로 시작하는 여행 양식에 도시와 추천 날짜가 전달되는지 확인한다. 기간 상세에서 직접 시작하면 추천 날짜가 전달되고 도시는 선택할 수 있어야 한다.
+- 점 세 개 아이콘으로 여행 관리를 열고 소유자는 연필 아이콘으로 여행 정보를 편집할 수 있는지 확인한다.
+- 최초 조회는 기존 스켈레톤을, 전체 화면 저장은 오구리 중앙 로딩을 표시하는지 확인한다.
+- 장소가 없는 여행을 열어 지도와 `장소 추가`가 동시에 보이는지 확인한다. 지도를 접은 뒤 다른 날짜를 선택하고 다시 펼친다. 전체 날짜 창의 지도와 목록도 확인한다.
+- 여행 도시의 장소를 검색해 결과, 상세, 지도 핀, 추가 후 새로고침까지 확인한다. 검색에 실패하면 재시도와 직접 추가를 각각 확인한다. 배포 환경에서 검색 오류를 재현하면 해당 환경의 장소 검색 응답과 Google Places 요청 지표를 함께 확인한다.
