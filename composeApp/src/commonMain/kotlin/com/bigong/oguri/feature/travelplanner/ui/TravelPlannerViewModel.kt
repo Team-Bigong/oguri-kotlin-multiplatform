@@ -24,6 +24,7 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitUndoAction
 import com.bigong.oguri.feature.travelplanner.ui.model.toVisitDraft
+import com.bigong.oguri.feature.travelplanner.ui.model.canApplyTo
 import com.bigong.oguri.feature.travelplanner.ui.model.withRefreshedPlan
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.CancellationException
@@ -629,7 +630,7 @@ class TravelPlannerViewModel(
         val current = state.value
         val order = current.unappliedOrder ?: return
         val plan = current.plan ?: return
-        if (order.structureRevision != plan.structureRevision) return
+        if (!order.canApplyTo(plan)) return
         reorderVisits(order.dayNumber, plan.orderRevision(order.dayNumber), plan.structureRevision, order.visitIds)
     }
 

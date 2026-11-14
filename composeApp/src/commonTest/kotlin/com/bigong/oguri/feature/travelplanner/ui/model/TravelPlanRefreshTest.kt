@@ -6,6 +6,7 @@ import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.domain.model.TravelVisit
+import com.bigong.oguri.domain.model.TravelVisitChange
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
@@ -26,6 +27,25 @@ class TravelPlanRefreshTest {
             mapOf(3 to 1),
             listOf(visit),
         )
+
+    @Test
+    fun anOrderFromARemovedDayStaysAvailableForReviewButCannotBeAppliedToUnassignedVisits() {
+        val order = TravelVisitChange.Reorder(3, 1, listOf(visit.id))
+        val current = TravelPlannerUiState(plan = plan, selectedDay = 3, unappliedOrder = order)
+        assertTrue(order.canApplyTo(plan))
+        val shortened =
+            plan.copy(
+                summary = plan.summary.copy(details = plan.summary.details.copy(dates = TravelDates(dates.start, dates.start))),
+                visits = listOf(visit.copy(dayNumber = TravelPlan.UNASSIGNED_DAY)),
+                revision = 2,
+                structureRevision = 2,
+            )
+        val refreshed = current.withRefreshedPlan(shortened)
+        assertEquals(TravelPlan.UNASSIGNED_DAY, refreshed.selectedDay)
+        assertEquals(order, refreshed.unappliedOrder)
+        assertTrue(order.isOutsideTrip(shortened))
+        assertFalse(order.canApplyTo(shortened))
+    }
 
     @Test
     fun inspectionFollowsTheConfirmedVisitAndClosesWhenItIsRemoved() {

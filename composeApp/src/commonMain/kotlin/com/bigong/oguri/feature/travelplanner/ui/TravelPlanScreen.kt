@@ -50,6 +50,8 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
+import com.bigong.oguri.feature.travelplanner.ui.model.canApplyTo
+import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
 import com.bigong.oguri.feature.travelplanner.ui.model.hasTimeOrderMismatch
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
@@ -255,7 +257,8 @@ internal fun TravelPlanScreen(
             val visitListState = rememberLazyListState()
             var draggedId by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf<String?>(null) }
             var dragPosition by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf(0f) }
-            val unappliedOrder = state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay }
+            val unappliedOrder =
+                state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay || it.isOutsideTrip(plan) }
             LaunchedEffect(state.listFocusRequest) {
                 val index = visits.indexOfFirst { it.id == state.selectedVisitId }
                 if (state.listFocusRequest > 0 && index >= 0) {
@@ -271,11 +274,10 @@ internal fun TravelPlanScreen(
                     item(key = "unapplied-visit-order") {
                         val savedIds = savedVisits.map(TravelVisit::id)
                         val latestById = plan.visits.associateBy(TravelVisit::id)
-                        val sameOrder = savedIds == unappliedOrder.visitIds
-                        val canReapply =
-                            plan.structureRevision == unappliedOrder.structureRevision &&
-                                savedIds.toSet() == unappliedOrder.visitIds.toSet()
+                        val sameOrder = !unappliedOrder.isOutsideTrip(plan) && savedIds == unappliedOrder.visitIds
+                        val canReapply = unappliedOrder.canApplyTo(plan)
                         Text(stringResource(Res.string.travel_order_mine), style = MaterialTheme.typography.titleSmall)
+                        Text(travelDayLabel(dates, unappliedOrder.dayNumber), style = MaterialTheme.typography.bodySmall)
                         unappliedOrder.visitIds.forEachIndexed { index, id ->
                             val details = latestById[id]?.details
                             val name = state.dayPlaces[details?.googlePlaceId]?.name ?: details?.name

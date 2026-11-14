@@ -49,6 +49,15 @@ internal data class TravelPlannerUiState(
     val viewportRequest: Int = 0,
 )
 
+internal fun TravelVisitChange.Reorder.isOutsideTrip(plan: TravelPlan): Boolean =
+    dayNumber !in TravelPlan.UNASSIGNED_DAY..plan.summary.details.dates.dayCount
+
+internal fun TravelVisitChange.Reorder.canApplyTo(plan: TravelPlan): Boolean =
+    !isOutsideTrip(plan) &&
+        structureRevision == plan.structureRevision &&
+        visitIds.size == plan.visits.count { it.dayNumber == dayNumber } &&
+        visitIds.toSet() == plan.visits.filter { it.dayNumber == dayNumber }.map(TravelVisit::id).toSet()
+
 internal data class TravelVisitUndoAction(
     val originalRequestId: String,
     val dayNumber: Int,
