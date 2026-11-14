@@ -1,6 +1,8 @@
 package com.bigong.oguri.domain
 
 import jakarta.persistence.Column
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.Id
@@ -42,6 +44,11 @@ class TravelVisit(
     @Column(length = 512)
     val googlePlaceId: String? = details.googlePlaceId
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    var category: TravelVisitCategory? = details.category
+        private set
+
     var localTime: LocalTime? = details.localTime
         private set
 
@@ -53,7 +60,7 @@ class TravelVisit(
     var revision: Long = revision
         private set
 
-    fun details(): TravelVisitDetails = TravelVisitDetails(name, location, localTime, note, googlePlaceId)
+    fun details(): TravelVisitDetails = TravelVisitDetails(name, location, localTime, note, googlePlaceId, category)
 
     internal fun merge(
         base: TravelVisitDetails,
@@ -76,6 +83,7 @@ class TravelVisit(
             localTime = changed(base.localTime, proposed.localTime, localTime),
             note = changed(base.note, proposed.note, note),
             googlePlaceId = googlePlaceId,
+            category = changed(base.category, proposed.category, category),
         )
     }
 
@@ -88,6 +96,7 @@ class TravelVisit(
         location = details.location
         localTime = details.localTime
         note = details.note
+        category = details.category
         this.revision = revision
     }
 
@@ -106,12 +115,14 @@ data class TravelVisitDetails(
     val localTime: LocalTime?,
     val note: String?,
     val googlePlaceId: String? = null,
+    val category: TravelVisitCategory? = null,
 ) {
     init {
         if (googlePlaceId == null) {
             require(!name.isNullOrBlank() && name.length <= MAX_NAME_LENGTH)
         } else {
-            require(GOOGLE_PLACE_ID.matches(googlePlaceId) && name == null && location == null)
+            require(GOOGLE_PLACE_ID.matches(googlePlaceId))
+            require(name == null || (name.isNotBlank() && name.length <= MAX_NAME_LENGTH))
         }
         require(location == null || location.length <= MAX_LOCATION_LENGTH)
         require(note == null || note.length <= MAX_NOTE_LENGTH)

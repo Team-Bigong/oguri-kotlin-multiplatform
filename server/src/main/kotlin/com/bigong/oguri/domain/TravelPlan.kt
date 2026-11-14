@@ -206,7 +206,7 @@ class TravelPlan(
         if (baseDayNumber != null && previousDay != baseDayNumber && dayNumber != baseDayNumber) {
             throw TravelPlanConflict("VISIT_CHANGED")
         }
-        val merged = if (base == null) details else visit.merge(base, details)
+        val merged = if (base == null) details.copy(category = details.category ?: visit.category) else visit.merge(base, details)
         if (previousDay != nextDay) requirePlaceCapacity(nextDay, merged)
         revision++
         visit.edit(merged, revision)

@@ -87,7 +87,9 @@ class TravelPlanService(
     @Transactional(readOnly = true)
     fun list(memberId: String): List<TravelPlanSummaryResponse> {
         requireMember(memberId)
-        return plans.findAccessible(memberId).map { it.toSummary() }
+        val accessible = plans.findAccessible(memberId)
+        val memberCounts = collaboration.memberCounts(accessible.map(TravelPlan::id))
+        return accessible.map { it.toSummary(memberCounts[it.id]) }
     }
 
     @Transactional
@@ -335,9 +337,10 @@ class TravelPlanService(
             localTime = localTime,
             note = note?.trim()?.takeIf(String::isNotEmpty),
             googlePlaceId = googlePlaceId,
+            category = category,
         )
 
-    private fun TravelPlan.toSummary(): TravelPlanSummaryResponse =
+    private fun TravelPlan.toSummary(memberCount: Int? = null): TravelPlanSummaryResponse =
         TravelPlanSummaryResponse(
             id,
             city,
@@ -350,6 +353,7 @@ class TravelPlanService(
             } else {
                 TravelPlanSourceResponse(sourceDestinationId, sourceStartDate, sourceEndDate)
             },
+            memberCount,
         )
 
     private fun TravelPlan.toResponseFor(memberId: String): TravelPlanResponse =
@@ -373,6 +377,7 @@ class TravelPlanService(
                         localTime = visit.localTime?.toString(),
                         note = visit.note,
                         googlePlaceId = visit.googlePlaceId,
+                        category = visit.category,
                         revision = visit.revision,
                     )
                 },
@@ -395,7 +400,7 @@ data class StoredVisitUndo(
             position,
             structureRevision,
             targetDay,
-            deletedDetails?.let { TravelVisitDetails(it.name, it.location, it.localTime, it.note, it.googlePlaceId) },
+            deletedDetails?.let { TravelVisitDetails(it.name, it.location, it.localTime, it.note, it.googlePlaceId, it.category) },
         )
 
     companion object {
@@ -406,7 +411,7 @@ data class StoredVisitUndo(
                 undo.position,
                 undo.structureRevision,
                 undo.targetDay,
-                undo.deletedDetails?.let { TravelVisitRequest(it.name, it.location, it.localTime, it.note, it.googlePlaceId) },
+                undo.deletedDetails?.let { TravelVisitRequest(it.name, it.location, it.localTime, it.note, it.googlePlaceId, it.category) },
             )
     }
 }
