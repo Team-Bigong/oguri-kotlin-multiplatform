@@ -130,6 +130,31 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun reorderKeepsItsDayRevisionAcrossUnrelatedEditsAndRejectsAChangedOrder() =
+        runTest {
+            val visits = listOf(
+                TravelVisit("first", 1, TravelVisitDetails("First", null, null, null, null), 1),
+                TravelVisit("second", 1, TravelVisitDetails("Second", null, null, null, null), 1),
+            )
+            val plans = AccessPlans(plan.copy(visits = visits, dayOrderRevisions = mapOf(1 to 1L)))
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.selectDay(1)
+            val originalOrder = listOf("first", "second")
+            val movedOrder = originalOrder.reversed()
+
+            plans.currentPlan = plans.currentPlan.copy(revision = 2)
+            viewModel.refreshPlan("plan")
+            assertTrue(viewModel.reorderVisits(1, 1, 0, movedOrder))
+            advanceUntilIdle()
+
+            plans.currentPlan = plans.currentPlan.copy(revision = 3, dayOrderRevisions = mapOf(1 to 3L))
+            viewModel.refreshPlan("plan")
+            assertFalse(viewModel.reorderVisits(1, 1, 0, movedOrder))
+        }
+
+    @Test
     fun automaticRefreshSkipsUnchangedCacheWritesAndPreservesTheDraftWhenARevisionArrives() =
         runTest {
             val plans = AccessPlans(plan)

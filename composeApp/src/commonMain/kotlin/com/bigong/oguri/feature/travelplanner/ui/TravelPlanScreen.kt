@@ -96,7 +96,7 @@ internal fun TravelPlanScreen(
     onInspectVisit: (String) -> Unit,
     onCloseInspection: () -> Unit,
     onMoveVisit: (TravelVisit, Int) -> Unit,
-    onReorderVisits: (List<String>) -> Unit,
+    onReorderVisits: (Int, Long, Long, List<String>) -> Boolean,
     onDraftChange: (TravelVisitDraft?) -> Unit,
     onApplyVisit: () -> Unit,
     onRemoveVisit: () -> Unit,
@@ -139,9 +139,10 @@ internal fun TravelPlanScreen(
         TravelModifiedButton(plan, enabled = !state.isSaving && !state.canRetrySave, onClick = onRecentChanges)
         val dates = plan.summary.details.dates
         val savedVisits = plan.visits.filter { it.dayNumber == state.selectedDay }
-        var dragOrder by remember(state.selectedDay, plan.revision) { mutableStateOf<List<String>?>(null) }
-        LaunchedEffect(state.failure) {
-            if (state.failure != null) dragOrder = null
+        val orderRevision = plan.orderRevision(state.selectedDay)
+        var dragOrder by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf<List<String>?>(null) }
+        LaunchedEffect(state.failure, state.isOffline) {
+            if (state.failure != null || state.isOffline) dragOrder = null
         }
         val visits =
             dragOrder?.let { order ->
@@ -166,14 +167,15 @@ internal fun TravelPlanScreen(
                 travelMapScene(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter)
             }
         var overlappingVisits by remember(state.selectedDay) { mutableStateOf<List<String>>(emptyList()) }
-        if (overlappingVisits.isNotEmpty()) {
+        val availableOverlaps = scene.markers.filter { it.id in overlappingVisits }.map { it.id }
+        if (availableOverlaps.size > 1) {
             AlertDialog(
                 onDismissRequest = { overlappingVisits = emptyList() },
                 title = { Text(stringResource(Res.string.travel_overlapping_visits)) },
                 text = {
                     LazyColumn(Modifier.heightIn(max = 240.dp)) {
                         itemsIndexed(visits) { index, visit ->
-                            if (visit.id in overlappingVisits) {
+                            if (visit.id in availableOverlaps) {
                                 TextButton(onClick = {
                                     overlappingVisits = emptyList()
                                     onMarkerClick(visit.id)
@@ -244,8 +246,8 @@ internal fun TravelPlanScreen(
             },
         ) {
             val visitListState = rememberLazyListState()
-            var draggedId by remember(state.selectedDay, plan.revision) { mutableStateOf<String?>(null) }
-            var dragPosition by remember(state.selectedDay, plan.revision) { mutableStateOf(0f) }
+            var draggedId by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf<String?>(null) }
+            var dragPosition by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf(0f) }
             LaunchedEffect(state.listFocusRequest) {
                 val index = visits.indexOfFirst { it.id == state.selectedVisitId }
                 if (state.listFocusRequest > 0 && index >= 0) visitListState.scrollToItem(index)
@@ -296,13 +298,14 @@ internal fun TravelPlanScreen(
                             }
                         },
                         onDragFinished = { apply ->
-                            val order = dragOrder
-                            if (apply && order != null && order != savedVisits.map(TravelVisit::id)) {
-                                onReorderVisits(order)
-                            } else {
-                                dragOrder = null
+                            if (draggedId == visit.id) {
+                                val order = dragOrder
+                                val accepted =
+                                    apply && order != null &&
+                                        onReorderVisits(state.selectedDay, orderRevision, plan.structureRevision, order)
+                                if (!accepted) dragOrder = null
+                                draggedId = null
                             }
-                            draggedId = null
                         },
                     )
                 }

@@ -604,13 +604,23 @@ class TravelPlannerViewModel(
         )
     }
 
-    internal fun reorderVisits(visitIds: List<String>) {
+    internal fun reorderVisits(
+        day: Int,
+        expectedOrderRevision: Long,
+        expectedStructureRevision: Long,
+        visitIds: List<String>,
+    ): Boolean {
         val current = state.value
-        val plan = current.plan ?: return
-        val day = current.selectedDay
+        val plan = current.plan ?: return false
+        if (day != current.selectedDay ||
+            plan.orderRevision(day) != expectedOrderRevision ||
+            plan.structureRevision != expectedStructureRevision
+        ) {
+            return false
+        }
         val originalIds = plan.visits.filter { it.dayNumber == day }.map(TravelVisit::id)
-        if (visitIds == originalIds || visitIds.size != originalIds.size || visitIds.toSet() != originalIds.toSet()) return
-        changeVisit(TravelVisitChange.Reorder(day, plan.orderRevision(day), visitIds, plan.structureRevision))
+        if (visitIds == originalIds || visitIds.size != originalIds.size || visitIds.toSet() != originalIds.toSet()) return false
+        return changeVisit(TravelVisitChange.Reorder(day, expectedOrderRevision, visitIds, expectedStructureRevision))
     }
 
     internal fun openExistingPlace(visit: TravelVisit) {
@@ -619,7 +629,13 @@ class TravelPlannerViewModel(
     }
 
     internal fun selectVisitFromMap(visitId: String) {
-        mutableState.update { it.copy(selectedVisitId = visitId, listFocusRequest = it.listFocusRequest + 1) }
+        mutableState.update { current ->
+            if (current.plan?.visits?.any { it.id == visitId && it.dayNumber == current.selectedDay } != true) {
+                current
+            } else {
+                current.copy(selectedVisitId = visitId, listFocusRequest = current.listFocusRequest + 1)
+            }
+        }
     }
 
     internal fun fitMap() {
@@ -730,7 +746,7 @@ class TravelPlannerViewModel(
         val newIndex = currentIndex + offset
         if (currentIndex == -1 || newIndex !in visits.indices) return
         visits.add(newIndex, visits.removeAt(currentIndex))
-        reorderVisits(visits)
+        reorderVisits(visit.dayNumber, plan.orderRevision(visit.dayNumber), plan.structureRevision, visits)
     }
 
     internal fun undoVisit() {
@@ -747,12 +763,13 @@ class TravelPlannerViewModel(
         change: TravelVisitChange,
         selectedDayAfterSave: Int = state.value.selectedDay,
         addedPlace: TravelPlace? = null,
-    ) {
+    ): Boolean {
         val current = state.value
-        val plan = current.plan ?: return
-        if (pendingSave != null || current.isLoading || current.isSaving || current.isOffline || current.needsLatestPlan) return
+        val plan = current.plan ?: return false
+        if (pendingSave != null || current.isLoading || current.isSaving || current.isOffline || current.needsLatestPlan) return false
         addedPlaceForSave = addedPlace
         submit(plan.summary.id, TravelPendingSave.Visit(newRequestId(), change, selectedDayAfterSave))
+        return true
     }
 
     private fun applySavedVisit(

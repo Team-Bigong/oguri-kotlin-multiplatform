@@ -18,8 +18,7 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
     private let onMarkerClick: (String) -> Void
     private var tileTimeout: DispatchWorkItem?
     private var previousViewport: Int32?
-    private var previousFocus: String?
-    private var previouslyEmpty = true
+    private var fittedMarkers = false
     private var pendingCamera: (() -> Void)?
 
     init(container: UIView, onMarkerClick: @escaping (String) -> Void, onUnavailable: @escaping () -> Void) {
@@ -64,11 +63,10 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
             marker.map = map
         }
 
-        let isEmpty = scene.markers.isEmpty
-        guard previousViewport != viewportRequest || previousFocus != focusedVisitId || previouslyEmpty != isEmpty else { return }
+        let hasMarkers = !scene.markers.isEmpty
+        guard previousViewport != viewportRequest || (!fittedMarkers && hasMarkers) else { return }
         previousViewport = viewportRequest
-        previousFocus = focusedVisitId
-        previouslyEmpty = isEmpty
+        fittedMarkers = hasMarkers
         pendingCamera = { [weak self] in self?.positionCamera(for: scene, focusedVisitId: focusedVisitId) }
         applyPendingCamera()
     }

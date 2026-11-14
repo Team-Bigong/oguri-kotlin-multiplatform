@@ -134,7 +134,14 @@ internal actual fun PlatformTravelMap(
             }
         }
 
-        LaunchedEffect(renderedMap, viewportRequest, scene.markers.isEmpty(), focusedVisitId, mapSize) {
+        var appliedViewport by remember(renderedMap) { mutableStateOf<Int?>(null) }
+        var fittedMarkers by remember(renderedMap, viewportRequest) { mutableStateOf(false) }
+        LaunchedEffect(renderedMap, viewportRequest, scene.markers.isNotEmpty(), mapSize) {
+            if (mapSize.width == 0 || mapSize.height == 0) return@LaunchedEffect
+            val hasMarkers = scene.markers.isNotEmpty()
+            if (appliedViewport == viewportRequest && (fittedMarkers || !hasMarkers)) return@LaunchedEffect
+            appliedViewport = viewportRequest
+            fittedMarkers = hasMarkers
             val focus = scene.markers.firstOrNull { it.id == focusedVisitId }
             if (focus != null) {
                 renderedMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focus.coordinates.toLatLng(), 15f))
@@ -157,12 +164,8 @@ internal actual fun PlatformTravelMap(
                     1 -> renderedMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates.single(), 14f))
                     else -> {
                         val bounds = LatLngBounds.builder().apply { coordinates.forEach(::include) }.build()
-                        if (mapSize.width > 0 && mapSize.height > 0) {
-                            val padding = (28 * density).toInt().coerceAtMost(minOf(mapSize.width, mapSize.height) / 4)
-                            renderedMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, mapSize.width, mapSize.height, padding))
-                        } else {
-                            renderedMap.moveCamera(CameraUpdateFactory.newLatLngZoom(bounds.center, 10f))
-                        }
+                        val padding = (28 * density).toInt().coerceAtMost(minOf(mapSize.width, mapSize.height) / 4)
+                        renderedMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, mapSize.width, mapSize.height, padding))
                     }
                 }
             }

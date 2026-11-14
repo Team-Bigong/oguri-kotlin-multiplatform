@@ -25,6 +25,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -148,19 +149,21 @@ internal fun TravelPlaceSearchSheet(
                         if (coordinates != null) {
                             var available by remember(selected.id) { mutableStateOf(true) }
                             if (available) {
-                                PlatformTravelMap(
-                                    scene =
-                                        TravelMapScene(
-                                            listOf(TravelMapMarker(selected.id, coordinates, null, false)),
-                                            emptyList(),
-                                            null,
-                                        ),
-                                    viewportRequest = 0,
-                                    focusedVisitId = null,
-                                    onMarkerClick = {},
-                                    onUnavailable = { available = false },
-                                    modifier = Modifier.fillMaxWidth().height(144.dp),
-                                )
+                                key(selected.id) {
+                                    PlatformTravelMap(
+                                        scene =
+                                            TravelMapScene(
+                                                listOf(TravelMapMarker(selected.id, coordinates, null, false)),
+                                                emptyList(),
+                                                null,
+                                            ),
+                                        viewportRequest = 0,
+                                        focusedVisitId = null,
+                                        onMarkerClick = {},
+                                        onUnavailable = { available = false },
+                                        modifier = Modifier.fillMaxWidth().height(144.dp),
+                                    )
+                                }
                             }
                         }
                         if (existing != null) {
