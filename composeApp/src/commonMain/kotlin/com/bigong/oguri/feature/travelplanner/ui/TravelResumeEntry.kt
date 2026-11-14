@@ -12,7 +12,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.travel_dates_value
 import oguri.composeapp.generated.resources.travel_resume
@@ -24,7 +27,10 @@ internal fun TravelResumeEntry(
     onOpen: (String) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    LaunchedEffect(viewModel) { viewModel.loadResume() }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(viewModel, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.loadResume() }
+    }
     val plan = state.resumePlan ?: return
     Card(
         onClick = { onOpen(plan.id) },

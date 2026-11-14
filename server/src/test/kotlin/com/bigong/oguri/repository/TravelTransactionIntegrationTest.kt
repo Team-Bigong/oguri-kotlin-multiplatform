@@ -324,6 +324,58 @@ class TravelTransactionIntegrationTest {
     }
 
     @Test
+    fun `홈 이어보기는 가까운 예정 여행보다 내가 연 여행을 우선하고 친구 수정으로 바뀌지 않는다`() {
+        val owner = member()
+        val friend = member()
+        val today = LocalDate.now(java.time.ZoneId.of("Asia/Seoul"))
+        val near = tx { service.create(owner, creation(today.plusDays(10))).id }
+        val far = tx { service.create(owner, creation(today.plusDays(20))).id }
+        val past = tx { service.create(owner, creation(today.minusDays(10))).id }
+        assertEquals(near, tx { service.resume(owner) }?.id)
+        tx { service.recordView(owner, past, 1) }
+        assertEquals(near, tx { service.resume(owner) }?.id)
+        tx { service.recordView(owner, far, 1) }
+        jdbc
+            .sql("INSERT INTO travel_plan_members (travel_plan_id, member_id) VALUES (:id, :member)")
+            .param("id", near)
+            .param("member", friend)
+            .update()
+        tx { service.execute(friend, near, add("Friend edit")) }
+        assertEquals(far, tx { service.resume(owner) }?.id)
+    }
+
+    @Test
+    fun `진행 중 여행은 최근에 연 예정 여행보다 우선하고 진행 중 안에서 내 열람으로 고른다`() {
+        val owner = member()
+        val today = LocalDate.now(java.time.ZoneId.of("Asia/Seoul"))
+        tx { service.create(owner, creation(today.minusDays(1))) }
+        val active = tx { service.create(owner, creation(today.minusDays(1))).id }
+        val upcoming = tx { service.create(owner, creation(today.plusDays(10))).id }
+        tx { service.recordView(owner, active, 1) }
+        tx { service.recordView(owner, upcoming, 1) }
+        assertEquals(active, tx { service.resume(owner) }?.id)
+    }
+
+    @Test
+    fun `지난 여행만 있으면 목록은 보존하고 홈 이어보기는 비운다`() {
+        val owner = member()
+        val past = tx { service.create(owner, creation(LocalDate.now().minusDays(10))).id }
+        tx { service.recordView(owner, past, 1) }
+        assertNull(tx { service.resume(owner) })
+        assertEquals(listOf(past), tx { service.list(owner) }.map { it.id })
+    }
+
+    @Test
+    fun `제외된 멤버의 홈 이어보기는 이전 열람 기록으로 여행을 다시 선택하지 않는다`() {
+        val trip = fixture(startDate = LocalDate.now().plusDays(10))
+        tx { service.recordView(trip.other, trip.id, 1) }
+        assertEquals(trip.id, tx { service.resume(trip.other) }?.id)
+        tx { collaboration.remove(trip.owner, trip.id, trip.other) }
+        assertNull(tx { service.resume(trip.other) })
+        assertTrue(tx { service.list(trip.other) }.isEmpty())
+    }
+
+    @Test
     fun `예약 취소가 먼저 확정되면 대기 중인 발송 작업을 인계하지 않는다`() {
         val alarm = reminderFixture()
         assertNull(
@@ -553,13 +605,17 @@ class TravelTransactionIntegrationTest {
             .single()
     }
 
-    private fun <T : Any> tx(action: () -> T): T =
+    private fun <T> tx(action: () -> T): T =
         requireNotNull(
             transaction.execute {
                 jdbc.sql("SET LOCAL statement_timeout = '8s'").update()
-                action()
+                TransactionValue(action())
             },
-        )
+        ).value
+
+    private data class TransactionValue<T>(
+        val value: T,
+    )
 
     // Hold the first commit, then prove PostgreSQL has blocked the second request on a lock.
     // Merely starting two threads is insufficient evidence that the requests overlapped.

@@ -64,17 +64,23 @@ class TravelPlannerViewModel(
     private var pendingPlanId: String? = null
     private val recoveryWriteMutex: Mutex = Mutex()
     private var draftWrite: Job? = null
+    private var resumeRequest: Long = 0
     private var overviewRequest: Long = 0
     private var addedPlaceForSave: TravelPlace? = null
 
     internal suspend fun loadResume() {
+        val request = ++resumeRequest
+        val generation = mutationGeneration
         val plan =
             try {
                 repository.resume()
             } catch (_: TravelPlanException) {
                 null
             }
-        mutableState.update { it.copy(resumePlan = plan) }
+        currentCoroutineContext().ensureActive()
+        if (request == resumeRequest && generation == mutationGeneration) {
+            mutableState.update { it.copy(resumePlan = plan) }
+        }
     }
 
     internal suspend fun loadCreationCity(destinationId: Long) {

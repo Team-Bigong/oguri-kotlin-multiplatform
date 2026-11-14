@@ -93,6 +93,86 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun aLateResumeResponseCannotReplaceTheLatestHomeCard() =
+        runTest {
+            val barrier = CompletableDeferred<Unit>()
+            val plans =
+                ResumePlans(plan).apply {
+                    action = {
+                        withContext(NonCancellable) { barrier.await() }
+                        plan.summary
+                    }
+                }
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            launch { viewModel.loadResume() }
+            runCurrent()
+            val latest = plan.summary.copy(id = "latest")
+            plans.action = { latest }
+            viewModel.loadResume()
+            barrier.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(latest, viewModel.state.value.resumePlan)
+        }
+
+    @Test
+    fun aCancelledHomeRefreshCannotPublishItsLateResult() =
+        runTest {
+            val barrier = CompletableDeferred<Unit>()
+            val plans =
+                ResumePlans(plan).apply {
+                    action = {
+                        withContext(NonCancellable) { barrier.await() }
+                        plan.summary
+                    }
+                }
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            val reading = launch { viewModel.loadResume() }
+            runCurrent()
+            reading.cancel()
+            barrier.complete(Unit)
+            advanceUntilIdle()
+            assertNull(viewModel.state.value.resumePlan)
+        }
+
+    @Test
+    fun accessRevocationCannotBeUndoneByAPendingHomeRefresh() =
+        runTest {
+            val barrier = CompletableDeferred<Unit>()
+            val plans = ResumePlans(plan)
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadResume()
+            assertEquals(plan.summary, viewModel.state.value.resumePlan)
+            plans.action = {
+                withContext(NonCancellable) { barrier.await() }
+                plan.summary
+            }
+            launch { viewModel.loadResume() }
+            runCurrent()
+            viewModel.forgetUnavailablePlan(plan.summary.id)
+            barrier.complete(Unit)
+            advanceUntilIdle()
+            assertNull(viewModel.state.value.resumePlan)
+            assertEquals(TravelPlanFailure.UNAVAILABLE, viewModel.state.value.failure)
+        }
+
+    @Test
+    fun emptyAndDeniedResumeLookupsHideTheCardWithoutFailingTheHomePage() =
+        runTest {
+            val plans = ResumePlans(plan)
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadResume()
+            plans.action = { null }
+            viewModel.loadResume()
+            assertNull(viewModel.state.value.resumePlan)
+            plans.action = { plan.summary }
+            viewModel.loadResume()
+            plans.action = { throw TravelPlanException(TravelPlanFailure.SIGN_IN_REQUIRED) }
+            viewModel.loadResume()
+            assertNull(viewModel.state.value.resumePlan)
+            assertNull(viewModel.state.value.failure)
+        }
+
+    @Test
     fun offlineInspectionReadsTheConfirmedNoteWithoutCreatingOrClearingADraft() =
         runTest {
             val visit = TravelVisit("visit", 1, TravelVisitDetails("Museum", "Address", null, "Confirmed shared note"), 1)
@@ -520,4 +600,12 @@ private class BatchOverviewPlaces : TravelPlaceRepository by DeniedPlaces() {
             ids.associateWith { TravelPlace(it, "$language:$it", null, TravelCoordinates(37.5, 127.0), emptyList()) },
             false,
         )
+}
+
+private class ResumePlans(
+    plan: TravelPlan,
+) : TravelPlanRepository by AccessPlans(plan) {
+    var action: suspend () -> TravelPlanSummary? = { plan.summary }
+
+    override suspend fun resume(): TravelPlanSummary? = action()
 }
