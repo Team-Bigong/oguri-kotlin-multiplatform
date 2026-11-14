@@ -10,8 +10,13 @@ import com.bigong.oguri.dto.request.TravelPlanCommand
 import com.bigong.oguri.dto.request.TravelVisitRequest
 import com.bigong.oguri.dto.response.TravelPlanResponse
 import com.bigong.oguri.dto.response.TravelVisitResponse
+import com.bigong.oguri.service.RegisterTravelReminderDevice
+import com.bigong.oguri.service.ScheduleTravelReminder
 import com.bigong.oguri.service.TravelCollaborationService
+import com.bigong.oguri.service.TravelDetailsChange
 import com.bigong.oguri.service.TravelPlanService
+import com.bigong.oguri.service.TravelReminderDelivery
+import com.bigong.oguri.service.TravelReminderService
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityManagerFactory
 import org.flywaydb.core.Flyway
@@ -23,6 +28,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory
 import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.simple.JdbcClient
@@ -35,7 +41,10 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.transaction.support.TransactionTemplate
 import org.springframework.web.server.ResponseStatusException
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.Properties
 import java.util.UUID
 import java.util.concurrent.ArrayBlockingQueue
@@ -55,6 +64,8 @@ class TravelTransactionIntegrationTest {
     private lateinit var jdbc: JdbcClient
     private lateinit var service: TravelPlanService
     private lateinit var collaboration: TravelCollaborationService
+    private lateinit var reminders: TravelReminderRepository
+    private lateinit var reminderService: TravelReminderService
     private lateinit var changes: TravelCollaborationRepository
 
     @BeforeAll
@@ -115,7 +126,11 @@ class TravelTransactionIntegrationTest {
                 TravelPlanViewRepository(jdbc),
                 changes,
             )
-        collaboration = TravelCollaborationService(service, plans, members, changes, TravelReminderRepository(jdbc), 7)
+        reminders = TravelReminderRepository(jdbc)
+        collaboration = TravelCollaborationService(service, plans, members, changes, reminders, 7)
+        val delivery = mock(TravelReminderDelivery::class.java)
+        `when`(delivery.configured).thenReturn(true)
+        reminderService = TravelReminderService(service, reminders, delivery)
     }
 
     @AfterAll
@@ -308,10 +323,170 @@ class TravelTransactionIntegrationTest {
         assertEquals(listOf("Rolled back"), read(trip).visits.map { it.name })
     }
 
-    private fun fixture(visits: Int = 0): Fixture {
+    @Test
+    fun `예약 취소가 먼저 확정되면 대기 중인 발송 작업을 인계하지 않는다`() {
+        val alarm = reminderFixture()
+        assertNull(
+            overlap(
+                { reminderService.cancel(alarm.row.memberId, alarm.trip.id, alarm.row.id) },
+                { assertNull(reminderService.beginHandoff(alarm.row)) },
+            ),
+        )
+        assertEquals(TravelReminderStatus.CANCELLED, reminders.find(alarm.row.id)?.status)
+        assertFalse(reminders.due().any { it.id == alarm.row.id })
+    }
+
+    @Test
+    fun `인계 시작 뒤 취소된 예약은 늦은 성공 응답으로 되살아나지 않는다`() {
+        val alarm = reminderFixture()
+        assertNull(
+            overlap(
+                { assertEquals(alarm.token, reminderService.beginHandoff(alarm.row)) },
+                { reminderService.cancel(alarm.row.memberId, alarm.trip.id, alarm.row.id) },
+            ),
+        )
+        reminders.finishHandoff(alarm.row.id, true)
+        assertEquals(TravelReminderStatus.CANCELLED, reminders.find(alarm.row.id)?.status)
+        assertEquals(
+            HttpStatus.NOT_FOUND,
+            assertThrows(ResponseStatusException::class.java) {
+                tx { reminderService.open(alarm.row.memberId, alarm.row.id) }
+            }.statusCode,
+        )
+    }
+
+    @Test
+    fun `예약 변경은 큐의 이전 버전을 막고 늦은 이전 취소는 새 예약을 취소하지 않는다`() {
+        val alarm = reminderFixture()
+        val summary = read(alarm.trip).summary
+        val request =
+            ScheduleTravelReminder(
+                UUID.randomUUID(),
+                LocalDateTime
+                    .now(ZoneOffset.UTC)
+                    .plusHours(1)
+                    .withSecond(0)
+                    .withNano(0),
+                "UTC",
+                summary.startDate,
+                summary.endDate,
+                summary.timeZone,
+                alarm.row.deviceId,
+            )
+        assertNull(
+            overlap(
+                { reminderService.schedule(alarm.row.memberId, alarm.trip.id, request) },
+                { assertNull(reminderService.beginHandoff(alarm.row)) },
+            ),
+        )
+        tx { reminderService.cancel(alarm.row.memberId, alarm.trip.id, alarm.row.id) }
+        assertEquals(request.requestId, reminders.current(alarm.trip.id, alarm.row.memberId)?.id)
+        assertEquals(TravelReminderStatus.PENDING, reminders.find(request.requestId)?.status)
+        assertEquals(request.requestId, tx { reminderService.schedule(alarm.row.memberId, alarm.trip.id, request) }.id)
+        assertEquals(
+            2L,
+            jdbc
+                .sql("SELECT count(*) FROM travel_reminders WHERE travel_plan_id = :id")
+                .param("id", alarm.trip.id)
+                .query(Long::class.javaObjectType)
+                .single(),
+        )
+    }
+
+    @Test
+    fun `로그아웃이 먼저 확정되면 이전 기기의 발송 인계를 차단한다`() {
+        val alarm = reminderFixture()
+        assertNull(
+            overlap(
+                { reminderService.revokeDevice(alarm.row.deviceId, alarm.secret) },
+                { assertNull(reminderService.beginHandoff(alarm.row)) },
+            ),
+        )
+        assertNull(reminders.current(alarm.trip.id, alarm.row.memberId))
+        assertFalse(reminders.due().any { it.id == alarm.row.id })
+    }
+
+    @Test
+    fun `멤버 제외가 먼저 확정되면 큐의 개인 알림도 인계하지 않는다`() {
+        val alarm = reminderFixture(forOwner = false)
+        assertNull(
+            overlap(
+                { collaboration.remove(alarm.trip.owner, alarm.trip.id, alarm.trip.other) },
+                { assertNull(reminderService.beginHandoff(alarm.row)) },
+            ),
+        )
+        assertEquals(TravelReminderStatus.CANCELLED, reminders.find(alarm.row.id)?.status)
+    }
+
+    @Test
+    fun `두 발송 작업은 같은 예약을 한 번만 인계하고 알림 열기는 본인 권한을 확인한다`() {
+        val alarm = reminderFixture()
+        assertNull(
+            overlap(
+                { assertEquals(alarm.token, reminderService.beginHandoff(alarm.row)) },
+                { assertNull(reminderService.beginHandoff(alarm.row)) },
+            ),
+        )
+        assertEquals(TravelReminderStatus.HANDOFF_STARTED, reminders.find(alarm.row.id)?.status)
+        reminders.finishHandoff(alarm.row.id, true)
+        assertEquals(alarm.trip.id, tx { reminderService.open(alarm.row.memberId, alarm.row.id) })
+        assertEquals(
+            HttpStatus.NOT_FOUND,
+            assertThrows(ResponseStatusException::class.java) {
+                tx { reminderService.open(alarm.trip.other, alarm.row.id) }
+            }.statusCode,
+        )
+    }
+
+    @Test
+    fun `기간 변경이 먼저 확정되면 큐의 이전 예약을 인계하지 않는다`() {
+        val alarm = reminderFixture()
+        val before = read(alarm.trip)
+        val summary = before.summary
+        assertNull(
+            overlap(
+                {
+                    collaboration.updateDetails(
+                        alarm.trip.owner,
+                        alarm.trip.id,
+                        TravelDetailsChange(
+                            summary.city,
+                            summary.title,
+                            summary.timeZone,
+                            summary.startDate.plusDays(1),
+                            summary.endDate.plusDays(1),
+                            before.revision,
+                            0,
+                        ),
+                    )
+                },
+                { assertNull(reminderService.beginHandoff(alarm.row)) },
+            ),
+        )
+        assertEquals(TravelReminderStatus.CANCELLED, reminders.find(alarm.row.id)?.status)
+    }
+
+    private fun reminderFixture(forOwner: Boolean = true): ReminderFixture {
+        val trip = fixture(startDate = LocalDate.now().plusDays(10))
+        val member = if (forOwner) trip.owner else trip.other
+        val device = UUID.randomUUID()
+        val secret = "a".repeat(64)
+        val token = "test-push-token-" + UUID.randomUUID()
+        val id = UUID.randomUUID()
+        tx {
+            reminderService.registerDevice(member, device, RegisterTravelReminderDevice(secret, token))
+            reminders.insert(id, trip.id, member, device, OffsetDateTime.now().minusSeconds(30), "UTC")
+        }
+        return ReminderFixture(trip, requireNotNull(reminders.find(id)), secret, token)
+    }
+
+    private fun fixture(
+        visits: Int = 0,
+        startDate: LocalDate = LocalDate.of(2027, 4, 1),
+    ): Fixture {
         val owner = member()
         val other = member()
-        val id = tx { service.create(owner, creation()).id }
+        val id = tx { service.create(owner, creation(startDate)).id }
         jdbc
             .sql("INSERT INTO travel_plan_members (travel_plan_id, member_id) VALUES (:id, :member)")
             .param("id", id)
@@ -326,14 +501,14 @@ class TravelTransactionIntegrationTest {
             jdbc.sql("INSERT INTO members (id) VALUES (:id)").param("id", id).update()
         }
 
-    private fun creation(): CreateTravelPlanRequest =
+    private fun creation(startDate: LocalDate = LocalDate.of(2027, 4, 1)): CreateTravelPlanRequest =
         CreateTravelPlanRequest(
             UUID.randomUUID(),
             "Seoul",
             "Asia/Seoul",
             "Trip",
-            LocalDate.of(2027, 4, 1),
-            LocalDate.of(2027, 4, 3),
+            startDate,
+            startDate.plusDays(2),
             null,
         )
 
@@ -445,6 +620,13 @@ class TravelTransactionIntegrationTest {
             assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS))
         }
     }
+
+    private data class ReminderFixture(
+        val trip: Fixture,
+        val row: TravelReminderRow,
+        val secret: String,
+        val token: String,
+    )
 
     private data class Fixture(
         val id: UUID,
