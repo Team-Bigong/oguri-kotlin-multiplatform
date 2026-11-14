@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -35,6 +36,7 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapScene
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_retry_button
@@ -100,18 +102,19 @@ internal fun TravelPlanPane(
                                 modifier = Modifier.fillMaxSize(),
                             )
                         }
-                        TravelTextButton(
-                            onClick = { mapExpanded = false },
-                            modifier = Modifier.align(Alignment.TopEnd).padding(top = 4.dp, end = 8.dp)
-                                .clip(CircleShape).background(OguriTheme.colors.surfaceCard)
-                                .border(1.dp, OguriTheme.colors.borderSubtle, CircleShape),
+                        Box(
+                            Modifier.align(Alignment.TopEnd).padding(end = 8.dp).heightIn(min = 44.dp)
+                                .noRippleClickable(onClick = { mapExpanded = false }),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(stringResource(Res.string.travel_map_hide), style = OguriTheme.typography.bodySmall)
-                                Icon(
-                                    painterResource(Res.drawable.ic_right_arrow), null,
-                                    Modifier.size(14.dp).rotate(-90f),
-                                )
+                            Row(
+                                Modifier.heightIn(min = 30.dp).background(OguriTheme.colors.surfaceCard, CircleShape)
+                                    .border(1.dp, OguriTheme.colors.borderSubtle, CircleShape).padding(horizontal = 10.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(stringResource(Res.string.travel_map_hide), style = travelTextStyle(12, 14), color = OguriTheme.colors.textSecondary)
+                                Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(12.dp).rotate(-90f), tint = OguriTheme.colors.textSecondary)
                             }
                         }
                     }

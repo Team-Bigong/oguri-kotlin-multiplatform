@@ -214,4 +214,5 @@
     <string name="travel_private_settings">个人设置</string>
     <string name="travel_reminder_status_on">已开启</string>
     <string name="travel_card_date_range">%1$s - %2$s</string>
+    <string name="travel_manual_note_placeholder">同行成员也能看到</string>
 </resources>

@@ -28,10 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.AdvertisementCard
@@ -51,6 +51,7 @@ import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTravelInformationCard
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
 import com.bigong.oguri.feature.travelplanner.ui.TravelDestinationEntry
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
@@ -142,13 +143,13 @@ fun PlaceDetailScreen(
                             ) {
                                 Text(
                                     text = placeDetail.city,
-                                    style = OguriTheme.typography.sectionTitle,
+                                    style = travelTextStyle(22, 26, FontWeight.Bold),
                                     color = Neutral100,
                                 )
                                 Text(
                                     text = stringResource(Res.string.place_detail_country, placeDetail.country),
-                                    style = OguriTheme.typography.labelMedium,
-                                    color = Neutral40,
+                                    style = travelTextStyle(12, 14, FontWeight.Medium),
+                                    color = OguriTheme.colors.textTertiary,
                                 )
                             }
                             Row(
@@ -168,7 +169,7 @@ fun PlaceDetailScreen(
                         }
                     }
                     item {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         PlaceDetailDescriptionSection(
                             description = placeDetail.description,
                             modifier = Modifier.padding(horizontal = 20.dp),

@@ -214,4 +214,5 @@
     <string name="travel_private_settings">自分だけの設定</string>
     <string name="travel_reminder_status_on">オン</string>
     <string name="travel_card_date_range">%1$s - %2$s</string>
+    <string name="travel_manual_note_placeholder">同行するメンバーにも表示されます</string>
 </resources>

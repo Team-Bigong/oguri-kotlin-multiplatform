@@ -1,13 +1,15 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -30,12 +32,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.deeplink.travelInviteLink
 import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange70
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlanSource
@@ -49,9 +54,10 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelReminderDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.ic_mypage
 import oguri.composeapp.generated.resources.ic_right_arrow
-import oguri.composeapp.generated.resources.img_profile
 import oguri.composeapp.generated.resources.travel_accept_ownership
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
@@ -129,13 +135,12 @@ internal fun TravelMembersRoute(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Image(
-                            painterResource(Res.drawable.img_profile), null,
-                            Modifier.size(40.dp).clip(CircleShape).background(Mint40),
-                        )
+                        Box(Modifier.size(40.dp).background(Mint40, CircleShape), contentAlignment = Alignment.Center) {
+                            Icon(painterResource(Res.drawable.ic_mypage), null, Modifier.size(24.dp), tint = Neutral0)
+                        }
                         Text(
                             member.nickname ?: stringResource(Res.string.travel_member),
-                            Modifier.weight(1f), color = colors.textPrimary, style = OguriTheme.typography.bodyLarge,
+                            Modifier.weight(1f), color = Neutral100, style = travelTextStyle(15, 18, FontWeight.Medium),
                         )
                         if (member.owner) {
                             Text(stringResource(Res.string.travel_owner_role), color = colors.textTertiary, style = OguriTheme.typography.bodySmall)
@@ -199,6 +204,8 @@ internal fun TravelMembersRoute(
                 }
                 HorizontalDivider(color = colors.borderSubtle)
                 if (members.isOwner) {
+                    Spacer(Modifier.height(24.dp))
+                    HorizontalDivider(color = colors.borderSubtle)
                     TravelManagementRow(stringResource(Res.string.travel_delete_trip), !state.busy, destructive = true) {
                         confirmation = { viewModel.delete(planId) }
                     }
@@ -276,7 +283,7 @@ internal fun TravelMembersRoute(
 private fun TravelManagementSection(label: String) {
     Text(
         label, Modifier.padding(start = 24.dp, end = 24.dp, top = 14.dp),
-        style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary,
+        style = travelTextStyle(12, 14), color = OguriTheme.colors.textTertiary,
     )
 }
 
@@ -296,8 +303,8 @@ private fun TravelManagementRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            label, Modifier.weight(1f), style = OguriTheme.typography.bodyLarge,
-            color = if (destructive) colors.error else colors.textPrimary,
+            label, Modifier.weight(1f), style = travelTextStyle(15, 18, FontWeight.Medium),
+            color = if (destructive) Orange70 else Neutral100,
         )
         trailing?.let { Text(it, style = OguriTheme.typography.bodySmall, color = colors.textTertiary) }
         if (!destructive) Icon(painterResource(Res.drawable.ic_right_arrow), null, tint = colors.textPrimary)

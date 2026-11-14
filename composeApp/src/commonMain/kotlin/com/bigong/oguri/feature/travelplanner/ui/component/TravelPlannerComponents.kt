@@ -36,9 +36,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
@@ -128,7 +131,7 @@ private fun TravelPageTitle(title: String, modifier: Modifier, textAlign: TextAl
         title,
         modifier = modifier,
         textAlign = textAlign,
-        style = OguriTheme.typography.cardTitle,
+        style = travelTextStyle(18, 21, FontWeight.SemiBold),
         color = Neutral100,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -140,6 +143,7 @@ internal fun TravelPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    textStyle: TextStyle = OguriTheme.typography.cardSubtitle,
     content: @Composable () -> Unit,
 ) {
     TravelButton(
@@ -148,7 +152,7 @@ internal fun TravelPrimaryButton(
         enabled = enabled,
         backgroundColor = if (enabled) Mint40 else Neutral10,
         borderColor = Mint70.takeIf { enabled },
-        textStyle = OguriTheme.typography.cardSubtitle,
+        textStyle = textStyle,
         content = content,
     )
 }
@@ -198,7 +202,7 @@ private fun TravelButton(
     enabled: Boolean,
     backgroundColor: Color,
     borderColor: Color? = null,
-    textStyle: androidx.compose.ui.text.TextStyle = OguriTheme.typography.labelLarge,
+    textStyle: TextStyle = OguriTheme.typography.labelLarge,
     contentColor: Color = Neutral100,
     content: @Composable () -> Unit,
 ) {
@@ -297,8 +301,18 @@ internal fun TravelBottomAction(
         TravelPrimaryButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp),
+            textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
             content = content,
         )
     }
 }
+
+@Composable
+internal fun travelTextStyle(size: Int, lineHeight: Int, weight: FontWeight = FontWeight.Normal): TextStyle =
+    OguriTheme.typography.bodyMedium.copy(
+        fontSize = size.sp,
+        lineHeight = lineHeight.sp,
+        fontWeight = weight,
+        letterSpacing = 0.sp,
+    )

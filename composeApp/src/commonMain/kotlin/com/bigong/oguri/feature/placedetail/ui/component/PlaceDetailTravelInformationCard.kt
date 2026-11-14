@@ -1,9 +1,9 @@
 package com.bigong.oguri.feature.placedetail.ui.component
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,14 +22,16 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.toCurrencyDisplayName
 import com.bigong.oguri.domain.model.PlaceDetailTravelInformation
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
+import kotlin.math.roundToInt
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.place_detail_information_cost_index
 import oguri.composeapp.generated.resources.place_detail_information_cost_index_source
@@ -44,7 +46,6 @@ import oguri.composeapp.generated.resources.place_detail_precipitation_mostly_cl
 import oguri.composeapp.generated.resources.place_detail_precipitation_often_rainy_season
 import oguri.composeapp.generated.resources.place_detail_precipitation_sometimes_rain
 import org.jetbrains.compose.resources.stringResource
-import kotlin.math.roundToInt
 
 private const val CLEAR_PRECIPITATION_MAXIMUM = 30.0
 private const val MOSTLY_CLEAR_PRECIPITATION_MAXIMUM = 60.0
@@ -126,7 +127,7 @@ private fun TravelInformationRow(
     supportingText: String? = null,
     highlightedText: String? = null,
 ) {
-    val bodyStyle = OguriTheme.typography.bodyMedium
+    val bodyStyle = travelTextStyle(14, 17)
     val supportingStyle = OguriTheme.typography.labelSmall
     val highlightedStyle = SpanStyle(fontWeight = FontWeight.SemiBold)
 

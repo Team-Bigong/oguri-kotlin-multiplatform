@@ -1,7 +1,10 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,19 +14,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -39,7 +42,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -50,6 +56,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral30
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
@@ -126,19 +136,22 @@ internal fun TravelPlaceSearchSheet(
         onDismissRequest = close,
         sheetState = sheet,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-        dragHandle = { BottomSheetDefaults.DragHandle(width = 36.dp, height = 4.dp, color = colors.borderStrong) },
+        dragHandle = {
+            Box(Modifier.padding(top = 8.dp, bottom = 8.dp).size(width = 36.dp, height = 4.dp)
+                .background(colors.borderStrong, CircleShape))
+        },
     ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).imePadding()) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(0.88f).imePadding()) {
             Row(
-                Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp),
+                Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp, top = 0.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(stringResource(Res.string.travel_add_visit), style = OguriTheme.typography.cardTitle, color = colors.textPrimary)
+                Text(stringResource(Res.string.travel_add_visit), style = travelTextStyle(18, 21, FontWeight.SemiBold), color = Neutral100)
                 Text(
                     travelDayLabel(plan.summary.details.dates, targetDay),
                     Modifier.weight(1f),
-                    style = OguriTheme.typography.bodySmall,
+                    style = travelTextStyle(12, 14, FontWeight.Medium),
                     color = colors.textTertiary,
                 )
                 TravelIconButton(onClick = close, enabled = canDismiss) {
@@ -149,18 +162,18 @@ internal fun TravelPlaceSearchSheet(
                 }
             }
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 8.dp)
-                    .background(colors.surfaceCard, CircleShape).border(1.dp, colors.borderSubtle, CircleShape),
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp)
+                    .background(colors.surfaceCard, CircleShape).border(1.dp, colors.borderSubtle, CircleShape).padding(3.dp),
             ) {
                 TravelChoiceChip(stringResource(Res.string.travel_google_search_tab), !manual, canEdit, {
                     focus.clearFocus()
                     manual = false
-                }, Modifier.weight(1f))
+                }, Modifier.weight(1f), segmented = true)
                 TravelChoiceChip(stringResource(Res.string.travel_manual_add), manual, canEdit, {
                     focus.clearFocus()
                     onManualAdd()
                     manual = true
-                }, Modifier.weight(1f))
+                }, Modifier.weight(1f), segmented = true)
             }
             LazyColumn(
                 Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp),
@@ -180,7 +193,7 @@ internal fun TravelPlaceSearchSheet(
                 }
                 if (manual) {
                     if (draft != null) item {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             TravelPlaceField(
                                 draft.name, { onDraftChange(draft.copy(name = it)) }, Res.string.travel_visit_name,
                                 Res.string.travel_manual_name_placeholder, TravelVisitDetails.MAX_NAME_LENGTH, canEdit,
@@ -188,31 +201,26 @@ internal fun TravelPlaceSearchSheet(
                             TravelPlaceField(
                                 draft.location, { onDraftChange(draft.copy(location = it)) }, Res.string.travel_visit_location,
                                 Res.string.travel_manual_location_placeholder, TravelVisitDetails.MAX_LOCATION_LENGTH, canEdit,
-                            )
-                            Text(
-                                stringResource(Res.string.travel_manual_location_hint),
-                                style = OguriTheme.typography.caption, color = colors.textTertiary,
+                                supportingText = Res.string.travel_manual_location_hint,
                             )
                             TravelPlaceField(
                                 draft.note, { onDraftChange(draft.copy(note = it)) }, Res.string.travel_visit_note,
-                                Res.string.travel_visit_note_shared, TravelVisitDetails.MAX_NOTE_LENGTH, canEdit, multiline = true,
+                                Res.string.travel_manual_note_placeholder, TravelVisitDetails.MAX_NOTE_LENGTH, canEdit, multiline = true,
                             )
                             TravelCategoryPicker(draft.category, canEdit) { onDraftChange(draft.copy(category = it)) }
                         }
                     }
                 } else {
                     item {
-                        OutlinedTextField(
+                        TravelPlaceInput(
                             value = search.query,
-                            onValueChange = { if (it.length <= 120) onQuery(it) },
-                            placeholder = { Text(stringResource(Res.string.travel_search_places)) },
-                            leadingIcon = { Icon(painterResource(Res.drawable.btn_search), contentDescription = null, tint = colors.textTertiary) },
-                            singleLine = true,
+                            onChange = { if (it.length <= 120) onQuery(it) },
+                            label = stringResource(Res.string.travel_search_places),
+                            placeholder = stringResource(Res.string.travel_search_places),
                             enabled = canEdit,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(8.dp),
-                            textStyle = OguriTheme.typography.bodyLarge,
-                            colors = TravelFieldColors(),
+                            leadingIcon = {
+                                Icon(painterResource(Res.drawable.btn_search), null, Modifier.size(20.dp), tint = colors.textTertiary)
+                            },
                         )
                     }
                     when {
@@ -228,7 +236,7 @@ internal fun TravelPlaceSearchSheet(
                             item {
                                 Text(
                                     stringResource(Res.string.travel_search_city, plan.summary.details.city),
-                                    style = OguriTheme.typography.caption, color = colors.textTertiary,
+                                    style = travelTextStyle(11, 13), color = colors.textTertiary,
                                 )
                             }
                             items(search.results, key = TravelPlace::id) { place ->
@@ -244,14 +252,10 @@ internal fun TravelPlaceSearchSheet(
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Column(Modifier.weight(1f)) {
-                                        Text(place.name, style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
-                                        place.address?.let { Text(it, style = OguriTheme.typography.bodySmall, color = colors.textTertiary) }
+                                        Text(place.name, style = travelTextStyle(15, 18, if (checked) FontWeight.SemiBold else FontWeight.Medium), color = Neutral100)
+                                        place.address?.let { Text(it, style = travelTextStyle(13, 16), color = colors.textTertiary) }
                                     }
-                                    Icon(
-                                        painterResource(if (checked) Res.drawable.ic_terms_checked else Res.drawable.ic_terms_unchecked),
-                                        contentDescription = null,
-                                        tint = Color.Unspecified,
-                                    )
+                                    TravelSearchSelectionMark(checked)
                                 }
                                 if (!checked) HorizontalDivider(color = colors.borderSubtle)
                             }
@@ -265,7 +269,7 @@ internal fun TravelPlaceSearchSheet(
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 stringResource(Res.string.travel_keep_google_label),
-                                Modifier.weight(1f), style = OguriTheme.typography.bodyMedium, color = colors.textPrimary,
+                                Modifier.weight(1f), style = travelTextStyle(14, 17), color = Neutral100,
                             )
                             Switch(
                                 checked = keepGoogleDetails,
@@ -300,7 +304,11 @@ internal fun TravelPlaceSearchSheet(
                             }
                         }
                     }
-                    item { TravelCategoryPicker(searchCategory, canEdit) { searchCategory = it } }
+                    item {
+                        Box(Modifier.padding(top = if (selected == null) 12.dp else 16.dp)) {
+                            TravelCategoryPicker(searchCategory, canEdit) { searchCategory = it }
+                        }
+                    }
                 }
                 if (state.canRetrySave && state.pendingSaveStored && !state.isSaving) {
                     item { TravelLeavePendingSave(onLeaveWithPendingSave) }
@@ -365,23 +373,86 @@ private fun TravelPlaceField(
     limit: Int,
     enabled: Boolean,
     multiline: Boolean = false,
+    supportingText: org.jetbrains.compose.resources.StringResource? = null,
 ) {
     val fieldLabel = stringResource(label)
-    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Text(fieldLabel, style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
-        OutlinedTextField(
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(fieldLabel, style = travelTextStyle(12, 14, FontWeight.Medium), color = OguriTheme.colors.textTertiary)
+        TravelPlaceInput(
             value = value,
-            onValueChange = { if (it.length <= limit) onChange(it) },
-            placeholder = { Text(stringResource(placeholder)) },
-            modifier = Modifier.fillMaxWidth().semantics { contentDescription = fieldLabel },
-            singleLine = !multiline,
-            minLines = if (multiline) 3 else 1,
-            maxLines = if (multiline) 5 else 1,
+            onChange = { if (it.length <= limit) onChange(it) },
+            label = fieldLabel,
+            placeholder = stringResource(placeholder),
             enabled = enabled,
-            shape = RoundedCornerShape(8.dp),
-            textStyle = OguriTheme.typography.bodyLarge,
-            colors = TravelFieldColors(),
+            multiline = multiline,
         )
+        if (supportingText != null) {
+            Text(
+                stringResource(supportingText),
+                Modifier.padding(horizontal = 4.dp),
+                style = travelTextStyle(11, 13),
+                color = OguriTheme.colors.textTertiary,
+            )
+        }
+    }
+}
+
+@Composable
+private fun TravelPlaceInput(
+    value: String,
+    onChange: (String) -> Unit,
+    label: String,
+    placeholder: String,
+    enabled: Boolean,
+    multiline: Boolean = false,
+    leadingIcon: (@Composable () -> Unit)? = null,
+) {
+    val shape = RoundedCornerShape(8.dp)
+    val style = travelTextStyle(15, if (multiline) 21 else 18)
+    val focusSource = remember { MutableInteractionSource() }
+    val focused by focusSource.collectIsFocusedAsState()
+    BasicTextField(
+        value = value,
+        onValueChange = onChange,
+        modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
+        enabled = enabled,
+        singleLine = !multiline,
+        maxLines = if (multiline) 5 else 1,
+        textStyle = style.copy(color = Neutral100),
+        cursorBrush = SolidColor(Neutral100),
+        interactionSource = focusSource,
+        decorationBox = { innerField ->
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = if (multiline) 89.dp else 48.dp)
+                    .background(Neutral0, shape).border(1.dp, if (focused) Neutral50 else Neutral30, shape)
+                    .padding(horizontal = 13.dp, vertical = if (multiline) 13.dp else 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = if (multiline) Alignment.Top else Alignment.CenterVertically,
+            ) {
+                leadingIcon?.invoke()
+                Box(Modifier.weight(1f)) {
+                    if (value.isEmpty()) Text(placeholder, style = style, color = Neutral50)
+                    innerField()
+                }
+            }
+        },
+    )
+}
+
+@Composable
+private fun TravelSearchSelectionMark(selected: Boolean) {
+    val fill = OguriTheme.colors.mint
+    val outline = OguriTheme.colors.borderStrong
+    val ink = Neutral0
+    Canvas(Modifier.size(18.dp)) {
+        if (selected) {
+            drawCircle(fill)
+            drawLine(ink, Offset(size.width * .27f, size.height * .52f), Offset(size.width * .44f, size.height * .69f), 2.dp.toPx(), StrokeCap.Round)
+            drawLine(ink, Offset(size.width * .44f, size.height * .69f), Offset(size.width * .74f, size.height * .34f), 2.dp.toPx(), StrokeCap.Round)
+        } else {
+            val stroke = 1.5.dp.toPx()
+            drawCircle(outline, radius = size.minDimension / 2 - stroke / 2, style = androidx.compose.ui.graphics.drawscope.Stroke(stroke))
+        }
     }
 }
 

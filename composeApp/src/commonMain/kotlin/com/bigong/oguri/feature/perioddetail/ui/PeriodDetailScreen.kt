@@ -42,6 +42,7 @@ import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailSkeletonCo
 import com.bigong.oguri.feature.perioddetail.ui.component.PeriodDetailTopBar
 import com.bigong.oguri.feature.perioddetail.ui.model.PeriodDetailUiState
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import kotlin.time.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -177,13 +178,13 @@ fun PeriodDetailScreen(
                                 Spacer(modifier = Modifier.height(10.dp))
                                 Text(
                                     text = periodText,
-                                    style = OguriTheme.typography.sectionTitle,
+                                    style = travelTextStyle(22, 26, FontWeight.Bold),
                                     color = Neutral100,
                                 )
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = dDayText,
-                                    style = OguriTheme.typography.labelMedium,
+                                    style = travelTextStyle(12, 14, FontWeight.Medium),
                                     color = dDayColor,
                                 )
                                 Spacer(modifier = Modifier.height(24.dp))
@@ -210,7 +211,7 @@ fun PeriodDetailScreen(
                             Image(
                                 painter = painterResource(Res.drawable.img_oguri_parasol),
                                 contentDescription = null,
-                                modifier = Modifier.height(132.dp),
+                                modifier = Modifier.height(112.dp),
                             )
                         }
                     }
@@ -254,7 +255,7 @@ fun PeriodDetailScreen(
                                 Text(
                                     stringResource(Res.string.travel_period_plan_hint),
                                     Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                                    style = OguriTheme.typography.bodySmall,
+                                    style = travelTextStyle(13, 16),
                                     color = OguriTheme.colors.textTertiary,
                                     textAlign = TextAlign.Center,
                                 )
@@ -269,7 +270,7 @@ fun PeriodDetailScreen(
                                             painterResource(Res.drawable.ic_travel_add), null,
                                             Modifier.padding(end = 8.dp), tint = OguriTheme.colors.mint,
                                         )
-                                        Text(stringResource(Res.string.travel_create_from_period))
+                                        Text(stringResource(Res.string.travel_create_from_period), style = travelTextStyle(15, 18, FontWeight.Medium))
                                     }
                                 }
                             }

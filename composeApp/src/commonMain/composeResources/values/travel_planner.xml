@@ -214,4 +214,5 @@
     <string name="travel_private_settings">Personal settings</string>
     <string name="travel_reminder_status_on">On</string>
     <string name="travel_card_date_range">%1$s - %2$s</string>
+    <string name="travel_manual_note_placeholder">Your companions can see this too</string>
 </resources>

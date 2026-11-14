@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -11,11 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelModifiedUnit
 import com.bigong.oguri.feature.travelplanner.ui.model.travelModifiedAge
 import kotlin.time.Clock
 import oguri.composeapp.generated.resources.*
+import oguri.composeapp.generated.resources.travel_recent_changes
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -26,19 +29,22 @@ internal fun TravelModifiedButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val modified = plan.lastModifiedAt ?: return
-    val age = remember(plan.summary.id, modified) { travelModifiedAge(modified, Clock.System.now()) }
+    val modified = plan.lastModifiedAt
+    val age = remember(modified) { modified?.let { travelModifiedAge(it, Clock.System.now()) } }
     val label =
-        when (age.unit) {
+        when (age?.unit) {
+            null -> stringResource(Res.string.travel_recent_changes)
             TravelModifiedUnit.JUST_NOW -> stringResource(Res.string.travel_modified_just_now)
             TravelModifiedUnit.MINUTES -> stringResource(Res.string.travel_modified_minutes, age.count)
             TravelModifiedUnit.HOURS -> stringResource(Res.string.travel_modified_hours, age.count)
             TravelModifiedUnit.DAYS -> stringResource(Res.string.travel_modified_days, age.count)
         }
-    TravelTextButton(enabled = enabled, onClick = onClick, modifier = modifier) {
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
-            Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
-        }
+    Row(
+        modifier.heightIn(min = 28.dp).noRippleClickable(enabled = enabled, onClick = onClick),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = travelTextStyle(13, 16), color = OguriTheme.colors.textTertiary)
+        Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(12.dp), tint = OguriTheme.colors.textTertiary)
     }
 }

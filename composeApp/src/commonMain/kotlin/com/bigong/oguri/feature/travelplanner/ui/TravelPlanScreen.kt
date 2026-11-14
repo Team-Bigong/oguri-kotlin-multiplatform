@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
@@ -64,6 +65,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitDetailsSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.component.label
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
@@ -293,13 +295,13 @@ internal fun TravelPlanScreen(
                     travelDayLabel(dates, state.selectedDay),
                     modifier = Modifier.weight(1f),
                     color = Neutral100,
-                    style = OguriTheme.typography.cardSubtitle,
+                    style = travelTextStyle(15, 18, FontWeight.Medium),
                 )
                 if (!state.isOffline && !state.isSaving && failure == null) {
                     Text(
                         stringResource(Res.string.travel_saved_status),
                         color = OguriTheme.colors.textTertiary,
-                        style = OguriTheme.typography.bodySmall,
+                        style = travelTextStyle(13, 16),
                     )
                 }
             }
@@ -354,9 +356,9 @@ internal fun TravelPlanScreen(
                     item {
                         Text(
                             stringResource(Res.string.travel_empty_day),
-                            color = OguriTheme.colors.textSecondary,
-                            style = OguriTheme.typography.bodyMedium,
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                            color = OguriTheme.colors.textTertiary,
+                            style = travelTextStyle(14, 21),
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
                             textAlign = TextAlign.Center,
                         )
                     }
