@@ -43,6 +43,9 @@ class TravelPostgresIntegrationTest {
         dataSource.setConnectionProperties(Properties().apply { setProperty("currentSchema", schema) })
         jdbc = JdbcClient.create(dataSource)
         legacy = fixture()
+        // Some installations provisioned this field manually before it had a migration.
+        jdbc.sql("ALTER TABLE members ADD COLUMN onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE").update()
+        jdbc.sql("UPDATE members SET onboarding_completed = TRUE WHERE id = :id").param("id", legacy.owner).update()
         legacyExperienceId =
             jdbc
                 .sql(
@@ -80,6 +83,24 @@ class TravelPostgresIntegrationTest {
                 .load()
                 .clean()
         }
+    }
+
+    @Test
+    fun `V41 적용은 기존 온보딩 완료 값을 보존한다`() {
+        assertTrue(
+            jdbc
+                .sql("SELECT onboarding_completed FROM members WHERE id = :id")
+                .param("id", legacy.owner)
+                .query(Boolean::class.javaObjectType)
+                .single(),
+        )
+        assertFalse(
+            jdbc
+                .sql("SELECT onboarding_completed FROM members WHERE id = :id")
+                .param("id", legacy.other)
+                .query(Boolean::class.javaObjectType)
+                .single(),
+        )
     }
 
     @Test
