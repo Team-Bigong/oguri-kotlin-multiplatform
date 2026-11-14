@@ -8,6 +8,7 @@ import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanException
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelRecovery
+import com.bigong.oguri.domain.model.TravelVisitChange
 import com.bigong.oguri.domain.repository.TravelRecoveryRepository
 import dev.zacsweers.metro.Inject
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,7 @@ class DefaultTravelRecoveryRepository : TravelRecoveryRepository {
     override suspend fun load(planId: String?): TravelRecovery =
         access {
             val entry = it[planId ?: CREATION] ?: return@access TravelRecovery()
-            TravelRecovery(entry.plan?.value, entry.edit?.draft, entry.edit?.pending)
+            TravelRecovery(entry.plan?.value, entry.edit?.draft, entry.edit?.pending, entry.unappliedOrder?.value)
         } ?: TravelRecovery()
 
     override suspend fun rememberPlan(plan: TravelPlan) {
@@ -55,11 +56,25 @@ class DefaultTravelRecoveryRepository : TravelRecoveryRepository {
     override suspend fun finishRequest(
         planId: String?,
         clearDraft: Boolean,
+        conflictedOrder: TravelVisitChange.Reorder?,
     ) {
         mutate(planId) { entry ->
             val draft = entry.edit?.draft
-            entry.copy(edit = if (clearDraft || draft == null) null else StoredEdit(now(), draft, null))
+            val submitted = (entry.edit?.pending as? TravelPendingSave.Visit)?.change as? TravelVisitChange.Reorder
+            entry.copy(
+                edit = if (clearDraft || draft == null) null else StoredEdit(now(), draft, null),
+                unappliedOrder =
+                    when {
+                        conflictedOrder != null -> StoredOrder(now(), conflictedOrder)
+                        clearDraft && submitted?.dayNumber == entry.unappliedOrder?.value?.dayNumber -> null
+                        else -> entry.unappliedOrder
+                    },
+            )
         }
+    }
+
+    override suspend fun discardUnappliedOrder(planId: String) {
+        mutate(planId) { it.copy(unappliedOrder = null) }
     }
 
     override suspend fun forget(planId: String) {
@@ -93,11 +108,12 @@ class DefaultTravelRecoveryRepository : TravelRecoveryRepository {
                             RecoveryEntry(
                                 plan = entry.plan?.takeIf { now - it.savedAt in 0..PLAN_TTL },
                                 edit = entry.edit?.takeIf { now - it.savedAt in 0..EDIT_TTL },
+                                unappliedOrder = entry.unappliedOrder?.takeIf { now - it.savedAt in 0..EDIT_TTL },
                             )
-                        }.filterValues { it.plan != null || it.edit != null }
+                        }.filterValues { it.plan != null || it.edit != null || it.unappliedOrder != null }
                         .toMutableMap()
                 val result = block(entries)
-                val updated = entries.filterValues { it.plan != null || it.edit != null }
+                val updated = entries.filterValues { it.plan != null || it.edit != null || it.unappliedOrder != null }
                 if (updated.isEmpty()) {
                     if (raw != null) write(null)
                 } else if (stored?.entries != updated || stored.account != account) {
@@ -126,6 +142,7 @@ private data class RecoveryVault(
 private data class RecoveryEntry(
     val plan: StoredPlan? = null,
     val edit: StoredEdit? = null,
+    val unappliedOrder: StoredOrder? = null,
 )
 
 @Serializable
@@ -139,4 +156,11 @@ private data class StoredEdit(
     val savedAt: Long,
     val draft: TravelDraft?,
     val pending: TravelPendingSave?,
+)
+
+
+@Serializable
+private data class StoredOrder(
+    val savedAt: Long,
+    val value: TravelVisitChange.Reorder,
 )

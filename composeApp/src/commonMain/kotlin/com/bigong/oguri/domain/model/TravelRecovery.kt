@@ -36,4 +36,5 @@ data class TravelRecovery(
     val confirmedPlan: TravelPlan? = null,
     val draft: TravelDraft? = null,
     val pending: TravelPendingSave? = null,
+    val unappliedOrder: TravelVisitChange.Reorder? = null,
 )

@@ -162,7 +162,8 @@ class TravelAccessRevocationTest {
                 TravelVisit("second", 1, TravelVisitDetails("Second", null, null, null, null), 1),
             )
             val plans = AccessPlans(plan.copy(visits = visits, dayOrderRevisions = mapOf(1 to 1L)))
-            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            val recovery = AccessRecovery()
+            val viewModel = createTravelPlannerTestViewModel(plans, recovery)
             viewModel.loadPlan("plan")
             advanceUntilIdle()
             viewModel.selectDay(1)
@@ -178,13 +179,18 @@ class TravelAccessRevocationTest {
 
             plans.saveFailure = null
             plans.currentPlan = plans.currentPlan.copy(revision = 2, dayOrderRevisions = mapOf(1 to 2L))
-            viewModel.loadPlan("plan", rebaseDraft = true)
+            val reopened = createTravelPlannerTestViewModel(plans, recovery)
+            reopened.loadPlan("plan")
             advanceUntilIdle()
-            assertEquals(attempted, viewModel.state.value.unappliedOrder)
-            viewModel.applyUnappliedOrder()
+            reopened.selectDay(1)
+            assertEquals(attempted, reopened.state.value.unappliedOrder)
+            assertFalse(reopened.state.value.canRetrySave)
+            assertEquals(1, plans.saveAttempts.size)
+            reopened.applyUnappliedOrder()
             advanceUntilIdle()
             assertEquals(listOf<TravelVisitChange>(attempted, attempted.copy(expectedOrderRevision = 2)), plans.saveAttempts)
-            assertNull(viewModel.state.value.unappliedOrder)
+            assertNull(reopened.state.value.unappliedOrder)
+            assertNull(recovery.load("plan").unappliedOrder)
         }
 
     @Test
@@ -654,13 +660,15 @@ private class AccessPlans(
 
 private class AccessRecovery : TravelRecoveryRepository {
     var confirmed: TravelPlan? = null
+    private var pending: TravelPendingSave? = null
+    private var unappliedOrder: TravelVisitChange.Reorder? = null
     var confirmedWrites: Int = 0
     var draft: TravelDraft? = null
     var forgotten: Boolean = false
     var draftWrites: Int = 0
     var draftBarrier: CompletableDeferred<Unit>? = null
 
-    override suspend fun load(planId: String?): TravelRecovery = TravelRecovery(confirmedPlan = confirmed, draft = draft)
+    override suspend fun load(planId: String?): TravelRecovery = TravelRecovery(confirmedPlan = confirmed, draft = draft, pending = pending, unappliedOrder = unappliedOrder)
 
     override suspend fun rememberPlan(plan: TravelPlan) {
         confirmedWrites++
@@ -681,6 +689,8 @@ private class AccessRecovery : TravelRecoveryRepository {
     override suspend fun forget(planId: String) {
         confirmed = null
         draft = null
+        pending = null
+        unappliedOrder = null
         forgotten = true
     }
 
@@ -688,12 +698,27 @@ private class AccessRecovery : TravelRecoveryRepository {
         planId: String?,
         request: TravelPendingSave,
         draft: TravelDraft?,
-    ) = Unit
+    ) {
+        pending = request
+    }
+
+    override suspend fun discardUnappliedOrder(planId: String) {
+        unappliedOrder = null
+    }
 
     override suspend fun finishRequest(
         planId: String?,
         clearDraft: Boolean,
-    ) = Unit
+        conflictedOrder: TravelVisitChange.Reorder?,
+    ) {
+        val submitted = (pending as? TravelPendingSave.Visit)?.change as? TravelVisitChange.Reorder
+        if (conflictedOrder != null) {
+            unappliedOrder = conflictedOrder
+        } else if (clearDraft && submitted?.dayNumber == unappliedOrder?.dayNumber) {
+            unappliedOrder = null
+        }
+        pending = null
+    }
 }
 
 private class DeniedPlaces : TravelPlaceRepository {

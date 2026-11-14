@@ -169,9 +169,12 @@ private class CreationRecovery(
         pending = request
     }
 
+    override suspend fun discardUnappliedOrder(planId: String) = Unit
+
     override suspend fun finishRequest(
         planId: String?,
         clearDraft: Boolean,
+        conflictedOrder: TravelVisitChange.Reorder?,
     ) {
         pending = null
     }

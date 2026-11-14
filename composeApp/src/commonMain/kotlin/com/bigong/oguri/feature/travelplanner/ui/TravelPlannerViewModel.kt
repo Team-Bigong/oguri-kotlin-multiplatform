@@ -263,6 +263,7 @@ class TravelPlannerViewModel(
                             isOffline = true,
                             failure = TravelPlanFailure.CONNECTION,
                             visitDraft = it.visitDraft ?: stored?.draft?.toVisitDraft(),
+                            unappliedOrder = if (wasLoaded) it.unappliedOrder else stored?.unappliedOrder,
                             canRetrySave = pendingSave != null,
                             selectedDay = if (wasLoaded) it.selectedDay else savedDay ?: it.selectedDay,
                         )
@@ -322,6 +323,7 @@ class TravelPlannerViewModel(
                             current.selectedDay.takeIf { it in 0..dates.dayCount } ?: initialDay
                         },
                     visitDraft = nextDraft,
+                    unappliedOrder = if (wasLoaded) current.unappliedOrder else stored?.unappliedOrder,
                     inspectedVisitId = current.inspectedVisitId?.takeIf { id -> nextDraft == null && plan.visits.any { it.id == id } },
                     needsLatestPlan = pendingSave == null && (wasRemoved || changedStructure || (!rebaseDraft && current.needsLatestPlan)),
                     failure =
@@ -632,7 +634,16 @@ class TravelPlannerViewModel(
     }
 
     internal fun discardUnappliedOrder() {
+        val current = state.value
+        val planId = current.plan?.summary?.id ?: return
+        if (current.unappliedOrder == null || current.isSaving || pendingSave != null) return
+        val generation = mutationGeneration
         mutableState.update { it.copy(unappliedOrder = null) }
+        viewModelScope.launch {
+            recoveryWriteMutex.withLock {
+                if (generation == mutationGeneration) recoverSafely { recovery.discardUnappliedOrder(planId) }
+            }
+        }
     }
 
     internal fun openExistingPlace(visit: TravelVisit) {
@@ -914,14 +925,14 @@ class TravelPlannerViewModel(
                     }
                 }
                 pendingSave = null
-                recoverSafely { recovery.finishRequest(planId, clearDraft = true) }
+                recoveryWriteMutex.withLock {
+                    if (generation == mutationGeneration) recoverSafely { recovery.finishRequest(planId, clearDraft = true) }
+                }
             } catch (exception: TravelPlanException) {
                 if (generation != mutationGeneration) return@launch
                 if (planId != null && visitSaveAttempted) recordVisitSaveFailure(planId, exception.failure)
                 val attemptedOrder = (request as? TravelPendingSave.Visit)?.change as? TravelVisitChange.Reorder
-                if (attemptedOrder != null && exception.failure == TravelPlanFailure.CONFLICT) {
-                    mutableState.update { it.copy(unappliedOrder = attemptedOrder) }
-                }
+                val conflictedOrder = attemptedOrder.takeIf { exception.failure == TravelPlanFailure.CONFLICT }
                 when (exception.failure) {
                     TravelPlanFailure.CONNECTION, TravelPlanFailure.SIGN_IN_REQUIRED -> Unit
                     TravelPlanFailure.UNAVAILABLE -> {
@@ -929,7 +940,13 @@ class TravelPlannerViewModel(
                     }
                     else -> {
                         pendingSave = null
-                        recoverSafely { recovery.finishRequest(planId, clearDraft = false) }
+                        recoveryWriteMutex.withLock {
+                            if (generation == mutationGeneration) {
+                                recoverSafely { recovery.finishRequest(planId, clearDraft = false, conflictedOrder = conflictedOrder) }
+                            }
+                        }
+                        if (generation != mutationGeneration) return@launch
+                        if (conflictedOrder != null) mutableState.update { it.copy(unappliedOrder = conflictedOrder) }
                     }
                 }
                 applyFailure(exception.failure)
