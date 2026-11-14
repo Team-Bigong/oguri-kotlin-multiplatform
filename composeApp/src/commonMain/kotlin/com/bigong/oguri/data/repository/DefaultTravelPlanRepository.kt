@@ -85,6 +85,11 @@ class DefaultTravelPlanRepository internal constructor(
 
     override suspend fun get(planId: String): TravelPlan = request { remote.get(planId).toDomain() }
 
+    override suspend fun getIfChanged(
+        planId: String,
+        knownRevision: Long,
+    ): TravelPlan? = request { remote.getIfChanged(planId, knownRevision)?.toDomain() }
+
     override suspend fun changeVisit(
         planId: String,
         requestId: String,

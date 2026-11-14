@@ -351,11 +351,16 @@ class TravelPlannerViewModel(
             loadPlan(planId)
             return
         }
-        if (before.plan == null) return
+        val currentPlan = before.plan?.takeIf { it.summary.id == planId } ?: return
         val generation = mutationGeneration
         try {
-            val updated = repository.get(planId)
+            val updated = repository.getIfChanged(planId, currentPlan.revision)
             currentCoroutineContext().ensureActive()
+            if (generation != mutationGeneration) return
+            if (updated == null || updated.revision <= currentPlan.revision) {
+                verifiedAt = TimeSource.Monotonic.markNow()
+                return
+            }
             if (!rememberCurrentPlan(updated, generation)) return
             verifiedAt = TimeSource.Monotonic.markNow()
             mutableState.update { current ->

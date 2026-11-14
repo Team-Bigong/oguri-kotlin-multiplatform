@@ -130,6 +130,33 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun automaticRefreshSkipsUnchangedCacheWritesAndPreservesTheDraftWhenARevisionArrives() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val recovery = AccessRecovery()
+            val viewModel = createTravelPlannerTestViewModel(plans, recovery)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.openVisit(null)
+            val draft = requireNotNull(viewModel.state.value.visitDraft).copy(name = "Museum")
+            viewModel.updateVisitDraft(draft)
+            advanceUntilIdle()
+
+            viewModel.refreshPlan("plan")
+            assertEquals(listOf(plan.revision), plans.requestedRevisions)
+            assertEquals(1, recovery.confirmedWrites)
+            assertEquals(draft, viewModel.state.value.visitDraft)
+
+            val edited = plan.copy(revision = plan.revision + 1)
+            plans.currentPlan = edited
+            viewModel.refreshPlan("plan")
+            assertEquals(edited.revision, viewModel.state.value.plan?.revision)
+            assertEquals(edited, recovery.confirmed)
+            assertEquals(draft, viewModel.state.value.visitDraft)
+            assertEquals(2, recovery.confirmedWrites)
+        }
+
+    @Test
     fun aLateSuccessfulRefreshCannotRestoreAnAlreadyRevokedPlan() =
         runTest {
             val plans = AccessPlans(plan)
@@ -505,8 +532,9 @@ class TravelAccessRevocationTest {
 }
 
 private class AccessPlans(
-    private val plan: TravelPlan,
+    var currentPlan: TravelPlan,
 ) : TravelPlanRepository {
+    val requestedRevisions = mutableListOf<Long>()
     val activities = mutableListOf<Pair<String, TravelUsageActivity>>()
     var activityFailure = false
 
@@ -527,7 +555,15 @@ private class AccessPlans(
         readBarrier?.await()
         if (unavailable) throw TravelPlanException(TravelPlanFailure.UNAVAILABLE)
         if (connectionFailure) throw TravelPlanException(TravelPlanFailure.CONNECTION)
-        return plan
+        return currentPlan
+    }
+
+    override suspend fun getIfChanged(
+        planId: String,
+        knownRevision: Long,
+    ): TravelPlan? {
+        requestedRevisions.add(knownRevision)
+        return get(planId).takeUnless { it.revision == knownRevision }
     }
 
     override suspend fun list(): List<TravelPlanSummary> = error("Unused")
@@ -552,12 +588,13 @@ private class AccessPlans(
         change: TravelVisitChange,
     ): TravelPlan {
         saveFailure?.let { throw TravelPlanException(it) }
-        return plan
+        return currentPlan
     }
 }
 
 private class AccessRecovery : TravelRecoveryRepository {
     var confirmed: TravelPlan? = null
+    var confirmedWrites: Int = 0
     var draft: TravelDraft? = null
     var forgotten: Boolean = false
     var draftWrites: Int = 0
@@ -566,6 +603,7 @@ private class AccessRecovery : TravelRecoveryRepository {
     override suspend fun load(planId: String?): TravelRecovery = TravelRecovery(confirmedPlan = confirmed, draft = draft)
 
     override suspend fun rememberPlan(plan: TravelPlan) {
+        confirmedWrites++
         confirmed = plan
     }
 

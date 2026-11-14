@@ -39,6 +39,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.encodeURLPathPart
 import kotlinx.coroutines.sync.Mutex
@@ -122,6 +123,19 @@ internal class KtorTravelPlanRemoteDataSource(
     suspend fun get(planId: String): TravelPlanResponse =
         authRequestExecutor.executeForSession(sessionVersion) { token ->
             httpClient.get("$BASE_URL$TRIPS_PATH/$planId") { attributes.put(RequestAccessToken, token) }.body()
+        }
+
+    suspend fun getIfChanged(
+        planId: String,
+        knownRevision: Long,
+    ): TravelPlanResponse? =
+        authRequestExecutor.executeForSession(sessionVersion) { token ->
+            val response =
+                httpClient.get("$BASE_URL$TRIPS_PATH/$planId") {
+                    attributes.put(RequestAccessToken, token)
+                    parameter("knownRevision", knownRevision)
+                }
+            if (response.status == HttpStatusCode.NoContent) null else response.body()
         }
 
     suspend fun changeVisit(

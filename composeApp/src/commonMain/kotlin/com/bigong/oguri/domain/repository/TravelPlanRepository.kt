@@ -28,6 +28,11 @@ interface TravelPlanRepository {
 
     suspend fun get(planId: String): TravelPlan
 
+    suspend fun getIfChanged(
+        planId: String,
+        knownRevision: Long,
+    ): TravelPlan? = get(planId).takeUnless { it.revision == knownRevision }
+
     suspend fun changeVisit(
         planId: String,
         requestId: String,

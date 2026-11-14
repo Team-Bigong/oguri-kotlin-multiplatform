@@ -83,8 +83,21 @@ class TravelPlanController(
     fun get(
         request: HttpServletRequest,
         @PathVariable tripId: UUID,
-    ): ResponseEntity<TravelPlanResponse> =
-        ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(travelPlanService.get(request.resolveMemberId(), tripId))
+        @RequestParam(required = false) knownRevision: Long?,
+    ): ResponseEntity<TravelPlanResponse> {
+        val memberId = request.resolveMemberId()
+        val plan =
+            if (knownRevision == null) {
+                travelPlanService.get(memberId, tripId)
+            } else {
+                travelPlanService.getIfChanged(memberId, tripId, knownRevision)
+            }
+        return if (plan == null) {
+            ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build()
+        } else {
+            ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(plan)
+        }
+    }
 
     @PostMapping("/{tripId}/commands")
     fun execute(

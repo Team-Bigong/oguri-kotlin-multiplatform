@@ -9,7 +9,9 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.header
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.util.UUID
@@ -19,6 +21,18 @@ class TravelUsageControllerTest {
     private val mvc = MockMvcBuilders.standaloneSetup(TravelPlanController(service, mock(TravelPlacesService::class.java))).build()
     private val planId = UUID.randomUUID()
     private val session = UUID.randomUUID()
+
+    @Test
+    fun `자동 갱신에서 최신 수정 번호면 본문 없이 응답한다`() {
+        mvc
+            .perform(
+                get("/api/v1/trips/$planId")
+                    .requestAttr(AuthContext.AUTHENTICATED_MEMBER_ID_ATTRIBUTE, "member")
+                    .param("knownRevision", "4"),
+            ).andExpect(status().isNoContent)
+            .andExpect(header().string("Cache-Control", "no-store"))
+        verify(service).getIfChanged("member", planId, 4)
+    }
 
     @Test
     fun `행동 종류와 세션만 받아 인증된 회원의 여행 서비스로 전달한다`() {

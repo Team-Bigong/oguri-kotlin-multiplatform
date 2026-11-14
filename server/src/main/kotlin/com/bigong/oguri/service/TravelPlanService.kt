@@ -97,7 +97,20 @@ class TravelPlanService(
     ): TravelPlanResponse {
         requireMember(memberId)
         val plan = accessiblePlan(memberId, planId)
-        return plan.toResponse(lastViewedDay = views.lastDay(memberId, planId)?.takeIf(plan::containsDay))
+        return plan.toResponseFor(memberId)
+    }
+
+    @Transactional
+    fun getIfChanged(
+        memberId: String,
+        planId: UUID,
+        knownRevision: Long,
+    ): TravelPlanResponse? {
+        require(knownRevision >= 0)
+        requireMember(memberId)
+        val plan = accessiblePlan(memberId, planId)
+        if (plan.revision == knownRevision) return null
+        return plan.toResponseFor(memberId)
     }
 
     @Transactional(readOnly = true)
@@ -338,6 +351,9 @@ class TravelPlanService(
                 TravelPlanSourceResponse(sourceDestinationId, sourceStartDate, sourceEndDate)
             },
         )
+
+    private fun TravelPlan.toResponseFor(memberId: String): TravelPlanResponse =
+        toResponse(lastViewedDay = views.lastDay(memberId, id)?.takeIf(::containsDay))
 
     private fun TravelPlan.toResponse(lastViewedDay: Int? = null): TravelPlanResponse =
         TravelPlanResponse(

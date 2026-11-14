@@ -757,6 +757,25 @@ class TravelTransactionIntegrationTest {
             .single()
 
     @Test
+    fun `자동 갱신은 변경을 반환하고 이전 수정 번호가 있어도 제외된 멤버를 차단한다`() {
+        val trip = fixture()
+        assertNull(tx { service.getIfChanged(trip.other, trip.id, 0) })
+
+        tx { service.execute(trip.owner, trip.id, add("Museum")) }
+        val changed = requireNotNull(tx { service.getIfChanged(trip.other, trip.id, 0) })
+        assertEquals(1L, changed.revision)
+        assertEquals("Museum", changed.visits.single().name)
+        assertNull(tx { service.getIfChanged(trip.other, trip.id, changed.revision) })
+
+        tx { collaboration.remove(trip.owner, trip.id, trip.other) }
+        val denied =
+            assertThrows(ResponseStatusException::class.java) {
+                tx { service.getIfChanged(trip.other, trip.id, changed.revision) }
+            }
+        assertEquals(HttpStatus.NOT_FOUND, denied.statusCode)
+    }
+
+    @Test
     fun `사용 행동은 세션과 종류별 한번만 기록하고 제외된 멤버와 비회원은 거부한다`() {
         val trip = fixture()
         val session = UUID.randomUUID()
