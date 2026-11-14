@@ -25,7 +25,7 @@ class TravelReminderService(
     private val delivery: TravelReminderDelivery,
     private val usage: TravelUsageRepository,
 ) {
-    @Transactional(readOnly = true)
+    @Transactional
     fun settings(memberId: String, planId: UUID): TravelReminderSettings {
         plans.requireMember(memberId)
         val plan = plans.accessiblePlan(memberId, planId)
@@ -91,7 +91,7 @@ class TravelReminderService(
         reminders.revokeDevice(deviceId, revocationHash)
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     fun open(memberId: String, reminderId: UUID): UUID {
         plans.requireMember(memberId)
         val reminder = reminders.find(reminderId)

@@ -4,40 +4,49 @@ import com.bigong.oguri.dto.request.CreateTravelPlanRequest
 import com.bigong.oguri.dto.request.TravelPlanCommand
 import com.bigong.oguri.dto.request.TravelPlanSourceRequest
 import com.bigong.oguri.dto.request.TravelVisitRequest
+import com.bigong.oguri.service.RegisterTravelReminderDevice
+import com.bigong.oguri.service.ScheduleTravelReminder
+import com.bigong.oguri.service.TravelReminderDelivery
 import com.bigong.oguri.util.JwtTokenProvider
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.flywaydb.core.Flyway
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
+import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalTime
+import java.time.ZoneOffset
 import java.util.UUID
 import javax.sql.DataSource
 
 @EnabledIfEnvironmentVariable(named = "TRAVEL_TEST_DATABASE_URL", matches = "jdbc:postgresql:.*")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class TravelCollaborationHttpTest {
+class TravelHttpIntegrationTest {
     @LocalServerPort
     private var port: Int = 0
 
     @Autowired private lateinit var dataSource: DataSource
     @Autowired private lateinit var json: ObjectMapper
     @Autowired private lateinit var tokens: JwtTokenProvider
+    @MockitoBean private lateinit var reminderDelivery: TravelReminderDelivery
 
     private val client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build()
 
@@ -90,6 +99,77 @@ class TravelCollaborationHttpTest {
         request("GET", "$trip?knownRevision=${updated.get("revision").asLong()}", 404, member)
         request("POST", "$trip/commands", 404, member, edit.copy(requestId = UUID.randomUUID()))
         assertEquals("INVITE_REVOKED", request("POST", "/trip-invites/join", 410, member, invite).get("code").asText())
+    }
+
+    @Test
+    fun `알림 예약은 개인별로 관리하고 이전 알림의 진입을 차단한다`() {
+        `when`(reminderDelivery.configured).thenReturn(true)
+        val owner = memberToken()
+        val member = memberToken()
+        val departure = LocalDate.now(ZoneOffset.UTC).plusDays(5)
+        val creation = CreateTravelPlanRequest(UUID.randomUUID(), "Seoul", "UTC", "Reminder trip", departure, departure, null)
+        val tripId = request("POST", "/trips", 200, owner, creation).get("id").asText()
+        val trip = "/trips/$tripId"
+        val invitation = request("POST", "$trip/invites", 200, owner).get("token").asText()
+        request("POST", "/trip-invites/join", 200, member, mapOf("token" to invitation))
+        val settings = "$trip/reminder"
+        val initial = request("GET", settings, 200, member)
+        assertTrue(initial.get("canSchedule").asBoolean())
+        assertTrue(initial.get("reminder").isNull)
+
+        val deviceId = UUID.randomUUID()
+        val device = RegisterTravelReminderDevice("a".repeat(64), "test-push-token-$deviceId")
+        request("PUT", "/travel-reminder-devices/$deviceId", 204, member, device)
+        val booking =
+            ScheduleTravelReminder(
+                UUID.randomUUID(),
+                departure.minusDays(1).atTime(LocalTime.NOON),
+                "UTC",
+                departure,
+                departure,
+                "UTC",
+                deviceId,
+            )
+        val firstId = booking.requestId
+        val firstLink = "/travel-reminders/$firstId"
+        assertEquals("PENDING", request("PUT", settings, 200, member, booking).get("status").asText())
+        assertEquals(firstId.toString(), request("PUT", settings, 200, member, booking).get("id").asText())
+        assertTrue(request("GET", settings, 200, owner).get("reminder").isNull)
+        request("GET", firstLink, 404, member)
+
+        markReminderSent(firstId)
+        request("GET", firstLink, 401)
+        request("GET", firstLink, 404, owner)
+        assertEquals(tripId, request("GET", firstLink, 200, member).get("planId").asText())
+
+        val secondId = UUID.randomUUID()
+        request("PUT", settings, 200, member, booking.copy(requestId = secondId))
+        request("GET", firstLink, 404, member)
+        request("DELETE", "$settings/$firstId", 204, member)
+        assertEquals(secondId.toString(), request("GET", settings, 200, member).get("reminder").get("id").asText())
+
+        markReminderSent(secondId)
+        request("DELETE", "$settings/$secondId", 204, member)
+        request("GET", "/travel-reminders/$secondId", 404, member)
+        assertTrue(request("GET", settings, 200, member).get("reminder").isNull)
+
+        val thirdId = UUID.randomUUID()
+        request("PUT", settings, 200, member, booking.copy(requestId = thirdId))
+        markReminderSent(thirdId)
+        val memberId = tokens.getMemberId(member)
+        request("DELETE", "$trip/members/$memberId", 204, owner)
+        request("GET", "/travel-reminders/$thirdId", 404, member)
+        request("GET", settings, 404, member)
+    }
+
+    private fun markReminderSent(id: UUID) {
+        // Set up the server state after provider acceptance without sending a real notification.
+        val changed =
+            JdbcClient.create(dataSource)
+                .sql("UPDATE travel_reminders SET status = 'SENT' WHERE id = :id AND status = 'PENDING'")
+                .param("id", id)
+                .update()
+        assertEquals(1, changed)
     }
 
     private fun memberToken(): String {
