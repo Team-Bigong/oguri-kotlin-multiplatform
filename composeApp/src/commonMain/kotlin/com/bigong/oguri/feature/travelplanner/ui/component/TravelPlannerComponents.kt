@@ -139,7 +139,14 @@ internal fun TravelPrimaryButton(
     enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    TravelButton(onClick, modifier, enabled, if (enabled) Mint70 else Neutral10, content = content)
+    TravelButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        backgroundColor = if (enabled) Mint70 else Neutral10,
+        contentColor = if (OguriTheme.isDarkTheme) Neutral0 else Neutral100,
+        content = content,
+    )
 }
 
 @Composable
@@ -187,6 +194,7 @@ private fun TravelButton(
     enabled: Boolean,
     backgroundColor: Color,
     outlined: Boolean = false,
+    contentColor: Color = Neutral100,
     content: @Composable () -> Unit,
 ) {
     val shape = RoundedCornerShape(8.dp)
@@ -201,7 +209,7 @@ private fun TravelButton(
             ).padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        CompositionLocalProvider(LocalContentColor provides if (enabled) Neutral100 else Neutral50) {
+        CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else Neutral50) {
             ProvideTextStyle(OguriTheme.typography.labelLarge, content)
         }
     }
