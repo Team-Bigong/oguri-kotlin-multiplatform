@@ -74,6 +74,7 @@ internal fun TravelVisitEditor(
     onRemove: () -> Unit,
     onReload: () -> Unit,
     onRetrySave: () -> Unit,
+    onDirectionsOpened: () -> Unit,
 ) {
     var confirmDiscard by remember { mutableStateOf(false) }
     val original = draft.visit
@@ -197,6 +198,7 @@ internal fun TravelVisitEditor(
                 placeId = placeId,
                 destination = draft.placeTitle ?: draft.location,
                 enabled = !isSaving && !canRetrySave,
+                onOpened = onDirectionsOpened,
             )
             Row {
                 if (draft.visit != null) {

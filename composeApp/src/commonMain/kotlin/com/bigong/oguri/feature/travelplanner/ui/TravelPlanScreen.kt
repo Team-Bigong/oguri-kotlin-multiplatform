@@ -102,6 +102,7 @@ internal fun TravelPlanScreen(
     onRemoveVisit: () -> Unit,
     onSearchPlaces: () -> Unit,
     onMarkerClick: (String) -> Unit,
+    onDirectionsOpened: () -> Unit,
     onFitMap: () -> Unit,
     onFindNextHoliday: () -> Unit,
     onMembers: () -> Unit,
@@ -343,6 +344,7 @@ internal fun TravelPlanScreen(
                     place = state.dayPlaces[visit.details.googlePlaceId],
                     offline = state.isOffline,
                     onDismiss = onCloseInspection,
+                    onDirectionsOpened = onDirectionsOpened,
                 )
             }
         }
@@ -361,6 +363,7 @@ internal fun TravelPlanScreen(
                 onRemove = onRemoveVisit,
                 onReload = onReload,
                 onRetrySave = onRetrySave,
+                onDirectionsOpened = onDirectionsOpened,
             )
         }
     }

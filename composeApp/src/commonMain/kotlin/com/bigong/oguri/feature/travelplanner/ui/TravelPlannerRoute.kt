@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
+import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOverviewSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlaceSearchSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
@@ -142,6 +143,14 @@ internal fun TravelPlanRoute(
             }
         }
     }
+    LaunchedEffect(viewModel, planId, lifecycle, plan?.summary?.id, state.isOffline) {
+        if (plan != null && !state.isOffline) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                viewModel.recordActivity(planId, TravelUsageActivity.PLAN_DISPLAYED)
+                kotlinx.coroutines.awaitCancellation()
+            }
+        }
+    }
     LaunchedEffect(viewModel, planId, state.selectedDay, plan?.summary?.id) {
         if (plan != null) {
             delay(250)
@@ -166,7 +175,10 @@ internal fun TravelPlanRoute(
         onReload = { viewModel.loadPlan(planId, rebaseDraft = true) },
         onRetrySave = viewModel::retrySave,
         onUndoVisit = viewModel::undoVisit,
-        onSelectDay = viewModel::selectDay,
+        onSelectDay = { day ->
+            viewModel.selectDay(day)
+            viewModel.recordActivity(planId, TravelUsageActivity.DAY_SELECTED)
+        },
         onOverview = { showOverview = true },
         onOpenVisit = viewModel::openVisit,
         onInspectVisit = viewModel::inspectVisit,
@@ -177,7 +189,11 @@ internal fun TravelPlanRoute(
         onApplyVisit = viewModel::applyVisit,
         onRemoveVisit = viewModel::removeVisit,
         onSearchPlaces = viewModel::openPlaceSearch,
-        onMarkerClick = viewModel::selectVisitFromMap,
+        onMarkerClick = { id ->
+            viewModel.selectVisitFromMap(id)
+            viewModel.recordActivity(planId, TravelUsageActivity.PIN_SELECTED)
+        },
+        onDirectionsOpened = { viewModel.recordActivity(planId, TravelUsageActivity.DIRECTIONS_OPENED) },
         onFitMap = viewModel::fitMap,
         onFindNextHoliday = onFindNextHoliday,
         onMembers = {
@@ -196,6 +212,7 @@ internal fun TravelPlanRoute(
     )
     if (plan != null && showOverview) {
         state.overview?.let { overview ->
+            LaunchedEffect(planId) { viewModel.recordActivity(planId, TravelUsageActivity.OVERVIEW_VIEWED) }
             TravelOverviewSheet(
                 plan = plan,
                 state = overview,
@@ -208,6 +225,7 @@ internal fun TravelPlanRoute(
                 onSelectVisit = { id ->
                     showOverview = false
                     viewModel.selectOverviewVisit(id)
+                    viewModel.recordActivity(planId, TravelUsageActivity.PIN_SELECTED)
                 },
                 onAdd = { day ->
                     showOverview = false
@@ -219,6 +237,11 @@ internal fun TravelPlanRoute(
         }
     }
     if (plan != null && showChanges) {
+        LaunchedEffect(changesState.recentChanges, changesState.busy, changesState.failure) {
+            if (changesState.recentChanges != null && !changesState.busy && changesState.failure == null) {
+                viewModel.recordActivity(planId, TravelUsageActivity.CHANGES_VIEWED)
+            }
+        }
         val dismissChanges = {
             if (!changesState.busy) changesState.recentChanges?.let { collaborationViewModel.dismissChanges(planId, it.throughRevision) }
             showChanges = false
@@ -232,6 +255,7 @@ internal fun TravelPlanRoute(
             onDismiss = dismissChanges,
             onSelectDay = { day ->
                 viewModel.selectDay(day)
+                viewModel.recordActivity(planId, TravelUsageActivity.DAY_SELECTED)
                 dismissChanges()
             },
         )

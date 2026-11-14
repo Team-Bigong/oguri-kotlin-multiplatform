@@ -189,6 +189,11 @@ private class ManagementCollaboration : TravelCollaborationRepository {
 }
 
 private class ManagementPlans : TravelPlanRepository {
+    override suspend fun recordActivity(
+        planId: String,
+        kind: com.bigong.oguri.domain.model.TravelUsageActivity,
+    ) = Unit
+
     var barrier: CompletableDeferred<Unit>? = null
     var failureAfterRead: TravelPlanFailure? = null
 

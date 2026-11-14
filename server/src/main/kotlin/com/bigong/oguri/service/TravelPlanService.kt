@@ -17,6 +17,7 @@ import com.bigong.oguri.repository.MemberRepository
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelPlanViewRepository
+import com.bigong.oguri.repository.TravelUsageActivity
 import com.bigong.oguri.repository.TravelUsageEdit
 import com.bigong.oguri.repository.TravelUsageEntry
 import com.bigong.oguri.repository.TravelUsageRepository
@@ -45,6 +46,7 @@ class TravelPlanService(
     fun create(
         memberId: String,
         request: CreateTravelPlanRequest,
+        sessionId: UUID? = null,
     ): TravelPlanSummaryResponse {
         // The member row serializes creation retries, including the first insert.
         if (memberId == AuthContext.GUEST_MEMBER_ID || members.findForTravelCreation(memberId) == null) {
@@ -78,7 +80,7 @@ class TravelPlanService(
                         sourceEndDate = request.source?.endDate,
                     ),
                 )
-        usage.start(plan, memberId, TravelUsageEntry.CREATED)
+        usage.start(plan, memberId, TravelUsageEntry.CREATED, sessionId)
         return plan.toSummary()
     }
 
@@ -162,6 +164,7 @@ class TravelPlanService(
         memberId: String,
         planId: UUID,
         command: TravelPlanCommand,
+        sessionId: UUID? = null,
     ): TravelPlanResponse {
         requireMember(memberId)
         val plan = accessiblePlan(memberId, planId, write = true)
@@ -251,7 +254,7 @@ class TravelPlanService(
                 is TravelPlanCommand.RemoveVisit -> TravelUsageEdit.VISIT_REMOVED
                 is TravelPlanCommand.UndoVisit -> TravelUsageEdit.VISIT_UNDONE
             }
-        usage.recordEdit(plan, memberId, changeKind)
+        usage.recordEdit(plan, memberId, changeKind, sessionId)
         collaboration.recordMemberCommand(planId, memberId, command.requestId, fingerprint)
         collaboration.recordChange(
             planId,
@@ -269,6 +272,18 @@ class TravelPlanService(
                 },
         )
         return plan.toResponse()
+    }
+
+    @Transactional
+    fun recordActivity(
+        memberId: String,
+        planId: UUID,
+        sessionId: UUID,
+        kind: TravelUsageActivity,
+    ) {
+        requireMember(memberId)
+        val plan = accessiblePlan(memberId, planId, write = true)
+        usage.recordActivity(plan, memberId, sessionId, kind)
     }
 
     internal fun accessiblePlan(

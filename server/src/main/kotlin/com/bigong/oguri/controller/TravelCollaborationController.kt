@@ -1,6 +1,7 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
+import com.bigong.oguri.config.resolveTravelUsageSession
 import com.bigong.oguri.domain.TravelPlanConflict
 import com.bigong.oguri.dto.response.TravelPlanErrorResponse
 import com.bigong.oguri.service.IssuedTravelInvite
@@ -85,7 +86,7 @@ class TravelCollaborationController(
         @PathVariable tripId: UUID,
         @RequestBody body: TravelDetailsChange,
     ): ResponseEntity<Void> {
-        service.updateDetails(request.resolveMemberId(), tripId, body)
+        service.updateDetails(request.resolveMemberId(), tripId, body, request.resolveTravelUsageSession())
         return noContent()
     }
 
@@ -137,7 +138,7 @@ class TravelCollaborationController(
     fun join(
         request: HttpServletRequest,
         @RequestBody body: TravelInviteRequest,
-    ): ResponseEntity<JoinedTravelPlan> = noStore(service.join(request.resolveMemberId(), body.token))
+    ): ResponseEntity<JoinedTravelPlan> = noStore(service.join(request.resolveMemberId(), body.token, request.resolveTravelUsageSession()))
 
     @ExceptionHandler(TravelInviteException::class)
     fun inviteFailure(error: TravelInviteException): ResponseEntity<TravelPlanErrorResponse> =

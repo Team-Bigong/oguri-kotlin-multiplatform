@@ -3,9 +3,15 @@ package com.bigong.oguri.domain.repository
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanSummary
+import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.domain.model.TravelVisitChange
 
 interface TravelPlanRepository {
+    suspend fun recordActivity(
+        planId: String,
+        kind: TravelUsageActivity,
+    )
+
     suspend fun list(): List<TravelPlanSummary>
 
     suspend fun resume(): TravelPlanSummary?

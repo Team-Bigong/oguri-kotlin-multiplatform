@@ -111,6 +111,11 @@ class TravelCreationRecoveryTest {
 }
 
 private class CreationPlans : TravelPlanRepository {
+    override suspend fun recordActivity(
+        planId: String,
+        kind: com.bigong.oguri.domain.model.TravelUsageActivity,
+    ) = Unit
+
     val requests: MutableList<TravelPendingSave.Create> = mutableListOf()
     var failNext: Boolean = false
 

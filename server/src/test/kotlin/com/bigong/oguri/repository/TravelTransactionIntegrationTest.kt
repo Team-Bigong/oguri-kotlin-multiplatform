@@ -755,6 +755,171 @@ class TravelTransactionIntegrationTest {
             .query(Long::class.javaObjectType)
             .single()
 
+    @Test
+    fun `사용 행동은 세션과 종류별 한번만 기록하고 제외된 멤버와 비회원은 거부한다`() {
+        val trip = fixture()
+        val session = UUID.randomUUID()
+        repeat(2) { tx { service.recordActivity(trip.other, trip.id, session, TravelUsageActivity.PLAN_DISPLAYED) } }
+        tx { service.recordActivity(trip.other, trip.id, session, TravelUsageActivity.DAY_SELECTED) }
+        assertEquals(
+            2L,
+            jdbc
+                .sql(
+                    "SELECT count(*) FROM travel_usage_activity a JOIN travel_usage_cohorts c ON c.id = a.cohort_id WHERE c.travel_plan_id = :id",
+                ).param("id", trip.id)
+                .query(Long::class.javaObjectType)
+                .single(),
+        )
+        tx { collaboration.remove(trip.owner, trip.id, trip.other) }
+        val denied =
+            assertThrows(ResponseStatusException::class.java) {
+                tx { service.recordActivity(trip.other, trip.id, UUID.randomUUID(), TravelUsageActivity.PIN_SELECTED) }
+            }
+        assertEquals(HttpStatus.NOT_FOUND, denied.statusCode)
+        val guest =
+            assertThrows(ResponseStatusException::class.java) {
+                tx { service.recordActivity("GUEST", trip.id, UUID.randomUUID(), TravelUsageActivity.PIN_SELECTED) }
+            }
+        assertEquals(HttpStatus.UNAUTHORIZED, guest.statusCode)
+    }
+
+    @Test
+    fun `저장 재전송의 새 세션은 처음 확정된 세션을 덮어쓰지 않는다`() {
+        val owner = member()
+        val initialSession = UUID.randomUUID()
+        val retrySession = UUID.randomUUID()
+        val request = creation()
+        val plan = tx { service.create(owner, request, initialSession) }
+        tx { service.create(owner, request, retrySession) }
+        val command = add("Private visit")
+        tx { service.execute(owner, plan.id, command, initialSession) }
+        tx { service.execute(owner, plan.id, command, retrySession) }
+        val saved =
+            jdbc
+                .sql(
+                    "SELECT c.start_session_id, e.session_id FROM travel_usage_cohorts c JOIN travel_usage_edits e ON e.cohort_id = c.id WHERE c.travel_plan_id = :id",
+                ).param("id", plan.id)
+                .query()
+                .singleRow()
+        assertEquals(initialSession, saved["start_session_id"])
+        assertEquals(initialSession, saved["session_id"])
+        assertEquals(1L, usageEditCount(plan.id))
+    }
+
+    @Test
+    fun `재사용 집계는 표시와 목적 행동을 나누고 다른 세션의 24시간부터 7일만 센다`() {
+        val sql = Files.readString(Path.of("../scripts/report_travel_preparation_reuse.sql"))
+
+        fun report(): Map<String, Any> =
+            jdbc
+                .sql(sql)
+                .query()
+                .listOfRows()
+                .firstOrNull { it["entry_source"] == "DIRECT" }
+                .orEmpty()
+
+        fun value(
+            row: Map<String, Any>,
+            key: String,
+        ): Long = (row[key] as? Number)?.toLong() ?: 0L
+        val before = report()
+        val owner = member()
+        val initialSession = UUID.randomUUID()
+        val laterSession = UUID.randomUUID()
+        val plan = tx { service.create(owner, creation(LocalDate.now().plusDays(20)), initialSession) }
+        jdbc
+            .sql(
+                "UPDATE travel_usage_cohorts SET started_at = statement_timestamp() - interval '8 days' WHERE travel_plan_id = :id",
+            ).param("id", plan.id)
+            .update()
+
+        fun action(
+            kind: TravelUsageActivity,
+            session: UUID,
+        ) = tx { service.recordActivity(owner, plan.id, session, kind) }
+
+        fun actionTime(
+            kind: TravelUsageActivity,
+            interval: String,
+        ) {
+            jdbc
+                .sql(
+                    "UPDATE travel_usage_activity a SET occurred_at = c.started_at + CAST(:offset AS interval) FROM travel_usage_cohorts c WHERE a.cohort_id = c.id AND c.travel_plan_id = :id AND a.kind = :kind",
+                ).param("offset", interval)
+                .param("id", plan.id)
+                .param("kind", kind.name)
+                .update()
+        }
+        action(TravelUsageActivity.PLAN_DISPLAYED, laterSession)
+        actionTime(TravelUsageActivity.PLAN_DISPLAYED, "25 hours")
+        var current = report()
+        assertEquals(value(before, "eligible_memberships") + 1, value(current, "eligible_memberships"))
+        assertEquals(value(before, "displayed_again_memberships") + 1, value(current, "displayed_again_memberships"))
+        assertEquals(value(before, "reused_memberships"), value(current, "reused_memberships"))
+        action(TravelUsageActivity.DAY_SELECTED, initialSession)
+        actionTime(TravelUsageActivity.DAY_SELECTED, "26 hours")
+        assertEquals(value(before, "reused_memberships"), value(report(), "reused_memberships"))
+        action(TravelUsageActivity.PIN_SELECTED, laterSession)
+        for (interval in listOf("23 hours", "7 days 1 second")) {
+            actionTime(TravelUsageActivity.PIN_SELECTED, interval)
+            assertEquals(value(before, "reused_memberships"), value(report(), "reused_memberships"))
+        }
+        for (interval in listOf("24 hours", "7 days")) {
+            actionTime(TravelUsageActivity.PIN_SELECTED, interval)
+            current = report()
+            assertEquals(value(before, "reused_memberships") + 1, value(current, "reused_memberships"))
+            assertEquals(value(before, "reused_linked_users") + 1, value(current, "reused_linked_users"))
+        }
+        actionTime(TravelUsageActivity.PIN_SELECTED, "8 days")
+        tx { service.execute(owner, plan.id, add("Later edit"), laterSession) }
+        jdbc
+            .sql(
+                "UPDATE travel_usage_edits e SET occurred_at = c.started_at + interval '2 days' FROM travel_usage_cohorts c WHERE e.cohort_id = c.id AND c.travel_plan_id = :id",
+            ).param("id", plan.id)
+            .update()
+        assertEquals(value(before, "reused_memberships") + 1, value(report(), "reused_memberships"))
+    }
+
+    @Test
+    fun `구버전 생성의 세션 미상을 후속 행동으로 덮어쓰지 않는다`() {
+        val sql = Files.readString(Path.of("../scripts/report_travel_preparation_reuse.sql"))
+
+        fun report() =
+            jdbc
+                .sql(sql)
+                .query()
+                .listOfRows()
+                .first { it["entry_source"] == "ALL" }
+        // Ensure a total row exists even when this test runs before any other cohort.
+        val owner = member()
+        val before = report()
+        val plan = tx { service.create(owner, creation(LocalDate.now().plusDays(20))) }
+        jdbc
+            .sql("UPDATE travel_usage_cohorts SET started_at = statement_timestamp() - interval '8 days' WHERE travel_plan_id = :id")
+            .param("id", plan.id)
+            .update()
+        tx { service.recordActivity(owner, plan.id, UUID.randomUUID(), TravelUsageActivity.DAY_SELECTED) }
+        jdbc
+            .sql(
+                "UPDATE travel_usage_activity a SET occurred_at = c.started_at + interval '2 days' FROM travel_usage_cohorts c WHERE a.cohort_id = c.id AND c.travel_plan_id = :id",
+            ).param("id", plan.id)
+            .update()
+        assertNull(
+            jdbc
+                .sql("SELECT start_session_id FROM travel_usage_cohorts WHERE travel_plan_id = :id")
+                .param("id", plan.id)
+                .query()
+                .singleRow()["start_session_id"],
+        )
+        val after = report()
+        assertEquals(
+            (before.getValue("eligible_memberships") as Number).toLong() + 1,
+            (after.getValue("eligible_memberships") as Number).toLong(),
+        )
+        assertEquals(before["session_known_memberships"], after["session_known_memberships"])
+        assertEquals(before["reused_memberships"], after["reused_memberships"])
+    }
+
     private fun reminderFixture(forOwner: Boolean = true): ReminderFixture {
         val trip = fixture(startDate = LocalDate.now().plusDays(10))
         val member = if (forOwner) trip.owner else trip.other

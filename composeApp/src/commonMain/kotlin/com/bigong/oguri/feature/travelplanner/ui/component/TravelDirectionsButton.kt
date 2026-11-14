@@ -25,6 +25,7 @@ internal fun TravelDirectionsButton(
     placeId: String?,
     destination: String?,
     enabled: Boolean = true,
+    onOpened: () -> Unit,
 ) {
     val target = destination?.takeIf { it.isNotBlank() }
     if (target == null && placeId == null) return
@@ -40,6 +41,7 @@ internal fun TravelDirectionsButton(
                     if (placeId != null) parameters.append("destination_place_id", placeId)
                 }.buildString()
         failed = runCatching { uriHandler.openUri(url) }.isFailure
+        if (!failed) onOpened()
     }) { Text(stringResource(Res.string.travel_directions)) }
     if (failed) {
         Text(

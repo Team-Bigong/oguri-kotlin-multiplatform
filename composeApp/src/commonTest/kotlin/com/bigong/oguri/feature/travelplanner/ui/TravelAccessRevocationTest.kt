@@ -33,6 +33,35 @@ class TravelAccessRevocationTest {
     fun resetDispatcher() = Dispatchers.resetMain()
 
     @Test
+    fun usageCollectionRequiresTheDisplayedOnlinePlanAndCannotChangeEditingState() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.recordActivity("plan", TravelUsageActivity.PLAN_DISPLAYED)
+            advanceUntilIdle()
+            assertTrue(plans.activities.isEmpty())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.recordActivity("different", TravelUsageActivity.DAY_SELECTED)
+            viewModel.recordActivity("plan", TravelUsageActivity.PLAN_DISPLAYED)
+            advanceUntilIdle()
+            assertEquals(listOf("plan" to TravelUsageActivity.PLAN_DISPLAYED), plans.activities)
+            viewModel.openVisit(null)
+            val before = viewModel.state.value
+            plans.activityFailure = true
+            viewModel.recordActivity("plan", TravelUsageActivity.DIRECTIONS_OPENED)
+            advanceUntilIdle()
+            assertEquals(before, viewModel.state.value)
+            plans.connectionFailure = true
+            viewModel.refreshPlan("plan")
+            val offline = viewModel.state.value
+            viewModel.recordActivity("plan", TravelUsageActivity.PIN_SELECTED)
+            advanceUntilIdle()
+            assertEquals(offline, viewModel.state.value)
+            assertEquals(1, plans.activities.size)
+        }
+
+    @Test
     fun revokedAccessWaitsForAnActiveDraftWriteBeforeErasingStorage() =
         runTest {
             val plans = AccessPlans(plan)
@@ -450,6 +479,17 @@ class TravelAccessRevocationTest {
 private class AccessPlans(
     private val plan: TravelPlan,
 ) : TravelPlanRepository {
+    val activities = mutableListOf<Pair<String, TravelUsageActivity>>()
+    var activityFailure = false
+
+    override suspend fun recordActivity(
+        planId: String,
+        kind: TravelUsageActivity,
+    ) {
+        if (activityFailure) throw TravelPlanException(TravelPlanFailure.CONNECTION)
+        activities.add(planId to kind)
+    }
+
     var unavailable: Boolean = false
     var connectionFailure: Boolean = false
     var readBarrier: CompletableDeferred<Unit>? = null

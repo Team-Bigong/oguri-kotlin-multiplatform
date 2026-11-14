@@ -37,6 +37,7 @@ internal fun TravelVisitDetailsSheet(
     place: TravelPlace?,
     offline: Boolean,
     onDismiss: () -> Unit,
+    onDirectionsOpened: () -> Unit,
 ) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
@@ -58,7 +59,7 @@ internal fun TravelVisitDetailsSheet(
                 }
             }
             if (place != null) GooglePlacesAttribution(place.attributions)
-            TravelDirectionsButton(visit.details.googlePlaceId, place?.name ?: visit.details.location)
+            TravelDirectionsButton(visit.details.googlePlaceId, place?.name ?: visit.details.location, onOpened = onDirectionsOpened)
             TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_cancel)) }
         }
     }

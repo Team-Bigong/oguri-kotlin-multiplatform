@@ -116,6 +116,7 @@ class TravelCollaborationService(
     fun join(
         memberId: String,
         token: String,
+        sessionId: UUID? = null,
     ): JoinedTravelPlan {
         planService.requireMember(memberId)
         if (members.findForTravelCreation(memberId) == null) throw ResponseStatusException(HttpStatus.UNAUTHORIZED)
@@ -127,7 +128,7 @@ class TravelCollaborationService(
         requireActive(invite.expiresAt, invite.revokedAt)
         collaboration.join(planId, memberId)
         usage.start(plan, plan.ownerId, TravelUsageEntry.EXISTING)
-        usage.start(plan, memberId, TravelUsageEntry.JOINED)
+        usage.start(plan, memberId, TravelUsageEntry.JOINED, sessionId)
         return JoinedTravelPlan(planId)
     }
 
@@ -136,6 +137,7 @@ class TravelCollaborationService(
         memberId: String,
         planId: UUID,
         change: TravelDetailsChange,
+        sessionId: UUID? = null,
     ) {
         val plan = owner(memberId, planId)
         val reminderTimeChanged = plan.startDate != change.startDate || plan.endDate != change.endDate || plan.timeZone != change.timeZone
@@ -150,7 +152,7 @@ class TravelCollaborationService(
         )
         if (reminderTimeChanged) reminders.cancelForPlan(planId)
         collaboration.recordChange(planId, memberId, plan.revision, null, "TRIP_UPDATED")
-        usage.recordEdit(plan, memberId, TravelUsageEdit.TRIP_UPDATED)
+        usage.recordEdit(plan, memberId, TravelUsageEdit.TRIP_UPDATED, sessionId)
     }
 
     @Transactional

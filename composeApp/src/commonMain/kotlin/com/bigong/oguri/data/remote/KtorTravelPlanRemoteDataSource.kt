@@ -1,9 +1,11 @@
 package com.bigong.oguri.data.remote
 
+import com.bigong.oguri.core.analytics.travelUsageSession
 import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.core.network.BASE_URL
 import com.bigong.oguri.core.network.RequestAccessToken
 import com.bigong.oguri.data.remote.model.request.CreateTravelPlanRequest
+import com.bigong.oguri.data.remote.model.request.RecordTravelActivityRequest
 import com.bigong.oguri.data.remote.model.request.RecordTravelPlanViewRequest
 import com.bigong.oguri.data.remote.model.request.TravelChangesSeenRequest
 import com.bigong.oguri.data.remote.model.request.TravelCityTimeZoneRequest
@@ -25,11 +27,13 @@ import com.bigong.oguri.data.remote.model.response.TravelPlanResponse
 import com.bigong.oguri.data.remote.model.response.TravelPlanResumeResponse
 import com.bigong.oguri.data.remote.model.response.TravelPlanSummaryResponse
 import com.bigong.oguri.data.remote.model.response.TravelRecentChangesResponse
+import com.bigong.oguri.domain.model.TravelUsageActivity
 import dev.zacsweers.metro.Inject
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
@@ -37,6 +41,8 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.encodeURLPathPart
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @Inject
 internal class KtorTravelPlanRemoteDataSource(
@@ -44,6 +50,40 @@ internal class KtorTravelPlanRemoteDataSource(
     private val authRequestExecutor: AuthRequestExecutor,
 ) {
     private val sessionVersion: Long = AuthTokenStore.currentSession().version
+
+    private val activityMutex = Mutex()
+    private var activitySession: String? = null
+    private val recordedActivities = mutableSetOf<Pair<String, TravelUsageActivity>>()
+
+    private suspend fun <T> usageRequest(block: suspend (String, String) -> T): T =
+        authRequestExecutor.executeForSession(sessionVersion) { token ->
+            val session = travelUsageSession.current(sessionVersion) ?: throw AuthSessionChangedException()
+            block(token, session)
+        }
+
+    suspend fun recordActivity(
+        planId: String,
+        kind: TravelUsageActivity,
+    ) {
+        usageRequest { token, session ->
+            activityMutex.withLock {
+                if (activitySession != session) {
+                    activitySession = session
+                    recordedActivities.clear()
+                }
+                val key = planId to kind
+                if (key !in recordedActivities) {
+                    httpClient.post("$BASE_URL$TRIPS_PATH/$planId/activity") {
+                        attributes.put(RequestAccessToken, token)
+                        header("X-Travel-Session", session)
+                        contentType(ContentType.Application.Json)
+                        setBody(RecordTravelActivityRequest(kind.name))
+                    }
+                    recordedActivities.add(key)
+                }
+            }
+        }
+    }
 
     suspend fun list(): List<TravelPlanSummaryResponse> =
         authRequestExecutor.executeForSession(sessionVersion) { token ->
@@ -69,10 +109,11 @@ internal class KtorTravelPlanRemoteDataSource(
     }
 
     suspend fun create(request: CreateTravelPlanRequest): TravelPlanSummaryResponse =
-        authRequestExecutor.executeForSession(sessionVersion) { token ->
+        usageRequest { token, usageSession ->
             httpClient
                 .post("$BASE_URL$TRIPS_PATH") {
                     attributes.put(RequestAccessToken, token)
+                    header("X-Travel-Session", usageSession)
                     contentType(ContentType.Application.Json)
                     setBody(request)
                 }.body()
@@ -87,10 +128,11 @@ internal class KtorTravelPlanRemoteDataSource(
         planId: String,
         request: TravelPlanCommandRequest,
     ): TravelPlanResponse =
-        authRequestExecutor.executeForSession(sessionVersion) { token ->
+        usageRequest { token, usageSession ->
             httpClient
                 .post("$BASE_URL$TRIPS_PATH/$planId/commands") {
                     attributes.put(RequestAccessToken, token)
+                    header("X-Travel-Session", usageSession)
                     contentType(ContentType.Application.Json)
                     setBody(request)
                 }.body()
@@ -189,9 +231,10 @@ internal class KtorTravelPlanRemoteDataSource(
         planId: String,
         request: TravelDetailsRequest,
     ) {
-        authRequestExecutor.executeForSession(sessionVersion) { token ->
+        usageRequest { token, usageSession ->
             httpClient.put("$BASE_URL$TRIPS_PATH/$planId/details") {
                 attributes.put(RequestAccessToken, token)
+                header("X-Travel-Session", usageSession)
                 contentType(ContentType.Application.Json)
                 setBody(request)
             }
@@ -244,10 +287,11 @@ internal class KtorTravelPlanRemoteDataSource(
             }.body()
 
     suspend fun joinInvite(inviteToken: String): JoinedTravelPlanResponse =
-        authRequestExecutor.executeForSession(sessionVersion) { token ->
+        usageRequest { token, usageSession ->
             httpClient
                 .post("$BASE_URL$INVITES_PATH/join") {
                     attributes.put(RequestAccessToken, token)
+                    header("X-Travel-Session", usageSession)
                     contentType(ContentType.Application.Json)
                     setBody(TravelInviteRequest(inviteToken))
                 }.body()

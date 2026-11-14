@@ -9,6 +9,7 @@ import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanException
 import com.bigong.oguri.domain.model.TravelPlanFailure
+import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.domain.model.TravelVisitChange
 import com.bigong.oguri.domain.model.TravelVisitDetails
@@ -67,6 +68,23 @@ class TravelPlannerViewModel(
     private var resumeRequest: Long = 0
     private var overviewRequest: Long = 0
     private var addedPlaceForSave: TravelPlace? = null
+
+    internal fun recordActivity(
+        planId: String,
+        kind: TravelUsageActivity,
+    ) {
+        val current = state.value
+        if (current.isOffline || current.plan?.summary?.id != planId) return
+        viewModelScope.launch {
+            try {
+                repository.recordActivity(planId, kind)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                // Measurement is best effort and must not change access/edit/recovery state.
+            }
+        }
+    }
 
     internal suspend fun loadResume() {
         val request = ++resumeRequest

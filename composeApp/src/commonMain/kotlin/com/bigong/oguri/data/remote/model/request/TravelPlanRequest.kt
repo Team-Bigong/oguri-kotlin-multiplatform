@@ -128,3 +128,8 @@ internal data class TravelPlaceBatchRequest(
     val placeIds: List<String>,
     val language: String,
 )
+
+@kotlinx.serialization.Serializable
+internal data class RecordTravelActivityRequest(
+    val kind: String,
+)

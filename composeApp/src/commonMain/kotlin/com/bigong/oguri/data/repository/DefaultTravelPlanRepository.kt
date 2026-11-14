@@ -25,6 +25,7 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.domain.model.TravelRecentChanges
+import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.domain.model.TravelVisitChange
 import com.bigong.oguri.domain.model.TravelVisitDetails
@@ -46,6 +47,11 @@ class DefaultTravelPlanRepository internal constructor(
 ) : TravelPlanRepository,
     TravelPlaceRepository,
     TravelCollaborationRepository {
+    override suspend fun recordActivity(
+        planId: String,
+        kind: TravelUsageActivity,
+    ): Unit = request { remote.recordActivity(planId, kind) }
+
     override suspend fun list(): List<TravelPlanSummary> = request { remote.list().map { it.toDomain() } }
 
     override suspend fun resume(): TravelPlanSummary? = request { remote.resume().plan?.toDomain() }

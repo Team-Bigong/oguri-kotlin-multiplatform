@@ -1,6 +1,7 @@
 package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.resolveMemberId
+import com.bigong.oguri.config.resolveTravelUsageSession
 import com.bigong.oguri.domain.TravelPlanConflict
 import com.bigong.oguri.dto.request.CreateTravelPlanRequest
 import com.bigong.oguri.dto.request.RecordTravelPlanViewRequest
@@ -11,6 +12,7 @@ import com.bigong.oguri.dto.response.TravelPlanErrorResponse
 import com.bigong.oguri.dto.response.TravelPlanResponse
 import com.bigong.oguri.dto.response.TravelPlanResumeResponse
 import com.bigong.oguri.dto.response.TravelPlanSummaryResponse
+import com.bigong.oguri.repository.TravelUsageActivity
 import com.bigong.oguri.service.TravelPlacesService
 import com.bigong.oguri.service.TravelPlanService
 import jakarta.servlet.http.HttpServletRequest
@@ -41,7 +43,11 @@ class TravelPlanController(
         request: HttpServletRequest,
         @RequestBody body: CreateTravelPlanRequest,
     ): ResponseEntity<TravelPlanSummaryResponse> =
-        ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(travelPlanService.create(request.resolveMemberId(), body))
+        ResponseEntity
+            .ok()
+            .cacheControl(
+                CacheControl.noStore(),
+            ).body(travelPlanService.create(request.resolveMemberId(), body, request.resolveTravelUsageSession()))
 
     @GetMapping
     fun list(request: HttpServletRequest): ResponseEntity<List<TravelPlanSummaryResponse>> =
@@ -63,6 +69,16 @@ class TravelPlanController(
         return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build()
     }
 
+    @PostMapping("/{tripId}/activity")
+    fun activity(
+        request: HttpServletRequest,
+        @PathVariable tripId: UUID,
+        @RequestBody body: RecordTravelActivityRequest,
+    ): ResponseEntity<Void> {
+        travelPlanService.recordActivity(request.resolveMemberId(), tripId, requireNotNull(request.resolveTravelUsageSession()), body.kind)
+        return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build()
+    }
+
     @GetMapping("/{tripId}")
     fun get(
         request: HttpServletRequest,
@@ -76,7 +92,11 @@ class TravelPlanController(
         @PathVariable tripId: UUID,
         @RequestBody body: TravelPlanCommand,
     ): ResponseEntity<TravelPlanResponse> =
-        ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(travelPlanService.execute(request.resolveMemberId(), tripId, body))
+        ResponseEntity
+            .ok()
+            .cacheControl(
+                CacheControl.noStore(),
+            ).body(travelPlanService.execute(request.resolveMemberId(), tripId, body, request.resolveTravelUsageSession()))
 
     @PostMapping("/{tripId}/places/search")
     fun searchPlaces(
@@ -150,4 +170,9 @@ data class TravelPlaceSearchRequest(
 data class TravelPlaceBatchRequest(
     val placeIds: List<String>,
     val language: String,
+)
+
+@JvmRecord
+data class RecordTravelActivityRequest(
+    val kind: TravelUsageActivity,
 )
