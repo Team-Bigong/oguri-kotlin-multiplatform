@@ -230,7 +230,11 @@ internal fun TravelInviteRoute(
     LaunchedEffect(viewModel, token, state.joinedPlanId) {
         if (viewModel.matchesInvite(token)) state.joinedPlanId?.let(onJoined)
     }
-    TravelPlannerPage(stringResource(Res.string.travel_invitation), onBack, state.busy) {
+    TravelPlannerPage(
+        title = stringResource(Res.string.travel_invitation),
+        onBack = onBack,
+        isSaving = state.busy && state.preview != null,
+    ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             val preview = state.preview
             if (token == null) Text(stringResource(Res.string.travel_invite_missing))
