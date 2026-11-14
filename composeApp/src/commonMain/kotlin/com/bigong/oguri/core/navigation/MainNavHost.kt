@@ -250,6 +250,16 @@ fun MainNavHost(
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
                 onSearchClick = navigator::navigateToSearch,
+                onCreateTravelPlan =
+                    if (travelEnabled) {
+                        { startDate, endDate ->
+                            recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
+                            navigator.navigateToCreateTravelPlan(startDate = startDate, endDate = endDate)
+                        }
+                    } else {
+                        null
+                    },
+                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.EXPOSED) },
                 travelResume =
                     if (travelEnabled && travelSession.tokens != null) {
                         {
