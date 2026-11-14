@@ -179,4 +179,5 @@
     <string name="travel_order_matches">현재 목록이 이미 이 순서예요.</string>
     <string name="travel_leave_pending_save">나중에 다시 시도하기</string>
     <string name="travel_pending_save_preserved">여행을 다시 열면 이 저장을 다시 시도할 수 있어요.</string>
+    <string name="bottom_navigation_travel">여행</string>
 </resources>

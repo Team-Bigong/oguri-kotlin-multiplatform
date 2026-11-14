@@ -153,10 +153,6 @@ class MainNavigator(
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
-    fun navigateToTravelPlans() {
-        navHostController.navigate(RouteModel.TravelPlans) { launchSingleTop = true }
-    }
-
     fun navigateToCreateTravelPlan(
         destinationId: Long? = null,
         startDate: String? = null,

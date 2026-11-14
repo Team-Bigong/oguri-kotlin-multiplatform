@@ -179,4 +179,5 @@
     <string name="travel_order_matches">当前列表已经是这个顺序。</string>
     <string name="travel_leave_pending_save">退出并稍后重试</string>
     <string name="travel_pending_save_preserved">重新打开此行程后，可以重试保存。</string>
+    <string name="bottom_navigation_travel">旅行</string>
 </resources>

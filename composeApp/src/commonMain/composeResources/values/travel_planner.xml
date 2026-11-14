@@ -179,4 +179,5 @@
     <string name="travel_order_matches">The current list already has this order.</string>
     <string name="travel_leave_pending_save">Leave and try later</string>
     <string name="travel_pending_save_preserved">You can retry this save when you return to the trip.</string>
+    <string name="bottom_navigation_travel">Trips</string>
 </resources>

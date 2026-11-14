@@ -1,16 +1,20 @@
 package com.bigong.oguri.core.navigation
 
-import kotlinx.serialization.Serializable
+import com.bigong.oguri.core.network.TRAVEL_PLANNER_ENABLED_IN_RELEASE
+import com.bigong.oguri.core.network.isDebugPlatformBuild
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.bottom_navigation_calendar
 import oguri.composeapp.generated.resources.bottom_navigation_home
 import oguri.composeapp.generated.resources.bottom_navigation_my
+import oguri.composeapp.generated.resources.bottom_navigation_travel
 import oguri.composeapp.generated.resources.ic_calendar
 import oguri.composeapp.generated.resources.ic_home
 import oguri.composeapp.generated.resources.ic_mypage
+import oguri.composeapp.generated.resources.ic_plane
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.StringResource
 import kotlin.reflect.KClass
+import kotlinx.serialization.Serializable
 
 @Serializable
 enum class WebDocumentType {
@@ -108,7 +112,13 @@ data class BottomNavigationDestination(
     val iconResource: DrawableResource,
 )
 
-val bottomNavigationDestinations =
+internal val travelEnabled: Boolean
+    get() = isDebugPlatformBuild() || TRAVEL_PLANNER_ENABLED_IN_RELEASE
+
+val bottomNavigationDestinations: List<BottomNavigationDestination>
+    get() = if (travelEnabled) travelBottomNavigationDestinations else standardBottomNavigationDestinations
+
+private val standardBottomNavigationDestinations =
     listOf(
         BottomNavigationDestination(
             routeModel = RouteModel.Home,
@@ -141,3 +151,17 @@ val bottomNavigationDestinations =
             iconResource = Res.drawable.ic_mypage,
         ),
     )
+
+private val travelBottomNavigationDestinations =
+    standardBottomNavigationDestinations.toMutableList().apply {
+        add(
+            2,
+            BottomNavigationDestination(
+                routeModel = RouteModel.TravelPlans,
+                routeClass = RouteModel.TravelPlans::class,
+                routeSerialName = RouteModel.TravelPlans.serializer().descriptor.serialName,
+                labelResource = Res.string.bottom_navigation_travel,
+                iconResource = Res.drawable.ic_plane,
+            ),
+        )
+    }.toList()

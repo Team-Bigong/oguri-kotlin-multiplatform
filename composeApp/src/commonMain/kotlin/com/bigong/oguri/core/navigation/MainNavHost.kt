@@ -23,8 +23,6 @@ import androidx.navigation.toRoute
 import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
-import com.bigong.oguri.core.network.TRAVEL_PLANNER_ENABLED_IN_RELEASE
-import com.bigong.oguri.core.network.isDebugPlatformBuild
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.domain.model.DisplayThemeMode
@@ -80,7 +78,6 @@ fun MainNavHost(
     onDisplayThemeModeChange: (DisplayThemeMode) -> Unit,
 ) {
     val navigationScope = rememberCoroutineScope()
-    val travelEnabled = isDebugPlatformBuild() || TRAVEL_PLANNER_ENABLED_IN_RELEASE
     val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
     fun recordRecommendation(source: TravelRecommendationSource, entry: TravelRecommendationEntry) {
         navigationScope.launch {
@@ -250,16 +247,6 @@ fun MainNavHost(
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
                 onSearchClick = navigator::navigateToSearch,
-                onCreateTravelPlan =
-                    if (travelEnabled) {
-                        { startDate, endDate ->
-                            recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
-                            navigator.navigateToCreateTravelPlan(startDate = startDate, endDate = endDate)
-                        }
-                    } else {
-                        null
-                    },
-                onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.EXPOSED) },
                 travelResume =
                     if (travelEnabled && travelSession.tokens != null) {
                         {
@@ -343,13 +330,9 @@ fun MainNavHost(
             )
         }
         composable<RouteModel.TravelPlans> {
-            if (travelSession.tokens == null) {
-                TravelSignInRequired(onSignIn = navigator::navigateToTravelLogin, onBack = { navigator.popBackStack() })
-                return@composable
-            }
             TravelPlansRoute(
                 viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
-                onBack = { navigator.popBackStack() },
+                onBack = if (travelEnabled) null else ({ navigator.popBackStack() }),
                 signedIn = travelSession.tokens != null,
                 onSignIn = navigator::navigateToTravelLogin,
                 onCreate = { navigator.navigateToCreateTravelPlan() },
@@ -409,7 +392,6 @@ fun MainNavHost(
                 onOpenTermsOfService = { navigator.navigateToWebDocument(WebDocumentType.TERMS_OF_SERVICE) },
                 onOpenPrivacyPolicy = { navigator.navigateToWebDocument(WebDocumentType.PRIVACY_POLICY) },
                 onOpenDisplaySettings = navigator::navigateToDisplaySettings,
-                onOpenTravelPlans = navigator::navigateToTravelPlans.takeIf { travelEnabled },
                 onLoggedOut = onLoggedOut,
                 onWithdrawCompleted = onWithdrawCompleted,
                 onLoginRequired = navigator::navigateToLogin,
