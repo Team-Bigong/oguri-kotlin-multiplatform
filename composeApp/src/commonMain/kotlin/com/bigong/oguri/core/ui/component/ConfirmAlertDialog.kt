@@ -66,7 +66,7 @@ fun ConfirmAlertDialog(
                 Image(
                     painter = painterResource(iconResource),
                     contentDescription = null,
-                    colorFilter = ColorFilter.tint(WarningAmber),
+                    colorFilter = ColorFilter.tint(Orange50),
                     modifier = Modifier.size(48.dp),
                 )
 
@@ -104,7 +104,7 @@ fun ConfirmAlertDialog(
                         Text(
                             text = confirmButtonText,
                             style = OguriTheme.typography.bodyMedium,
-                            color = Neutral0,
+                            color = OguriTheme.colors.textOnMint,
                         )
                     }
 

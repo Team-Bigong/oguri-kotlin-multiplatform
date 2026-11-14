@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
@@ -316,41 +315,6 @@ internal fun CreateTravelPlanScreen(
             },
         )
     }
-}
-
-@Composable
-private fun TravelTimeZonePicker(
-    onDismiss: () -> Unit,
-    onSelect: (String) -> Unit,
-) {
-    var query by remember { mutableStateOf("") }
-    val zones = remember { TimeZone.availableZoneIds.filter { '/' in it && !it.startsWith("Etc/") }.sorted() }
-    val results = remember(zones, query) { zones.filter { it.replace('_', ' ').contains(query.trim(), ignoreCase = true) } }
-    AlertDialog(
-        shape = RoundedCornerShape(8.dp),
-        containerColor = Neutral0,
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.travel_choose_time_zone)) },
-        text = {
-            Column {
-                OutlinedTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    label = { Text(stringResource(Res.string.travel_choose_time_zone)) },
-                    singleLine = true,
-                    shape = RoundedCornerShape(8.dp),
-                    textStyle = OguriTheme.typography.bodyLarge,
-                    colors = TravelFieldColors(),
-                )
-                LazyColumn(Modifier.heightIn(max = 230.dp)) {
-                    items(results, key = { it }) { zone ->
-                        TravelTextButton(onClick = { onSelect(zone) }) { Text(zone.replace('_', ' ')) }
-                    }
-                }
-            }
-        },
-        confirmButton = { TravelTextButton(onClick = onDismiss) { Text(stringResource(Res.string.travel_cancel)) } },
-    )
 }
 
 @Composable

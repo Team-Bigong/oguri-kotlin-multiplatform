@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,7 +41,7 @@ internal fun TravelReminderDialog(
     var zone by rememberSaveable { mutableStateOf("") }
     val effectiveZone = zone.ifBlank { settings?.tripTimeZone?.id.orEmpty() }
     val selection = settings?.let { parseTravelReminderTime(date, time, effectiveZone, it, Clock.System.now()) }
-    AlertDialog(
+    com.bigong.oguri.feature.travelplanner.ui.component.TravelFormSheet(
         shape = RoundedCornerShape(8.dp),
         containerColor = Neutral0,
         onDismissRequest = { if (!state.busy) onDismiss() },

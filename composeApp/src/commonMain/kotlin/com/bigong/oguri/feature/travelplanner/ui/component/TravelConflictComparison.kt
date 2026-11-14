@@ -1,5 +1,8 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +25,7 @@ internal fun TravelConflictComparison(
     val fields = draft.latestDifferences()
     val latest = draft.visit ?: return
     if (fields.isEmpty()) return
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint5, androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(Res.string.travel_latest_saved_values), style = OguriTheme.typography.cardSubtitle)
         fields.forEach { field ->
             val label =
@@ -43,8 +46,11 @@ internal fun TravelConflictComparison(
                     TravelVisitField.NOTE -> latest.details.note
                     TravelVisitField.CATEGORY -> latest.details.category?.let { stringResource(it.label()) }
                 }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
-            Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
-            Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(label), style = OguriTheme.typography.labelMedium)
+            Text(stringResource(Res.string.travel_conflict_saved), style = OguriTheme.typography.labelSmall)
+            Text(value, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary)
         }
+        Text(stringResource(Res.string.travel_conflict_mine), style = OguriTheme.typography.labelMedium)
+        Text(draft.note, style = OguriTheme.typography.bodyMedium)
     }
 }

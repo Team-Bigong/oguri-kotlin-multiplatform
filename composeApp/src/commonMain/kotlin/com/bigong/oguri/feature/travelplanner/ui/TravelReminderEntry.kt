@@ -1,7 +1,6 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -59,7 +58,7 @@ internal fun TravelReminderEntry(
             reminderId?.let(::consumeTravelReminderOpening)
             viewModel.clearOpening()
         }
-        AlertDialog(
+        com.bigong.oguri.feature.travelplanner.ui.component.TravelFormSheet(
             shape = RoundedCornerShape(8.dp),
             containerColor = Neutral0,
             onDismissRequest = dismiss,

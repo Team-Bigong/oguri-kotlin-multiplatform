@@ -194,7 +194,7 @@
     <string name="travel_category_transport">Transport</string>
     <string name="travel_category_shopping">Shopping</string>
     <string name="travel_category_other">Other</string>
-    <string name="travel_google_search_tab">Search Google Maps</string>
+    <string name="travel_google_search_tab">Search map</string>
     <string name="travel_keep_google_label">Use the Google Maps name and address</string>
     <string name="travel_manual_name_placeholder">e.g. Noodle shop near the hotel</string>
     <string name="travel_manual_location_placeholder">Enter an address or leave it blank</string>
@@ -219,4 +219,9 @@
     <string name="travel_save_failed_label">Could not save</string>
     <string name="travel_place_count">%1$d places</string>
     <string name="travel_day_number">Day %1$d</string>
+    <string name="travel_discard_message">Your input will not be saved.</string>
+    <string name="travel_keep_writing">Keep editing</string>
+    <string name="travel_already_added">Already in this day. You can add it again.</string>
+    <string name="travel_conflict_mine">Your edits</string>
+    <string name="travel_conflict_saved">Latest saved content</string>
 </resources>

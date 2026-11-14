@@ -194,7 +194,7 @@
     <string name="travel_category_transport">교통</string>
     <string name="travel_category_shopping">쇼핑</string>
     <string name="travel_category_other">기타</string>
-    <string name="travel_google_search_tab">구글 지도에서 검색</string>
+    <string name="travel_google_search_tab">지도에서 검색</string>
     <string name="travel_keep_google_label">구글 지도 이름과 주소 그대로 쓰기</string>
     <string name="travel_manual_name_placeholder">예: 숙소 근처 쌀국수집</string>
     <string name="travel_manual_location_placeholder">주소를 적거나 비워둬도 돼요</string>
@@ -219,4 +219,9 @@
     <string name="travel_save_failed_label">저장하지 못했어요</string>
     <string name="travel_place_count">%1$d곳</string>
     <string name="travel_day_number">%1$d일차</string>
+    <string name="travel_discard_message">입력한 내용은 저장되지 않아요.</string>
+    <string name="travel_keep_writing">계속 작성</string>
+    <string name="travel_already_added">이미 이 날짜에 담은 장소예요. 한 번 더 담을 수 있어요.</string>
+    <string name="travel_conflict_mine">내가 작성한 내용</string>
+    <string name="travel_conflict_saved">최근 저장된 내용</string>
 </resources>

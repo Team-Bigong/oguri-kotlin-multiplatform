@@ -194,7 +194,7 @@
     <string name="travel_category_transport">交通</string>
     <string name="travel_category_shopping">购物</string>
     <string name="travel_category_other">其他</string>
-    <string name="travel_google_search_tab">在 Google 地图中搜索</string>
+    <string name="travel_google_search_tab">地图搜索</string>
     <string name="travel_keep_google_label">使用 Google 地图的名称和地址</string>
     <string name="travel_manual_name_placeholder">例如：酒店附近的米粉店</string>
     <string name="travel_manual_location_placeholder">可填写地址，也可留空</string>
@@ -219,4 +219,9 @@
     <string name="travel_save_failed_label">保存失败</string>
     <string name="travel_place_count">%1$d处</string>
     <string name="travel_day_number">第%1$d天</string>
+    <string name="travel_discard_message">输入内容不会保存。</string>
+    <string name="travel_keep_writing">继续编辑</string>
+    <string name="travel_already_added">已加入当天，可再次添加。</string>
+    <string name="travel_conflict_mine">我的修改</string>
+    <string name="travel_conflict_saved">最新保存内容</string>
 </resources>

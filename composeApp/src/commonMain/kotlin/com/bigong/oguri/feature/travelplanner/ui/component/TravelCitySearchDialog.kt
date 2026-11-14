@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +32,7 @@ internal fun TravelCitySearchDialog(
     onChooseRecommendedCity: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    AlertDialog(
+    com.bigong.oguri.feature.travelplanner.ui.component.TravelFormSheet(
         shape = RoundedCornerShape(8.dp),
         containerColor = Neutral0,
         onDismissRequest = onDismiss,

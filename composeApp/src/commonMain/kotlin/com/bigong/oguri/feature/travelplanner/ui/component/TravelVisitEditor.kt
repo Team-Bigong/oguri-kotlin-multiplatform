@@ -1,5 +1,14 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Icon
+import org.jetbrains.compose.resources.painterResource
+import oguri.composeapp.generated.resources.ic_travel_close
+import oguri.composeapp.generated.resources.travel_visit_day
+import oguri.composeapp.generated.resources.travel_search_close
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,9 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -105,18 +111,20 @@ internal fun TravelVisitEditor(
             },
         )
     ModalBottomSheet(
-        containerColor = Neutral0,
+        containerColor = com.bigong.oguri.core.designsystem.Neutral5,
+        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         onDismissRequest = { if (canDismiss) dismissDraft() },
         sheetState = sheetState,
     ) {
         Column(
-            modifier = Modifier.imePadding().verticalScroll(rememberScrollState()).padding(16.dp),
+            modifier = Modifier.fillMaxHeight(0.88f).imePadding(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(
-                stringResource(if (draft.visit == null) Res.string.travel_add_visit else Res.string.travel_edit_visit),
-                style = OguriTheme.typography.sectionTitle,
-            )
+            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(Res.string.travel_edit_visit), Modifier.weight(1f), style = OguriTheme.typography.cardTitle)
+                TravelIconButton(onClick = dismissDraft, enabled = canDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
+            }
+            Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             TravelConflictComparison(draft, dates)
             if (isSaving) TravelLoading(modifier = Modifier.fillMaxWidth())
             if (placeId == null || original.details.name != null) {
@@ -138,17 +146,19 @@ internal fun TravelVisitEditor(
             TravelOutlineButton(onClick = { showDayMenu = true }, enabled = canEdit, modifier = Modifier.fillMaxWidth()) {
                 Text(travelDayLabel(dates, draft.dayNumber))
             }
-            DropdownMenu(expanded = showDayMenu, onDismissRequest = { showDayMenu = false }) {
-                for (dayNumber in 1..dates.dayCount) {
-                    DropdownMenuItem(
-                        text = { Text(travelDayLabel(dates, dayNumber)) },
-                        onClick = {
-                            showDayMenu = false
-                            onDraftChange(draft.copy(dayNumber = dayNumber))
-                        },
-                    )
-                }
-            }
+            if (showDayMenu) TravelFormSheet(
+                onDismissRequest = { showDayMenu = false },
+                title = { Text(stringResource(Res.string.travel_visit_day)) },
+                text = {
+                    androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = 320.dp)) {
+                        items(dates.dayCount) { index ->
+                            TravelTextButton(onClick = { showDayMenu = false; onDraftChange(draft.copy(dayNumber = index + 1)) }) {
+                                Text(travelDayLabel(dates, index + 1))
+                            }
+                        }
+                    }
+                },
+            )
             if (placeId == null || original.details.location != null) {
                 OutlinedTextField(
                     value = draft.location,
@@ -185,47 +195,23 @@ internal fun TravelVisitEditor(
             if (canRetrySave && !isSaving && onLeaveWithPendingSave != null) {
                 TravelLeavePendingSave(onLeaveWithPendingSave)
             }
-            TravelPrimaryButton(
-                enabled = canEdit && (placeId != null || draft.name.isNotBlank()) && !draft.hasInvalidTime,
-                onClick = onApply,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(stringResource(Res.string.travel_apply))
+            TravelDirectionsButton(placeId, draft.placeTitle ?: draft.location, enabled = !isSaving && !canRetrySave, onOpened = onDirectionsOpened)
             }
-            TravelDirectionsButton(
-                placeId = placeId,
-                destination = draft.placeTitle ?: draft.location,
-                enabled = !isSaving && !canRetrySave,
-                onOpened = onDirectionsOpened,
-            )
-            Row {
-                if (draft.visit != null) {
-                    TravelTextButton(enabled = canEdit, onClick = { confirmRemoval = true }) {
-                        Text(stringResource(Res.string.travel_delete), color = MaterialTheme.colorScheme.error)
-                    }
+            Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                if (draft.visit != null) TravelTextButton(enabled = canEdit, onClick = { confirmRemoval = true }) {
+                    Text(stringResource(Res.string.travel_delete), color = com.bigong.oguri.core.designsystem.Orange50)
                 }
-                TravelTextButton(enabled = canDismiss, onClick = dismissDraft) {
-                    Text(stringResource(Res.string.travel_cancel))
+                TravelPrimaryButton(enabled = canEdit && (placeId != null || draft.name.isNotBlank()), onClick = onApply, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(Res.string.travel_apply))
                 }
             }
         }
     }
 
     if (confirmDiscard) {
-        AlertDialog(
-            shape = RoundedCornerShape(8.dp),
-            containerColor = Neutral0,
-            onDismissRequest = { confirmDiscard = false },
-            title = { Text(stringResource(Res.string.travel_discard_title)) },
-            confirmButton = {
-                TravelTextButton(onClick = {
-                    confirmDiscard = false
-                    onDraftChange(null)
-                }) { Text(stringResource(Res.string.travel_discard_draft)) }
-            },
-            dismissButton = {
-                TravelTextButton(onClick = { confirmDiscard = false }) { Text(stringResource(Res.string.travel_cancel)) }
-            },
+        TravelDiscardConfirmation(
+            onKeep = { confirmDiscard = false },
+            onDiscard = { confirmDiscard = false; onDraftChange(null) },
         )
     }
     if (confirmRemoval) {

@@ -194,7 +194,7 @@
     <string name="travel_category_transport">交通</string>
     <string name="travel_category_shopping">買い物</string>
     <string name="travel_category_other">その他</string>
-    <string name="travel_google_search_tab">Google マップで検索</string>
+    <string name="travel_google_search_tab">地図で検索</string>
     <string name="travel_keep_google_label">Google マップの名前と住所を使う</string>
     <string name="travel_manual_name_placeholder">例：ホテル近くの麺料理店</string>
     <string name="travel_manual_location_placeholder">住所を入力するか、空欄にできます</string>
@@ -219,4 +219,9 @@
     <string name="travel_save_failed_label">保存できませんでした</string>
     <string name="travel_place_count">%1$dか所</string>
     <string name="travel_day_number">%1$d日目</string>
+    <string name="travel_discard_message">入力内容は保存されません。</string>
+    <string name="travel_keep_writing">編集を続ける</string>
+    <string name="travel_already_added">この日には追加済みです。もう一度追加できます。</string>
+    <string name="travel_conflict_mine">自分の編集内容</string>
+    <string name="travel_conflict_saved">最新の保存内容</string>
 </resources>

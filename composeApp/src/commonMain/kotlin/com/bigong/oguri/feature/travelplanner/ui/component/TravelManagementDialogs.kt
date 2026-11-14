@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -97,7 +96,7 @@ internal fun TravelDetailsDialog(
             city.length <= TravelPlanDetails.MAX_TEXT_LENGTH &&
             dates != null &&
             timeZone != null
-    AlertDialog(
+    com.bigong.oguri.feature.travelplanner.ui.component.TravelFormSheet(
         shape = RoundedCornerShape(8.dp),
         containerColor = Neutral0,
         onDismissRequest = onDismiss,

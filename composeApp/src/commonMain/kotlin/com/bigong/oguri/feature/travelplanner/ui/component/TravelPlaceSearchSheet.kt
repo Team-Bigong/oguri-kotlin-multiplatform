@@ -21,7 +21,6 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -259,6 +258,7 @@ internal fun TravelPlaceSearchSheet(
                     }
                     if (selected != null) item {
                         existing?.let { visit ->
+                            Text(stringResource(Res.string.travel_already_added), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
                             TravelTextButton(
                                 onClick = {
                                     if (hasDraft) {
@@ -303,7 +303,6 @@ internal fun TravelPlaceSearchSheet(
             ) {
                 Text(
                     when {
-                        existing != null && !manual -> stringResource(Res.string.travel_add_again)
                         else -> stringResource(Res.string.travel_add_to_day, targetDay)
                     },
                 )
@@ -311,20 +310,14 @@ internal fun TravelPlaceSearchSheet(
         }
     }
     if (confirmDiscard) {
-        AlertDialog(
-            onDismissRequest = { confirmDiscard = false },
-            title = { Text(stringResource(Res.string.travel_discard_title)) },
-            confirmButton = {
-                TravelTextButton(onClick = {
-                    confirmDiscard = false
-                    onDraftChange(null)
-                    val visit = openAfterDiscard
-                    openAfterDiscard = null
-                    if (visit == null) onDismiss() else onShowVisit(visit)
-                }) { Text(stringResource(Res.string.travel_discard_draft)) }
-            },
-            dismissButton = {
-                TravelTextButton(onClick = { confirmDiscard = false }) { Text(stringResource(Res.string.travel_cancel)) }
+        TravelDiscardConfirmation(
+            onKeep = { confirmDiscard = false },
+            onDiscard = {
+                confirmDiscard = false
+                onDraftChange(null)
+                val visit = openAfterDiscard
+                openAfterDiscard = null
+                if (visit == null) onDismiss() else onShowVisit(visit)
             },
         )
     }
