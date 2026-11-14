@@ -93,18 +93,11 @@ internal fun TravelReminderDialog(
                             textStyle = OguriTheme.typography.bodyLarge,
                             colors = TravelFieldColors(),
                         )
-                        OutlinedTextField(effectiveZone, {
-                            zone = it
-                        }, enabled = !state.busy, label = { Text(stringResource(Res.string.travel_choose_time_zone)) }, singleLine = true,
-                            shape = RoundedCornerShape(8.dp),
-                            textStyle = OguriTheme.typography.bodyLarge,
-                            colors = TravelFieldColors(),
-                        )
                         Text(
                             stringResource(
                                 Res.string.travel_reminder_before_departure,
                                 settings.dates.start.toString(),
-                                settings.tripTimeZone.id,
+                                "",
                             ),
                         )
                         if (date.isNotBlank() &&

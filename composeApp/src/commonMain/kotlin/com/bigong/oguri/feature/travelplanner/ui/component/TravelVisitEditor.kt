@@ -69,7 +69,6 @@ internal fun TravelVisitEditor(
     failure: TravelPlanFailure?,
     attributions: List<TravelPlaceAttribution>,
     canRetrySave: Boolean,
-    timeOrderMismatch: Boolean,
     onDraftChange: (TravelVisitDraft?) -> Unit,
     onApply: () -> Unit,
     onRemove: () -> Unit,
@@ -80,7 +79,7 @@ internal fun TravelVisitEditor(
 ) {
     var confirmDiscard by remember { mutableStateOf(false) }
     val original = draft.visit
-    val changed = original?.details != draft.toDetails() || original.dayNumber != draft.dayNumber || draft.hasInvalidTime
+    val changed = original?.details != draft.toDetails() || original.dayNumber != draft.dayNumber
     val hasInput = draft.name.isNotBlank() || draft.location.isNotBlank() || draft.localTime.isNotBlank() || draft.note.isNotBlank() || draft.category != null
     val needsDiscardConfirmation by rememberUpdatedState(changed && (original != null || hasInput))
     val dismissDraft = {
@@ -140,7 +139,7 @@ internal fun TravelVisitEditor(
                 Text(travelDayLabel(dates, draft.dayNumber))
             }
             DropdownMenu(expanded = showDayMenu, onDismissRequest = { showDayMenu = false }) {
-                for (dayNumber in TravelPlan.UNASSIGNED_DAY..dates.dayCount) {
+                for (dayNumber in 1..dates.dayCount) {
                     DropdownMenuItem(
                         text = { Text(travelDayLabel(dates, dayNumber)) },
                         onClick = {
@@ -150,26 +149,6 @@ internal fun TravelVisitEditor(
                     )
                 }
             }
-            OutlinedTextField(
-                value = draft.localTime,
-                onValueChange = { if (it.length <= 5) onDraftChange(draft.copy(localTime = it)) },
-                label = { Text(stringResource(Res.string.travel_visit_time)) },
-                supportingText =
-                    if (draft.hasInvalidTime) {
-                        { Text(stringResource(Res.string.travel_invalid_time)) }
-                    } else if (timeOrderMismatch) {
-                        { Text(stringResource(Res.string.travel_visit_time_order)) }
-                    } else {
-                        null
-                    },
-                singleLine = true,
-                isError = draft.hasInvalidTime,
-                enabled = canEdit,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                textStyle = OguriTheme.typography.bodyLarge,
-                colors = TravelFieldColors(),
-            )
             if (placeId == null || original.details.location != null) {
                 OutlinedTextField(
                     value = draft.location,

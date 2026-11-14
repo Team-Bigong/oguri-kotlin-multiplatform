@@ -36,8 +36,8 @@ internal fun TravelDaySelector(
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 5.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        items(dates.dayCount + 1) { index ->
-            val day = if (index == dates.dayCount) TravelPlan.UNASSIGNED_DAY else index + 1
+        items(dates.dayCount) { index ->
+            val day = index + 1
             TravelChoiceChip(travelDayLabel(dates, day), selectedDay == day, enabled, { onSelectDay(day) })
         }
         item {

@@ -41,7 +41,7 @@ class TravelPlanRefreshTest {
                 structureRevision = 2,
             )
         val refreshed = current.withRefreshedPlan(shortened)
-        assertEquals(TravelPlan.UNASSIGNED_DAY, refreshed.selectedDay)
+        assertEquals(1, refreshed.selectedDay)
         assertEquals(order, refreshed.unappliedOrder)
         assertTrue(order.isOutsideTrip(shortened))
         assertFalse(order.canApplyTo(shortened))
@@ -76,7 +76,7 @@ class TravelPlanRefreshTest {
                 structureRevision = 2,
             )
         val refreshed = current.withRefreshedPlan(shortened)
-        assertEquals(TravelPlan.UNASSIGNED_DAY, refreshed.selectedDay)
+        assertEquals(1, refreshed.selectedDay)
         assertEquals(draft, refreshed.visitDraft)
         assertTrue(refreshed.needsLatestPlan)
         assertEquals(TravelPlanFailure.CONFLICT, refreshed.failure)

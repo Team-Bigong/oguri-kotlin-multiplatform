@@ -126,7 +126,7 @@ internal fun TravelOverviewSheet(
                         onMarkerClick = { id ->
                             val coordinates = scene.markers.firstOrNull { it.id == id }?.coordinates
                             val ids = scene.markers.filter { it.coordinates == coordinates }.map { it.id }
-                            if (ids.size > 1) overlapping = ids else onSelectVisit(id)
+                            onSelectVisit(id)
                         },
                         onUnavailable = { mapUnavailable = true },
                         modifier = Modifier.fillMaxWidth().height(180.dp),
@@ -197,26 +197,5 @@ internal fun TravelOverviewSheet(
             }
             TravelTextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_cancel)) }
         }
-    }
-    if (overlapping.isNotEmpty()) {
-        AlertDialog(
-            shape = RoundedCornerShape(8.dp),
-            containerColor = Neutral0,
-            onDismissRequest = { overlapping = emptyList() },
-            title = { Text(stringResource(Res.string.travel_overlapping_visits)) },
-            text = {
-                LazyColumn(Modifier.heightIn(max = 280.dp)) {
-                    items(plan.visits.filter { it.id in overlapping }, key = { it.id }) { visit ->
-                        TravelTextButton(onClick = {
-                            overlapping = emptyList()
-                            onSelectVisit(visit.id)
-                        }) {
-                            Text("${travelDayLabel(dates, visit.dayNumber)} · ${title(visit)}")
-                        }
-                    }
-                }
-            },
-            confirmButton = { TravelTextButton(onClick = { overlapping = emptyList() }) { Text(stringResource(Res.string.travel_cancel)) } },
-        )
     }
 }

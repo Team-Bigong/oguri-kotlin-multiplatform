@@ -88,7 +88,7 @@ internal fun TravelDetailsDialog(
     var start by remember(plan.revision) { mutableStateOf(current.dates.start.toString()) }
     var end by remember(plan.revision) { mutableStateOf(current.dates.endInclusive.toString()) }
     val dates = runCatching { TravelDates(LocalDate.parse(start), LocalDate.parse(end)) }.getOrNull()
-    val timeZone = zone.trim().takeIf { it in TimeZone.availableZoneIds }?.let(TimeZone::of)
+    val timeZone = com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone(city.trim())?.let(TimeZone::of) ?: current.timeZone
     val affected = if (dates == null) 0 else plan.visits.count { it.dayNumber > dates.dayCount }
     val valid =
         title.isNotBlank() &&
@@ -119,16 +119,6 @@ internal fun TravelDetailsDialog(
                         city,
                         { city = it },
                         label = { Text(stringResource(Res.string.travel_city)) },
-                        enabled = !busy,
-                        singleLine = true,
-                        shape = RoundedCornerShape(8.dp),
-                        textStyle = OguriTheme.typography.bodyLarge,
-                        colors = TravelFieldColors(),
-                    )
-                    OutlinedTextField(
-                        zone,
-                        { zone = it },
-                        label = { Text(stringResource(Res.string.travel_choose_time_zone)) },
                         enabled = !busy,
                         singleLine = true,
                         shape = RoundedCornerShape(8.dp),
@@ -167,7 +157,6 @@ internal fun TravelDetailsDialog(
                             current.dates.endInclusive.toString(),
                         ),
                     )
-                    Text(stringResource(Res.string.travel_time_zone, current.timeZone.id))
                     current.source?.let { source ->
                         Text(stringResource(Res.string.travel_source), style = OguriTheme.typography.cardSubtitle)
                         if (source.startDate != null && source.endDate != null) {
@@ -203,75 +192,3 @@ internal fun TravelDetailsDialog(
     )
 }
 
-@Composable
-internal fun TravelRecentChangesDialog(
-    changes: TravelRecentChanges?,
-    dates: TravelDates,
-    onDismiss: () -> Unit,
-    onSelectDay: (Int) -> Unit,
-    busy: Boolean = false,
-    failure: TravelPlanFailure? = null,
-    onRetry: (() -> Unit)? = null,
-) {
-    AlertDialog(
-        shape = RoundedCornerShape(8.dp),
-        containerColor = Neutral0,
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.travel_recent_changes)) },
-        text = {
-            if (busy) {
-                TravelLoading(Modifier.fillMaxWidth())
-            } else if (failure != null) {
-                TravelInlineFailure(failure, onRetry = onRetry)
-            } else if (changes == null || changes.changes.isEmpty()) {
-                Text(stringResource(Res.string.travel_no_recent_changes))
-            } else {
-                val currentDates = changes.dates ?: dates
-                LazyColumn(Modifier.heightIn(max = 360.dp)) {
-                    for ((day, entries) in changes.changes.groupBy { it.dayNumber }) {
-                        item(key = "change-day-$day") {
-                            Text(
-                                if (day == null) stringResource(Res.string.travel_changes_trip) else travelDayLabel(currentDates, day),
-                                style = OguriTheme.typography.cardTitle,
-                            )
-                        }
-                        items(entries, key = { it.revision }) { entry ->
-                            val destination = entry.destinationDay(currentDates)
-                            val label =
-                                when (entry.kind) {
-                                    "VISIT_ADDED" -> Res.string.travel_change_visit_added
-                                    "VISIT_EDITED" -> Res.string.travel_change_visit_edited
-                                    "VISIT_UNDONE" -> Res.string.travel_change_visit_undone
-                                    "VISIT_REMOVED" -> Res.string.travel_change_visit_removed
-                                    "DAY_REORDERED" -> Res.string.travel_change_day_reordered
-                                    "OWNER_CHANGED" -> Res.string.travel_change_owner
-                                    else -> Res.string.travel_change_trip
-                                }
-                            Column(Modifier.padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(stringResource(label), style = OguriTheme.typography.cardSubtitle)
-                                entry.occurredAt?.let { instant ->
-                                    Text(
-                                        changes.timeZone?.let { instant.toLocalDateTime(it).toString() + " · " + it.id }
-                                            ?: instant.toString(),
-                                    )
-                                }
-                                if (entry.visitId != null) Text(entry.visitName ?: stringResource(Res.string.travel_changed_place))
-                                if (entry.isVisitRemoved) {
-                                    Text(stringResource(Res.string.travel_change_removed_now))
-                                } else if (destination != null) {
-                                    if (entry.visitId != null && entry.dayNumber != destination) {
-                                        Text(stringResource(Res.string.travel_change_moved_now, travelDayLabel(currentDates, destination)))
-                                    }
-                                    TravelTextButton(onClick = { onSelectDay(destination) }) {
-                                        Text(stringResource(Res.string.travel_change_open_day, travelDayLabel(currentDates, destination)))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = { TravelTextButton(onClick = onDismiss) { Text(stringResource(Res.string.travel_search_close)) } },
-    )
-}

@@ -58,7 +58,6 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelIconButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelModifiedButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanPane
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
@@ -71,7 +70,6 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.canApplyTo
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
-import com.bigong.oguri.feature.travelplanner.ui.model.hasTimeOrderMismatch
 import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
 import kotlin.time.Clock
@@ -138,7 +136,6 @@ internal fun TravelPlanScreen(
     onFitMap: () -> Unit,
     onFindNextHoliday: () -> Unit,
     onMembers: () -> Unit,
-    onRecentChanges: () -> Unit,
     onSignIn: () -> Unit,
     onRetryPlaces: () -> Unit,
 ) {
@@ -173,10 +170,6 @@ internal fun TravelPlanScreen(
             return@TravelPlannerPage
         }
 
-        TravelModifiedButton(
-            plan, enabled = !state.isSaving && !state.canRetrySave,
-            onClick = onRecentChanges, modifier = Modifier.align(Alignment.CenterHorizontally),
-        )
         val dates = plan.summary.details.dates
         val savedVisits = plan.visits.filter { it.dayNumber == state.selectedDay }
         val orderRevision = plan.orderRevision(state.selectedDay)
@@ -206,52 +199,12 @@ internal fun TravelPlanScreen(
             remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter) {
                 travelMapScene(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter)
             }
-        var overlappingVisits by remember(state.selectedDay) { mutableStateOf<List<String>>(emptyList()) }
-        val availableOverlaps = scene.markers.filter { it.id in overlappingVisits }.map { it.id }
-        if (availableOverlaps.size > 1) {
-            AlertDialog(
-                shape = RoundedCornerShape(8.dp),
-                containerColor = Neutral0,
-                onDismissRequest = { overlappingVisits = emptyList() },
-                title = { Text(stringResource(Res.string.travel_overlapping_visits)) },
-                text = {
-                    LazyColumn(Modifier.heightIn(max = 240.dp)) {
-                        itemsIndexed(visits) { index, visit ->
-                            if (visit.id in availableOverlaps) {
-                                TravelTextButton(onClick = {
-                                    overlappingVisits = emptyList()
-                                    onMarkerClick(visit.id)
-                                }) {
-                                    val title = visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
-                                    Text(
-                                        if (title == null) {
-                                            stringResource(Res.string.travel_visit_fallback, index + 1)
-                                        } else {
-                                            stringResource(Res.string.travel_visit_number, index + 1, title)
-                                        },
-                                    )
-                                }
-                            }
-                        }
-                    }
-                },
-                confirmButton = {
-                    TravelTextButton(onClick = { overlappingVisits = emptyList() }) {
-                        Text(stringResource(Res.string.travel_cancel))
-                    }
-                },
-            )
-        }
         TravelPlanPane(
             scene = scene,
             viewportRequest = state.viewportRequest,
             focusedVisitId = state.mapFocusedVisitId,
             onFitMap = onFitMap,
-            onMarkerClick = { visitId ->
-                val coordinates = scene.markers.firstOrNull { it.id == visitId }?.coordinates
-                val atPoint = scene.markers.filter { it.coordinates == coordinates }.map { it.id }
-                if (atPoint.size > 1) overlappingVisits = atPoint else onMarkerClick(visitId)
-            },
+            onMarkerClick = onMarkerClick,
             modifier = Modifier.weight(1f),
             status = {
                 if (state.isLoadingDayPlaces) TravelLoading(Modifier.fillMaxWidth())
@@ -462,7 +415,6 @@ internal fun TravelPlanScreen(
                 failure = failure,
                 attributions = state.dayPlaces[draft.visit?.details?.googlePlaceId]?.attributions.orEmpty(),
                 canRetrySave = state.canRetrySave,
-                timeOrderMismatch = draft.hasTimeOrderMismatch(plan.visits),
                 onDraftChange = onDraftChange,
                 onApply = onApplyVisit,
                 onRemove = onRemoveVisit,
@@ -518,7 +470,6 @@ private fun TravelVisitRow(
             visit.details.category?.let {
                 Text(stringResource(it.label()), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
             }
-            visit.details.localTime?.let { Text(it.toString()) }
             if (visit.details.note != null) {
                 Text(stringResource(Res.string.travel_has_note), style = MaterialTheme.typography.labelMedium)
             }

@@ -117,12 +117,12 @@ class TravelPlan(
         this.endDate = endDate
         revision++
         structureRevision++
-        var position = nextPosition(0)
+        var position = nextPosition(dayCount.toInt())
         unassigned.forEach { visit ->
             dayRevisions[visit.dayNumber] = revision
-            visit.moveTo(0, position++)
+            visit.moveTo(dayCount.toInt(), position++)
         }
-        if (unassigned.isNotEmpty()) dayRevisions[0] = revision
+        if (unassigned.isNotEmpty()) dayRevisions[dayCount.toInt()] = revision
     }
 
     fun transferTo(memberId: String) {

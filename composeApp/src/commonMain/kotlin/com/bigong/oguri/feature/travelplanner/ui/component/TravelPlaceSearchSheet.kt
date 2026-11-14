@@ -97,9 +97,6 @@ internal fun TravelPlaceSearchSheet(
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
     var openAfterDiscard by remember { mutableStateOf<TravelVisit?>(null) }
     val selected = search.selected
-    var keepGoogleDetails by rememberSaveable(selected?.id) { mutableStateOf(true) }
-    var nameOverride by rememberSaveable(selected?.id) { mutableStateOf("") }
-    var locationOverride by rememberSaveable(selected?.id) { mutableStateOf("") }
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
     val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
     val hasDraft by rememberUpdatedState(draft != null && draft.hasPlaceInput())
@@ -261,41 +258,6 @@ internal fun TravelPlaceSearchSheet(
                         }
                     }
                     if (selected != null) item {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                stringResource(Res.string.travel_keep_google_label),
-                                Modifier.weight(1f), style = travelTextStyle(14, 17), color = Neutral100,
-                            )
-                            Box(
-                                Modifier.size(width = 48.dp, height = 48.dp)
-                                    .toggleable(
-                                        value = keepGoogleDetails, enabled = canEdit, role = Role.Switch,
-                                        interactionSource = null, indication = null,
-                                        onValueChange = { keepGoogleDetails = it },
-                                    ),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Box(
-                                    Modifier.size(width = 40.dp, height = 24.dp)
-                                        .background(if (keepGoogleDetails) colors.mint else colors.borderStrong, CircleShape),
-                                ) {
-                                    Box(
-                                        Modifier.align(if (keepGoogleDetails) Alignment.CenterEnd else Alignment.CenterStart)
-                                            .padding(horizontal = 2.dp).size(20.dp).background(Color.White, CircleShape),
-                                    )
-                                }
-                            }
-                        }
-                        if (!keepGoogleDetails) {
-                            TravelPlaceField(
-                                nameOverride, { nameOverride = it }, Res.string.travel_visit_name,
-                                Res.string.travel_manual_name_placeholder, TravelVisitDetails.MAX_NAME_LENGTH, canEdit,
-                            )
-                            TravelPlaceField(
-                                locationOverride, { locationOverride = it }, Res.string.travel_visit_location,
-                                Res.string.travel_manual_location_placeholder, TravelVisitDetails.MAX_LOCATION_LENGTH, canEdit,
-                            )
-                        }
                         existing?.let { visit ->
                             TravelTextButton(
                                 onClick = {
@@ -324,7 +286,7 @@ internal fun TravelPlaceSearchSheet(
             }
             TravelBottomAction(
                 enabled = canEdit && if (manual) draft?.name?.isNotBlank() == true
-                    else selected != null && (keepGoogleDetails || nameOverride.isNotBlank()),
+                    else selected != null,
                 onClick = {
                     focus.clearFocus()
                     if (manual) onApplyManual()
@@ -333,8 +295,8 @@ internal fun TravelPlaceSearchSheet(
                             selected,
                             targetDay,
                             searchCategory,
-                            nameOverride.trim().takeIf { !keepGoogleDetails && it.isNotEmpty() },
-                            locationOverride.trim().takeIf { !keepGoogleDetails && it.isNotEmpty() },
+                            null,
+                            null,
                         )
                     }
                 },
@@ -342,7 +304,6 @@ internal fun TravelPlaceSearchSheet(
                 Text(
                     when {
                         existing != null && !manual -> stringResource(Res.string.travel_add_again)
-                        targetDay == TravelPlan.UNASSIGNED_DAY -> stringResource(Res.string.travel_add_without_date)
                         else -> stringResource(Res.string.travel_add_to_day, targetDay)
                     },
                 )

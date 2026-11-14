@@ -17,7 +17,6 @@ import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOverviewSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlaceSearchSheet
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -111,7 +110,6 @@ internal fun TravelPlanRoute(
     val changesState by collaborationViewModel.state.collectAsStateWithLifecycle()
     var showOverview by remember(planId) { mutableStateOf(false) }
     var overviewRetry by remember(planId) { mutableIntStateOf(0) }
-    var showChanges by remember(planId) { mutableStateOf(false) }
     LaunchedEffect(viewModel, planId, changesState.failure) {
         if (changesState.failure == TravelPlanFailure.UNAVAILABLE) viewModel.forgetUnavailablePlan(planId)
     }
@@ -206,10 +204,6 @@ internal fun TravelPlanRoute(
                 ?.dates
                 ?.let { onMembers(it.start.toString(), it.endInclusive.toString()) }
         },
-        onRecentChanges = {
-            showChanges = true
-            collaborationViewModel.recentChanges(planId)
-        },
         onSignIn = onSignIn,
         onRetryPlaces = { detailsRetry++ },
     )
@@ -238,30 +232,6 @@ internal fun TravelPlanRoute(
                 },
             )
         }
-    }
-    if (plan != null && showChanges) {
-        LaunchedEffect(changesState.recentChanges, changesState.busy, changesState.failure) {
-            if (changesState.recentChanges?.changes?.isNotEmpty() == true && !changesState.busy && changesState.failure == null) {
-                viewModel.recordActivity(planId, TravelUsageActivity.CHANGES_VIEWED)
-            }
-        }
-        val dismissChanges = {
-            if (!changesState.busy) changesState.recentChanges?.let { collaborationViewModel.dismissChanges(planId, it.throughRevision) }
-            showChanges = false
-        }
-        TravelRecentChangesDialog(
-            changes = changesState.recentChanges,
-            dates = plan.summary.details.dates,
-            busy = changesState.busy,
-            failure = changesState.failure,
-            onRetry = { collaborationViewModel.recentChanges(planId) },
-            onDismiss = dismissChanges,
-            onSelectDay = { day ->
-                viewModel.selectDay(day)
-                viewModel.recordActivity(planId, TravelUsageActivity.CHANGE_DAY_OPENED)
-                dismissChanges()
-            },
-        )
     }
     if (plan != null) {
         TravelPlaceSearchSheet(

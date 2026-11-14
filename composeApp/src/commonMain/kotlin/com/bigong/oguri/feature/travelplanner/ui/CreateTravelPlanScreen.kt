@@ -227,16 +227,6 @@ internal fun CreateTravelPlanScreen(
             }
             val optionsState =
                 stringResource(if (showOptions) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
-            val needsTimeZone = cityName.isNotEmpty() && timeZoneId == null
-            if (needsTimeZone) {
-                TravelOutlineButton(
-                    onClick = { isTimeZoneMenuOpen = true },
-                    enabled = canEdit,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text(stringResource(Res.string.travel_choose_time_zone))
-                }
-            }
             TravelTextButton(
                 onClick = { showOptions = !showOptions },
                 modifier = Modifier.semantics { stateDescription = optionsState },
@@ -256,15 +246,6 @@ internal fun CreateTravelPlanScreen(
                     textStyle = OguriTheme.typography.bodyLarge,
                     colors = TravelFieldColors(),
                 )
-                if (timeZoneId != null) {
-                    TravelOutlineButton(
-                        onClick = { isTimeZoneMenuOpen = true },
-                        enabled = canEdit,
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text(stringResource(Res.string.travel_time_zone, timeZoneId))
-                    }
-                }
             }
             state.failure?.takeUnless { it == TravelPlanFailure.SIGN_IN_REQUIRED }?.let {
                 TravelInlineFailure(
@@ -317,16 +298,6 @@ internal fun CreateTravelPlanScreen(
                 onCloseCitySearch()
             },
             onDismiss = onCloseCitySearch,
-        )
-    }
-
-    if (isTimeZoneMenuOpen) {
-        TravelTimeZonePicker(
-            onDismiss = { isTimeZoneMenuOpen = false },
-            onSelect = {
-                timeZoneOverride = it
-                isTimeZoneMenuOpen = false
-            },
         )
     }
 

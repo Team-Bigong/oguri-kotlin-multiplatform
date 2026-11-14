@@ -74,16 +74,16 @@ class TravelPlanCollaborationTest {
     }
 
     @Test
-    fun `기간 단축은 기존 미배정 뒤에 장소를 보존한다`() {
+    fun `기간 단축은 마지막 날 뒤에 기존 순서대로 장소를 보존한다`() {
         val plan = plan()
-        plan.addVisit(0, details.copy(name = "Undated"))
+        plan.addVisit(1, details.copy(name = "First day"))
         plan.addVisit(2, details.copy(name = "Second day"))
         plan.addVisit(3, details.copy(name = "Third day"))
         val originalIds = plan.orderedVisits().map { it.id }.toSet()
         plan.updateDetails("Seoul", "Trip", "Asia/Seoul", plan.startDate, plan.startDate, plan.revision, 2)
         assertEquals(originalIds, plan.orderedVisits().map { it.id }.toSet())
-        assertEquals(listOf("Undated", "Second day", "Third day"), plan.orderedVisits().map { it.name })
-        assertTrue(plan.orderedVisits().all { it.dayNumber == 0 })
+        assertEquals(listOf("First day", "Second day", "Third day"), plan.orderedVisits().map { it.name })
+        assertTrue(plan.orderedVisits().all { it.dayNumber == 1 })
         assertEquals(
             3,
             plan

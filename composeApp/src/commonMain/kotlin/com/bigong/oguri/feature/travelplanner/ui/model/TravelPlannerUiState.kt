@@ -129,13 +129,6 @@ internal data class TravelVisitDraft(
             if (dayNumber != latest.dayNumber) add(TravelVisitField.DAY)
             if (name.trim() != latest.details.name.orEmpty()) add(TravelVisitField.NAME)
             if (location.trim() != latest.details.location.orEmpty()) add(TravelVisitField.LOCATION)
-            if (localTime.trim() !=
-                latest.details.localTime
-                    ?.toString()
-                    .orEmpty()
-            ) {
-                add(TravelVisitField.TIME)
-            }
             if (note.trim() != latest.details.note.orEmpty()) add(TravelVisitField.NOTE)
             if (category != latest.details.category) add(TravelVisitField.CATEGORY)
         }

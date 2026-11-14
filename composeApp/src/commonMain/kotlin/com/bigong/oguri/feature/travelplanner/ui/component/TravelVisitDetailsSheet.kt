@@ -51,7 +51,6 @@ internal fun TravelVisitDetailsSheet(
                     Text(title, style = OguriTheme.typography.cardTitle)
                     Text(travelDayLabel(dates, visit.dayNumber))
                     visit.details.category?.let { Text(stringResource(it.label())) }
-                    visit.details.localTime?.let { Text(stringResource(Res.string.travel_visit_local_time, it.toString())) }
                     (visit.details.location ?: place?.address)?.let { Text(it) }
                     visit.details.note?.let { note ->
                         Text(note)

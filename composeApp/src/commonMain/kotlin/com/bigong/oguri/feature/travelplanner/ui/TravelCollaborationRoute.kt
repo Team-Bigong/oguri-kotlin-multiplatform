@@ -51,7 +51,6 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelReminderDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
@@ -206,7 +205,6 @@ internal fun TravelMembersRoute(
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider(color = colors.borderSubtle)
                 TravelManagementRow(stringResource(Res.string.travel_trip_info), !state.busy) { viewModel.loadDetails(planId) }
-                TravelManagementRow(stringResource(Res.string.travel_recent_changes), !state.busy) { viewModel.recentChanges(planId) }
                 HorizontalDivider(color = colors.borderSubtle)
                 Spacer(Modifier.height(26.dp))
                 TravelManagementSection(stringResource(Res.string.travel_private_settings))
@@ -264,17 +262,6 @@ internal fun TravelMembersRoute(
             onOpenSource = { source ->
                 viewModel.dismissDetails()
                 onOpenSource(source)
-            },
-        )
-    }
-    state.recentChanges?.let { changes ->
-        TravelRecentChangesDialog(
-            changes,
-            dates,
-            onDismiss = { viewModel.dismissChanges(planId, changes.throughRevision) },
-            onSelectDay = { day ->
-                viewModel.dismissChanges(planId, changes.throughRevision)
-                onSelectDay(day)
             },
         )
     }

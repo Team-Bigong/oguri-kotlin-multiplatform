@@ -34,7 +34,7 @@ internal fun TravelVisitCategory.label(): StringResource =
         TravelVisitCategory.CAFE -> Res.string.travel_category_cafe
         TravelVisitCategory.SIGHTSEEING -> Res.string.travel_category_sightseeing
         TravelVisitCategory.LODGING -> Res.string.travel_category_lodging
-        TravelVisitCategory.FLIGHT -> Res.string.travel_category_flight
+        TravelVisitCategory.FLIGHT -> Res.string.travel_category_transport
         TravelVisitCategory.TRANSPORT -> Res.string.travel_category_transport
         TravelVisitCategory.SHOPPING -> Res.string.travel_category_shopping
         TravelVisitCategory.OTHER -> Res.string.travel_category_other
@@ -53,7 +53,7 @@ internal fun TravelCategoryPicker(
             color = OguriTheme.colors.textTertiary,
         )
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TravelVisitCategory.entries.forEach { option ->
+            TravelVisitCategory.entries.filter { it != TravelVisitCategory.FLIGHT }.forEach { option ->
                 TravelChoiceChip(
                     label = stringResource(option.label()),
                     selected = category == option,

@@ -295,7 +295,7 @@ class TravelPlannerViewModel(
                         .toLocalDateTime(plan.summary.details.timeZone)
                         .date
                 val initialDay =
-                    plan.lastViewedDay?.takeIf { it in 0..dates.dayCount }
+                    plan.lastViewedDay?.takeIf { it in 1..dates.dayCount }
                         ?: if (today in dates.start..dates.endInclusive) {
                             (today.toEpochDays() - dates.start.toEpochDays()).toInt() + 1
                         } else {
@@ -316,7 +316,7 @@ class TravelPlannerViewModel(
                         } else {
                             it.copy(
                                 structureRevision = plan.structureRevision,
-                                dayNumber = it.dayNumber.takeIf { day -> day in 0..dates.dayCount } ?: TravelPlan.UNASSIGNED_DAY,
+                                dayNumber = it.dayNumber.takeIf { day -> day in 1..dates.dayCount } ?: plan.summary.details.dates.dayCount,
                             )
                         }
                     }
@@ -840,7 +840,7 @@ class TravelPlannerViewModel(
     ) {
         val addedPlace = addedPlaceForSave
         val change = request.change
-        val selectedDayAfterSave = request.selectedDay.takeIf { it in 0..updated.summary.details.dates.dayCount } ?: TravelPlan.UNASSIGNED_DAY
+        val selectedDayAfterSave = request.selectedDay.takeIf { it in 1..updated.summary.details.dates.dayCount } ?: updated.summary.details.dates.dayCount
         mutableState.update { current ->
             val addedToVisibleDay = addedPlace != null && (change as? TravelVisitChange.Add)?.dayNumber == current.selectedDay
             val undo =
