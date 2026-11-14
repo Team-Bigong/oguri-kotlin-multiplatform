@@ -127,7 +127,7 @@ private fun TravelEntryCard(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(label, style = OguriTheme.typography.caption, color = colors.textTertiary)
+            Text(label, style = travelTextStyle(11, 14), color = colors.textTertiary)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(plan.details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
                 Text(travelCardDates(plan.details.dates, includeYear = false), style = travelTextStyle(12, 14), color = colors.textTertiary)
@@ -143,5 +143,5 @@ private fun Modifier.travelEntrySurface(onClick: () -> Unit): Modifier {
     val colors = OguriTheme.colors
     val shape = RoundedCornerShape(8.dp)
     return fillMaxWidth().heightIn(min = 48.dp).clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderSubtle, shape)
-        .noRippleClickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 11.dp)
+        .noRippleClickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp)
 }

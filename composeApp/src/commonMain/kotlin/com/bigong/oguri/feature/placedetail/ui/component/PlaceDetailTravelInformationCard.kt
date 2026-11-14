@@ -16,18 +16,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.ParagraphStyle
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral60
-import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.toCurrencyDisplayName
 import com.bigong.oguri.domain.model.PlaceDetailTravelInformation
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
@@ -37,7 +30,6 @@ import oguri.composeapp.generated.resources.place_detail_information_cost_index
 import oguri.composeapp.generated.resources.place_detail_information_cost_index_source
 import oguri.composeapp.generated.resources.place_detail_information_exchange_rate
 import oguri.composeapp.generated.resources.place_detail_information_recommend_period
-import oguri.composeapp.generated.resources.place_detail_information_recommend_period_highlight
 import oguri.composeapp.generated.resources.place_detail_information_weather
 import oguri.composeapp.generated.resources.place_detail_precipitation_clear
 import oguri.composeapp.generated.resources.place_detail_precipitation_frequent_rain
@@ -67,12 +59,6 @@ fun PlaceDetailTravelInformationCard(
             recommendPeriod.startMonth,
             recommendPeriod.endMonth,
         )
-    val recommendPeriodHighlightedText =
-        stringResource(
-            Res.string.place_detail_information_recommend_period_highlight,
-            recommendPeriod.startMonth,
-            recommendPeriod.endMonth,
-        )
     val weatherText =
         stringResource(
             Res.string.place_detail_information_weather,
@@ -85,18 +71,16 @@ fun PlaceDetailTravelInformationCard(
             modifier
                 .fillMaxWidth()
                 .background(color = Mint5, shape = RoundedCornerShape(8.dp))
-                .border(width = 1.dp, color = Mint40, shape = RoundedCornerShape(8.dp))
+                .border(width = 1.dp, color = Mint50, shape = RoundedCornerShape(8.dp))
                 .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         TravelInformationRow(
             text = recommendPeriodText,
-            highlightedText = recommendPeriodHighlightedText,
         )
 
         TravelInformationRow(
             text = weatherText,
-            highlightedText = "${travelInformation.averageTemperature}°C",
         )
 
         TravelInformationRow(
@@ -125,72 +109,19 @@ fun PlaceDetailTravelInformationCard(
 private fun TravelInformationRow(
     text: String,
     supportingText: String? = null,
-    highlightedText: String? = null,
 ) {
-    val bodyStyle = travelTextStyle(14, 17)
-    val supportingStyle = OguriTheme.typography.labelSmall
-    val highlightedStyle = SpanStyle(fontWeight = FontWeight.SemiBold)
-
     Row(
-        modifier = Modifier.fillMaxWidth().heightIn(min = 24.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 22.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Box(Modifier.padding(top = 8.dp).size(6.dp).background(Mint70, CircleShape))
         Text(
-            text =
-                buildAnnotatedString {
-                    withStyle(style = ParagraphStyle(lineHeight = bodyStyle.lineHeight)) {
-                        withStyle(style = bodyStyle.toSpanStyle()) {
-                            appendWithHighlight(
-                                text = text,
-                                highlightedText = highlightedText,
-                                highlightedStyle = highlightedStyle,
-                            )
-                        }
-                        if (supportingText != null) {
-                            append(" ")
-                            withStyle(
-                                style =
-                                    supportingStyle
-                                        .toSpanStyle()
-                                        .merge(SpanStyle(color = Neutral60)),
-                            ) {
-                                append("(")
-                                append(supportingText)
-                                append(")")
-                            }
-                        }
-                    }
-                },
-            style = bodyStyle,
+            text = if (supportingText == null) text else "$text ($supportingText)",
+            style = travelTextStyle(14, 17),
             color = Neutral100,
         )
     }
-}
-
-private fun androidx.compose.ui.text.AnnotatedString.Builder.appendWithHighlight(
-    text: String,
-    highlightedText: String?,
-    highlightedStyle: SpanStyle,
-) {
-    if (highlightedText.isNullOrEmpty()) {
-        append(text)
-        return
-    }
-
-    val highlightedStartIndex = text.indexOf(string = highlightedText)
-    if (highlightedStartIndex == -1) {
-        append(text)
-        return
-    }
-
-    val highlightedEndIndex = highlightedStartIndex + highlightedText.length
-    append(text.substring(startIndex = 0, endIndex = highlightedStartIndex))
-    withStyle(style = highlightedStyle) {
-        append(text.substring(startIndex = highlightedStartIndex, endIndex = highlightedEndIndex))
-    }
-    append(text.substring(startIndex = highlightedEndIndex))
 }
 
 @Composable
