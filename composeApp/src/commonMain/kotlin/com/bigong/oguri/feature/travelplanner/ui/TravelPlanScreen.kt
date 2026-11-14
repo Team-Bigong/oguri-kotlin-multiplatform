@@ -449,6 +449,7 @@ internal fun TravelPlanScreen(
                 isSaving = state.isSaving,
                 failure = failure,
                 attributions = state.dayPlaces[draft.visit?.details?.googlePlaceId]?.attributions.orEmpty(),
+                placeAddress = state.dayPlaces[draft.visit?.details?.googlePlaceId]?.address,
                 canRetrySave = state.canRetrySave,
                 onDraftChange = onDraftChange,
                 onApply = onApplyVisit,

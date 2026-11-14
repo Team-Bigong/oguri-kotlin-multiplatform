@@ -48,7 +48,7 @@
     <string name="travel_move_visit">%1$sの順番を変更</string>
     <string name="travel_visit_removed">この訪問予定は別の端末で削除されました。</string>
     <string name="travel_search_places">場所を検索</string>
-    <string name="travel_search_city">%1$s周辺で検索</string>
+    <string name="travel_search_city">%1$s周辺で見つかりました · Google マップの検索結果</string>
     <string name="travel_search_empty">検索結果がありません</string>
     <string name="travel_search_results">検索結果に戻る</string>
     <string name="travel_add_to_day">%1$d日目に追加</string>
@@ -121,7 +121,7 @@
     <string name="travel_change_trip">旅行情報を変更</string>
     <string name="travel_change_owner">旅行のオーナーを変更</string>
     <string name="travel_offline_snapshot">オフライン · 最後に確認した旅程です</string>
-    <string name="travel_discard_title">未保存の変更を破棄しますか？</string>
+    <string name="travel_discard_title">保存せずに閉じますか？</string>
     <string name="travel_discard_draft">変更を破棄</string>
     <string name="travel_undo_visit">直前の削除・移動を元に戻す</string>
     <string name="travel_undo_unavailable">訪問予定の削除や移動は元に戻せません。</string>
@@ -159,8 +159,8 @@
     <string name="travel_open_source">元のおすすめを見る</string>
     <string name="travel_latest_saved_values">現在保存されている内容（入力内容は下に保持されます）</string>
     <string name="travel_value_not_set">未設定</string>
-    <string name="travel_visit_day">日付</string>
-    <string name="travel_visit_note_shared">このメモは旅行のメンバー全員に共有されます。</string>
+    <string name="travel_visit_day">訪問日</string>
+    <string name="travel_visit_note_shared">メモはこの旅行のメンバーに表示されます</string>
     <string name="travel_visit_time_order">訪問順と時刻が一致していません。適用しても現在の順序は変わりません。</string>
     <string name="travel_overview">すべての日程</string>
     <string name="travel_overview_legend">ピンの数字は旅行の日数、–は日付未定です。訪問先を選ぶとその日程に移動します。</string>
@@ -179,7 +179,7 @@
     <string name="travel_city_sydney">シドニー</string>
     <string name="travel_city_barcelona">バルセロナ</string>
     <string name="travel_overview_map_fit">すべての訪問先を表示</string>
-    <string name="travel_place_search_unavailable">場所を検索できませんでした。手入力で追加できます。</string>
+    <string name="travel_place_search_unavailable">場所の検索中に問題が発生しました</string>
     <string name="travel_all_days_tab">すべて</string>
     <string name="travel_manage_title">旅行の管理</string>
     <string name="travel_itinerary">訪問予定</string>
@@ -198,7 +198,7 @@
     <string name="travel_keep_google_label">Google マップの名前と住所を使う</string>
     <string name="travel_manual_name_placeholder">例：ホテル近くの麺料理店</string>
     <string name="travel_manual_location_placeholder">住所を入力するか、空欄にできます</string>
-    <string name="travel_manual_location_hint">手動で追加した場所は一覧のみに表示されます。</string>
+    <string name="travel_manual_location_hint">位置がない場合は地図に表示されず、リストにのみ残ります</string>
     <string name="travel_saved_status">保存済み</string>
     <string name="travel_list_description">一緒に出かける予定をまとめました</string>
     <string name="travel_home_guide">気になる場所は見つかりましたか？</string>
@@ -221,7 +221,7 @@
     <string name="travel_day_number">%1$d日目</string>
     <string name="travel_discard_message">入力内容は保存されません。</string>
     <string name="travel_keep_writing">編集を続ける</string>
-    <string name="travel_already_added">この日には追加済みです。もう一度追加できます。</string>
+    <string name="travel_already_added">%1$d日目に追加済みの場所です</string>
     <string name="travel_conflict_mine">自分の編集内容</string>
     <string name="travel_conflict_saved">最新の保存内容</string>
     <string name="travel_add_city">都市を追加</string>
@@ -287,4 +287,13 @@
     <string name="travel_saved_day_order">%1$d日目 · 現在保存された順序</string>
     <string name="travel_just_added">追加されたばかり</string>
     <string name="travel_retry">再試行</string>
+    <string name="travel_search_preserved_hint">保存した予定はそのままです</string>
+    <string name="travel_visit_conflict_title">ほかの人がこの項目を編集しました</string>
+    <string name="travel_visit_conflict_description">入力内容は下にそのまま残っています。現在保存されている内容と比較してください。</string>
+    <string name="travel_note_mine">メモ（自分の入力）</string>
+    <string name="travel_use_saved">保存済みの内容を使う</string>
+    <string name="travel_apply_mine">自分の入力を適用</string>
+    <string name="travel_delete_visit_action">訪問を削除</string>
+    <string name="travel_directions_compact">経路 ↗</string>
+    <string name="travel_note_label">メモ</string>
 </resources>

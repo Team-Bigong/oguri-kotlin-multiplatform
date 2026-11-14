@@ -48,7 +48,7 @@
     <string name="travel_move_visit">调整 %1$s 的顺序</string>
     <string name="travel_visit_removed">这条到访安排已在其他设备上删除。</string>
     <string name="travel_search_places">搜索地点</string>
-    <string name="travel_search_city">搜索 %1$s 附近的地点</string>
+    <string name="travel_search_city">在%1$s附近找到 · Google 地图搜索结果</string>
     <string name="travel_search_empty">没有搜索结果</string>
     <string name="travel_search_results">返回搜索结果</string>
     <string name="travel_add_to_day">添加到第 %1$d 天</string>
@@ -121,7 +121,7 @@
     <string name="travel_change_trip">旅行信息已更改</string>
     <string name="travel_change_owner">旅行所有者已更改</string>
     <string name="travel_offline_snapshot">离线 · 这是上次查看的行程</string>
-    <string name="travel_discard_title">要放弃未保存的更改吗？</string>
+    <string name="travel_discard_title">不保存并关闭吗？</string>
     <string name="travel_discard_draft">放弃更改</string>
     <string name="travel_undo_visit">撤销上次删除或移动</string>
     <string name="travel_undo_unavailable">这次删除或移动已无法撤销。</string>
@@ -159,8 +159,8 @@
     <string name="travel_open_source">查看原始推荐</string>
     <string name="travel_latest_saved_values">当前保存的内容（您的输入保留在下方）</string>
     <string name="travel_value_not_set">未设置</string>
-    <string name="travel_visit_day">日期</string>
-    <string name="travel_visit_note_shared">此备注对所有旅行成员可见。</string>
+    <string name="travel_visit_day">到访日期</string>
+    <string name="travel_visit_note_shared">此旅行的成员可以查看备注</string>
     <string name="travel_visit_time_order">此时间与到访顺序不一致。应用后仍保留当前顺序。</string>
     <string name="travel_overview">查看所有日期</string>
     <string name="travel_overview_legend">图钉数字表示旅行天数，–表示未定日期。选择到访地点即可打开对应日期。</string>
@@ -179,7 +179,7 @@
     <string name="travel_city_sydney">悉尼</string>
     <string name="travel_city_barcelona">巴塞罗那</string>
     <string name="travel_overview_map_fit">查看所有地点</string>
-    <string name="travel_place_search_unavailable">暂时无法搜索地点。你可以手动添加。</string>
+    <string name="travel_place_search_unavailable">查找地点时出现问题</string>
     <string name="travel_all_days_tab">全部</string>
     <string name="travel_manage_title">管理旅行</string>
     <string name="travel_itinerary">行程安排</string>
@@ -198,7 +198,7 @@
     <string name="travel_keep_google_label">使用 Google 地图的名称和地址</string>
     <string name="travel_manual_name_placeholder">例如：酒店附近的米粉店</string>
     <string name="travel_manual_location_placeholder">可填写地址，也可留空</string>
-    <string name="travel_manual_location_hint">手动添加的地点仅显示在列表中。</string>
+    <string name="travel_manual_location_hint">没有位置时仅保留在列表中，不显示在地图上</string>
     <string name="travel_saved_status">已保存</string>
     <string name="travel_list_description">把一起出游的行程放在这里</string>
     <string name="travel_home_guide">找到想去的地方了吗？</string>
@@ -221,7 +221,7 @@
     <string name="travel_day_number">第%1$d天</string>
     <string name="travel_discard_message">输入内容不会保存。</string>
     <string name="travel_keep_writing">继续编辑</string>
-    <string name="travel_already_added">已加入当天，可再次添加。</string>
+    <string name="travel_already_added">此地点已添加到第%1$d天</string>
     <string name="travel_conflict_mine">我的修改</string>
     <string name="travel_conflict_saved">最新保存内容</string>
     <string name="travel_add_city">添加城市</string>
@@ -287,4 +287,13 @@
     <string name="travel_saved_day_order">第%1$d天 · 当前保存的顺序</string>
     <string name="travel_just_added">刚刚添加</string>
     <string name="travel_retry">重试</string>
+    <string name="travel_search_preserved_hint">已保存的行程保持不变</string>
+    <string name="travel_visit_conflict_title">其他人修改了此到访</string>
+    <string name="travel_visit_conflict_description">您的输入保留在下方，请与当前保存的内容比较。</string>
+    <string name="travel_note_mine">备注（我的输入）</string>
+    <string name="travel_use_saved">使用已保存的内容</string>
+    <string name="travel_apply_mine">应用我的输入</string>
+    <string name="travel_delete_visit_action">删除到访</string>
+    <string name="travel_directions_compact">路线 ↗</string>
+    <string name="travel_note_label">备注</string>
 </resources>

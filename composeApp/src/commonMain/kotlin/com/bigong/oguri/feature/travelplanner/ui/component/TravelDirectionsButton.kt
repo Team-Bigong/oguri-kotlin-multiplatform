@@ -16,6 +16,7 @@ import androidx.compose.ui.semantics.semantics
 import io.ktor.http.URLBuilder
 import io.ktor.http.takeFrom
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.travel_directions_compact
 import oguri.composeapp.generated.resources.travel_directions
 import oguri.composeapp.generated.resources.travel_directions_unavailable
 import org.jetbrains.compose.resources.stringResource
@@ -25,6 +26,7 @@ internal fun TravelDirectionsButton(
     placeId: String?,
     destination: String?,
     enabled: Boolean = true,
+    compact: Boolean = false,
     onOpened: () -> Unit,
 ) {
     val target = destination?.takeIf { it.isNotBlank() }
@@ -42,7 +44,7 @@ internal fun TravelDirectionsButton(
                 }.buildString()
         failed = runCatching { uriHandler.openUri(url) }.isFailure
         if (!failed) onOpened()
-    }) { Text(stringResource(Res.string.travel_directions)) }
+    }) { Text(stringResource(if (compact) Res.string.travel_directions_compact else Res.string.travel_directions), style = OguriTheme.typography.labelMedium) }
     if (failed) {
         Text(
             stringResource(Res.string.travel_directions_unavailable),

@@ -48,7 +48,7 @@
     <string name="travel_move_visit">Change the order of %1$s</string>
     <string name="travel_visit_removed">This visit was deleted on another device.</string>
     <string name="travel_search_places">Search for a place</string>
-    <string name="travel_search_city">Searching near %1$s</string>
+    <string name="travel_search_city">Found near %1$s · Google Maps results</string>
     <string name="travel_search_empty">No search results</string>
     <string name="travel_search_results">Back to results</string>
     <string name="travel_add_to_day">Add to day %1$d</string>
@@ -121,7 +121,7 @@
     <string name="travel_change_trip">Trip details changed</string>
     <string name="travel_change_owner">Trip owner changed</string>
     <string name="travel_offline_snapshot">Offline · This is your last viewed itinerary</string>
-    <string name="travel_discard_title">Discard unsaved changes?</string>
+    <string name="travel_discard_title">Close without saving?</string>
     <string name="travel_discard_draft">Discard changes</string>
     <string name="travel_undo_visit">Undo last deletion or move</string>
     <string name="travel_undo_unavailable">The deletion or move can no longer be undone.</string>
@@ -159,8 +159,8 @@
     <string name="travel_open_source">Open original recommendation</string>
     <string name="travel_latest_saved_values">Currently saved values (your input is kept below)</string>
     <string name="travel_value_not_set">Not set</string>
-    <string name="travel_visit_day">Date</string>
-    <string name="travel_visit_note_shared">Everyone in this trip can read this note.</string>
+    <string name="travel_visit_day">Visit date</string>
+    <string name="travel_visit_note_shared">Notes are visible to members of this trip</string>
     <string name="travel_visit_time_order">This time differs from the visit order. Applying it keeps the current order.</string>
     <string name="travel_overview">All dates</string>
     <string name="travel_overview_legend">Pin numbers indicate trip days; – means no date. Select a visit to open its day.</string>
@@ -179,7 +179,7 @@
     <string name="travel_city_sydney">Sydney</string>
     <string name="travel_city_barcelona">Barcelona</string>
     <string name="travel_overview_map_fit">Show all stops</string>
-    <string name="travel_place_search_unavailable">Place search is unavailable. You can add a place manually.</string>
+    <string name="travel_place_search_unavailable">There was a problem finding places</string>
     <string name="travel_all_days_tab">All days</string>
     <string name="travel_manage_title">Manage trip</string>
     <string name="travel_itinerary">Itinerary</string>
@@ -198,7 +198,7 @@
     <string name="travel_keep_google_label">Use the Google Maps name and address</string>
     <string name="travel_manual_name_placeholder">e.g. Noodle shop near the hotel</string>
     <string name="travel_manual_location_placeholder">Enter an address or leave it blank</string>
-    <string name="travel_manual_location_hint">Places added manually appear only in the list.</string>
+    <string name="travel_manual_location_hint">Without a location, it stays in the list and does not appear on the map</string>
     <string name="travel_saved_status">Saved</string>
     <string name="travel_list_description">All the trips you’re planning together</string>
     <string name="travel_home_guide">Found somewhere you like?</string>
@@ -221,7 +221,7 @@
     <string name="travel_day_number">Day %1$d</string>
     <string name="travel_discard_message">Your input will not be saved.</string>
     <string name="travel_keep_writing">Keep editing</string>
-    <string name="travel_already_added">Already in this day. You can add it again.</string>
+    <string name="travel_already_added">Already added to day %1$d</string>
     <string name="travel_conflict_mine">Your edits</string>
     <string name="travel_conflict_saved">Latest saved content</string>
     <string name="travel_add_city">Add city</string>
@@ -287,4 +287,13 @@
     <string name="travel_saved_day_order">Day %1$d · Saved order</string>
     <string name="travel_just_added">Just added</string>
     <string name="travel_retry">Try again</string>
+    <string name="travel_search_preserved_hint">Your saved itinerary is unchanged</string>
+    <string name="travel_visit_conflict_title">Someone else edited this visit</string>
+    <string name="travel_visit_conflict_description">Your input is preserved below. Compare it with the saved values.</string>
+    <string name="travel_note_mine">Note (my input)</string>
+    <string name="travel_use_saved">Use saved values</string>
+    <string name="travel_apply_mine">Apply my input</string>
+    <string name="travel_delete_visit_action">Delete visit</string>
+    <string name="travel_directions_compact">Directions ↗</string>
+    <string name="travel_note_label">Note</string>
 </resources>

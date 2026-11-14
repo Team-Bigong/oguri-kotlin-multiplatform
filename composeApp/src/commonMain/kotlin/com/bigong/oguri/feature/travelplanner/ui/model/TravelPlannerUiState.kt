@@ -126,6 +126,9 @@ internal data class TravelVisitDraft(
         )
     }
 
+    fun useSavedValues(): TravelVisitDraft =
+        visit?.let { TravelVisitDraft(it.dayNumber, it, placeTitle = placeTitle, structureRevision = structureRevision) } ?: this
+
     fun latestDifferences(): Set<TravelVisitField> {
         val latest = visit?.takeIf { showLatestComparison } ?: return emptySet()
         return buildSet {

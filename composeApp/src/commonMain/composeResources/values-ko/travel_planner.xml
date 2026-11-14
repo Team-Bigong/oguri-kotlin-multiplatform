@@ -48,7 +48,7 @@
     <string name="travel_move_visit">%1$s 순서 변경</string>
     <string name="travel_visit_removed">다른 기기에서 이 방문 일정을 삭제했어요.</string>
     <string name="travel_search_places">장소 검색</string>
-    <string name="travel_search_city">%1$s 주변에서 검색</string>
+    <string name="travel_search_city">%1$s 주변에서 찾았어요 · Google 지도 검색 결과</string>
     <string name="travel_search_empty">검색 결과가 없어요</string>
     <string name="travel_search_results">검색 결과로 돌아가기</string>
     <string name="travel_add_to_day">%1$d일차에 추가</string>
@@ -121,7 +121,7 @@
     <string name="travel_change_trip">여행 정보 변경</string>
     <string name="travel_change_owner">여행 소유자 변경</string>
     <string name="travel_offline_snapshot">오프라인 · 마지막으로 확인한 일정이에요</string>
-    <string name="travel_discard_title">저장하지 않은 입력을 버릴까요?</string>
+    <string name="travel_discard_title">저장하지 않고 닫을까요?</string>
     <string name="travel_discard_draft">입력 버리기</string>
     <string name="travel_undo_visit">최근 삭제·이동 되돌리기</string>
     <string name="travel_undo_unavailable">이제 방문 일정의 삭제나 이동을 되돌릴 수 없어요.</string>
@@ -159,8 +159,8 @@
     <string name="travel_open_source">원래 추천 보기</string>
     <string name="travel_latest_saved_values">현재 저장된 내용 (내 입력은 아래에 유지돼요)</string>
     <string name="travel_value_not_set">설정 안 함</string>
-    <string name="travel_visit_day">날짜</string>
-    <string name="travel_visit_note_shared">이 메모는 여행 멤버 모두에게 보여요.</string>
+    <string name="travel_visit_day">방문 날짜</string>
+    <string name="travel_visit_note_shared">메모는 이 여행의 멤버에게 보여요</string>
     <string name="travel_visit_time_order">방문 순서와 시각이 맞지 않아요. 적용해도 현재 순서는 유지돼요.</string>
     <string name="travel_overview">전체 날짜 보기</string>
     <string name="travel_overview_legend">핀 숫자는 여행 일차, –는 날짜 없음을 뜻해요. 방문을 선택하면 해당 날짜로 이동해요.</string>
@@ -179,7 +179,7 @@
     <string name="travel_city_sydney">시드니</string>
     <string name="travel_city_barcelona">바르셀로나</string>
     <string name="travel_overview_map_fit">모든 장소 보기</string>
-    <string name="travel_place_search_unavailable">장소를 검색하지 못했어요. 직접 추가할 수 있어요.</string>
+    <string name="travel_place_search_unavailable">장소를 찾는 중 문제가 생겼어요</string>
     <string name="travel_all_days_tab">전체</string>
     <string name="travel_manage_title">여행 관리</string>
     <string name="travel_itinerary">방문 일정</string>
@@ -198,7 +198,7 @@
     <string name="travel_keep_google_label">구글 지도 이름과 주소 그대로 쓰기</string>
     <string name="travel_manual_name_placeholder">예: 숙소 근처 쌀국수집</string>
     <string name="travel_manual_location_placeholder">주소를 적거나 비워둬도 돼요</string>
-    <string name="travel_manual_location_hint">직접 추가한 장소는 목록에만 표시돼요.</string>
+    <string name="travel_manual_location_hint">위치가 없으면 지도에는 표시되지 않고 목록에만 남아요</string>
     <string name="travel_saved_status">저장됨</string>
     <string name="travel_list_description">함께 떠날 일정을 한곳에 모아두었어요</string>
     <string name="travel_home_guide">마음에 드는 곳을 찾았나요?</string>
@@ -221,7 +221,7 @@
     <string name="travel_day_number">%1$d일차</string>
     <string name="travel_discard_message">입력한 내용은 저장되지 않아요.</string>
     <string name="travel_keep_writing">계속 작성</string>
-    <string name="travel_already_added">이미 이 날짜에 담은 장소예요. 한 번 더 담을 수 있어요.</string>
+    <string name="travel_already_added">%1$d일차에 이미 담은 장소예요</string>
     <string name="travel_conflict_mine">내가 작성한 내용</string>
     <string name="travel_conflict_saved">최근 저장된 내용</string>
     <string name="travel_add_city">도시 추가</string>
@@ -287,4 +287,13 @@
     <string name="travel_saved_day_order">%1$d일차 · 지금 저장된 순서</string>
     <string name="travel_just_added">방금 추가됨</string>
     <string name="travel_retry">다시 시도</string>
+    <string name="travel_search_preserved_hint">담아둔 일정은 그대로예요</string>
+    <string name="travel_visit_conflict_title">다른 사람이 이 항목을 수정했어요</string>
+    <string name="travel_visit_conflict_description">내 입력은 아래에 그대로 있어요. 지금 저장된 내용과 비교해 주세요.</string>
+    <string name="travel_note_mine">메모 (내 입력)</string>
+    <string name="travel_use_saved">저장된 내용 쓰기</string>
+    <string name="travel_apply_mine">내 입력으로 적용</string>
+    <string name="travel_delete_visit_action">방문 삭제</string>
+    <string name="travel_directions_compact">길찾기 ↗</string>
+    <string name="travel_note_label">메모</string>
 </resources>
