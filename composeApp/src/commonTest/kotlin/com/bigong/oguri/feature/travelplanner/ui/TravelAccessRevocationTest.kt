@@ -93,6 +93,76 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun offlineInspectionReadsTheConfirmedNoteWithoutCreatingOrClearingADraft() =
+        runTest {
+            val visit = TravelVisit("visit", 1, TravelVisitDetails("Museum", "Address", null, "Confirmed shared note"), 1)
+            val withVisit = plan.copy(visits = listOf(visit))
+            val plans = AccessPlans(withVisit)
+            val recovery = AccessRecovery()
+            val viewModel = createTravelPlannerTestViewModel(plans, recovery)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            plans.connectionFailure = true
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            assertTrue(viewModel.state.value.isOffline)
+            val writesBefore = recovery.draftWrites
+            viewModel.inspectVisit(visit.id)
+            assertEquals(visit.id, viewModel.state.value.inspectedVisitId)
+            assertEquals(visit.id, viewModel.state.value.selectedVisitId)
+            assertEquals(
+                "Confirmed shared note",
+                viewModel.state.value.plan
+                    ?.visits
+                    ?.single()
+                    ?.details
+                    ?.note,
+            )
+            assertNull(viewModel.state.value.visitDraft)
+            viewModel.closeInspection()
+            advanceUntilIdle()
+            assertNull(viewModel.state.value.inspectedVisitId)
+            assertNull(recovery.draft)
+            assertEquals(writesBefore, recovery.draftWrites)
+        }
+
+    @Test
+    fun inspectionCannotReplaceAnExistingUnsavedDraft() =
+        runTest {
+            val visit = TravelVisit("visit", 1, TravelVisitDetails("Museum", null, null, null), 1)
+            val recovery = AccessRecovery()
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan.copy(visits = listOf(visit))), recovery)
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.openVisit(null)
+            val draft = requireNotNull(viewModel.state.value.visitDraft).copy(name = "New place", note = "Unsaved note")
+            viewModel.updateVisitDraft(draft)
+            advanceUntilIdle()
+            viewModel.inspectVisit(visit.id)
+            viewModel.closeInspection()
+            assertNull(viewModel.state.value.inspectedVisitId)
+            assertEquals(draft, viewModel.state.value.visitDraft)
+            assertEquals("Unsaved note", recovery.draft?.note)
+        }
+
+    @Test
+    fun revokedAccessAlsoClosesInspectionAndRejectsLateSelection() =
+        runTest {
+            val visit = TravelVisit("visit", 1, TravelVisitDetails("Museum", null, null, "Shared note"), 1)
+            val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan.copy(visits = listOf(visit))), AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+            viewModel.inspectVisit("missing")
+            assertNull(viewModel.state.value.inspectedVisitId)
+            viewModel.inspectVisit(visit.id)
+            assertEquals(visit.id, viewModel.state.value.inspectedVisitId)
+            viewModel.forgetUnavailablePlan("plan")
+            viewModel.inspectVisit(visit.id)
+            assertNull(viewModel.state.value.inspectedVisitId)
+            assertNull(viewModel.state.value.plan)
+        }
+
+    @Test
     fun loadedOverviewUsesSeparatePlacesAndDoesNotChangeTheSelectedDay() =
         runTest {
             val withPlace = plan.copy(visits = listOf(TravelVisit("visit", 2, TravelVisitDetails(null, null, null, null, "place"), 1)))
@@ -204,11 +274,13 @@ private class AccessPlans(
     private val plan: TravelPlan,
 ) : TravelPlanRepository {
     var unavailable: Boolean = false
+    var connectionFailure: Boolean = false
     var readBarrier: CompletableDeferred<Unit>? = null
 
     override suspend fun get(planId: String): TravelPlan {
         readBarrier?.await()
         if (unavailable) throw TravelPlanException(TravelPlanFailure.UNAVAILABLE)
+        if (connectionFailure) throw TravelPlanException(TravelPlanFailure.CONNECTION)
         return plan
     }
 
@@ -239,6 +311,7 @@ private class AccessRecovery : TravelRecoveryRepository {
     var confirmed: TravelPlan? = null
     var draft: TravelDraft? = null
     var forgotten: Boolean = false
+    var draftWrites: Int = 0
     var draftBarrier: CompletableDeferred<Unit>? = null
 
     override suspend fun load(planId: String?): TravelRecovery = TravelRecovery(confirmedPlan = confirmed, draft = draft)
@@ -253,6 +326,7 @@ private class AccessRecovery : TravelRecoveryRepository {
     ) {
         withContext(NonCancellable) {
             draftBarrier?.await()
+            draftWrites++
             this@AccessRecovery.draft = draft
         }
     }

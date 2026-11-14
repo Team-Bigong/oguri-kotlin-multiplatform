@@ -170,4 +170,7 @@
     <string name="travel_pane_split">지도와 목록 함께 보기</string>
     <string name="travel_pane_map">지도 중심 보기</string>
     <string name="travel_select_day">날짜 선택</string>
+    <string name="travel_visit_details">방문 정보</string>
+    <string name="travel_visit_local_time">현지 시각 · %1$s</string>
+    <string name="travel_directions_unavailable">지도를 열지 못했어요. 다시 시도해 주세요.</string>
 </resources>

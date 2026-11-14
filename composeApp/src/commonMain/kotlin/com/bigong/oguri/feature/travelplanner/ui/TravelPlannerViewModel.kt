@@ -288,6 +288,7 @@ class TravelPlannerViewModel(
                             current.selectedDay.takeIf { it in 0..dates.dayCount } ?: initialDay
                         },
                     visitDraft = nextDraft,
+                    inspectedVisitId = current.inspectedVisitId?.takeIf { id -> nextDraft == null && plan.visits.any { it.id == id } },
                     needsLatestPlan = pendingSave == null && (wasRemoved || changedStructure || (!rebaseDraft && current.needsLatestPlan)),
                     failure =
                         when {
@@ -561,10 +562,29 @@ class TravelPlannerViewModel(
         submit(null, TravelPendingSave.Create(newRequestId(), details))
     }
 
+    internal fun inspectVisit(visitId: String) {
+        val current = state.value
+        if (current.isSaving || current.isLoading || current.canRetrySave || pendingSave != null || current.visitDraft != null) return
+        val visit = current.plan?.visits?.firstOrNull { it.id == visitId && it.dayNumber == current.selectedDay } ?: return
+        mutableState.update {
+            it.copy(
+                inspectedVisitId = visit.id,
+                selectedVisitId = visit.id,
+                mapFocusedVisitId = visit.id,
+                viewportRequest = it.viewportRequest + 1,
+            )
+        }
+    }
+
+    internal fun closeInspection() {
+        mutableState.update { it.copy(inspectedVisitId = null) }
+    }
+
     internal fun openVisit(visit: TravelVisit?) {
         if (state.value.plan == null || state.value.isSaving || pendingSave != null) return
         mutableState.update {
             it.copy(
+                inspectedVisitId = null,
                 visitDraft =
                     TravelVisitDraft(
                         visit?.dayNumber ?: it.selectedDay,

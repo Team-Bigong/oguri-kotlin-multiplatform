@@ -170,4 +170,7 @@
     <string name="travel_pane_split">Map and list view</string>
     <string name="travel_pane_map">Expanded map view</string>
     <string name="travel_select_day">Select date</string>
+    <string name="travel_visit_details">Visit details</string>
+    <string name="travel_visit_local_time">Local time · %1$s</string>
+    <string name="travel_directions_unavailable">Could not open the map. Try again.</string>
 </resources>

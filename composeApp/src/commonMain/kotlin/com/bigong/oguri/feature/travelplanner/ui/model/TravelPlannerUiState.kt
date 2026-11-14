@@ -39,6 +39,7 @@ internal data class TravelPlannerUiState(
     val dayPlaces: Map<String, TravelPlace> = emptyMap(),
     val isLoadingDayPlaces: Boolean = false,
     val dayPlacesIncomplete: Boolean = false,
+    val inspectedVisitId: String? = null,
     val selectedVisitId: String? = null,
     val listFocusRequest: Int = 0,
     val mapFocusedVisitId: String? = null,

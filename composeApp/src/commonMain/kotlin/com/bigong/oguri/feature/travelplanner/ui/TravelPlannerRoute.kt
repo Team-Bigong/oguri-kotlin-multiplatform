@@ -169,6 +169,8 @@ internal fun TravelPlanRoute(
         onSelectDay = viewModel::selectDay,
         onOverview = { showOverview = true },
         onOpenVisit = viewModel::openVisit,
+        onInspectVisit = viewModel::inspectVisit,
+        onCloseInspection = viewModel::closeInspection,
         onMoveVisit = viewModel::moveVisit,
         onReorderVisits = viewModel::reorderVisits,
         onDraftChange = viewModel::updateVisitDraft,

@@ -45,6 +45,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelModifiedButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanPane
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitDetailsSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
@@ -92,6 +93,8 @@ internal fun TravelPlanScreen(
     onSelectDay: (Int) -> Unit,
     onOverview: () -> Unit,
     onOpenVisit: (TravelVisit?) -> Unit,
+    onInspectVisit: (String) -> Unit,
+    onCloseInspection: () -> Unit,
     onMoveVisit: (TravelVisit, Int) -> Unit,
     onReorderVisits: (List<String>) -> Unit,
     onDraftChange: (TravelVisitDraft?) -> Unit,
@@ -263,9 +266,10 @@ internal fun TravelPlanScreen(
                         number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
                         selected = state.selectedVisitId == visit.id,
                         canEdit = canEdit,
+                        canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
                         canMoveUp = index > 0,
                         canMoveDown = index < visits.lastIndex,
-                        onOpen = { onOpenVisit(visit) },
+                        onOpen = { if (canEdit) onOpenVisit(visit) else onInspectVisit(visit.id) },
                         onMove = { offset -> onMoveVisit(visit, offset) },
                         onDragStart = {
                             val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
@@ -325,6 +329,23 @@ internal fun TravelPlanScreen(
             Text(stringResource(Res.string.travel_add_visit))
         }
 
+        state.inspectedVisitId?.let { id ->
+            plan.visits.firstOrNull { it.id == id }?.let { visit ->
+                TravelVisitDetailsSheet(
+                    visit = visit,
+                    title =
+                        state.dayPlaces[visit.details.googlePlaceId]?.name ?: visit.details.name
+                            ?: stringResource(
+                                Res.string.travel_visit_fallback,
+                                plan.visits.filter { it.dayNumber == visit.dayNumber }.indexOf(visit) + 1,
+                            ),
+                    dates = dates,
+                    place = state.dayPlaces[visit.details.googlePlaceId],
+                    offline = state.isOffline,
+                    onDismiss = onCloseInspection,
+                )
+            }
+        }
         state.visitDraft?.let { draft ->
             TravelVisitEditor(
                 draft = draft,
@@ -352,6 +373,7 @@ private fun TravelVisitRow(
     number: Int?,
     selected: Boolean,
     canEdit: Boolean,
+    canOpen: Boolean,
     canMoveUp: Boolean,
     canMoveDown: Boolean,
     onOpen: () -> Unit,
@@ -372,7 +394,7 @@ private fun TravelVisitRow(
                     .noRippleClickable(
                         onClick = onOpen,
                         interactionSource = remember { MutableInteractionSource() },
-                        enabled = canEdit,
+                        enabled = canOpen,
                     ).padding(vertical = 12.dp, horizontal = 4.dp),
         ) {
             val label = if (number == null) title else stringResource(Res.string.travel_visit_number, number, title)

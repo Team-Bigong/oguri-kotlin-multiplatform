@@ -14,6 +14,7 @@ internal fun TravelPlannerUiState.withRefreshedPlan(updated: TravelPlan): Travel
     return copy(
         plan = updated,
         selectedDay = day,
+        inspectedVisitId = inspectedVisitId?.takeIf { id -> updated.visits.any { it.id == id } },
         selectedVisitId = visible(selectedVisitId),
         mapFocusedVisitId = visible(mapFocusedVisitId),
         dayPlaces = if (dayChanged) emptyMap() else dayPlaces,

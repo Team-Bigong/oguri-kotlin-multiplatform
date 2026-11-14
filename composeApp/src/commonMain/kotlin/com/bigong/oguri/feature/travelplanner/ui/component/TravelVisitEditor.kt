@@ -29,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.domain.model.TravelDates
@@ -39,8 +38,6 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
-import io.ktor.http.URLBuilder
-import io.ktor.http.takeFrom
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_alert
 import oguri.composeapp.generated.resources.travel_add_visit
@@ -48,7 +45,6 @@ import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_delete
 import oguri.composeapp.generated.resources.travel_delete_visit_title
-import oguri.composeapp.generated.resources.travel_directions
 import oguri.composeapp.generated.resources.travel_discard_draft
 import oguri.composeapp.generated.resources.travel_discard_title
 import oguri.composeapp.generated.resources.travel_edit_visit
@@ -88,7 +84,6 @@ internal fun TravelVisitEditor(
         if (needsDiscardConfirmation) confirmDiscard = true else onDraftChange(null)
     }
     val placeId = draft.visit?.details?.googlePlaceId
-    val uriHandler = LocalUriHandler.current
     var showDayMenu by remember { mutableStateOf(false) }
     var confirmRemoval by remember { mutableStateOf(false) }
     val canDismiss by rememberUpdatedState(!isSaving && !canRetrySave)
@@ -198,20 +193,11 @@ internal fun TravelVisitEditor(
             ) {
                 Text(stringResource(Res.string.travel_apply))
             }
-            val destination = draft.placeTitle ?: draft.location.takeIf { it.isNotBlank() }
-            if (destination != null || placeId != null) {
-                TextButton(enabled = canEdit, onClick = {
-                    val url =
-                        URLBuilder()
-                            .apply {
-                                takeFrom("https://www.google.com/maps/dir/")
-                                parameters.append("api", "1")
-                                parameters.append("destination", destination ?: "place_id:$placeId")
-                                if (placeId != null) parameters.append("destination_place_id", placeId)
-                            }.buildString()
-                    runCatching { uriHandler.openUri(url) }
-                }) { Text(stringResource(Res.string.travel_directions)) }
-            }
+            TravelDirectionsButton(
+                placeId = placeId,
+                destination = draft.placeTitle ?: draft.location,
+                enabled = !isSaving && !canRetrySave,
+            )
             Row {
                 if (draft.visit != null) {
                     TextButton(enabled = canEdit, onClick = { confirmRemoval = true }) {

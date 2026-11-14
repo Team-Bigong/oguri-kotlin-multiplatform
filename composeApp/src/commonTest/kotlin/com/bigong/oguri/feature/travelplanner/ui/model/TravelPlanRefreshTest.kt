@@ -28,6 +28,23 @@ class TravelPlanRefreshTest {
         )
 
     @Test
+    fun inspectionFollowsTheConfirmedVisitAndClosesWhenItIsRemoved() {
+        val current = TravelPlannerUiState(plan = plan, selectedDay = 3, inspectedVisitId = visit.id)
+        val moved = plan.copy(revision = 2, visits = listOf(visit.copy(dayNumber = 2)))
+        val refreshed = current.withRefreshedPlan(moved)
+        assertEquals(visit.id, refreshed.inspectedVisitId)
+        assertEquals(3, refreshed.selectedDay)
+        assertEquals(
+            2,
+            refreshed.plan
+                ?.visits
+                ?.single()
+                ?.dayNumber,
+        )
+        assertNull(refreshed.withRefreshedPlan(moved.copy(revision = 3, visits = emptyList())).inspectedVisitId)
+    }
+
+    @Test
     fun shortenedTripPreservesTheDraftAndRequiresConfirmationBeforeSaving() {
         val draft = TravelVisitDraft(3, visit, note = "My unsaved note")
         val current = TravelPlannerUiState(plan = plan, selectedDay = 3, visitDraft = draft, viewportRequest = 7)

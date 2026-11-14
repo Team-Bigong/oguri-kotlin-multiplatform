@@ -170,4 +170,7 @@
     <string name="travel_pane_split">地図とリスト表示</string>
     <string name="travel_pane_map">地図を拡大表示</string>
     <string name="travel_select_day">日付を選択</string>
+    <string name="travel_visit_details">訪問情報</string>
+    <string name="travel_visit_local_time">現地時刻 · %1$s</string>
+    <string name="travel_directions_unavailable">地図を開けませんでした。もう一度お試しください。</string>
 </resources>
