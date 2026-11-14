@@ -9,7 +9,9 @@ class TravelInviteLinksTest {
 
     @Test
     fun receivesOnlyTheExpectedInvitationUrls() {
+        assertEquals("https://$TRAVEL_INVITE_HOST/trip-invite/#$token", travelInviteLink(token))
         assertEquals(token, parseTravelInvite(travelInviteLink(token)))
+        assertEquals(token, parseTravelInvite("https://$TRAVEL_INVITE_HOST/trip-invite#$token"))
         assertEquals(token, parseTravelInvite("oguri://open/trip-invite#$token"))
         assertNull(parseTravelInvite("https://other.example/trip-invite#$token"))
         assertNull(parseTravelInvite("https://$TRAVEL_INVITE_HOST/trip-invite?token=$token"))

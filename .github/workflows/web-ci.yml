@@ -37,5 +37,10 @@ jobs:
       - name: Verify travel invitation routing
         run: npm test
 
-      - name: Build web
-        run: npm run build
+      - name: Build and verify invitation files
+        env:
+          TRAVEL_ANDROID_SIGNING_SHA256: "AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA:AA"
+          TRAVEL_IOS_APP_ID: "EXAMPLE123.com.bigong.oguri"
+        run: |
+          npm run build
+          node scripts/verifyTravelInvite.mjs

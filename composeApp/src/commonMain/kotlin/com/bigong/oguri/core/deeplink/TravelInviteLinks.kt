@@ -10,7 +10,7 @@ private val inviteTokenPattern: Regex = Regex("[A-Za-z0-9_-]{43}")
 
 internal fun travelInviteLink(token: String): String {
     require(inviteTokenPattern.matches(token))
-    return "https://$TRAVEL_INVITE_HOST/trip-invite#$token"
+    return "https://$TRAVEL_INVITE_HOST/trip-invite/#$token"
 }
 
 internal fun parseTravelInvite(urlText: String): String? {

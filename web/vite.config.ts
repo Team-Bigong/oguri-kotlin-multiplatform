@@ -6,6 +6,12 @@ export default defineConfig(({ mode }) => {
   const settings = { ...loadEnv(mode, path.resolve(__dirname, ".."), ""), ...process.env }
   const androidFingerprint = settings.TRAVEL_ANDROID_SIGNING_SHA256?.trim().toUpperCase()
   const appleAppId = settings.TRAVEL_IOS_APP_ID?.trim()
+  if (androidFingerprint && !/^([A-F0-9]{2}:){31}[A-F0-9]{2}$/.test(androidFingerprint)) {
+    throw new Error("TRAVEL_ANDROID_SIGNING_SHA256 must be a colon-separated SHA-256 fingerprint")
+  }
+  if (appleAppId && !/^[A-Z0-9]{10}\.[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/.test(appleAppId)) {
+    throw new Error("TRAVEL_IOS_APP_ID must contain the application identifier prefix and bundle ID")
+  }
   return {
     envDir: "..",
     plugins: [
@@ -13,7 +19,7 @@ export default defineConfig(({ mode }) => {
       {
         name: "travel-invite-domain-associations",
         generateBundle() {
-          if (androidFingerprint && /^([A-F0-9]{2}:){31}[A-F0-9]{2}$/.test(androidFingerprint)) {
+          if (androidFingerprint) {
             this.emitFile({
               type: "asset",
               fileName: ".well-known/assetlinks.json",
@@ -27,7 +33,7 @@ export default defineConfig(({ mode }) => {
               }])
             })
           }
-          if (appleAppId && /^[A-Z0-9]{10}\.[A-Za-z0-9.-]+$/.test(appleAppId)) {
+          if (appleAppId) {
             this.emitFile({
               type: "asset",
               fileName: ".well-known/apple-app-site-association",
