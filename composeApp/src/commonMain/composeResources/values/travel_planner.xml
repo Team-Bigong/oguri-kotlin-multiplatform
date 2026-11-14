@@ -266,4 +266,8 @@
     <string name="travel_clock_pm">%1$d:%2$s PM</string>
     <string name="travel_participating_members">Travel members</string>
     <string name="travel_map_list_available">You can still view your itinerary in the list</string>
+    <string name="travel_create_heading">Where shall we go?</string>
+    <string name="travel_create_description">Just choose your cities and dates</string>
+    <string name="travel_actual_dates">Actual travel dates</string>
+    <string name="travel_create_recommendation">Choose your actual travel dates within the recommended %1$s</string>
 </resources>

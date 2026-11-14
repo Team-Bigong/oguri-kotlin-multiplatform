@@ -266,4 +266,8 @@
     <string name="travel_clock_pm">下午 %1$d:%2$s</string>
     <string name="travel_participating_members">参与成员</string>
     <string name="travel_map_list_available">您仍可在列表中查看行程</string>
+    <string name="travel_create_heading">想去哪里旅行？</string>
+    <string name="travel_create_description">只需选择城市和日期</string>
+    <string name="travel_actual_dates">实际旅行日期</string>
+    <string name="travel_create_recommendation">请在推荐的 %1$s 中选择实际出发的日期</string>
 </resources>

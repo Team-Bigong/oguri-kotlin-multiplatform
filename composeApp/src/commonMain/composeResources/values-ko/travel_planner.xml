@@ -266,4 +266,8 @@
     <string name="travel_clock_pm">오후 %1$d:%2$s</string>
     <string name="travel_participating_members">참여 멤버</string>
     <string name="travel_map_list_available">일정은 목록에서 계속 볼 수 있어요</string>
+    <string name="travel_create_heading">어디로 떠나볼까요?</string>
+    <string name="travel_create_description">도시와 날짜만 고르면 돼요</string>
+    <string name="travel_actual_dates">실제 여행 날짜</string>
+    <string name="travel_create_recommendation">추천받은 %1$s 중에서 실제로 떠나는 날짜를 골라요</string>
 </resources>
