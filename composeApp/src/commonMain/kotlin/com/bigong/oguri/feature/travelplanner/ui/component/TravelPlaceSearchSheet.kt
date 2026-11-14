@@ -73,12 +73,13 @@ internal fun TravelPlaceSearchSheet(
     onShowVisit: (TravelVisit) -> Unit,
     onDismiss: () -> Unit,
     onRetrySave: () -> Unit,
+    onLeaveWithPendingSave: () -> Unit,
     onReload: () -> Unit,
     onManualAdd: () -> Unit,
 ) {
     val search = state.placeSearch ?: return
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
-    val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan
+    val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
     val focusManager = LocalFocusManager.current
     val selected = search.selected
     val day = state.selectedDay
@@ -103,7 +104,7 @@ internal fun TravelPlaceSearchSheet(
             )
             if (search.isLoading || state.isSaving) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (search.failure != null) {
-                TravelInlineFailure(search.failure, onRetry = { onQuery(search.query) })
+                TravelInlineFailure(search.failure, onRetry = if (canEdit) ({ onQuery(search.query) }) else null)
             } else if (!search.isLoading && search.query.trim().length >= 2 && search.results.isEmpty()) {
                 Text(stringResource(Res.string.travel_search_empty), modifier = Modifier.padding(vertical = 8.dp))
             }
@@ -196,6 +197,9 @@ internal fun TravelPlaceSearchSheet(
                 GooglePlacesAttribution(
                     selected?.attributions ?: search.results.flatMap(TravelPlace::attributions),
                 )
+            }
+            if (state.canRetrySave && state.pendingSaveStored && !state.isSaving) {
+                TravelLeavePendingSave(onLeaveWithPendingSave)
             }
             Row {
                 TextButton(onClick = onManualAdd, enabled = canEdit) { Text(stringResource(Res.string.travel_manual_add)) }

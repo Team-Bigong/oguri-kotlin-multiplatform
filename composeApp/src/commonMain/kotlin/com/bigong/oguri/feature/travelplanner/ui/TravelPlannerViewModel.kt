@@ -265,6 +265,7 @@ class TravelPlannerViewModel(
                             visitDraft = it.visitDraft ?: stored?.draft?.toVisitDraft(),
                             unappliedOrder = if (wasLoaded) it.unappliedOrder else it.unappliedOrder ?: stored?.unappliedOrder,
                             canRetrySave = pendingSave != null,
+                            pendingSaveStored = stored?.pending != null || it.pendingSaveStored,
                             selectedDay = if (wasLoaded) it.selectedDay else savedDay ?: it.selectedDay,
                             inspectedVisitId = it.inspectedVisitId.takeIf { cached != null },
                             selectedVisitId = it.selectedVisitId.takeIf { cached != null },
@@ -320,6 +321,7 @@ class TravelPlannerViewModel(
                     plan = plan,
                     isOffline = false,
                     canRetrySave = pendingSave != null,
+                    pendingSaveStored = stored?.pending != null || current.pendingSaveStored,
                     selectedDay =
                         if (current.plan ==
                             null
@@ -922,11 +924,12 @@ class TravelPlannerViewModel(
         verifyAccess: Boolean = false,
     ) {
         if (state.value.isSaving || state.value.isLoading) return
+        val wasStored = pendingSave == request && state.value.pendingSaveStored
         pendingPlanId = planId
         pendingSave = request
         mutationGeneration++
         val generation = mutationGeneration
-        mutableState.update { it.copy(isSaving = true, failure = null, canRetrySave = false) }
+        mutableState.update { it.copy(isSaving = true, failure = null, canRetrySave = false, pendingSaveStored = wasStored) }
         viewModelScope.launch {
             var visitSaveAttempted = false
             try {
@@ -938,6 +941,7 @@ class TravelPlannerViewModel(
                         generation == mutationGeneration
                     }
                 if (!canSubmit) return@launch
+                mutableState.update { it.copy(pendingSaveStored = true) }
                 when (request) {
                     is TravelPendingSave.Create -> {
                         val created = repository.create(request.requestId, request.details)
@@ -963,6 +967,7 @@ class TravelPlannerViewModel(
                 recoveryWriteMutex.withLock {
                     if (generation == mutationGeneration) recoverSafely { recovery.finishRequest(planId, clearDraft = true) }
                 }
+                mutableState.update { it.copy(pendingSaveStored = false) }
             } catch (exception: TravelPlanException) {
                 if (generation != mutationGeneration) return@launch
                 if (planId != null && visitSaveAttempted) recordVisitSaveFailure(planId, exception.failure)
@@ -1054,6 +1059,7 @@ class TravelPlannerViewModel(
             current.copy(
                 failure = failure,
                 canRetrySave = pendingSave != null,
+                pendingSaveStored = pendingSave != null && current.pendingSaveStored,
                 visitUndo = current.visitUndo.takeUnless { failure == TravelPlanFailure.UNDO_UNAVAILABLE },
                 needsLatestPlan =
                     current.needsLatestPlan || failure == TravelPlanFailure.CONFLICT || failure == TravelPlanFailure.VISIT_REMOVED,

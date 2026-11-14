@@ -40,6 +40,8 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_alert
+import oguri.composeapp.generated.resources.travel_leave_pending_save
+import oguri.composeapp.generated.resources.travel_pending_save_preserved
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
@@ -74,6 +76,7 @@ internal fun TravelVisitEditor(
     onRemove: () -> Unit,
     onReload: () -> Unit,
     onRetrySave: () -> Unit,
+    onLeaveWithPendingSave: (() -> Unit)?,
     onDirectionsOpened: () -> Unit,
 ) {
     var confirmDiscard by remember { mutableStateOf(false) }
@@ -187,6 +190,9 @@ internal fun TravelVisitEditor(
                     TravelInlineFailure(it, onRetrySave.takeIf { canRetrySave })
                 }
             }
+            if (canRetrySave && !isSaving && onLeaveWithPendingSave != null) {
+                TravelLeavePendingSave(onLeaveWithPendingSave)
+            }
             Button(
                 enabled = canEdit && (placeId != null || draft.name.isNotBlank()) && !draft.hasInvalidTime,
                 onClick = onApply,
@@ -243,4 +249,10 @@ internal fun TravelVisitEditor(
             onCancelClick = { confirmRemoval = false },
         )
     }
+}
+
+@Composable
+internal fun TravelLeavePendingSave(onLeave: () -> Unit) {
+    Text(stringResource(Res.string.travel_pending_save_preserved), style = MaterialTheme.typography.bodySmall)
+    TextButton(onClick = onLeave) { Text(stringResource(Res.string.travel_leave_pending_save)) }
 }

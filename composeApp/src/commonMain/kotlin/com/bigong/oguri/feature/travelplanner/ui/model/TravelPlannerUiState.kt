@@ -20,6 +20,7 @@ internal data class TravelPlannerUiState(
     val isSaving: Boolean = false,
     val failure: TravelPlanFailure? = null,
     val canRetrySave: Boolean = false,
+    val pendingSaveStored: Boolean = false,
     val isOffline: Boolean = false,
     val visitUndo: TravelVisitUndoAction? = null,
     val needsLatestPlan: Boolean = false,

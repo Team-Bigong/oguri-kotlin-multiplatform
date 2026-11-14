@@ -410,6 +410,7 @@ internal fun TravelPlanScreen(
                 onRemove = onRemoveVisit,
                 onReload = onReload,
                 onRetrySave = onRetrySave,
+                onLeaveWithPendingSave = onBack.takeIf { state.pendingSaveStored },
                 onDirectionsOpened = onDirectionsOpened,
             )
         }

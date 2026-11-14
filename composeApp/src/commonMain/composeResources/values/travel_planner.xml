@@ -176,4 +176,6 @@
     <string name="travel_order_mine">Your unsaved order</string>
     <string name="travel_order_cannot_reapply">The visits or trip dates changed. Reorder the current list to continue.</string>
     <string name="travel_order_matches">The current list already has this order.</string>
+    <string name="travel_leave_pending_save">Leave and try later</string>
+    <string name="travel_pending_save_preserved">You can retry this save when you return to the trip.</string>
 </resources>

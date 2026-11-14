@@ -272,6 +272,7 @@ internal fun TravelPlanRoute(
             onShowVisit = viewModel::openExistingPlace,
             onDismiss = viewModel::closePlaceSearch,
             onRetrySave = viewModel::retrySave,
+            onLeaveWithPendingSave = onBack,
             onReload = { viewModel.loadPlan(planId, rebaseDraft = true) },
             onManualAdd = {
                 viewModel.closePlaceSearch()

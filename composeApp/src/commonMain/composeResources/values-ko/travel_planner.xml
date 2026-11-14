@@ -176,4 +176,6 @@
     <string name="travel_order_mine">내가 정한 순서</string>
     <string name="travel_order_cannot_reapply">방문 목록이나 여행 기간이 바뀌었어요. 현재 목록에서 순서를 다시 바꿔 주세요.</string>
     <string name="travel_order_matches">현재 목록이 이미 이 순서예요.</string>
+    <string name="travel_leave_pending_save">나중에 다시 시도하기</string>
+    <string name="travel_pending_save_preserved">여행을 다시 열면 이 저장을 다시 시도할 수 있어요.</string>
 </resources>

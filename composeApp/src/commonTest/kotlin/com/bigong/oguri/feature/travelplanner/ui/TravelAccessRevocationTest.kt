@@ -321,6 +321,39 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun anUncertainSaveCanBeRetriedWithTheSameRequestAfterLeavingTheTrip() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val recovery = AccessRecovery()
+            val editing = createTravelPlannerTestViewModel(plans, recovery)
+            editing.loadPlan("plan")
+            advanceUntilIdle()
+            editing.openVisit(null)
+            editing.updateVisitDraft(requireNotNull(editing.state.value.visitDraft).copy(name = "Museum"))
+            plans.saveFailure = TravelPlanFailure.CONNECTION
+            editing.applyVisit()
+            advanceUntilIdle()
+            assertTrue(editing.state.value.canRetrySave)
+            assertTrue(editing.state.value.pendingSaveStored)
+            val saved = assertIs<TravelPendingSave.Visit>(recovery.load("plan").pending)
+            assertEquals(listOf(saved.requestId), plans.saveRequestIds)
+
+            val reopened = createTravelPlannerTestViewModel(plans, recovery)
+            reopened.loadPlan("plan")
+            advanceUntilIdle()
+            assertTrue(reopened.state.value.canRetrySave)
+            assertTrue(reopened.state.value.pendingSaveStored)
+            assertEquals(listOf(saved.requestId), plans.saveRequestIds)
+
+            plans.saveFailure = null
+            reopened.retrySave()
+            advanceUntilIdle()
+            assertEquals(listOf(saved.requestId, saved.requestId), plans.saveRequestIds)
+            assertFalse(reopened.state.value.pendingSaveStored)
+            assertNull(recovery.load("plan").pending)
+        }
+
+    @Test
     fun anExpiredSnapshotDoesNotHideTheDraftAfterTheConnectionReturns() =
         runTest {
             val plans = AccessPlans(plan)
@@ -675,6 +708,7 @@ private class AccessPlans(
     var unavailable: Boolean = false
     var connectionFailure: Boolean = false
     val saveAttempts = mutableListOf<TravelVisitChange>()
+    val saveRequestIds = mutableListOf<String>()
     var saveFailure: TravelPlanFailure? = null
     var readBarrier: CompletableDeferred<Unit>? = null
 
@@ -715,6 +749,7 @@ private class AccessPlans(
         change: TravelVisitChange,
     ): TravelPlan {
         saveAttempts.add(change)
+        saveRequestIds.add(requestId)
         saveFailure?.let { throw TravelPlanException(it) }
         return currentPlan
     }

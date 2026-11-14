@@ -176,4 +176,6 @@
     <string name="travel_order_mine">保存していない順序</string>
     <string name="travel_order_cannot_reapply">訪問先または旅行日程が変更されました。現在の一覧で並べ替えてください。</string>
     <string name="travel_order_matches">現在の一覧はすでにこの順序です。</string>
+    <string name="travel_leave_pending_save">閉じて後で再試行</string>
+    <string name="travel_pending_save_preserved">旅行を開き直すと、保存を再試行できます。</string>
 </resources>
