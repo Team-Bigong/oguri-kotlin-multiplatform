@@ -339,7 +339,8 @@ internal fun CreateTravelPlanScreen(
     if (citySearch != null) {
         TravelCitySearchDialog(
             state = citySearch,
-            recommendedCities = TravelCity.entries.map { cityLabel(it) },
+            selectedCities = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) },
+            recommendedCities = listOf(TravelCity.SEOUL, TravelCity.JEJU, TravelCity.OSAKA, TravelCity.TOKYO, TravelCity.TAIPEI, TravelCity.PARIS, TravelCity.HO_CHI_MINH, TravelCity.SYDNEY, TravelCity.BARCELONA).map { cityLabel(it) },
             onQuery = onSearchCities,
             onChoose = onChooseCity,
             onChooseRecommendedCity = { city ->
@@ -355,6 +356,7 @@ internal fun CreateTravelPlanScreen(
 
     if (isDatePickerForStart != null) com.bigong.oguri.feature.travelplanner.ui.component.TravelDateRangePicker(
         initial = dates, onDismiss = { isDatePickerForStart = null },
+        recommendedStart = recommendedStart, recommendedEnd = recommendedEnd,
         onSelected = { range ->
             startMillis = range.start.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
             endMillis = range.endInclusive.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()

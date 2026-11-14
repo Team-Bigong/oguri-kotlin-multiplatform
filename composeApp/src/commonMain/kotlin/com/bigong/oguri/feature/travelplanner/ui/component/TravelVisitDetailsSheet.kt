@@ -39,7 +39,7 @@ internal fun TravelVisitDetailsSheet(
     onDismiss: () -> Unit,
     onDirectionsOpened: () -> Unit,
 ) {
-    ModalBottomSheet(containerColor = OguriTheme.colors.backgroundPrimary, onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), dragHandle = { TravelSheetHandle() }, containerColor = OguriTheme.colors.backgroundPrimary, onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

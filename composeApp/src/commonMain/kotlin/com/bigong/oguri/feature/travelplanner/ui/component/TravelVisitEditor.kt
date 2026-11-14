@@ -110,7 +110,8 @@ internal fun TravelVisitEditor(
                 }
             },
         )
-    ModalBottomSheet(
+    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
+        dragHandle = { TravelSheetHandle() },
         containerColor = com.bigong.oguri.core.designsystem.Neutral5,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         onDismissRequest = { if (canDismiss) dismissDraft() },

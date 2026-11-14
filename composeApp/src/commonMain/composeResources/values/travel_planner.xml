@@ -270,4 +270,13 @@
     <string name="travel_create_description">Just choose your cities and dates</string>
     <string name="travel_actual_dates">Actual travel dates</string>
     <string name="travel_create_recommendation">Choose your actual travel dates within the recommended %1$s</string>
+    <string name="travel_city_search_placeholder">Search for a city</string>
+    <string name="travel_recommended_cities">Oguri’s recommended cities</string>
+    <string name="travel_city_search_hint">Search by name to find other cities on Google Maps.</string>
+    <string name="travel_previous_month">Previous month</string>
+    <string name="travel_next_month">Next month</string>
+    <string name="travel_select_dates">Choose your travel dates</string>
+    <string name="travel_selected_range">%1$s - %2$s · %3$d days</string>
+    <string name="travel_confirm_dates">Use these dates</string>
+    <string name="travel_calendar_recommendation">The dotted dates through the %1$d are the recommended period.</string>
 </resources>

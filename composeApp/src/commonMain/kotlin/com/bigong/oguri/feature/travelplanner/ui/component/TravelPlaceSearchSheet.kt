@@ -123,7 +123,7 @@ internal fun TravelPlaceSearchSheet(
         plan.visits.firstOrNull { it.dayNumber == targetDay && it.details.googlePlaceId == place.id }
     }
 
-    ModalBottomSheet(
+    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
         containerColor = colors.backgroundSecondary,
         onDismissRequest = close,
         sheetState = sheet,

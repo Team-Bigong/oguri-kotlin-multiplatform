@@ -187,14 +187,14 @@ internal fun TravelDetailsDialog(
         },
     )
     if (citySearch != null) TravelCitySearchDialog(
-        state = citySearch, recommendedCities = current.cities,
+        state = citySearch, recommendedCities = current.cities, selectedCities = cities,
         onQuery = onSearchCities, onChoose = onChooseCity,
         onChooseRecommendedCity = { cities = (cities + it).distinct().take(10); onCloseCitySearch() },
         onDismiss = onCloseCitySearch,
     )
-    if (chooseDates) TravelDateRangePicker(dates, { chooseDates = false }) { range ->
+    if (chooseDates) TravelDateRangePicker(dates, { chooseDates = false }, onSelected = { range ->
         start = range.start.toString(); end = range.endInclusive.toString(); chooseDates = false
-    }
+    }, recommendedStart = current.source?.startDate, recommendedEnd = current.source?.endDate)
 
 }
 

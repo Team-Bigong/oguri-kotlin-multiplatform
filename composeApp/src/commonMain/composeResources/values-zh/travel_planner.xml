@@ -270,4 +270,13 @@
     <string name="travel_create_description">只需选择城市和日期</string>
     <string name="travel_actual_dates">实际旅行日期</string>
     <string name="travel_create_recommendation">请在推荐的 %1$s 中选择实际出发的日期</string>
+    <string name="travel_city_search_placeholder">搜索城市名称</string>
+    <string name="travel_recommended_cities">Oguri 推荐的城市</string>
+    <string name="travel_city_search_hint">搜索名称即可在 Google 地图中查找其他城市。</string>
+    <string name="travel_previous_month">上个月</string>
+    <string name="travel_next_month">下个月</string>
+    <string name="travel_select_dates">请选择旅行日期</string>
+    <string name="travel_selected_range">%1$s - %2$s · %3$d天</string>
+    <string name="travel_confirm_dates">确定此日期</string>
+    <string name="travel_calendar_recommendation">从标有圆点的日期至 %1$d 日为推荐时段。</string>
 </resources>

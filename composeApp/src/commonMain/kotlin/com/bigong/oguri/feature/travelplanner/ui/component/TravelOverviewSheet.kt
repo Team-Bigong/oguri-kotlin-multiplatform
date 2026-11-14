@@ -96,7 +96,8 @@ internal fun TravelOverviewSheet(
         state.places[visit.details.googlePlaceId]?.name ?: visit.details.name
             ?: stringResource(Res.string.travel_visit_fallback, plan.visits.indexOf(visit) + 1)
     }
-    ModalBottomSheet(
+    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
+        dragHandle = { TravelSheetHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = com.bigong.oguri.core.designsystem.Neutral5,
