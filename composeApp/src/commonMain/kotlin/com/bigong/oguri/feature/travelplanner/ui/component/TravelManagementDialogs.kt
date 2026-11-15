@@ -148,6 +148,7 @@ internal fun TravelDetailsDialog(
         onDismissRequest = { if (!busy) onDismiss() },
         title = { Text(stringResource(if (showEditor) Res.string.travel_edit_trip else Res.string.travel_trip_info)) },
         showBottomActions = showEditor,
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = if (showEditor) 20.dp else 12.dp),
         actions = {
             if (!showEditor && canEdit) TravelTextButton(enabled = !busy, onClick = { editing = true }) { Text(stringResource(Res.string.travel_edit_action)) }
             else Spacer(Modifier.size(48.dp))
@@ -200,7 +201,7 @@ internal fun TravelDetailsDialog(
                     val shape = RoundedCornerShape(8.dp)
                     Column(Modifier.fillMaxWidth().clip(shape).background(Neutral0).border(1.dp, OguriTheme.colors.borderStrong, shape)) {
                         Text(current.title, Modifier.fillMaxWidth().background(Mint70).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = Neutral0)
-                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text(stringResource(Res.string.travel_info_dates, travelCardDates(current.dates, includeYear = true), current.dates.dayCount), style = OguriTheme.typography.cardSubtitle)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
