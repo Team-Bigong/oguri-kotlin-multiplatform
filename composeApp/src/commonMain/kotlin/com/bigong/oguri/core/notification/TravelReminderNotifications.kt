@@ -26,6 +26,10 @@ fun onTravelReminderTokenChanged() {
     mutableTokenVersion.update { it + 1 }
 }
 
+internal expect suspend fun travelReminderPermissionDenied(): Boolean
+
+internal expect fun openTravelReminderSettings()
+
 internal expect suspend fun requestTravelReminderPermission(): Boolean
 
 internal expect suspend fun travelReminderPushToken(): String?

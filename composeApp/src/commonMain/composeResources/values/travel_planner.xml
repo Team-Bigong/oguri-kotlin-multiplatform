@@ -140,7 +140,7 @@
     <string name="travel_reminder_before_departure">Choose a future time before departure on %1$s.</string>
     <string name="travel_reminder_invalid_time">Check the date, time and time zone. The reminder must be in the future and before departure.</string>
     <string name="travel_reminder_not_available">Reminders are currently unavailable or the trip has already started.</string>
-    <string name="travel_reminder_permission_denied">Notifications are off. You can allow them in system settings. Your trip is still available.</string>
+    <string name="travel_reminder_permission_denied">Allow notifications in device settings to schedule a reminder. You can still use your trip planner.</string>
     <string name="travel_reminder_save">Schedule reminder</string>
     <string name="travel_manage">More</string>
     <string name="travel_changed_place">Changed place</string>
@@ -246,7 +246,7 @@
     <string name="travel_confirm_transfer_title">Transfer ownership?</string>
     <string name="travel_confirm_transfer_message">Management passes to them when they accept.</string>
     <string name="travel_confirm_accept_title">Accept ownership?</string>
-    <string name="travel_confirm_accept_message">You will manage trip details and members.</string>
+    <string name="travel_confirm_accept_message">You will take over editing trip details and managing members.</string>
     <string name="travel_action_remove">Remove</string>
     <string name="travel_action_revoke">Revoke</string>
     <string name="travel_action_request">Request</string>
@@ -313,4 +313,13 @@
     <string name="travel_category_label">Category</string>
     <string name="travel_city_lookup_failed">Couldn’t verify the city information</string>
     <string name="travel_completed_trip">You’ve taken this trip</string>
+    <string name="travel_list_failure_title">Couldn’t load your trips</string>
+    <string name="travel_list_failure_message">You can still use recommendations and other screens</string>
+    <string name="travel_reminder_permission_title">Notifications are turned off</string>
+    <string name="travel_open_settings">Open settings</string>
+    <string name="travel_invite_revoked_title">This invitation link is no longer available</string>
+    <string name="travel_invite_deleted_title">This trip has been deleted</string>
+    <string name="travel_invite_deleted_message">This trip is no longer available</string>
+    <string name="travel_action_accept">Accept</string>
+    <string name="travel_list_retry">Try again</string>
 </resources>

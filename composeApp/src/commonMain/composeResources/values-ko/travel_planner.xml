@@ -140,7 +140,7 @@
     <string name="travel_reminder_before_departure">%1$s 출발 전의 미래 시각을 선택해 주세요.</string>
     <string name="travel_reminder_invalid_time">날짜·시각·시간대를 확인해 주세요. 현재 이후이면서 출발일 전이어야 해요.</string>
     <string name="travel_reminder_not_available">현재 알림을 예약할 수 없거나 여행이 이미 시작됐어요.</string>
-    <string name="travel_reminder_permission_denied">알림 권한이 꺼져 있어요. 기기 설정에서 허용할 수 있어요. 여행 계획은 그대로 이용할 수 있어요.</string>
+    <string name="travel_reminder_permission_denied">기기 설정에서 알림을 허용하면 예약할 수 있어요. 여행 계획은 그대로 쓸 수 있어요.</string>
     <string name="travel_reminder_save">알림 예약</string>
     <string name="travel_manage">더보기</string>
     <string name="travel_changed_place">변경된 장소</string>
@@ -246,7 +246,7 @@
     <string name="travel_confirm_transfer_title">소유권을 넘길까요?</string>
     <string name="travel_confirm_transfer_message">상대가 수락하면 관리 권한이 넘어가요.</string>
     <string name="travel_confirm_accept_title">소유권을 받을까요?</string>
-    <string name="travel_confirm_accept_message">여행 정보와 멤버 관리를 맡게 돼요.</string>
+    <string name="travel_confirm_accept_message">여행 정보 수정과 멤버 관리를 맡게 돼요.</string>
     <string name="travel_action_remove">제외</string>
     <string name="travel_action_revoke">철회</string>
     <string name="travel_action_request">요청</string>
@@ -313,4 +313,13 @@
     <string name="travel_category_label">카테고리</string>
     <string name="travel_city_lookup_failed">도시 정보를 확인하지 못했어요</string>
     <string name="travel_completed_trip">다녀온 여행이에요</string>
+    <string name="travel_list_failure_title">정보를 불러오지 못했어요</string>
+    <string name="travel_list_failure_message">추천과 다른 화면은 그대로 쓸 수 있어요</string>
+    <string name="travel_reminder_permission_title">알림 권한이 꺼져 있어요</string>
+    <string name="travel_open_settings">설정 열기</string>
+    <string name="travel_invite_revoked_title">더 이상 쓸 수 없는 초대 링크예요</string>
+    <string name="travel_invite_deleted_title">삭제된 여행이에요</string>
+    <string name="travel_invite_deleted_message">이 여행은 더 이상 쓸 수 없어요</string>
+    <string name="travel_action_accept">받기</string>
+    <string name="travel_list_retry">다시 시도하기</string>
 </resources>

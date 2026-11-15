@@ -140,7 +140,7 @@
     <string name="travel_reminder_before_departure">%1$sの出発前の、未来の時刻を選んでください。</string>
     <string name="travel_reminder_invalid_time">日付・時刻・タイムゾーンを確認してください。現在より後、出発日より前の時刻が必要です。</string>
     <string name="travel_reminder_not_available">現在予約できないか、旅行がすでに始まっています。</string>
-    <string name="travel_reminder_permission_denied">通知が無効です。端末の設定で許可できます。旅行の計画は引き続き利用できます。</string>
+    <string name="travel_reminder_permission_denied">端末の設定で通知を許可すると予約できます。旅行プランはそのまま使えます。</string>
     <string name="travel_reminder_save">通知を予約</string>
     <string name="travel_manage">その他</string>
     <string name="travel_changed_place">変更された場所</string>
@@ -246,7 +246,7 @@
     <string name="travel_confirm_transfer_title">所有権を譲りますか？</string>
     <string name="travel_confirm_transfer_message">相手が承認すると管理権限が移ります。</string>
     <string name="travel_confirm_accept_title">所有権を受け取りますか？</string>
-    <string name="travel_confirm_accept_message">旅行情報とメンバーの管理を引き継ぎます。</string>
+    <string name="travel_confirm_accept_message">旅行情報の編集とメンバー管理を引き継ぎます。</string>
     <string name="travel_action_remove">外す</string>
     <string name="travel_action_revoke">無効にする</string>
     <string name="travel_action_request">依頼</string>
@@ -313,4 +313,13 @@
     <string name="travel_category_label">カテゴリ</string>
     <string name="travel_city_lookup_failed">都市情報を確認できませんでした</string>
     <string name="travel_completed_trip">行ってきた旅行です</string>
+    <string name="travel_list_failure_title">情報を読み込めませんでした</string>
+    <string name="travel_list_failure_message">おすすめや他の画面はそのまま使えます</string>
+    <string name="travel_reminder_permission_title">通知の許可がオフになっています</string>
+    <string name="travel_open_settings">設定を開く</string>
+    <string name="travel_invite_revoked_title">この招待リンクはもう使えません</string>
+    <string name="travel_invite_deleted_title">削除された旅行です</string>
+    <string name="travel_invite_deleted_message">この旅行はもう使えません</string>
+    <string name="travel_action_accept">引き継ぐ</string>
+    <string name="travel_list_retry">もう一度試す</string>
 </resources>

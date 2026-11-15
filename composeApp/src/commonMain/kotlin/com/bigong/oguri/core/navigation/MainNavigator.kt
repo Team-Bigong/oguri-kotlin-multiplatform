@@ -178,6 +178,13 @@ class MainNavigator(
         popBackStack()
     }
 
+    fun closeTravelInviteToPlans() {
+        navHostController.navigate(RouteModel.TravelPlans) {
+            popUpTo<RouteModel.TravelInvite> { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
     fun openJoinedTravelPlan(planId: String) {
         navHostController.navigate(RouteModel.TravelPlans) {
             popUpTo<RouteModel.TravelInvite> { inclusive = true }

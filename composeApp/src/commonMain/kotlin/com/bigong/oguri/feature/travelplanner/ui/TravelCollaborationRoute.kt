@@ -294,6 +294,7 @@ internal fun TravelMembersRoute(
             onCancel = { reminderViewModel.cancel(planId) },
             onReload = { reminderViewModel.load(planId) },
             onDismiss = { showReminder = false },
+            onRefreshPermission = reminderViewModel::refreshPermission,
         )
     }
     state.detailsPlan?.let { plan ->
@@ -325,11 +326,13 @@ internal fun TravelMembersRoute(
             "remove" -> Triple(Res.string.travel_confirm_remove_title, Res.string.travel_confirm_remove_message, Res.string.travel_action_remove)
             "revoke" -> Triple(Res.string.travel_confirm_revoke_title, Res.string.travel_confirm_revoke_message, Res.string.travel_action_revoke)
             "transfer" -> Triple(Res.string.travel_confirm_transfer_title, Res.string.travel_confirm_transfer_message, Res.string.travel_action_request)
-            "accept" -> Triple(Res.string.travel_confirm_accept_title, Res.string.travel_confirm_accept_message, Res.string.travel_accept_ownership)
+            "accept" -> Triple(Res.string.travel_confirm_accept_title, Res.string.travel_confirm_accept_message, Res.string.travel_action_accept)
             else -> Triple(Res.string.travel_confirm_delete_title, Res.string.travel_confirm_delete_message, Res.string.travel_delete)
         }
         com.bigong.oguri.core.ui.component.ConfirmAlertDialog(
-            iconResource = Res.drawable.ic_alert,
+            iconResource = if (confirmationKind == "accept") Res.drawable.ic_info else Res.drawable.ic_alert,
+            iconTint = if (confirmationKind == "accept") com.bigong.oguri.core.designsystem.Mint70 else com.bigong.oguri.core.designsystem.Orange50,
+            messageColor = if (confirmationKind == "accept") OguriTheme.colors.textTertiary else com.bigong.oguri.core.designsystem.Orange50,
             titleText = stringResource(labels.first), messageText = stringResource(labels.second),
             confirmButtonText = stringResource(labels.third), cancelButtonText = stringResource(Res.string.travel_cancel),
             onDismissRequest = { confirmation = null }, onCancelClick = { confirmation = null },
@@ -378,6 +381,7 @@ internal fun TravelInviteRoute(
     onSignIn: () -> Unit,
     onBack: () -> Unit,
     onJoined: (String) -> Unit,
+    onOpenPlans: () -> Unit = onBack,
 ) {
     val loadedState = viewModel.state.collectAsStateWithLifecycle().value
     val state = if (viewModel.matchesInvite(token)) loadedState else TravelCollaborationState(busy = token != null)
@@ -396,9 +400,15 @@ internal fun TravelInviteRoute(
         Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = if (terminal) 24.dp else 20.dp, vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = if (preview != null && !terminal) Arrangement.Top else Arrangement.Center) {
             if (terminal) {
                 androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_empty), null, Modifier.size(180.dp))
-                Text(stringResource(Res.string.travel_invite_expired_title), style = OguriTheme.typography.cardTitle, modifier = Modifier.padding(top = 24.dp))
-                Text(stringResource(Res.string.travel_invite_expired_message), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary, modifier = Modifier.padding(vertical = 12.dp))
-                TravelOutlineButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_go_to_plans)) }
+                val deleted = state.failure == com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_TRIP_DELETED
+                val title = when (state.failure) {
+                    com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_REVOKED -> Res.string.travel_invite_revoked_title
+                    com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_TRIP_DELETED -> Res.string.travel_invite_deleted_title
+                    else -> Res.string.travel_invite_expired_title
+                }
+                Text(stringResource(title), style = OguriTheme.typography.cardTitle, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 24.dp))
+                Text(stringResource(if (deleted) Res.string.travel_invite_deleted_message else Res.string.travel_invite_expired_message), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 16.dp, bottom = 28.dp))
+                TravelOutlineButton(onClick = onOpenPlans, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_go_to_plans)) }
             } else if (preview != null && token != null) {
                 Spacer(Modifier.height(12.dp))
                 androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_parasol), null, Modifier.size(160.dp))

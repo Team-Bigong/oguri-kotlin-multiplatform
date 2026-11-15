@@ -306,6 +306,9 @@ fun MainNavHost(
                     viewModel = inviteViewModel,
                     onSignIn = navigator::navigateToTravelLogin,
                     onBack = closeInvite,
+                    onOpenPlans = {
+                        if (token?.let(TravelInviteIntent::clear) != false) navigator.closeTravelInviteToPlans()
+                    },
                     onJoined = {
                         if (token?.let(TravelInviteIntent::clear) == true) navigator.openJoinedTravelPlan(it)
                     },

@@ -140,7 +140,7 @@
     <string name="travel_reminder_before_departure">请选择 %1$s 出发前的未来时间。</string>
     <string name="travel_reminder_invalid_time">请检查日期、时间和时区。提醒须晚于当前时间且早于出发日。</string>
     <string name="travel_reminder_not_available">当前无法预约提醒，或旅行已开始。</string>
-    <string name="travel_reminder_permission_denied">通知权限已关闭。可在系统设置中允许，旅行计划仍可正常使用。</string>
+    <string name="travel_reminder_permission_denied">在设备设置中允许通知后即可预约提醒。旅行计划仍可正常使用。</string>
     <string name="travel_reminder_save">预约提醒</string>
     <string name="travel_manage">更多</string>
     <string name="travel_changed_place">已更改的地点</string>
@@ -246,7 +246,7 @@
     <string name="travel_confirm_transfer_title">要转移所有权吗？</string>
     <string name="travel_confirm_transfer_message">对方接受后将获得管理权限。</string>
     <string name="travel_confirm_accept_title">要接受所有权吗？</string>
-    <string name="travel_confirm_accept_message">你将管理行程信息和成员。</string>
+    <string name="travel_confirm_accept_message">您将负责编辑旅行信息和管理成员。</string>
     <string name="travel_action_remove">移除</string>
     <string name="travel_action_revoke">撤销</string>
     <string name="travel_action_request">请求</string>
@@ -313,4 +313,13 @@
     <string name="travel_category_label">类别</string>
     <string name="travel_city_lookup_failed">无法确认城市信息</string>
     <string name="travel_completed_trip">这是已结束的旅行</string>
+    <string name="travel_list_failure_title">无法加载信息</string>
+    <string name="travel_list_failure_message">推荐和其他页面仍可正常使用</string>
+    <string name="travel_reminder_permission_title">通知权限已关闭</string>
+    <string name="travel_open_settings">打开设置</string>
+    <string name="travel_invite_revoked_title">此邀请链接已无法使用</string>
+    <string name="travel_invite_deleted_title">此旅行已删除</string>
+    <string name="travel_invite_deleted_message">此旅行已无法使用</string>
+    <string name="travel_action_accept">接受</string>
+    <string name="travel_list_retry">重试</string>
 </resources>

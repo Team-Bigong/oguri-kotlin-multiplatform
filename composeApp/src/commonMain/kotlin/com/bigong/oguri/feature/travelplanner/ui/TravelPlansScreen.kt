@@ -48,7 +48,6 @@ import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoadFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
@@ -93,7 +92,14 @@ internal fun TravelPlansScreen(
                 HorizontalDivider(color = colors.borderSubtle)
                 TravelPlansEmpty(Res.drawable.img_oguri_hello, stringResource(Res.string.travel_guest_plans), stringResource(Res.string.travel_login_action), onSignIn, stringResource(Res.string.travel_login_title), Modifier.weight(1f))
             }
-            failure != null -> TravelLoadFailure(failure, onRetry)
+            failure != null -> {
+                Column(Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (onBack == null) Text(stringResource(Res.string.travel_list), style = OguriTheme.typography.sectionTitle)
+                    Text(stringResource(Res.string.travel_list_description), style = OguriTheme.typography.cardSubtitle, color = colors.textTertiary)
+                }
+                HorizontalDivider(color = colors.borderSubtle)
+                TravelPlansEmpty(Res.drawable.img_oguri_empty, stringResource(Res.string.travel_list_failure_message), stringResource(Res.string.travel_list_retry), onRetry, stringResource(Res.string.travel_list_failure_title), Modifier.weight(1f), illustrationSize = 200.dp)
+            }
             plans == null -> Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SkeletonBox(Modifier.fillMaxWidth().height(134.dp))
                 TravelLoading(Modifier.fillMaxWidth(0.5f))
@@ -187,13 +193,14 @@ private fun TravelPlansEmpty(
     title: String = "",
     modifier: Modifier = Modifier,
     showPlus: Boolean = false,
+    illustrationSize: androidx.compose.ui.unit.Dp = 160.dp,
 ) {
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Image(painterResource(illustration), contentDescription = null, modifier = Modifier.size(160.dp))
+        Image(painterResource(illustration), contentDescription = null, modifier = Modifier.size(illustrationSize))
         Spacer(Modifier.height(24.dp))
         if (title.isNotBlank()) Text(title, style = OguriTheme.typography.cardTitle, color = Neutral100, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
