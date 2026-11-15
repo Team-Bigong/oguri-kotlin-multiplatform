@@ -61,4 +61,18 @@ class TravelConflictComparisonTest {
         assertEquals("Shared update", restored.note)
         assertEquals(setOf(TravelVisitField.CATEGORY), restored.latestDifferences())
     }
+    @Test
+    fun usingSavedValuesReplacesAllLocalEditsAndKeepsTheLatestRevision() {
+        val latest = original.copy(dayNumber = 3, revision = 8, details = original.details.copy(note = "Shared note", category = TravelVisitCategory.CAFE))
+        val draft = TravelVisitDraft(1, original, name = "My name", placeTitle = "Google place", structureRevision = 4, note = "My note").rebaseOn(latest)
+        val saved = draft.useSavedValues()
+        assertEquals(latest.details, saved.toDetails())
+        assertEquals(3, saved.dayNumber)
+        assertEquals(8L, saved.visit?.revision)
+        assertEquals(4L, saved.structureRevision)
+        assertEquals("Google place", saved.placeTitle)
+        assertFalse(saved.showLatestComparison)
+        assertTrue(saved.latestDifferences().isEmpty())
+    }
+
 }

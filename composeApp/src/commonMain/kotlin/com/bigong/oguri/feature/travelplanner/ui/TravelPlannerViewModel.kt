@@ -26,7 +26,6 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlaceSearchState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitUndoAction
-import com.bigong.oguri.feature.travelplanner.ui.model.canApplyTo
 import com.bigong.oguri.feature.travelplanner.ui.model.toVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.withRefreshedPlan
 import dev.zacsweers.metro.Inject
@@ -193,6 +192,18 @@ class TravelPlannerViewModel(
                 currentCoroutineContext().ensureActive()
                 mutableState.update { it.copy(citySearch = it.citySearch?.copy(timeZone = zone, loading = false)) }
             }
+    }
+
+    internal suspend fun resolveCityTimeZone(city: String, language: String): String? {
+        com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone(city)?.let { return it }
+        return try {
+            val match = placeRepository.cities(city, language).firstOrNull { it.label.equals(city, ignoreCase = true) } ?: return null
+            placeRepository.cityTimeZone(match.id)?.takeIf { it in kotlinx.datetime.TimeZone.availableZoneIds }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: TravelPlanException) {
+            null
+        }
     }
 
     internal suspend fun loadCreationMatches() {
@@ -676,8 +687,9 @@ class TravelPlannerViewModel(
         val current = state.value
         val order = current.unappliedOrder ?: return
         val plan = current.plan ?: return
-        if (!order.canApplyTo(plan)) return
-        reorderVisits(order.dayNumber, plan.orderRevision(order.dayNumber), plan.structureRevision, order.visitIds)
+        if (current.needsLatestPlan) return
+        val rebasedVisitIds = order.rebasedVisitIds(plan) ?: return
+        reorderVisits(order.dayNumber, plan.orderRevision(order.dayNumber), plan.structureRevision, rebasedVisitIds)
     }
 
     internal fun discardUnappliedOrder() {

@@ -56,12 +56,6 @@ internal data class TravelPlannerUiState(
 internal fun TravelVisitChange.Reorder.isOutsideTrip(plan: TravelPlan): Boolean =
     dayNumber !in 1..plan.summary.details.dates.dayCount
 
-internal fun TravelVisitChange.Reorder.canApplyTo(plan: TravelPlan): Boolean =
-    !isOutsideTrip(plan) &&
-        structureRevision == plan.structureRevision &&
-        visitIds.size == plan.visits.count { it.dayNumber == dayNumber } &&
-        visitIds.toSet() == plan.visits.filter { it.dayNumber == dayNumber }.map(TravelVisit::id).toSet()
-
 internal data class TravelVisitUndoAction(
     val originalRequestId: String,
     val dayNumber: Int,
@@ -125,6 +119,9 @@ internal data class TravelVisitDraft(
             category = if (category == previous.details.category) latest.details.category else category,
         )
     }
+
+    fun useSavedValues(): TravelVisitDraft =
+        visit?.let { TravelVisitDraft(it.dayNumber, it, placeTitle = placeTitle, structureRevision = structureRevision) } ?: this
 
     fun latestDifferences(): Set<TravelVisitField> {
         val latest = visit?.takeIf { showLatestComparison } ?: return emptySet()

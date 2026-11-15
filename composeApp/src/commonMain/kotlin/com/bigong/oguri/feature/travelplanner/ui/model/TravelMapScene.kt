@@ -13,6 +13,7 @@ data class TravelMapMarker(
     val label: String?,
     val selected: Boolean,
     val dayNumber: Int? = null,
+    val title: String? = null,
 ) {
     val colorArgb: Int
         get() = if (selected) Mint80.toArgb() else travelDayColor(dayNumber)
@@ -51,7 +52,7 @@ internal fun travelMapScene(
     val markers =
         visits.mapIndexedNotNull { index, visit ->
             coordinates[index]?.let {
-                TravelMapMarker(visit.id, it, if (numbered) (index + 1).toString() else null, visit.id == selectedVisitId)
+                TravelMapMarker(visit.id, it, if (numbered) (index + 1).toString() else null, visit.id == selectedVisitId, title = visit.details.name ?: places[visit.details.googlePlaceId]?.name)
             }
         }
     val lines =
@@ -80,6 +81,7 @@ internal fun travelOverviewScene(
                         (visits.filter { it.dayNumber == visit.dayNumber }.indexOf(visit) + 1).toString(),
                         selected = false,
                         dayNumber = visit.dayNumber,
+                        title = visit.details.name ?: places[visit.details.googlePlaceId]?.name,
                     )
                 }
             },

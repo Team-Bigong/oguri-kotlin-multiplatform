@@ -139,7 +139,19 @@ sealed interface TravelVisitChange {
         val expectedOrderRevision: Long,
         val visitIds: List<String>,
         val structureRevision: Long = 0,
-    ) : TravelVisitChange
+    ) : TravelVisitChange {
+        fun rebasedVisitIds(plan: TravelPlan): List<String>? {
+            if (dayNumber !in 1..plan.summary.details.dates.dayCount || structureRevision != plan.structureRevision) return null
+
+            val requestedIds = visitIds.toSet()
+            val currentIds = plan.visits.filter { it.dayNumber == dayNumber }.map(TravelVisit::id)
+            val currentIdSet = currentIds.toSet()
+            if (requestedIds.size != visitIds.size || currentIdSet.size != currentIds.size || !currentIdSet.containsAll(requestedIds)) return null
+
+            val requestedOrder = visitIds.iterator()
+            return currentIds.map { id -> if (id in requestedIds) requestedOrder.next() else id }
+        }
+    }
 }
 
 enum class TravelPlanFailure {

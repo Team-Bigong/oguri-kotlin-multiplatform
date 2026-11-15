@@ -37,7 +37,7 @@ internal fun travelCardDates(dates: TravelDates, includeYear: Boolean): String {
 }
 
 @Composable
-private fun travelMonthDay(date: LocalDate): String =
+internal fun travelMonthDay(date: LocalDate): String =
     stringResource(Res.string.calendar_month_day, date.month.ordinal + 1, date.day)
 
 @Composable

@@ -32,7 +32,7 @@ class TravelPlanRefreshTest {
     fun anOrderFromARemovedDayStaysAvailableForReviewButCannotBeAppliedToUnassignedVisits() {
         val order = TravelVisitChange.Reorder(3, 1, listOf(visit.id))
         val current = TravelPlannerUiState(plan = plan, selectedDay = 3, unappliedOrder = order)
-        assertTrue(order.canApplyTo(plan))
+        assertEquals(listOf(visit.id), order.rebasedVisitIds(plan))
         val shortened =
             plan.copy(
                 summary = plan.summary.copy(details = plan.summary.details.copy(dates = TravelDates(dates.start, dates.start))),
@@ -44,7 +44,26 @@ class TravelPlanRefreshTest {
         assertEquals(1, refreshed.selectedDay)
         assertEquals(order, refreshed.unappliedOrder)
         assertTrue(order.isOutsideTrip(shortened))
-        assertFalse(order.canApplyTo(shortened))
+        assertNull(order.rebasedVisitIds(shortened))
+    }
+
+    @Test
+    fun aConfirmedReorderPreservesThePositionsOfNewVisits() {
+        val otherVisit = visit.copy(id = "other")
+        val newVisit = visit.copy(id = "new")
+        val latestPlan = plan.copy(visits = listOf(visit, newVisit, otherVisit))
+        val order = TravelVisitChange.Reorder(3, 1, listOf(otherVisit.id, visit.id))
+
+        assertEquals(listOf(otherVisit.id, newVisit.id, visit.id), order.rebasedVisitIds(latestPlan))
+    }
+
+    @Test
+    fun anOrderCannotBeAppliedAfterAMatchingVisitMovesToAnotherDay() {
+        val otherVisit = visit.copy(id = "other", dayNumber = 2)
+        val latestPlan = plan.copy(visits = listOf(visit, otherVisit))
+        val order = TravelVisitChange.Reorder(3, 1, listOf(otherVisit.id, visit.id))
+
+        assertNull(order.rebasedVisitIds(latestPlan))
     }
 
     @Test

@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -24,7 +26,7 @@ internal fun TravelFormSheet(
     shape: Shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     containerColor: Color = OguriTheme.colors.backgroundSecondary,
 ) {
-    ModalBottomSheet(onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor) {
+    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor, dragHandle = { TravelSheetHandle() }) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ProvideTextStyle(OguriTheme.typography.cardTitle, title)
             ProvideTextStyle(OguriTheme.typography.bodyMedium, text)
@@ -43,4 +45,10 @@ internal fun TravelDiscardConfirmation(onDiscard: () -> Unit, onKeep: () -> Unit
         cancelButtonText = stringResource(Res.string.travel_keep_writing),
         onDismissRequest = onKeep, onConfirmClick = onDiscard, onCancelClick = onKeep,
     )
+}
+
+@Composable
+internal fun TravelSheetHandle() {
+    Box(Modifier.padding(top = 8.dp, bottom = 8.dp).size(width = 36.dp, height = 4.dp)
+        .background(OguriTheme.colors.borderStrong, CircleShape))
 }

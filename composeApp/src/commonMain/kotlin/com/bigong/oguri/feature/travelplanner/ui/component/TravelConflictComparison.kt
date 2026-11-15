@@ -1,5 +1,10 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -25,8 +30,10 @@ internal fun TravelConflictComparison(
     val fields = draft.latestDifferences()
     val latest = draft.visit ?: return
     if (fields.isEmpty()) return
-    Column(modifier = androidx.compose.ui.Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint5, androidx.compose.foundation.shape.RoundedCornerShape(8.dp)).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(Res.string.travel_latest_saved_values), style = OguriTheme.typography.cardSubtitle)
+    Column(modifier = Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Orange5, RoundedCornerShape(8.dp))
+        .border(1.dp, com.bigong.oguri.core.designsystem.Orange20, RoundedCornerShape(8.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(stringResource(Res.string.travel_visit_conflict_title), style = OguriTheme.typography.cardSubtitle)
+        Text(stringResource(Res.string.travel_visit_conflict_description), style = OguriTheme.typography.caption, color = OguriTheme.colors.textSecondary)
         fields.forEach { field ->
             val label =
                 when (field) {
@@ -34,7 +41,7 @@ internal fun TravelConflictComparison(
                     TravelVisitField.NAME -> Res.string.travel_visit_name
                     TravelVisitField.LOCATION -> Res.string.travel_visit_location
                     TravelVisitField.TIME -> Res.string.travel_visit_time
-                    TravelVisitField.NOTE -> Res.string.travel_visit_note
+                    TravelVisitField.NOTE -> Res.string.travel_note_label
                     TravelVisitField.CATEGORY -> Res.string.travel_category
                 }
             val value =
@@ -46,19 +53,10 @@ internal fun TravelConflictComparison(
                     TravelVisitField.NOTE -> latest.details.note
                     TravelVisitField.CATEGORY -> latest.details.category?.let { stringResource(it.label()) }
                 }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
-            Text(stringResource(label), style = OguriTheme.typography.labelMedium)
-            Text(stringResource(Res.string.travel_conflict_saved), style = OguriTheme.typography.labelSmall)
-            Text(value, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary)
-            Text(stringResource(Res.string.travel_conflict_mine), style = OguriTheme.typography.labelSmall)
-            val mine = when (field) {
-                TravelVisitField.DAY -> travelDayLabel(dates, draft.dayNumber)
-                TravelVisitField.NAME -> draft.name
-                TravelVisitField.LOCATION -> draft.location
-                TravelVisitField.TIME -> null
-                TravelVisitField.NOTE -> draft.note
-                TravelVisitField.CATEGORY -> draft.category?.let { stringResource(it.label()) }
-            }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
-            Text(mine, style = OguriTheme.typography.bodyMedium)
+            Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral0, RoundedCornerShape(8.dp)).padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(label), Modifier.weight(1f), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                Text(value, Modifier.weight(2f), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textPrimary, textAlign = androidx.compose.ui.text.style.TextAlign.End)
+            }
         }
     }
 }
