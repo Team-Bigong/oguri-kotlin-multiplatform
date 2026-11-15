@@ -99,7 +99,7 @@ internal fun TravelPlaceSearchSheet(
     val selected = search.selected
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
     val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
-    val hasDraft by rememberUpdatedState(draft != null && draft.hasPlaceInput())
+    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory))
     val close = {
         if (canDismiss) {
             openAfterDiscard = null
@@ -284,7 +284,7 @@ internal fun TravelPlaceSearchSheet(
                                 Text(stringResource(Res.string.travel_already_added, targetDay), Modifier.weight(1f), style = OguriTheme.typography.bodySmall, color = colors.textSecondary)
                                 TravelTextButton(
                                     onClick = {
-                                        if (hasDraft) { openAfterDiscard = visit; confirmDiscard = true }
+                                        if (hasUnsavedPlaceInput(draft, null, searchCategory)) { openAfterDiscard = visit; confirmDiscard = true }
                                         else onShowVisit(visit)
                                     },
                                     enabled = canEdit,
@@ -340,6 +340,9 @@ internal fun TravelPlaceSearchSheet(
         )
     }
 }
+
+internal fun hasUnsavedPlaceInput(draft: TravelVisitDraft?, selected: TravelPlace?, category: TravelVisitCategory?): Boolean =
+    draft?.hasPlaceInput() == true || selected != null || category != null
 
 private fun TravelVisitDraft.hasPlaceInput(): Boolean =
     name.isNotBlank() || location.isNotBlank() || note.isNotBlank() || category != null
