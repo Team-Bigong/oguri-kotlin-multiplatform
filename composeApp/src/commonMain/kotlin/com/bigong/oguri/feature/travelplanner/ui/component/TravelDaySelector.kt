@@ -2,11 +2,10 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
@@ -42,9 +41,12 @@ internal fun TravelDaySelector(
             TravelChoiceChip(travelDayLabel(dates, day), selectedDay == day, enabled, { onSelectDay(day) })
         }
         item {
-            TravelTextButton(onClick = onOverview, enabled = enabled) {
-                Text(stringResource(Res.string.travel_all_days_tab))
-            }
+            TravelChoiceChip(
+                label = stringResource(Res.string.travel_all_days_tab),
+                selected = null,
+                enabled = enabled,
+                onClick = onOverview,
+            )
         }
     }
 }
