@@ -71,7 +71,7 @@ class TravelPlanService(
                         creationRequestId = request.requestId,
                         creationFingerprint = fingerprint,
                         city = request.city.trim(),
-                        cities = request.cities.map(String::trim),
+                        cities = (request.cities ?: listOf(request.city)).map(String::trim),
                         timeZone = request.timeZone.trim(),
                         title = request.title.trim(),
                         startDate = request.startDate,
@@ -332,7 +332,7 @@ class TravelPlanService(
     private fun fingerprint(request: Any): String =
         HexFormat.of().formatHex(
             MessageDigest.getInstance("SHA-256").digest(objectMapper.writeValueAsBytes(
-                if (request is CreateTravelPlanRequest && request.cities == listOf(request.city)) {
+                if (request is CreateTravelPlanRequest && (request.cities == null || request.cities == listOf(request.city))) {
                     objectMapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(request).also { it.remove("cities") }
                 } else request,
             )),

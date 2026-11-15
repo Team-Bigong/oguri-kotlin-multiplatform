@@ -57,6 +57,36 @@ class TravelHttpIntegrationTest {
     }
 
     @Test
+    fun `앱에서 선택한 도시 하나와 추천 기간만 보내도 여행을 만든다`() {
+        val owner = memberToken()
+        val start = "2027-09-10"
+        val end = "2027-09-19"
+        val body = mapOf(
+            "requestId" to UUID.randomUUID().toString(),
+            "city" to "시드니",
+            "timeZone" to "Australia/Sydney",
+            "title" to "시드니 여행",
+            "startDate" to start,
+            "endDate" to end,
+            "source" to mapOf("destinationId" to null, "startDate" to start, "endDate" to end),
+        )
+
+        val created = request("POST", "/trips", 200, owner, body)
+        assertEquals(listOf("시드니"), created.get("cities").map(JsonNode::asText))
+        assertEquals(start, created.get("source").get("startDate").asText())
+
+        val retried = request("POST", "/trips", 200, owner, body + ("cities" to listOf("시드니")))
+        assertEquals(created.get("id"), retried.get("id"))
+
+        val multipleCities = body + mapOf(
+            "requestId" to UUID.randomUUID().toString(),
+            "cities" to listOf("시드니", "멜버른"),
+        )
+        val multiCityPlan = request("POST", "/trips", 200, owner, multipleCities)
+        assertEquals(listOf("시드니", "멜버른"), multiCityPlan.get("cities").map(JsonNode::asText))
+    }
+
+    @Test
     fun `초대 참여부터 편집 충돌과 멤버 제외까지 실제 HTTP로 검증한다`() {
         val owner = memberToken()
         val member = memberToken()
