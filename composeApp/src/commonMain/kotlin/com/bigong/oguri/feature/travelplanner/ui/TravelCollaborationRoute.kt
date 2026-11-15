@@ -330,9 +330,9 @@ internal fun TravelMembersRoute(
             else -> Triple(Res.string.travel_confirm_delete_title, Res.string.travel_confirm_delete_message, Res.string.travel_delete)
         }
         com.bigong.oguri.core.ui.component.ConfirmAlertDialog(
-            iconResource = if (confirmationKind == "accept") Res.drawable.ic_info else Res.drawable.ic_alert,
-            iconTint = if (confirmationKind == "accept") com.bigong.oguri.core.designsystem.Mint70 else com.bigong.oguri.core.designsystem.Orange50,
-            messageColor = if (confirmationKind == "accept") OguriTheme.colors.textTertiary else com.bigong.oguri.core.designsystem.Orange50,
+            iconResource = if (confirmationKind in listOf("transfer", "accept")) Res.drawable.ic_info else Res.drawable.ic_alert,
+            iconTint = if (confirmationKind in listOf("transfer", "accept")) com.bigong.oguri.core.designsystem.Mint70 else com.bigong.oguri.core.designsystem.Orange50,
+            messageColor = if (confirmationKind in listOf("transfer", "accept")) OguriTheme.colors.textTertiary else com.bigong.oguri.core.designsystem.Orange50,
             titleText = stringResource(labels.first), messageText = stringResource(labels.second),
             confirmButtonText = stringResource(labels.third), cancelButtonText = stringResource(Res.string.travel_cancel),
             onDismissRequest = { confirmation = null }, onCancelClick = { confirmation = null },
