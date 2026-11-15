@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
@@ -155,7 +156,17 @@ internal fun TravelOverviewSheet(
             }
             LazyColumn(Modifier.weight(1f)) {
                 val groups = plan.visits.groupBy { it.dayNumber }
-                if (groups.isEmpty()) item { Text(stringResource(Res.string.travel_empty_day)) }
+                if (groups.isEmpty()) {
+                    item {
+                        Text(
+                            text = stringResource(Res.string.travel_empty_day),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
+                            color = OguriTheme.colors.textTertiary,
+                            style = travelTextStyle(14, 21),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
                 groups.entries
                     .sortedBy {
                         if (it.key ==
