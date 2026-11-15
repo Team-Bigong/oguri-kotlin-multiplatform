@@ -52,6 +52,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInContent
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
@@ -84,14 +85,7 @@ internal fun TravelPlansScreen(
         val failure = state.failure
         val plans = state.plans
         when {
-            !signedIn -> {
-                Column(Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(Res.string.travel_list), style = OguriTheme.typography.sectionTitle)
-                    Text(stringResource(Res.string.travel_list_description), style = OguriTheme.typography.cardSubtitle, color = colors.textTertiary)
-                }
-                HorizontalDivider(color = colors.borderSubtle)
-                TravelPlansEmpty(Res.drawable.img_oguri_hello, stringResource(Res.string.travel_guest_plans), stringResource(Res.string.travel_login_action), onSignIn, stringResource(Res.string.travel_login_title), Modifier.weight(1f))
-            }
+            !signedIn -> TravelSignInContent(onSignIn = onSignIn, showPageTitle = onBack == null)
             failure != null -> {
                 Column(Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (onBack == null) Text(stringResource(Res.string.travel_list), style = OguriTheme.typography.sectionTitle)
@@ -185,7 +179,7 @@ internal fun TravelPlansScreen(
 }
 
 @Composable
-private fun TravelPlansEmpty(
+internal fun TravelPlansEmpty(
     illustration: DrawableResource,
     message: String,
     actionLabel: String,
