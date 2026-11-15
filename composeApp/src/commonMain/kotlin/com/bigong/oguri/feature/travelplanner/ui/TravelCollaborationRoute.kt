@@ -114,6 +114,7 @@ internal fun TravelMembersRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val reminderState by reminderViewModel.state.collectAsStateWithLifecycle()
     val cityState by cityViewModel.state.collectAsStateWithLifecycle()
+    val language = androidx.compose.ui.text.intl.Locale.current.toLanguageTag()
     var showMembers by remember(planId) { mutableStateOf(false) }
     var showReminder by remember(planId) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
@@ -306,6 +307,7 @@ internal fun TravelMembersRoute(
             onCloseCitySearch = cityViewModel::closeCitySearch,
             onSearchCities = { cityViewModel.searchCities(it, androidx.compose.ui.text.intl.Locale.current.toLanguageTag()) },
             onChooseCity = cityViewModel::chooseCity,
+            onResolveCityTimeZone = { city -> cityViewModel.resolveCityTimeZone(city, language) },
             onReload = { viewModel.loadDetails(planId) },
             onApply = { details, affected -> viewModel.updateDetails(plan, details, affected) },
             canEdit = state.members?.isOwner == true,

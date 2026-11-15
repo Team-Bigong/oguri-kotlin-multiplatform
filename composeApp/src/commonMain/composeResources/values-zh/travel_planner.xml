@@ -311,4 +311,5 @@
     <string name="travel_offline_readonly">离线 · 只读</string>
     <string name="travel_readonly">只读</string>
     <string name="travel_category_label">类别</string>
+    <string name="travel_city_lookup_failed">无法确认城市信息</string>
 </resources>

@@ -311,4 +311,5 @@
     <string name="travel_offline_readonly">Offline · Read only</string>
     <string name="travel_readonly">Read only</string>
     <string name="travel_category_label">Category</string>
+    <string name="travel_city_lookup_failed">Couldn’t verify the city information</string>
 </resources>

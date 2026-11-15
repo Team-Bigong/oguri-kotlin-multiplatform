@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -92,6 +93,7 @@ internal fun TravelDetailsDialog(
     onCloseCitySearch: () -> Unit,
     onSearchCities: (String) -> Unit,
     onChooseCity: (com.bigong.oguri.domain.model.TravelCitySuggestion) -> Unit,
+    onResolveCityTimeZone: suspend (String) -> String?,
     onReload: () -> Unit,
     onApply: (TravelPlanDetails, Int) -> Unit,
     canEdit: Boolean,
@@ -105,6 +107,20 @@ internal fun TravelDetailsDialog(
     var cities by remember(plan.revision) { mutableStateOf(current.cities) }
     var zones by remember(plan.revision) { mutableStateOf(mapOf(current.city to current.timeZone.id)) }
     val city = cities.firstOrNull().orEmpty()
+    var resolvingCity by remember { mutableStateOf(false) }
+    var cityLookupFailed by remember { mutableStateOf(false) }
+    var cityLookupAttempt by remember { mutableIntStateOf(0) }
+    LaunchedEffect(city, showEditor, cityLookupAttempt, zones[city]) {
+        cityLookupFailed = false
+        resolvingCity = false
+        if (showEditor && zones[city] == null && com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone(city) == null) {
+            resolvingCity = true
+            val zone = onResolveCityTimeZone(city)
+            if (zone != null) zones = zones + (city to zone)
+            cityLookupFailed = zone == null
+            resolvingCity = false
+        }
+    }
     LaunchedEffect(citySearch?.selected, citySearch?.loading) {
         if (citySearch?.selected != null && !citySearch.loading) {
             val label = citySearch.selected.label.take(TravelPlanDetails.MAX_TEXT_LENGTH)
@@ -156,6 +172,11 @@ internal fun TravelDetailsDialog(
                             }
                             Text(stringResource(Res.string.travel_primary_city), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         }
+                    }
+                    if (resolvingCity) TravelLoading(Modifier.fillMaxWidth())
+                    if (cityLookupFailed) {
+                        Text(stringResource(Res.string.travel_city_lookup_failed), style = OguriTheme.typography.bodySmall, color = Orange50)
+                        TravelTextButton(onClick = { cityLookupAttempt++ }, enabled = !busy) { Text(stringResource(Res.string.travel_retry)) }
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(Res.string.travel_actual_dates), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)

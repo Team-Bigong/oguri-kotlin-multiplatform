@@ -195,6 +195,18 @@ class TravelPlannerViewModel(
             }
     }
 
+    internal suspend fun resolveCityTimeZone(city: String, language: String): String? {
+        com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone(city)?.let { return it }
+        return try {
+            val match = placeRepository.cities(city, language).firstOrNull { it.label.equals(city, ignoreCase = true) } ?: return null
+            placeRepository.cityTimeZone(match.id)?.takeIf { it in kotlinx.datetime.TimeZone.availableZoneIds }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: TravelPlanException) {
+            null
+        }
+    }
+
     internal suspend fun loadCreationMatches() {
         try {
             val plans = repository.list()

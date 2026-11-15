@@ -720,6 +720,54 @@ class TravelAccessRevocationTest {
             assertTrue(requireNotNull(viewModel.state.value.overview).incomplete)
             assertFalse(requireNotNull(viewModel.state.value.overview).loading)
         }
+    @Test
+    fun presetCityKeepsItsZoneWithoutAPlaceLookup() = runTest {
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), DeniedPlaces())
+        assertEquals("Asia/Seoul", viewModel.resolveCityTimeZone("서울", "ko"))
+    }
+
+    @Test
+    fun promotedSavedCityResolvesItsOwnZone() = runTest {
+        val places = object : TravelPlaceRepository by DeniedPlaces() {
+            override suspend fun cities(query: String, language: String): List<TravelCitySuggestion> {
+                assertEquals("싱가포르", query)
+                assertEquals("ko", language)
+                return listOf(TravelCitySuggestion("singapore-id", query))
+            }
+            override suspend fun cityTimeZone(placeId: String): String {
+                assertEquals("singapore-id", placeId)
+                return "Asia/Singapore"
+            }
+        }
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), places)
+        assertEquals("Asia/Singapore", viewModel.resolveCityTimeZone("싱가포르", "ko"))
+    }
+
+    @Test
+    fun anotherCitySearchResultCannotSupplyThePromotedCityZone() = runTest {
+        val places = object : TravelPlaceRepository by DeniedPlaces() {
+            override suspend fun cities(query: String, language: String) = listOf(TravelCitySuggestion("other-id", "다른 도시"))
+        }
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), places)
+        assertNull(viewModel.resolveCityTimeZone("싱가포르", "ko"))
+    }
+
+    @Test
+    fun failedCityLookupCanBeRetriedWithoutKeepingAnInvalidZone() = runTest {
+        var fail = true
+        val places = object : TravelPlaceRepository by DeniedPlaces() {
+            override suspend fun cities(query: String, language: String): List<TravelCitySuggestion> {
+                if (fail) throw TravelPlanException(TravelPlanFailure.CONNECTION)
+                return listOf(TravelCitySuggestion("singapore-id", query))
+            }
+            override suspend fun cityTimeZone(placeId: String) = "Asia/Singapore"
+        }
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), places)
+        assertNull(viewModel.resolveCityTimeZone("싱가포르", "ko"))
+        fail = false
+        assertEquals("Asia/Singapore", viewModel.resolveCityTimeZone("싱가포르", "ko"))
+    }
+
 }
 
 private class AccessPlans(
