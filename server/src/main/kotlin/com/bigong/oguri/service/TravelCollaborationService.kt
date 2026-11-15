@@ -43,7 +43,8 @@ class TravelCollaborationService(
     ): TravelMembersResponse {
         planService.requireMember(memberId)
         val plan = planService.accessiblePlan(memberId, planId)
-        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId), plan.ownerId == memberId && collaboration.hasActiveInvite(planId, now()))
+        val inviteExpiresAt = if (plan.ownerId == memberId) collaboration.activeInviteExpiresAt(planId, now()) else null
+        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId), inviteExpiresAt != null, inviteExpiresAt)
     }
 
     @Transactional
@@ -286,6 +287,7 @@ data class TravelMembersResponse(
     val members: List<TravelMemberRow>,
     val ownershipTarget: String?,
     val hasActiveInvite: Boolean = false,
+    val inviteExpiresAt: OffsetDateTime? = null,
 )
 
 data class IssuedTravelInvite(

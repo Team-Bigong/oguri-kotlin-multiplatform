@@ -72,9 +72,14 @@ class TravelHttpIntegrationTest {
         val tripId = created.get("id").asText()
         assertEquals(destinationId, created.get("source").get("destinationId").asInt())
         val trip = "/trips/$tripId"
-        assertTrue(!request("GET", "$trip/members", 200, owner).get("hasActiveInvite").asBoolean())
-        val token = request("POST", "$trip/invites", 200, owner).get("token").asText()
-        assertTrue(request("GET", "$trip/members", 200, owner).get("hasActiveInvite").asBoolean())
+        val membersWithoutInvite = request("GET", "$trip/members", 200, owner)
+        assertTrue(!membersWithoutInvite.get("hasActiveInvite").asBoolean())
+        assertTrue(membersWithoutInvite.get("inviteExpiresAt").isNull)
+        val issued = request("POST", "$trip/invites", 200, owner)
+        val token = issued.get("token").asText()
+        val membersWithInvite = request("GET", "$trip/members", 200, owner)
+        assertTrue(membersWithInvite.get("hasActiveInvite").asBoolean())
+        assertEquals(issued.get("expiresAt").asText(), membersWithInvite.get("inviteExpiresAt").asText())
         val invite = mapOf("token" to token)
         val preview = request("POST", "/trip-invites/preview", 200, body = invite)
         assertEquals("Trip", preview.get("title").asText())
@@ -85,6 +90,7 @@ class TravelHttpIntegrationTest {
         assertEquals(tripId, request("POST", "/trip-invites/join", 200, member, invite).get("planId").asText())
 
         assertEquals(2, request("GET", "/trips", 200, member).single().get("memberCount").asInt())
+        assertTrue(request("GET", "$trip/members", 200, member).get("inviteExpiresAt").isNull)
 
         val original = TravelVisitRequest("Museum", null, null, null, null, TravelVisitCategory.SIGHTSEEING)
         val added = request("POST", "$trip/commands", 200, owner, TravelPlanCommand.AddVisit(UUID.randomUUID(), 1, original, 0))
@@ -118,7 +124,9 @@ class TravelHttpIntegrationTest {
 
         val memberId = tokens.getMemberId(member)
         request("DELETE", "$trip/members/$memberId", 204, owner)
-        assertTrue(!request("GET", "$trip/members", 200, owner).get("hasActiveInvite").asBoolean())
+        val membersAfterRemoval = request("GET", "$trip/members", 200, owner)
+        assertTrue(!membersAfterRemoval.get("hasActiveInvite").asBoolean())
+        assertTrue(membersAfterRemoval.get("inviteExpiresAt").isNull)
         request("GET", "$trip?knownRevision=${updated.get("revision").asLong()}", 404, member)
         request("POST", "$trip/commands", 404, member, edit.copy(requestId = UUID.randomUUID()))
         assertEquals("INVITE_REVOKED", request("POST", "/trip-invites/join", 410, member, invite).get("code").asText())

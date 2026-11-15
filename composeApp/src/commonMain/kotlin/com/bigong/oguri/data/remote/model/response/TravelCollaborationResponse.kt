@@ -15,6 +15,7 @@ internal data class TravelMembersResponse(
     val members: List<TravelMemberResponse>,
     val ownershipTarget: String? = null,
     val hasActiveInvite: Boolean = false,
+    val inviteExpiresAt: String? = null,
 )
 
 @Serializable

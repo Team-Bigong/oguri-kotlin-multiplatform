@@ -15,6 +15,7 @@ data class TravelMembers(
     val members: List<TravelMember>,
     val ownershipTarget: String?,
     val hasActiveInvite: Boolean = false,
+    val inviteExpiresAt: Instant? = null,
 ) {
     val isOwner: Boolean get() = members.any { it.id == currentMemberId && it.owner }
 }
