@@ -170,10 +170,11 @@ class TravelManagementAccessTest {
     fun unavailableReminderSettingsDoNotKeepThePreviousReservationVisible() =
         runTest {
             val repository = ManagementReminders()
-            val viewModel = TravelReminderViewModel(repository)
+            val viewModel = TravelReminderViewModel(repository, isPermissionDenied = { true })
             viewModel.load("plan")
             advanceUntilIdle()
             assertNotNull(viewModel.state.value.settings)
+            assertTrue(viewModel.state.value.permissionDenied)
             repository.failure = TravelPlanFailure.CONNECTION
             viewModel.load("plan")
             advanceUntilIdle()
