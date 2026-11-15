@@ -29,7 +29,7 @@ internal fun TravelFullScreenForm(
     showBottomActions: Boolean = true,
     actions: @Composable () -> Unit = { Spacer(Modifier.size(48.dp)) },
 ) {
-    Dialog(onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest, properties = travelDialogProperties()) {
         TravelDialogSystemBars()
         TravelPlannerPage(title = "", onBack = null) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
