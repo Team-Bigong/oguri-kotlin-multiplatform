@@ -55,7 +55,6 @@
     <string name="travel_add_without_date">Add without a date</string>
     <string name="travel_manual_add">Add manually</string>
     <string name="travel_add_again">Add another visit</string>
-    <string name="travel_show_existing_visit">View in itinerary</string>
     <string name="travel_place_added">Added to the itinerary</string>
     <string name="travel_map_show">Show map</string>
     <string name="travel_map_hide">Hide map</string>
@@ -221,7 +220,6 @@
     <string name="travel_day_number">Day %1$d</string>
     <string name="travel_discard_message">Your input will not be saved.</string>
     <string name="travel_keep_writing">Keep editing</string>
-    <string name="travel_already_added">Already added to day %1$d</string>
     <string name="travel_conflict_mine">Your edits</string>
     <string name="travel_conflict_saved">Latest saved content</string>
     <string name="travel_add_city">Add city</string>

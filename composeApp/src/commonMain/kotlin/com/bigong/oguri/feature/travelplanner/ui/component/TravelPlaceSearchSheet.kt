@@ -59,7 +59,6 @@ import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanFailure
-import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.domain.model.TravelVisitCategory
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
@@ -77,7 +76,6 @@ internal fun TravelPlaceSearchSheet(
     onQuery: (String) -> Unit,
     onSelect: (TravelPlace?) -> Unit,
     onAdd: (TravelPlace, Int, TravelVisitCategory?, String?, String?) -> Unit,
-    onShowVisit: (TravelVisit) -> Unit,
     onDismiss: () -> Unit,
     onRetrySave: () -> Unit,
     onLeaveWithPendingSave: () -> Unit,
@@ -95,14 +93,12 @@ internal fun TravelPlaceSearchSheet(
     var manual by rememberSaveable { mutableStateOf(draft != null) }
     var searchCategory by rememberSaveable { mutableStateOf<TravelVisitCategory?>(null) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
-    var openAfterDiscard by remember { mutableStateOf<TravelVisit?>(null) }
     val selected = search.selected
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
     val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
     val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory))
     val close = {
         if (canDismiss) {
-            openAfterDiscard = null
             if (hasDraft) confirmDiscard = true
             else {
                 if (draft != null) onDraftChange(null)
@@ -119,9 +115,6 @@ internal fun TravelPlaceSearchSheet(
         } else true
     })
     val targetDay = if (manual) draft?.dayNumber ?: day else day
-    val existing = selected?.let { place ->
-        plan.visits.firstOrNull { it.dayNumber == targetDay && it.details.googlePlaceId == place.id }
-    }
 
     ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
         containerColor = colors.backgroundSecondary,
@@ -272,26 +265,6 @@ internal fun TravelPlaceSearchSheet(
                             }
                         }
                     }
-                    if (selected != null) item {
-                        existing?.let { visit ->
-                            val shape = RoundedCornerShape(8.dp)
-                            Row(
-                                Modifier.fillMaxWidth().padding(top = 4.dp)
-                                    .background(com.bigong.oguri.core.designsystem.Mint5, shape)
-                                    .border(1.dp, com.bigong.oguri.core.designsystem.Mint40, shape).padding(12.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Text(stringResource(Res.string.travel_already_added, targetDay), Modifier.weight(1f), style = OguriTheme.typography.bodySmall, color = colors.textSecondary)
-                                TravelTextButton(
-                                    onClick = {
-                                        if (hasUnsavedPlaceInput(draft, null, searchCategory)) { openAfterDiscard = visit; confirmDiscard = true }
-                                        else onShowVisit(visit)
-                                    },
-                                    enabled = canEdit,
-                                ) { Text(stringResource(Res.string.travel_show_existing_visit), style = OguriTheme.typography.labelMedium) }
-                            }
-                        }
-                    }
                     if (search.results.isNotEmpty()) item {
                         Box(Modifier.padding(top = if (selected == null) 12.dp else 16.dp)) {
                             TravelCategoryPicker(searchCategory, canEdit) { searchCategory = it }
@@ -333,9 +306,7 @@ internal fun TravelPlaceSearchSheet(
             onDiscard = {
                 confirmDiscard = false
                 onDraftChange(null)
-                val visit = openAfterDiscard
-                openAfterDiscard = null
-                if (visit == null) onDismiss() else onShowVisit(visit)
+                onDismiss()
             },
         )
     }

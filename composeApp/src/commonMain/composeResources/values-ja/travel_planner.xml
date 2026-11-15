@@ -55,7 +55,6 @@
     <string name="travel_add_without_date">日付を決めずに追加</string>
     <string name="travel_manual_add">手動で追加</string>
     <string name="travel_add_again">もう一度訪問する予定を追加</string>
-    <string name="travel_show_existing_visit">予定で確認</string>
     <string name="travel_place_added">予定に追加しました</string>
     <string name="travel_map_show">地図を表示</string>
     <string name="travel_map_hide">地図を閉じる</string>
@@ -221,7 +220,6 @@
     <string name="travel_day_number">%1$d日目</string>
     <string name="travel_discard_message">入力内容は保存されません。</string>
     <string name="travel_keep_writing">編集を続ける</string>
-    <string name="travel_already_added">%1$d日目に追加済みの場所です</string>
     <string name="travel_conflict_mine">自分の編集内容</string>
     <string name="travel_conflict_saved">最新の保存内容</string>
     <string name="travel_add_city">都市を追加</string>

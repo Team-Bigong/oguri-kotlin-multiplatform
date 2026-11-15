@@ -55,7 +55,6 @@
     <string name="travel_add_without_date">날짜 없이 담기</string>
     <string name="travel_manual_add">직접 추가</string>
     <string name="travel_add_again">다시 방문 추가</string>
-    <string name="travel_show_existing_visit">일정에서 보기</string>
     <string name="travel_place_added">일정에 추가했어요</string>
     <string name="travel_map_show">지도 펼치기</string>
     <string name="travel_map_hide">지도 접기</string>
@@ -221,7 +220,6 @@
     <string name="travel_day_number">%1$d일차</string>
     <string name="travel_discard_message">입력한 내용은 저장되지 않아요.</string>
     <string name="travel_keep_writing">계속 작성</string>
-    <string name="travel_already_added">%1$d일차에 이미 담은 장소예요</string>
     <string name="travel_conflict_mine">내가 작성한 내용</string>
     <string name="travel_conflict_saved">최근 저장된 내용</string>
     <string name="travel_add_city">도시 추가</string>

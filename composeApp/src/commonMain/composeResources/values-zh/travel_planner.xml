@@ -55,7 +55,6 @@
     <string name="travel_add_without_date">添加为日期待定</string>
     <string name="travel_manual_add">手动添加</string>
     <string name="travel_add_again">再次添加到访</string>
-    <string name="travel_show_existing_visit">在行程中查看</string>
     <string name="travel_place_added">已添加到行程</string>
     <string name="travel_map_show">显示地图</string>
     <string name="travel_map_hide">收起地图</string>
@@ -221,7 +220,6 @@
     <string name="travel_day_number">第%1$d天</string>
     <string name="travel_discard_message">输入内容不会保存。</string>
     <string name="travel_keep_writing">继续编辑</string>
-    <string name="travel_already_added">此地点已添加到第%1$d天</string>
     <string name="travel_conflict_mine">我的修改</string>
     <string name="travel_conflict_saved">最新保存内容</string>
     <string name="travel_add_city">添加城市</string>
