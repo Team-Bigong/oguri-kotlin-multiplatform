@@ -33,6 +33,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
@@ -219,7 +222,14 @@ internal fun TravelDetailsDialog(
                                 if (source.startDate != null && source.endDate != null) Text(stringResource(Res.string.travel_card_date_range, travelWeekDate(source.startDate), travelWeekDate(source.endDate)), style = OguriTheme.typography.cardSubtitle)
                                 Text(stringResource(Res.string.travel_source_explanation), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                                    TravelTextButton(enabled = !busy, onClick = { onOpenSource(source) }) { Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) { Text(stringResource(Res.string.travel_open_source)); Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(16.dp)) } }
+                                    Row(
+                                        Modifier.heightIn(min = 32.dp).semantics { role = Role.Button }.noRippleClickable(enabled = !busy, onClick = { onOpenSource(source) }),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    ) {
+                                        Text(stringResource(Res.string.travel_open_source), style = OguriTheme.typography.labelLarge, color = if (busy) Neutral50 else Neutral100)
+                                        Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(16.dp), tint = OguriTheme.colors.textTertiary)
+                                    }
                                 }
                             }
                         }
