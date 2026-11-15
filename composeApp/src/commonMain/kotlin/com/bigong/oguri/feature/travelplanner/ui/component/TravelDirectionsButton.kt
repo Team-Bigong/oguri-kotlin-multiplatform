@@ -47,7 +47,7 @@ internal fun TravelDirectionsButton(
         failed = runCatching { uriHandler.openUri(url) }.isFailure
         if (!failed) onOpened()
     }
-    val content: @Composable () -> Unit = { Text(stringResource(if (compact) Res.string.travel_directions_compact else Res.string.travel_directions), style = if (outlined) OguriTheme.typography.cardTitle else OguriTheme.typography.labelMedium) }
+    val content: @Composable () -> Unit = { Text(stringResource(if (compact) Res.string.travel_directions_compact else Res.string.travel_directions), style = if (outlined) OguriTheme.typography.cardTitle else if (compact) OguriTheme.typography.labelLarge else OguriTheme.typography.labelMedium) }
     if (outlined) TravelOutlineButton(onClick = openDirections, enabled = enabled, modifier = modifier, content = content)
     else TravelTextButton(onClick = openDirections, enabled = enabled, modifier = modifier, content = content)
     if (failed) {

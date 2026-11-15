@@ -145,8 +145,8 @@ internal fun TravelVisitEditor(
                 ) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(draft.placeTitle ?: draft.name, style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
-                        placeAddress?.let { Text(it, style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary) }
-                        GooglePlacesAttribution(attributions)
+                        Text(listOfNotNull(placeAddress, stringResource(Res.string.travel_google_maps_attribution)).joinToString(" · "), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        if (attributions.isNotEmpty()) GooglePlacesAttribution(attributions, includeGoogleBranding = false)
                     }
                     TravelDirectionsButton(placeId, draft.placeTitle, compact = true, enabled = !isSaving && !canRetrySave, onOpened = onDirectionsOpened)
                 }
