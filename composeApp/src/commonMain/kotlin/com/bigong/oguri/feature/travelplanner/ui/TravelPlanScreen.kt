@@ -1,7 +1,7 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
 import oguri.composeapp.generated.resources.ic_travel_drag
 import oguri.composeapp.generated.resources.ic_travel_note
@@ -301,7 +301,7 @@ internal fun TravelPlanScreen(
             },
         ) { mapVisible ->
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(start = 24.dp, top = 12.dp, end = 24.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -335,7 +335,7 @@ internal fun TravelPlanScreen(
             LazyColumn(
                 state = visitListState,
                 modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 8.dp),
             ) {
                 val undo = state.visitUndo?.takeIf { it.dayNumber == state.selectedDay }
                 if (visits.isEmpty()) {
@@ -344,7 +344,7 @@ internal fun TravelPlanScreen(
                             stringResource(Res.string.travel_empty_day),
                             color = OguriTheme.colors.textTertiary,
                             style = travelTextStyle(14, 21),
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
+                            modifier = Modifier.fillMaxWidth().padding(top = 32.dp, bottom = 24.dp),
                             textAlign = TextAlign.Center,
                         )
                     }
@@ -492,14 +492,11 @@ private fun TravelVisitRow(
     var showMenu by remember { mutableStateOf(false) }
     var swiped by remember(visit.id) { mutableStateOf(false) }
     val shape = RoundedCornerShape(8.dp)
+    val deleteVisible = swiped && canEdit
+    val deleteWidth = 72.dp
     Box(Modifier.fillMaxWidth().clip(shape)) {
-        if (swiped && canEdit) Box(
-            Modifier.align(Alignment.CenterEnd).width(64.dp).heightIn(min = 60.dp)
-                .background(com.bigong.oguri.core.designsystem.Orange50)
-                .noRippleClickable(onClick = onRemove), contentAlignment = Alignment.Center,
-        ) { Text(stringResource(Res.string.travel_delete), color = com.bigong.oguri.core.designsystem.Neutral0, style = OguriTheme.typography.labelLarge) }
         Row(
-            Modifier.fillMaxWidth().offset(x = if (swiped && canEdit) (-64).dp else 0.dp)
+            Modifier.fillMaxWidth().padding(end = if (deleteVisible) deleteWidth else 0.dp)
                 .background(if (selected) Mint10 else Neutral5)
                 .pointerInput(visit.id, canEdit) {
                     if (canEdit) {
@@ -546,6 +543,18 @@ private fun TravelVisitRow(
                             TravelTextButton(onClick = { showMenu = false; onRemove() }) { Text(stringResource(Res.string.travel_delete), color = com.bigong.oguri.core.designsystem.Orange50) }
                         }
                     }
+                }
+            }
+        }
+        if (deleteVisible) {
+            Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
+                Box(
+                    modifier = Modifier.width(deleteWidth).fillMaxHeight()
+                        .background(com.bigong.oguri.core.designsystem.Orange50)
+                        .noRippleClickable(onClick = onRemove),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(stringResource(Res.string.travel_delete), color = Neutral0, style = OguriTheme.typography.labelLarge)
                 }
             }
         }
