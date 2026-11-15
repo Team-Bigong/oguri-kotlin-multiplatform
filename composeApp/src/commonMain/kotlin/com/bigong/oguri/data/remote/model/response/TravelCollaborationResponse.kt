@@ -16,11 +16,13 @@ internal data class TravelMembersResponse(
     val ownershipTarget: String? = null,
     val hasActiveInvite: Boolean = false,
     val inviteExpiresAt: String? = null,
+    val inviteToken: String? = null,
 )
 
 @Serializable
 internal data class IssuedTravelInviteResponse(
     val token: String,
+    val expiresAt: String? = null,
 )
 
 @Serializable

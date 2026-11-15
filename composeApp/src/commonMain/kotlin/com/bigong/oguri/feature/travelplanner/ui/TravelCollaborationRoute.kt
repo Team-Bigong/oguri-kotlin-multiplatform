@@ -75,6 +75,7 @@ import oguri.composeapp.generated.resources.travel_delete_trip
 import oguri.composeapp.generated.resources.travel_invitation
 import oguri.composeapp.generated.resources.travel_invite_copied
 import oguri.composeapp.generated.resources.travel_invite_explanation
+import oguri.composeapp.generated.resources.travel_invite_copy_unavailable
 import oguri.composeapp.generated.resources.travel_invite_missing
 import oguri.composeapp.generated.resources.travel_invited_by
 import oguri.composeapp.generated.resources.travel_join_trip
@@ -118,7 +119,8 @@ internal fun TravelMembersRoute(
     var showMembers by remember(planId) { mutableStateOf(false) }
     var showReminder by remember(planId) { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
-    var copied by remember(state.invite) { mutableStateOf(false) }
+    val inviteToken = state.members?.inviteToken
+    var copied by remember(inviteToken) { mutableStateOf(false) }
     var confirmationKind by remember { mutableStateOf("delete") }
     var confirmation by remember { mutableStateOf<(() -> Unit)?>(null) }
     LaunchedEffect(viewModel, reminderViewModel, planId) {
@@ -215,19 +217,17 @@ internal fun TravelMembersRoute(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         itemVerticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (state.invite == null) {
+                        if (!members.hasActiveInvite) {
                             TravelOutlineButton(enabled = !state.busy, onClick = { viewModel.issue(planId) }) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Icon(painterResource(Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
                                     Text(stringResource(Res.string.travel_create_invite))
                                 }
                             }
-                        } else {
+                        } else if (inviteToken != null) {
                             TravelOutlineButton(enabled = !state.busy, onClick = {
-                                state.invite?.let {
-                                    clipboard.setText(AnnotatedString(travelInviteLink(it)))
-                                    copied = true
-                                }
+                                clipboard.setText(AnnotatedString(travelInviteLink(inviteToken)))
+                                copied = true
                             }) {
                                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Icon(painterResource(if (copied) Res.drawable.ic_travel_check else Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
@@ -235,7 +235,7 @@ internal fun TravelMembersRoute(
                                 }
                             }
                         }
-                        if (state.invite != null || members.hasActiveInvite) Box(
+                        if (members.hasActiveInvite) Box(
                             Modifier.heightIn(min = 45.dp)
                                 .noRippleClickable(enabled = !state.busy, onClick = { confirmationKind = "revoke"; confirmation = { viewModel.revoke(planId) } })
                                 .padding(horizontal = 8.dp),
@@ -243,6 +243,14 @@ internal fun TravelMembersRoute(
                         ) {
                             Text(stringResource(Res.string.travel_revoke_invite), style = travelTextStyle(13, 16), color = colors.textTertiary)
                         }
+                    }
+                    if (members.hasActiveInvite && inviteToken == null) {
+                        Text(
+                            stringResource(Res.string.travel_invite_copy_unavailable),
+                            Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp),
+                            style = OguriTheme.typography.caption,
+                            color = colors.textTertiary,
+                        )
                     }
                     members.inviteExpiresAt?.let { expires ->
                         Text(stringResource(Res.string.travel_invite_expiry_hint, travelWeekDate(expires.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date)), Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)

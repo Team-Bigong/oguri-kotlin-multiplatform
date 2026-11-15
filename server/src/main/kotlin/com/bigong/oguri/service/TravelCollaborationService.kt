@@ -23,6 +23,8 @@ import java.time.ZoneOffset
 import java.util.Base64
 import java.util.HexFormat
 import java.util.UUID
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 @Service
 class TravelCollaborationService(
@@ -33,8 +35,13 @@ class TravelCollaborationService(
     private val reminders: TravelReminderRepository,
     private val usage: TravelUsageRepository,
     @param:Value("\${TRAVEL_INVITE_TTL_DAYS:7}") private val inviteTtlDays: Long,
+    @param:Value("\${TRAVEL_INVITE_TOKEN_SECRET:\${JWT_SECRET:}}") inviteTokenSecret: String = "",
 ) {
-    private val random: SecureRandom = SecureRandom()
+    private val inviteTokenKey: SecretKeySpec =
+        SecretKeySpec(
+            inviteTokenSecret.takeIf(String::isNotBlank)?.toByteArray() ?: ByteArray(HMAC_KEY_BYTES).also(SecureRandom()::nextBytes),
+            "HmacSHA256",
+        )
 
     @Transactional
     fun members(
@@ -43,8 +50,19 @@ class TravelCollaborationService(
     ): TravelMembersResponse {
         planService.requireMember(memberId)
         val plan = planService.accessiblePlan(memberId, planId)
-        val inviteExpiresAt = if (plan.ownerId == memberId) collaboration.activeInviteExpiresAt(planId, now()) else null
-        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId), inviteExpiresAt != null, inviteExpiresAt)
+        val activeInvite = if (plan.ownerId == memberId) collaboration.activeInviteForOwner(planId, memberId, now()) else null
+        val inviteToken =
+            activeInvite?.let { invite ->
+                invite.nonce?.let { nonce -> inviteToken(planId, nonce) }?.takeIf { hash(it) == invite.hash }
+            }
+        return TravelMembersResponse(
+            currentMemberId = memberId,
+            members = collaboration.members(planId, plan.ownerId),
+            ownershipTarget = collaboration.ownershipTarget(planId),
+            hasActiveInvite = activeInvite != null,
+            inviteExpiresAt = activeInvite?.expiresAt,
+            inviteToken = inviteToken,
+        )
     }
 
     @Transactional
@@ -53,10 +71,11 @@ class TravelCollaborationService(
         planId: UUID,
     ): IssuedTravelInvite {
         owner(memberId, planId)
-        val token = Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(random::nextBytes))
+        val nonce = UUID.randomUUID()
+        val token = inviteToken(planId, nonce)
         val expires = now().plusDays(inviteTtlDays.coerceIn(1, 30))
         collaboration.revokeInvites(planId)
-        val storedExpiresAt = collaboration.issue(planId, memberId, hash(token), expires)
+        val storedExpiresAt = collaboration.issue(planId, memberId, hash(token), expires, nonce)
         return IssuedTravelInvite(token, storedExpiresAt)
     }
 
@@ -270,6 +289,13 @@ class TravelCollaborationService(
         if (!expiresAt.isAfter(now())) throw TravelInviteException(HttpStatus.GONE, "INVITE_EXPIRED")
     }
 
+    private fun inviteToken(planId: UUID, nonce: UUID): String {
+        val mac = Mac.getInstance(inviteTokenKey.algorithm)
+        mac.init(inviteTokenKey)
+        val token = mac.doFinal("oguri:travel-invite:v1:$planId:$nonce".toByteArray())
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(token)
+    }
+
     private fun hash(token: String): String {
         if (!TOKEN.matches(token)) throw TravelInviteException(HttpStatus.NOT_FOUND, "INVITE_UNKNOWN")
         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(token.toByteArray()))
@@ -278,6 +304,7 @@ class TravelCollaborationService(
     private fun now(): OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
 
     private companion object {
+        const val HMAC_KEY_BYTES = 32
         val TOKEN: Regex = Regex("[A-Za-z0-9_-]{43}")
     }
 }
@@ -288,6 +315,7 @@ data class TravelMembersResponse(
     val ownershipTarget: String?,
     val hasActiveInvite: Boolean = false,
     val inviteExpiresAt: OffsetDateTime? = null,
+    val inviteToken: String? = null,
 )
 
 data class IssuedTravelInvite(

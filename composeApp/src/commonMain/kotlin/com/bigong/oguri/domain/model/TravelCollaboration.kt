@@ -16,9 +16,15 @@ data class TravelMembers(
     val ownershipTarget: String?,
     val hasActiveInvite: Boolean = false,
     val inviteExpiresAt: Instant? = null,
+    val inviteToken: String? = null,
 ) {
     val isOwner: Boolean get() = members.any { it.id == currentMemberId && it.owner }
 }
+
+data class TravelIssuedInvite(
+    val token: String,
+    val expiresAt: Instant?,
+)
 
 data class TravelInvitePreview(
     val title: String,

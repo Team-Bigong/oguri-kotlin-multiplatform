@@ -80,15 +80,42 @@ class TravelManagementAccessTest {
             viewModel.recentChanges("plan")
             advanceUntilIdle()
             assertNotNull(viewModel.state.value.members)
-            assertNotNull(viewModel.state.value.invite)
+            assertNotNull(viewModel.state.value.members?.inviteToken)
             assertNotNull(viewModel.state.value.recentChanges)
             repository.failure = TravelPlanFailure.UNAVAILABLE
             viewModel.members("plan")
             advanceUntilIdle()
             assertNull(viewModel.state.value.members)
-            assertNull(viewModel.state.value.invite)
+            assertNull(viewModel.state.value.members?.inviteToken)
             assertNull(viewModel.state.value.recentChanges)
             assertEquals(TravelPlanFailure.UNAVAILABLE, viewModel.state.value.failure)
+        }
+
+    @Test
+    fun reopeningManagementRestoresTheSameInviteUntilRevoked() =
+        runTest {
+            val repository = ManagementCollaboration()
+            val firstViewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+            firstViewModel.members("plan")
+            advanceUntilIdle()
+            assertFalse(assertNotNull(firstViewModel.state.value.members).hasActiveInvite)
+
+            firstViewModel.issue("plan")
+            advanceUntilIdle()
+            val issued = assertNotNull(firstViewModel.state.value.members)
+            assertTrue(issued.hasActiveInvite)
+            assertNotNull(issued.inviteToken)
+
+            val reopenedViewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+            reopenedViewModel.members("plan")
+            advanceUntilIdle()
+            assertEquals(issued.inviteToken, reopenedViewModel.state.value.members?.inviteToken)
+
+            reopenedViewModel.revoke("plan")
+            advanceUntilIdle()
+            val revoked = assertNotNull(reopenedViewModel.state.value.members)
+            assertFalse(revoked.hasActiveInvite)
+            assertNull(revoked.inviteToken)
         }
 
     @Test
@@ -194,12 +221,21 @@ private class ManagementCollaboration : TravelCollaborationRepository {
         failure?.let { throw TravelPlanException(it) }
     }
 
+    private var activeInvite: TravelIssuedInvite? = null
+
     override suspend fun members(planId: String): TravelMembers {
         checkAccess()
-        return TravelMembers("owner", listOf(TravelMember("owner", "Nickname", true)), null)
+        return TravelMembers(
+            "owner",
+            listOf(TravelMember("owner", "Nickname", true)),
+            null,
+            hasActiveInvite = activeInvite != null,
+            inviteToken = activeInvite?.token,
+        )
     }
 
-    override suspend fun issue(planId: String): String = "secret-invite"
+    override suspend fun issue(planId: String): TravelIssuedInvite =
+        TravelIssuedInvite("secret-invite", null).also { activeInvite = it }
 
     override suspend fun recentChanges(planId: String): TravelRecentChanges =
         TravelRecentChanges(1, listOf(TravelChange(1, 1, "VISIT_ADDED")))
@@ -209,7 +245,9 @@ private class ManagementCollaboration : TravelCollaborationRepository {
         revision: Long,
     ) = checkAccess()
 
-    override suspend fun revoke(planId: String): Unit = error("Unused")
+    override suspend fun revoke(planId: String) {
+        activeInvite = null
+    }
 
     override suspend fun remove(
         planId: String,
