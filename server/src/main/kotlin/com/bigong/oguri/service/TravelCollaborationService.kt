@@ -56,8 +56,8 @@ class TravelCollaborationService(
         val token = Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(random::nextBytes))
         val expires = now().plusDays(inviteTtlDays.coerceIn(1, 30))
         collaboration.revokeInvites(planId)
-        collaboration.issue(planId, memberId, hash(token), expires)
-        return IssuedTravelInvite(token, expires)
+        val storedExpiresAt = collaboration.issue(planId, memberId, hash(token), expires)
+        return IssuedTravelInvite(token, storedExpiresAt)
     }
 
     @Transactional
