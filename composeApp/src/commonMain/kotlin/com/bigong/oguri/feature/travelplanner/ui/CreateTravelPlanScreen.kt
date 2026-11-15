@@ -71,6 +71,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
@@ -217,7 +218,7 @@ internal fun CreateTravelPlanScreen(
             if (!state.creationReady && !state.creationRecoveryFailed) TravelLoading(Modifier.fillMaxWidth())
             Column(Modifier.padding(horizontal = 4.dp)) {
                 Text(stringResource(Res.string.travel_create_heading), style = OguriTheme.typography.sectionTitle, color = colors.textPrimary)
-                Text(stringResource(Res.string.travel_create_description), style = OguriTheme.typography.bodyMedium, color = colors.textTertiary)
+                Text(stringResource(Res.string.travel_create_description), style = OguriTheme.typography.cardSubtitle, color = colors.textTertiary)
             }
             Spacer(Modifier.height(36.dp))
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -233,7 +234,7 @@ internal fun CreateTravelPlanScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = Mint30)
-                    Text(cities.joinToString(" · "), Modifier.weight(1f), style = OguriTheme.typography.bodyLarge, color = colors.textPrimary)
+                    Text(cities.joinToString(" · "), Modifier.weight(1f), style = travelTextStyle(15, 18), color = colors.textPrimary)
                     Text(stringResource(Res.string.travel_search_cities), style = OguriTheme.typography.labelMedium, color = colors.textTertiary)
                 }
                 if (cities.size > 1) {
@@ -289,12 +290,12 @@ internal fun CreateTravelPlanScreen(
                 singleLine = true,
                 enabled = canEdit,
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = titleLabel },
-                textStyle = OguriTheme.typography.bodyLarge.copy(color = colors.textPrimary),
+                textStyle = travelTextStyle(15, 18).copy(color = colors.textPrimary),
                 cursorBrush = SolidColor(colors.textPrimary),
                 decorationBox = { field ->
                     Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(colors.surfaceCard, RoundedCornerShape(8.dp))
                         .border(1.dp, colors.borderStrong, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
-                        if (title.isEmpty()) Text(if (cityName.isBlank()) titleLabel else defaultTitle, style = OguriTheme.typography.bodyLarge, color = colors.textPrimary)
+                        if (title.isEmpty()) Text(if (cityName.isBlank()) titleLabel else defaultTitle, style = travelTextStyle(15, 18), color = colors.textPrimary)
                         field()
                     }
                 },

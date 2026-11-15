@@ -80,13 +80,13 @@ internal fun TravelReminderDialog(
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 Column(Modifier.padding(horizontal = 24.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(Res.string.travel_reminder_heading), style = OguriTheme.typography.sectionTitle, color = OguriTheme.colors.textPrimary)
-                    Text(stringResource(Res.string.travel_reminder_explanation), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary)
+                    Text(stringResource(Res.string.travel_reminder_explanation), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textTertiary)
                 }
                 if (state.busy) TravelLoading(Modifier.fillMaxWidth())
                 if (settings != null) {
                     HorizontalDivider(color = OguriTheme.colors.borderSubtle)
                     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(stringResource(Res.string.travel_reminder_toggle), Modifier.weight(1f), style = OguriTheme.typography.bodyMedium)
+                        Text(stringResource(Res.string.travel_reminder_toggle), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
                         val toggleLabel = stringResource(Res.string.travel_reminder_toggle)
                         Box(Modifier.size(48.dp).semantics { contentDescription = toggleLabel }
                             .toggleable(value = enabled && !state.permissionDenied, role = Role.Switch, enabled = !state.busy && !state.permissionDenied && (settings.canSchedule || reminder != null), onValueChange = { enabled = it }), contentAlignment = Alignment.Center) {
@@ -151,8 +151,8 @@ internal fun TravelReminderDialog(
 private fun TravelReminderSettingRow(label: String, value: String, enabled: Boolean, onClick: () -> Unit) {
     HorizontalDivider(color = OguriTheme.colors.borderSubtle)
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).noRippleClickable(enabled = enabled, onClick = onClick).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(label, Modifier.weight(1f), style = OguriTheme.typography.bodyMedium)
-        Text(value, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textSecondary)
+        Text(label, Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
+        Text(value, style = travelTextStyle(15, 18), color = OguriTheme.colors.textSecondary)
         Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = OguriTheme.colors.textPrimary)
     }
 }

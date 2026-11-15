@@ -69,7 +69,7 @@ internal fun TravelCitySearchDialog(
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 BasicTextField(
                     value = state.query, onValueChange = { if (it.length <= 120) onQuery(it) }, singleLine = true,
-                    textStyle = OguriTheme.typography.bodyLarge.copy(color = colors.textPrimary), cursorBrush = SolidColor(colors.textPrimary),
+                    textStyle = travelTextStyle(15, 18).copy(color = colors.textPrimary), cursorBrush = SolidColor(colors.textPrimary),
                     modifier = Modifier.fillMaxWidth().semantics { contentDescription = searchLabel },
                     decorationBox = { field ->
                         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(colors.surfaceCard, RoundedCornerShape(8.dp))
@@ -77,7 +77,7 @@ internal fun TravelCitySearchDialog(
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Icon(painterResource(Res.drawable.ic_travel_search), null, Modifier.size(20.dp), tint = colors.textTertiary)
                             Box(Modifier.weight(1f)) {
-                                if (state.query.isEmpty()) Text(stringResource(Res.string.travel_city_search_placeholder), style = OguriTheme.typography.bodyMedium, color = colors.textTertiary)
+                                if (state.query.isEmpty()) Text(stringResource(Res.string.travel_city_search_placeholder), style = travelTextStyle(15, 18), color = colors.textTertiary)
                                 field()
                             }
                         }
@@ -108,7 +108,7 @@ internal fun TravelCitySearchDialog(
                 state.suggestions.forEach { suggestion ->
                     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).noRippleClickable(enabled = !state.loading, onClick = { onChoose(suggestion) }), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = colors.textTertiary)
-                        Text(suggestion.label, style = OguriTheme.typography.bodyLarge, color = colors.textPrimary)
+                        Text(suggestion.label, style = travelTextStyle(15, 18), color = colors.textPrimary)
                     }
                 }
                 if (state.suggestions.isNotEmpty()) GooglePlacesAttribution(emptyList())

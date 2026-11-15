@@ -164,7 +164,7 @@ internal fun TravelVisitEditor(
                         .noRippleClickable(enabled = canEdit, onClick = { showDayMenu = true }).padding(horizontal = 13.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(travelDayLabel(dates, draft.dayNumber), Modifier.weight(1f), style = OguriTheme.typography.bodyLarge)
+                    Text(travelDayLabel(dates, draft.dayNumber), Modifier.weight(1f), style = travelTextStyle(15, 18))
                     Icon(painterResource(Res.drawable.ic_travel_chevron_down), null, Modifier.size(20.dp), tint = OguriTheme.colors.textTertiary)
                 }
             }

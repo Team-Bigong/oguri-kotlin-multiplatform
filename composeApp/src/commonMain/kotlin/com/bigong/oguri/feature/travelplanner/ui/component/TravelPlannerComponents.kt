@@ -328,6 +328,7 @@ internal fun travelTextStyle(size: Int, lineHeight: Int, weight: FontWeight = Fo
             size >= 22 -> sectionTitle
             size >= 18 -> cardTitle
             size >= 15 && weight >= FontWeight.Medium -> cardSubtitle
+            size == 15 -> bodyLarge.copy(fontSize = cardSubtitle.fontSize)
             size >= 15 -> bodyLarge
             size == 14 && weight >= FontWeight.SemiBold -> labelLarge
             size == 14 -> bodyMedium
