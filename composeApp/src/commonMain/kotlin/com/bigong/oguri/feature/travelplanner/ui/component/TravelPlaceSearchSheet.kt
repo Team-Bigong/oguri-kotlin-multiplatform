@@ -189,9 +189,8 @@ internal fun TravelPlaceSearchSheet(
                                 Res.string.travel_manual_location_placeholder, TravelVisitDetails.MAX_LOCATION_LENGTH, canEdit,
                                 supportingText = Res.string.travel_manual_location_hint,
                             )
-                            TravelPlaceField(
-                                draft.note, { onDraftChange(draft.copy(note = it)) }, Res.string.travel_visit_note,
-                                Res.string.travel_manual_note_placeholder, TravelVisitDetails.MAX_NOTE_LENGTH, canEdit, multiline = true,
+                            TravelNoteField(
+                                draft.note, { onDraftChange(draft.copy(note = it)) }, Res.string.travel_visit_note, canEdit,
                             )
                             TravelCategoryPicker(draft.category, canEdit) { onDraftChange(draft.copy(category = it)) }
                         }

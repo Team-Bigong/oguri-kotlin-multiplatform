@@ -206,11 +206,10 @@ internal fun TravelVisitEditor(
                     Res.string.travel_manual_location_placeholder, TravelVisitDetails.MAX_LOCATION_LENGTH, canEdit)
             }
             if (!comparing || TravelVisitField.NOTE in comparisonFields) {
-                TravelPlaceField(
+                TravelNoteField(
                     draft.note, { onDraftChange(draft.copy(note = it)) },
                     if (comparing) Res.string.travel_note_mine else Res.string.travel_visit_note,
-                    Res.string.travel_manual_note_placeholder, TravelVisitDetails.MAX_NOTE_LENGTH, canEdit,
-                    multiline = true, supportingText = Res.string.travel_visit_note_shared.takeUnless { comparing },
+                    canEdit, supportingText = Res.string.travel_visit_note_shared.takeUnless { comparing },
                 )
             }
             if (!comparing || TravelVisitField.CATEGORY in comparisonFields) {
