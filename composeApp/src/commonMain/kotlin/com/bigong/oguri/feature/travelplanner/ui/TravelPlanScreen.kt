@@ -95,6 +95,8 @@ import oguri.composeapp.generated.resources.travel_day
 import oguri.composeapp.generated.resources.travel_day_outside_trip
 import oguri.composeapp.generated.resources.travel_discard_draft
 import oguri.composeapp.generated.resources.travel_empty_day
+import oguri.composeapp.generated.resources.travel_completed_trip
+import oguri.composeapp.generated.resources.ic_travel_row_arrow
 import oguri.composeapp.generated.resources.travel_find_next_holiday
 import oguri.composeapp.generated.resources.travel_has_note
 import oguri.composeapp.generated.resources.travel_list
@@ -221,6 +223,7 @@ internal fun TravelPlanScreen(
         TravelPlanPane(
             scene = scene,
             hideMap = unappliedOrder != null,
+            emptyDay = visits.isEmpty(),
             viewportRequest = state.viewportRequest,
             focusedVisitId = state.mapFocusedVisitId,
             onMarkerClick = onMarkerClick,
@@ -406,21 +409,24 @@ internal fun TravelPlanScreen(
                 }
             }
         }
-        TravelBottomAction(enabled = canEdit, onClick = onSearchPlaces) {
+        val completed = plan.summary.hasEnded { Clock.System.now().toLocalDateTime(it).date }
+        if (completed) {
+            HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+            val shape = RoundedCornerShape(8.dp)
+            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp)
+                .background(com.bigong.oguri.core.designsystem.Mint5, shape)
+                .border(1.dp, com.bigong.oguri.core.designsystem.Mint40, shape)
+                .noRippleClickable(onClick = onFindNextHoliday).heightIn(min = 50.dp).padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(Res.string.travel_completed_trip), Modifier.weight(1f), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textSecondary)
+                Text(stringResource(Res.string.travel_find_next_holiday), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+                Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(18.dp), tint = OguriTheme.colors.textTertiary)
+            }
+        }
+        TravelBottomAction(enabled = canEdit, onClick = onSearchPlaces, showDivider = !completed, topPadding = if (completed) 10.dp else 12.dp) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painterResource(Res.drawable.ic_travel_plus), contentDescription = null, modifier = Modifier.size(18.dp))
                 Text(stringResource(Res.string.travel_add_visit))
-            }
-        }
-        if (plan.summary.hasEnded {
-                Clock.System
-                    .now()
-                    .toLocalDateTime(it)
-                    .date
-            }
-        ) {
-            TravelTextButton(onClick = onFindNextHoliday, modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(stringResource(Res.string.travel_find_next_holiday))
             }
         }
         state.inspectedVisitId?.let { id ->

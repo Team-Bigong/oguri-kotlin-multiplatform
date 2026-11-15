@@ -312,4 +312,5 @@
     <string name="travel_readonly">읽기 전용</string>
     <string name="travel_category_label">카테고리</string>
     <string name="travel_city_lookup_failed">도시 정보를 확인하지 못했어요</string>
+    <string name="travel_completed_trip">다녀온 여행이에요</string>
 </resources>

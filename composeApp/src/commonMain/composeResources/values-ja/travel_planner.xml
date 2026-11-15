@@ -312,4 +312,5 @@
     <string name="travel_readonly">閲覧専用</string>
     <string name="travel_category_label">カテゴリ</string>
     <string name="travel_city_lookup_failed">都市情報を確認できませんでした</string>
+    <string name="travel_completed_trip">行ってきた旅行です</string>
 </resources>

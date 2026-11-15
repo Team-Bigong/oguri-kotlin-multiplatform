@@ -59,6 +59,7 @@ internal fun TravelPlanPane(
     onMarkerClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     hideMap: Boolean = false,
+    emptyDay: Boolean = false,
     status: @Composable () -> Unit,
     content: @Composable ColumnScope.(Boolean) -> Unit,
 ) {
@@ -75,7 +76,7 @@ internal fun TravelPlanPane(
         val maxMapHeight = (maxHeight - chromeHeight - (112 * density.fontScale).dp).coerceAtLeast(0.dp)
         val canShowMap = !hideMap && maxMapHeight >= 120.dp
         val showMap = canShowMap && mapExpanded
-        val mapHeight = 182.dp.coerceAtMost(maxMapHeight)
+        val mapHeight = (if (emptyDay) 200.dp else 182.dp).coerceAtMost(maxMapHeight)
         Column(Modifier.fillMaxSize()) {
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
             Spacer(Modifier.height(16.dp))

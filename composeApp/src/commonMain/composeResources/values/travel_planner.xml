@@ -312,4 +312,5 @@
     <string name="travel_readonly">Read only</string>
     <string name="travel_category_label">Category</string>
     <string name="travel_city_lookup_failed">Couldn’t verify the city information</string>
+    <string name="travel_completed_trip">You’ve taken this trip</string>
 </resources>

@@ -304,14 +304,16 @@ internal fun TravelInlineFailure(
 internal fun TravelBottomAction(
     enabled: Boolean,
     onClick: () -> Unit,
+    showDivider: Boolean = true,
+    topPadding: Dp = 12.dp,
     content: @Composable () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
-        HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+        if (showDivider) HorizontalDivider(color = OguriTheme.colors.borderSubtle)
         TravelPrimaryButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 20.dp),
             textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
             content = content,
         )
