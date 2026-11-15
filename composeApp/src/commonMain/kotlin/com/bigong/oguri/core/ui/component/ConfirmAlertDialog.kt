@@ -41,6 +41,8 @@ fun ConfirmAlertDialog(
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
     onCancelClick: () -> Unit,
+    iconTint: androidx.compose.ui.graphics.Color = Orange50,
+    messageColor: androidx.compose.ui.graphics.Color = Orange50,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -55,18 +57,18 @@ fun ConfirmAlertDialog(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 24.dp),
             shape = RoundedCornerShape(8.dp),
             color = Neutral0,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Image(
                     painter = painterResource(iconResource),
                     contentDescription = null,
-                    colorFilter = ColorFilter.tint(WarningAmber),
+                    colorFilter = ColorFilter.tint(iconTint),
                     modifier = Modifier.size(48.dp),
                 )
 
@@ -82,7 +84,7 @@ fun ConfirmAlertDialog(
                     Text(
                         text = messageText,
                         style = OguriTheme.typography.bodyMedium,
-                        color = Orange50,
+                        color = messageColor,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                     )
@@ -104,7 +106,7 @@ fun ConfirmAlertDialog(
                         Text(
                             text = confirmButtonText,
                             style = OguriTheme.typography.bodyMedium,
-                            color = Neutral0,
+                            color = OguriTheme.colors.textOnMint,
                         )
                     }
 

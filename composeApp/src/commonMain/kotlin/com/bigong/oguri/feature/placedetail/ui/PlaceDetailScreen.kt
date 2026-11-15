@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
@@ -29,10 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.AdvertisementCard
@@ -42,6 +41,7 @@ import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
+import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.feature.placedetail.ui.component.ExperienceCard
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailDescriptionSection
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailImagePager
@@ -50,6 +50,8 @@ import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailSkeletonCont
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTravelInformationCard
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
+import com.bigong.oguri.feature.travelplanner.ui.TravelDestinationEntry
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
@@ -81,6 +83,8 @@ fun PlaceDetailScreen(
     onPhotoClick: (List<String>, Int) -> Unit,
     onCreateTravelPlan: (() -> Unit)? = null,
     onTravelEntryVisible: (() -> Unit)? = null,
+    matchingTravelPlans: List<TravelPlanSummary> = emptyList(),
+    onOpenTravelPlan: ((String) -> Unit)? = null,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val isInitialLoading = placeDetail == null && placeDetailUiState.isLoading
@@ -139,13 +143,13 @@ fun PlaceDetailScreen(
                             ) {
                                 Text(
                                     text = placeDetail.city,
-                                    style = OguriTheme.typography.sectionTitle,
+                                    style = travelTextStyle(22, 26, FontWeight.Bold),
                                     color = Neutral100,
                                 )
                                 Text(
                                     text = stringResource(Res.string.place_detail_country, placeDetail.country),
-                                    style = OguriTheme.typography.labelMedium,
-                                    color = Neutral40,
+                                    style = travelTextStyle(12, 14, FontWeight.Medium),
+                                    color = OguriTheme.colors.textTertiary,
                                 )
                             }
                             Row(
@@ -165,24 +169,11 @@ fun PlaceDetailScreen(
                         }
                     }
                     item {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         PlaceDetailDescriptionSection(
                             description = placeDetail.description,
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
-                    }
-                    if (onCreateTravelPlan != null) {
-                        item {
-                            OutlinedButton(
-                                onClick = onCreateTravelPlan,
-                                modifier =
-                                    Modifier
-                                        .padding(horizontal = 20.dp, vertical = 8.dp)
-                                        .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
-                            ) {
-                                Text(stringResource(Res.string.travel_create_from_city))
-                            }
-                        }
                     }
                     item {
                         Spacer(modifier = Modifier.height(24.dp))
@@ -190,6 +181,19 @@ fun PlaceDetailScreen(
                             travelInformation = placeDetail.travelInformation,
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
+                    }
+                    if (onCreateTravelPlan != null) {
+                        item {
+                            TravelDestinationEntry(
+                                plans = matchingTravelPlans,
+                                onOpen = onOpenTravelPlan,
+                                onCreate = onCreateTravelPlan,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp)
+                                        .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            )
+                        }
                     }
                     item {
                         Spacer(modifier = Modifier.height(28.dp))

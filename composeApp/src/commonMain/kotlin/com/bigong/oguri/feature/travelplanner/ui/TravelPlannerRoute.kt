@@ -17,7 +17,6 @@ import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOverviewSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlaceSearchSheet
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelRecentChangesDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -27,15 +26,16 @@ import kotlinx.datetime.LocalDate
 @Composable
 internal fun TravelPlansRoute(
     viewModel: TravelPlannerViewModel,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     signedIn: Boolean,
     onSignIn: () -> Unit,
     onCreate: () -> Unit,
     onOpen: (String) -> Unit,
+    onFindNextHoliday: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.loadList() }
-    TravelPlansScreen(state, signedIn, onSignIn, onBack, onCreate, onOpen, viewModel::loadList)
+    TravelPlansScreen(state, signedIn, onSignIn, onBack, onCreate, onOpen, onFindNextHoliday, viewModel::loadList)
 }
 
 @Composable
@@ -110,7 +110,6 @@ internal fun TravelPlanRoute(
     val changesState by collaborationViewModel.state.collectAsStateWithLifecycle()
     var showOverview by remember(planId) { mutableStateOf(false) }
     var overviewRetry by remember(planId) { mutableIntStateOf(0) }
-    var showChanges by remember(planId) { mutableStateOf(false) }
     LaunchedEffect(viewModel, planId, changesState.failure) {
         if (changesState.failure == TravelPlanFailure.UNAVAILABLE) viewModel.forgetUnavailablePlan(planId)
     }
@@ -122,7 +121,7 @@ internal fun TravelPlanRoute(
     LaunchedEffect(dayOverride, plan?.summary?.id) {
         val day = dayOverride
         if (day != null && plan != null) {
-            if (day in 0..plan.summary.details.dates.dayCount) viewModel.selectDay(day)
+            if (day in 1..plan.summary.details.dates.dayCount) viewModel.selectDay(day)
             onDayConsumed()
         }
     }
@@ -190,6 +189,7 @@ internal fun TravelPlanRoute(
         onDraftChange = viewModel::updateVisitDraft,
         onApplyVisit = viewModel::applyVisit,
         onRemoveVisit = viewModel::removeVisit,
+        onRemoveFromList = viewModel::removeVisitFromList,
         onSearchPlaces = viewModel::openPlaceSearch,
         onMarkerClick = { id ->
             viewModel.selectVisitFromMap(id)
@@ -204,10 +204,6 @@ internal fun TravelPlanRoute(
                 ?.details
                 ?.dates
                 ?.let { onMembers(it.start.toString(), it.endInclusive.toString()) }
-        },
-        onRecentChanges = {
-            showChanges = true
-            collaborationViewModel.recentChanges(planId)
         },
         onSignIn = onSignIn,
         onRetryPlaces = { detailsRetry++ },
@@ -238,30 +234,6 @@ internal fun TravelPlanRoute(
             )
         }
     }
-    if (plan != null && showChanges) {
-        LaunchedEffect(changesState.recentChanges, changesState.busy, changesState.failure) {
-            if (changesState.recentChanges?.changes?.isNotEmpty() == true && !changesState.busy && changesState.failure == null) {
-                viewModel.recordActivity(planId, TravelUsageActivity.CHANGES_VIEWED)
-            }
-        }
-        val dismissChanges = {
-            if (!changesState.busy) changesState.recentChanges?.let { collaborationViewModel.dismissChanges(planId, it.throughRevision) }
-            showChanges = false
-        }
-        TravelRecentChangesDialog(
-            changes = changesState.recentChanges,
-            dates = plan.summary.details.dates,
-            busy = changesState.busy,
-            failure = changesState.failure,
-            onRetry = { collaborationViewModel.recentChanges(planId) },
-            onDismiss = dismissChanges,
-            onSelectDay = { day ->
-                viewModel.selectDay(day)
-                viewModel.recordActivity(planId, TravelUsageActivity.CHANGE_DAY_OPENED)
-                dismissChanges()
-            },
-        )
-    }
     if (plan != null) {
         TravelPlaceSearchSheet(
             state = state,
@@ -269,15 +241,14 @@ internal fun TravelPlanRoute(
             onQuery = { viewModel.searchPlaces(it, language) },
             onSelect = viewModel::selectPlace,
             onAdd = viewModel::addPlace,
-            onShowVisit = viewModel::openExistingPlace,
             onDismiss = viewModel::closePlaceSearch,
             onRetrySave = viewModel::retrySave,
             onLeaveWithPendingSave = onBack,
             onReload = { viewModel.loadPlan(planId, rebaseDraft = true) },
-            onManualAdd = {
-                viewModel.closePlaceSearch()
-                viewModel.openVisit(null)
-            },
+            onManualAdd = { if (state.visitDraft == null) viewModel.openVisit(null) },
+            onDraftChange = viewModel::updateVisitDraft,
+            onApplyManual = viewModel::applyVisit,
+            onSearchCity = { viewModel.selectSearchCity(it, language) },
         )
     }
 }

@@ -19,6 +19,26 @@ class TravelManagementAccessTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     @Test
+    fun terminalInvitationsKeepTheirOwnReasonAndCannotBeJoined() = runTest {
+        for (reason in listOf(TravelPlanFailure.INVITE_EXPIRED, TravelPlanFailure.INVITE_REVOKED, TravelPlanFailure.INVITE_TRIP_DELETED)) {
+            val repository = ManagementCollaboration()
+            val viewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+            viewModel.preview("valid")
+            advanceUntilIdle()
+            assertNotNull(viewModel.state.value.preview)
+            repository.failure = reason
+            viewModel.preview("closed")
+            advanceUntilIdle()
+            assertEquals(reason, viewModel.state.value.failure)
+            assertNull(viewModel.state.value.preview)
+            assertFalse(viewModel.state.value.busy)
+            viewModel.join("closed")
+            advanceUntilIdle()
+            assertTrue(repository.joinedTokens.isEmpty())
+        }
+    }
+
+    @Test
     fun replacingAnInvitationBlocksAStaleJoinAndDiscardsItsLateFailure() =
         runTest {
             val repository = ManagementCollaboration()
@@ -216,8 +236,10 @@ private class ManagementCollaboration : TravelCollaborationRepository {
     val joinedTokens = mutableListOf<String>()
     var joinInvite: suspend (String) -> String = { error("Unused") }
 
-    override suspend fun preview(token: String): TravelInvitePreview =
-        TravelInvitePreview(token, LocalDate(2027, 4, 1), LocalDate(2027, 4, 3), null)
+    override suspend fun preview(token: String): TravelInvitePreview {
+        checkAccess()
+        return TravelInvitePreview(token, LocalDate(2027, 4, 1), LocalDate(2027, 4, 3), null)
+    }
 
     override suspend fun join(token: String): String {
         joinedTokens.add(token)

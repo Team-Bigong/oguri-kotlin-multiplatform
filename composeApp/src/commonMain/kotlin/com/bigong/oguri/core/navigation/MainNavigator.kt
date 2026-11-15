@@ -153,10 +153,6 @@ class MainNavigator(
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
-    fun navigateToTravelPlans() {
-        navHostController.navigate(RouteModel.TravelPlans) { launchSingleTop = true }
-    }
-
     fun navigateToCreateTravelPlan(
         destinationId: Long? = null,
         startDate: String? = null,
@@ -180,6 +176,13 @@ class MainNavigator(
     fun showTravelDay(dayNumber: Int) {
         navHostController.previousBackStackEntry?.savedStateHandle?.set(TRAVEL_DAY_REQUEST, dayNumber)
         popBackStack()
+    }
+
+    fun closeTravelInviteToPlans() {
+        navHostController.navigate(RouteModel.TravelPlans) {
+            popUpTo<RouteModel.TravelInvite> { inclusive = true }
+            launchSingleTop = true
+        }
     }
 
     fun openJoinedTravelPlan(planId: String) {

@@ -12,13 +12,13 @@ import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.mypage.ui.model.MyPageSideEffect
-import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.snackbar_mypage_leave_days_updated
 import oguri.composeapp.generated.resources.snackbar_mypage_saved_place_deleted
 import oguri.composeapp.generated.resources.snackbar_mypage_selected_period_deleted
 import oguri.composeapp.generated.resources.snackbar_withdraw_failed
 import org.jetbrains.compose.resources.stringResource
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun MyPageRoute(
@@ -29,7 +29,6 @@ fun MyPageRoute(
     onOpenTermsOfService: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
     onOpenDisplaySettings: () -> Unit,
-    onOpenTravelPlans: (() -> Unit)? = null,
     onLoggedOut: () -> Unit,
     onWithdrawCompleted: () -> Unit,
     onLoginRequired: () -> Unit,
@@ -101,7 +100,6 @@ fun MyPageRoute(
         onConfirmDeleteSavedPlace = myPageViewModel::confirmDeleteSavedPlace,
         onSuggestClick = onOpenSuggestion,
         onDisplaySettingsClick = onOpenDisplaySettings,
-        onTravelPlansClick = onOpenTravelPlans,
         onTermsOfServiceClick = onOpenTermsOfService,
         onPrivacyPolicyClick = onOpenPrivacyPolicy,
         onWithdrawClick = myPageViewModel::showWithdrawDialog,

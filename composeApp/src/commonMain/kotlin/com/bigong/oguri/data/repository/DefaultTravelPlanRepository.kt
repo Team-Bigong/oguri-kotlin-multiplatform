@@ -71,6 +71,7 @@ class DefaultTravelPlanRepository internal constructor(
                     CreateTravelPlanRequest(
                         requestId = requestId,
                         city = details.city,
+                        cities = details.cities,
                         timeZone = details.timeZone.id,
                         title = details.title,
                         startDate = details.dates.start.toString(),
@@ -144,6 +145,9 @@ class DefaultTravelPlanRepository internal constructor(
 
     override suspend fun cityTimeZone(placeId: String): String? = request { remote.cityTimeZone(placeId).timeZone }
 
+    override suspend fun searchInCity(planId: String, query: String, language: String, city: String): List<TravelPlace> =
+        request { remote.searchPlaces(planId, query, language, city).map { it.toDomain() } }
+
     override suspend fun search(
         planId: String,
         query: String,
@@ -177,6 +181,8 @@ class DefaultTravelPlanRepository internal constructor(
                 response.currentMemberId,
                 response.members.map { TravelMember(it.id, it.nickname, it.owner) },
                 response.ownershipTarget,
+                response.hasActiveInvite,
+                response.inviteExpiresAt?.let(kotlin.time.Instant::parse),
             )
         }
 
@@ -210,6 +216,7 @@ class DefaultTravelPlanRepository internal constructor(
                     details.dates.endInclusive.toString(),
                     revision,
                     unassignedCount,
+                    details.cities,
                 ),
             )
         }
@@ -254,7 +261,7 @@ class DefaultTravelPlanRepository internal constructor(
     override suspend fun preview(token: String): TravelInvitePreview =
         request {
             val response = remote.previewInvite(token)
-            TravelInvitePreview(response.title, LocalDate.parse(response.startDate), LocalDate.parse(response.endDate), response.invitedBy)
+            TravelInvitePreview(response.title, LocalDate.parse(response.startDate), LocalDate.parse(response.endDate), response.invitedBy, response.city, response.memberCount)
         }
 
     override suspend fun join(token: String): String = request { remote.joinInvite(token).planId }
@@ -306,6 +313,7 @@ class DefaultTravelPlanRepository internal constructor(
     private fun TravelPlanSummaryResponse.toDomain(): TravelPlanSummary =
         TravelPlanSummary(
             id = id,
+            memberCount = memberCount,
             details =
                 TravelPlanDetails(
                     city,
@@ -315,6 +323,7 @@ class DefaultTravelPlanRepository internal constructor(
                     source?.let {
                         TravelPlanSource(it.destinationId, it.startDate?.let(LocalDate::parse), it.endDate?.let(LocalDate::parse))
                     },
+                    cities,
                 ),
         )
 
@@ -338,6 +347,7 @@ class DefaultTravelPlanRepository internal constructor(
                                 localTime = visit.localTime?.let(LocalTime::parse),
                                 note = visit.note,
                                 googlePlaceId = visit.googlePlaceId,
+                                category = visit.category,
                             ),
                         revision = visit.revision,
                     )
@@ -345,5 +355,5 @@ class DefaultTravelPlanRepository internal constructor(
         )
 
     private fun TravelVisitDetails.toRequest(): TravelVisitRequest =
-        TravelVisitRequest(name, location, localTime?.toString(), note, googlePlaceId)
+        TravelVisitRequest(name, location, localTime?.toString(), note, googlePlaceId, category)
 }

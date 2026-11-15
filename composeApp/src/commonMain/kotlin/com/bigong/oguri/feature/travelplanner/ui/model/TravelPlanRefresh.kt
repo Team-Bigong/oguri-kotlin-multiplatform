@@ -4,7 +4,7 @@ import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanFailure
 
 internal fun TravelPlannerUiState.withRefreshedPlan(updated: TravelPlan): TravelPlannerUiState {
-    val day = selectedDay.takeIf { it in 0..updated.summary.details.dates.dayCount } ?: TravelPlan.UNASSIGNED_DAY
+    val day = selectedDay.takeIf { it in 1..updated.summary.details.dates.dayCount } ?: updated.summary.details.dates.dayCount
     val dayChanged = day != selectedDay
     val removedDraft = visitDraft?.visit?.let { original -> updated.visits.none { it.id == original.id } } == true
     val changedStructure = visitDraft?.let { it.structureRevision != updated.structureRevision } == true

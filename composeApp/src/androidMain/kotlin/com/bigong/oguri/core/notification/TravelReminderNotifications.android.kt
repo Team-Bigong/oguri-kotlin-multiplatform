@@ -27,6 +27,24 @@ internal const val TRAVEL_REMINDER_EXTRA: String = "travelReminderId"
 private const val CHANNEL_ID = "travel_reminders"
 private const val NOTIFICATION_ID = 1
 
+internal actual suspend fun travelReminderPermissionDenied(): Boolean {
+    val context = OguriPlatformContextHolder.applicationContext ?: return false
+    if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return true
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+    val channel = ContextCompat.getSystemService(context, NotificationManager::class.java)?.getNotificationChannel(CHANNEL_ID)
+    return channel?.importance == NotificationManager.IMPORTANCE_NONE
+}
+
+internal actual fun openTravelReminderSettings() {
+    val context = OguriPlatformContextHolder.currentActivity ?: OguriPlatformContextHolder.applicationContext ?: return
+    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+    } else {
+        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:${context.packageName}"))
+    }
+    context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+}
+
 internal actual suspend fun requestTravelReminderPermission(): Boolean {
     val activity = OguriPlatformContextHolder.currentActivity as? MainActivity ?: return false
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
@@ -34,7 +52,7 @@ internal actual suspend fun requestTravelReminderPermission(): Boolean {
     ) {
         if (!activity.requestTravelNotificationPermission()) return false
     }
-    if (!NotificationManagerCompat.from(activity).areNotificationsEnabled()) return false
+    if (travelReminderPermissionDenied()) return false
     ensureReminderChannel(activity)
     return true
 }
@@ -66,6 +84,7 @@ private suspend fun <Result> Task<Result>.awaitResult(): Result? =
     }
 
 private fun ensureReminderChannel(context: Context) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
     val manager = ContextCompat.getSystemService(context, NotificationManager::class.java) ?: return
     manager.createNotificationChannel(
         NotificationChannel(CHANNEL_ID, context.getString(R.string.travel_reminder_push_title), NotificationManager.IMPORTANCE_DEFAULT),

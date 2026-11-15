@@ -43,7 +43,8 @@ class TravelCollaborationService(
     ): TravelMembersResponse {
         planService.requireMember(memberId)
         val plan = planService.accessiblePlan(memberId, planId)
-        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId))
+        val inviteExpiresAt = if (plan.ownerId == memberId) collaboration.activeInviteExpiresAt(planId, now()) else null
+        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId), inviteExpiresAt != null, inviteExpiresAt)
     }
 
     @Transactional
@@ -109,7 +110,7 @@ class TravelCollaborationService(
         val invite = collaboration.invite(hash) ?: throw TravelInviteException(HttpStatus.NOT_FOUND, "INVITE_UNKNOWN")
         requireActive(invite.expiresAt, invite.revokedAt)
         val inviter = invite.issuedBy?.let { members.findById(it).orElse(null)?.nickname }
-        return TravelInvitePreview(plan.title, plan.startDate, plan.endDate, inviter)
+        return TravelInvitePreview(plan.title, plan.startDate, plan.endDate, inviter, plan.city, collaboration.memberCounts(listOf(plan.id))[plan.id] ?: 1)
     }
 
     @Transactional
@@ -149,6 +150,7 @@ class TravelCollaborationService(
             change.endDate,
             requireNotNull(change.expectedRevision),
             requireNotNull(change.confirmedUnassignedCount),
+            change.cities.map(String::trim),
         )
         if (reminderTimeChanged) reminders.cancelForPlan(planId)
         collaboration.recordChange(planId, memberId, plan.revision, null, "TRIP_UPDATED")
@@ -284,6 +286,8 @@ data class TravelMembersResponse(
     val currentMemberId: String,
     val members: List<TravelMemberRow>,
     val ownershipTarget: String?,
+    val hasActiveInvite: Boolean = false,
+    val inviteExpiresAt: OffsetDateTime? = null,
 )
 
 data class IssuedTravelInvite(
@@ -296,6 +300,8 @@ data class TravelInvitePreview(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val invitedBy: String?,
+    val city: String? = null,
+    val memberCount: Int? = null,
 )
 
 data class JoinedTravelPlan(
@@ -324,4 +330,5 @@ data class TravelDetailsChange(
     val endDate: LocalDate,
     val expectedRevision: Long?,
     val confirmedUnassignedCount: Int?,
+    val cities: List<String> = listOf(city),
 )

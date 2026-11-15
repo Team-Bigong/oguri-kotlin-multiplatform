@@ -55,12 +55,14 @@ class TravelCollaborationViewModel(
         perform {
             val token = checkedResult { repository.issue(planId) }
             mutableState.update { it.copy(invite = token) }
+            val members = checkedResult { repository.members(planId) }
+            mutableState.update { it.copy(members = members) }
         }
 
     internal fun revoke(planId: String) =
         perform {
             checkedResult { repository.revoke(planId) }
-            mutableState.update { it.copy(invite = null) }
+            mutableState.update { it.copy(invite = null, members = it.members?.copy(hasActiveInvite = false, inviteExpiresAt = null)) }
         }
 
     internal fun remove(

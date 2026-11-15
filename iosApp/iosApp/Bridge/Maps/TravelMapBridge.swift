@@ -1,3 +1,4 @@
+import CoreText
 import ComposeApp
 import GoogleMaps
 import UIKit
@@ -20,6 +21,8 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
     private var previousViewport: Int32?
     private var fittedMarkers = false
     private var pendingCamera: (() -> Void)?
+    private var routeLines: [(GMSPolyline, Double)] = []
+    private var pinFonts: [String: CGFont] = [:]
 
     init(container: UIView, onMarkerClick: @escaping (String) -> Void, onUnavailable: @escaping () -> Void) {
         map = GMSMapView(options: GMSMapViewOptions())
@@ -43,20 +46,31 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: timeout)
     }
 
-    func render(scene: TravelMapScene, viewportRequest: Int32, focusedVisitId: String?) {
+    func render(scene: TravelMapScene, viewportRequest: Int32, focusedVisitId: String?, pinStyle: TravelMapPinStyle) {
         map.clear()
+        routeLines.removeAll()
         for line in scene.lines {
             let path = GMSMutablePath()
-            line.points.forEach { path.add($0.coordinate) }
+            var length = 0.0
+            var previous: CLLocationCoordinate2D?
+            line.points.forEach { point in
+                let coordinate = point.coordinate
+                path.add(coordinate)
+                if let previous { length += GMSGeometryDistance(previous, coordinate) }
+                previous = coordinate
+            }
             let polyline = GMSPolyline(path: path)
             polyline.geodesic = true
-            polyline.strokeColor = .travelRoute
-            polyline.strokeWidth = 3
+            polyline.strokeColor = UIColor(argb: line.colorArgb)
+            polyline.strokeWidth = 2
             polyline.map = map
+            routeLines.append((polyline, length))
         }
+        updateLinePattern()
         for pin in scene.markers {
             let marker = GMSMarker(position: pin.coordinates.coordinate)
-            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb)
+            marker.title = pin.title ?? pin.label
+            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, selected: pin.selected, style: pinStyle)
             marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
             marker.zIndex = pin.selected ? 1 : 0
             marker.userData = pin.id
@@ -104,6 +118,22 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         return true
     }
 
+    func mapView(_ mapView: GMSMapView, idleAt position: GMSCameraPosition) {
+        updateLinePattern()
+    }
+
+    private func updateLinePattern() {
+        let center = CGPoint(x: map.bounds.midX, y: map.bounds.midY)
+        let meters = GMSGeometryDistance(map.projection.coordinate(for: center), map.projection.coordinate(for: CGPoint(x: center.x + 1, y: center.y)))
+        guard meters.isFinite, meters > 0 else { return }
+        let totalLength = routeLines.reduce(0) { $0 + $1.1 }
+        let spacing = max(meters, totalLength / 32_000)
+        for (polyline, _) in routeLines {
+            guard let path = polyline.path else { continue }
+            polyline.spans = GMSStyleSpans(path, [.solidColor(polyline.strokeColor), .solidColor(.clear)], [NSNumber(value: spacing * 2), NSNumber(value: spacing * 6)], .geodesic)
+        }
+    }
+
     func mapViewSnapshotReady(_ mapView: GMSMapView) {
         tileTimeout?.cancel()
         tileTimeout = nil
@@ -113,31 +143,43 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         tileTimeout?.cancel()
         map.delegate = nil
         pendingCamera = nil
+        routeLines.removeAll()
+        pinFonts.removeAll()
         surface.onLayout = nil
         surface.removeFromSuperview()
     }
 
-    private func makeIcon(label: String?, colorArgb: Int32) -> UIImage {
-        let size = CGSize(width: 34, height: 34)
+    private func pinFont(uri: String, size: CGFloat) -> UIFont {
+        if pinFonts[uri] == nil, let url = URL(string: uri), let provider = CGDataProvider(url: url as CFURL), let font = CGFont(provider) {
+            CTFontManagerRegisterGraphicsFont(font, nil)
+            pinFonts[uri] = font
+        }
+        if let name = pinFonts[uri]?.postScriptName, let font = UIFont(name: name as String, size: size) { return font }
+        return UIFont.systemFont(ofSize: size)
+    }
+
+    private func makeIcon(label: String?, colorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
+        let side: CGFloat = selected ? 44 : 26
+        let size = CGSize(width: side, height: side)
         return UIGraphicsImageRenderer(size: size).image { _ in
-            UIColor.white.setFill()
-            UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
-            let color = UInt32(bitPattern: colorArgb)
-            UIColor(
-                red: CGFloat((color >> 16) & 0xff) / 255,
-                green: CGFloat((color >> 8) & 0xff) / 255,
-                blue: CGFloat(color & 0xff) / 255,
-                alpha: 1
-            ).setFill()
-            UIBezierPath(ovalIn: CGRect(x: 2, y: 2, width: 30, height: 30)).fill()
+            let color = UIColor(argb: colorArgb)
+            if selected {
+                color.withAlphaComponent(0.28).setFill()
+                UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
+            }
+            let diameter: CGFloat = selected ? 32 : 26
+            let frame = CGRect(x: (side - diameter) / 2, y: (side - diameter) / 2, width: diameter, height: diameter)
+            UIColor(argb: style.foregroundArgb).setFill()
+            UIBezierPath(ovalIn: frame).fill()
+            color.setFill()
+            UIBezierPath(ovalIn: frame.insetBy(dx: 2, dy: 2)).fill()
             guard let label else { return }
-            let attributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: 14),
-                .foregroundColor: UIColor.white
-            ]
-            let text = NSAttributedString(string: label, attributes: attributes)
+            let text = NSAttributedString(string: label, attributes: [
+                .font: pinFont(uri: selected ? style.selectedLabelFontUri : style.labelFontUri, size: CGFloat(selected ? style.selectedLabelSize : style.labelSize)),
+                .foregroundColor: UIColor(argb: style.foregroundArgb)
+            ])
             let bounds = text.size()
-            text.draw(at: CGPoint(x: (size.width - bounds.width) / 2, y: (size.height - bounds.height) / 2))
+            text.draw(at: CGPoint(x: (side - bounds.width) / 2, y: (side - bounds.height) / 2))
         }
     }
 }
@@ -152,7 +194,13 @@ private final class TravelMapSurface: UIView {
 }
 
 private extension UIColor {
-    static let travelRoute = UIColor(red: 0, green: 0.49, blue: 0.41, alpha: 1)
+    convenience init(argb: Int32) {
+        let color = UInt32(bitPattern: argb)
+        self.init(red: CGFloat((color >> 16) & 0xff) / 255,
+                  green: CGFloat((color >> 8) & 0xff) / 255,
+                  blue: CGFloat(color & 0xff) / 255,
+                  alpha: CGFloat((color >> 24) & 0xff) / 255)
+    }
 }
 
 private extension TravelCoordinates {

@@ -122,7 +122,7 @@ class TravelPlanController(
         @RequestBody body: TravelPlaceSearchRequest,
     ): ResponseEntity<List<TravelPlaceResponse>> =
         ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(
-            travelPlacesService.search(request.resolveMemberId(), tripId, body.query, body.language),
+            travelPlacesService.search(request.resolveMemberId(), tripId, body.query, body.language, body.city),
         )
 
     @GetMapping("/{tripId}/days/{dayNumber}/places")
@@ -181,6 +181,7 @@ class TravelPlanController(
 data class TravelPlaceSearchRequest(
     val query: String,
     val language: String,
+    val city: String? = null,
 )
 
 @JvmRecord

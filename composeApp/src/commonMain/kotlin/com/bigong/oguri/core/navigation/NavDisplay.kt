@@ -54,11 +54,11 @@ import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import com.bigong.oguri.domain.model.DisplayThemeMode
 import com.bigong.oguri.feature.travelplanner.ui.TravelReminderEntry
 import dev.zacsweers.metro.createGraphFactory
-import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.bottom_navigation_calendar
 import oguri.composeapp.generated.resources.bottom_navigation_home
 import oguri.composeapp.generated.resources.bottom_navigation_my
+import oguri.composeapp.generated.resources.bottom_navigation_travel
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 import oguri.composeapp.generated.resources.snackbar_login_success
 import oguri.composeapp.generated.resources.snackbar_logout_completed
@@ -67,6 +67,7 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
+import kotlinx.coroutines.launch
 
 private val EXIT_BACK_PRESS_WINDOW = 2.seconds
 
@@ -158,6 +159,7 @@ fun NavDisplay(
         val withdrawCompletedMessage = stringResource(Res.string.snackbar_withdraw_completed)
         val homeTabLabel = stringResource(Res.string.bottom_navigation_home)
         val calendarTabLabel = stringResource(Res.string.bottom_navigation_calendar)
+        val travelTabLabel = if (travelEnabled) stringResource(Res.string.bottom_navigation_travel) else null
         val myPageTabLabel = stringResource(Res.string.bottom_navigation_my)
         val incomingDeepLinkUrl =
             appGraph.deepLinkStore.incomingUrl
@@ -331,6 +333,7 @@ fun NavDisplay(
             homeTabLabel,
             calendarTabLabel,
             myPageTabLabel,
+            travelTabLabel,
         ) {
             if (!floatingBottomNavigationEnabled) {
                 return@LaunchedEffect
@@ -344,6 +347,7 @@ fun NavDisplay(
                 homeTabLabel = homeTabLabel,
                 calendarTabLabel = calendarTabLabel,
                 myPageTabLabel = myPageTabLabel,
+                travelTabLabel = travelTabLabel,
             )
         }
         LaunchedEffect(floatingBottomNavigationEnabled, currentDestination?.route) {

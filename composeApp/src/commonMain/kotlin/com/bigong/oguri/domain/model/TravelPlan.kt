@@ -36,8 +36,11 @@ data class TravelPlanDetails(
     val title: String,
     val dates: TravelDates,
     val source: TravelPlanSource? = null,
+    val cities: List<String> = listOf(city),
 ) {
     init {
+        require(cities.size in 1..10 && cities.distinct().size == cities.size && cities.first() == city)
+        require(cities.all { it.isNotBlank() && it.length <= MAX_TEXT_LENGTH })
         require(city.isNotBlank() && city.length <= MAX_TEXT_LENGTH)
         require(title.isNotBlank() && title.length <= MAX_TEXT_LENGTH)
     }
@@ -58,6 +61,7 @@ data class TravelPlanSource(
 data class TravelPlanSummary(
     val id: String,
     val details: TravelPlanDetails,
+    val memberCount: Int? = null,
 )
 
 @Serializable
@@ -92,6 +96,7 @@ data class TravelVisitDetails(
     val localTime: LocalTime?,
     val note: String?,
     val googlePlaceId: String? = null,
+    val category: TravelVisitCategory? = null,
 ) {
     companion object {
         const val MAX_NAME_LENGTH: Int = 150
@@ -134,7 +139,19 @@ sealed interface TravelVisitChange {
         val expectedOrderRevision: Long,
         val visitIds: List<String>,
         val structureRevision: Long = 0,
-    ) : TravelVisitChange
+    ) : TravelVisitChange {
+        fun rebasedVisitIds(plan: TravelPlan): List<String>? {
+            if (dayNumber !in 1..plan.summary.details.dates.dayCount || structureRevision != plan.structureRevision) return null
+
+            val requestedIds = visitIds.toSet()
+            val currentIds = plan.visits.filter { it.dayNumber == dayNumber }.map(TravelVisit::id)
+            val currentIdSet = currentIds.toSet()
+            if (requestedIds.size != visitIds.size || currentIdSet.size != currentIds.size || !currentIdSet.containsAll(requestedIds)) return null
+
+            val requestedOrder = visitIds.iterator()
+            return currentIds.map { id -> if (id in requestedIds) requestedOrder.next() else id }
+        }
+    }
 }
 
 enum class TravelPlanFailure {

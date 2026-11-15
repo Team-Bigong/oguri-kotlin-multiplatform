@@ -12,6 +12,7 @@ data class TravelDraft(
     val localTime: String,
     val note: String,
     val showLatestComparison: Boolean = false,
+    val category: TravelVisitCategory? = null,
 )
 
 @Serializable
