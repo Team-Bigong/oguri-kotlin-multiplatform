@@ -407,13 +407,13 @@ internal fun TravelInviteRoute(
                     else -> Res.string.travel_invite_expired_title
                 }
                 Text(stringResource(title), style = OguriTheme.typography.cardTitle, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 24.dp))
-                Text(stringResource(if (deleted) Res.string.travel_invite_deleted_message else Res.string.travel_invite_expired_message), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 16.dp, bottom = 28.dp))
+                Text(stringResource(if (deleted) Res.string.travel_invite_deleted_message else Res.string.travel_invite_expired_message), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 16.dp, bottom = 28.dp))
                 TravelOutlineButton(onClick = onOpenPlans, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_go_to_plans)) }
             } else if (preview != null && token != null) {
                 Spacer(Modifier.height(12.dp))
                 androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_parasol), null, Modifier.size(160.dp))
                 Spacer(Modifier.height(24.dp))
-                preview.invitedBy?.let { Text(stringResource(Res.string.travel_invited_by, it), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary) }
+                preview.invitedBy?.let { Text(stringResource(Res.string.travel_invited_by, it), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary) }
                 Text(stringResource(Res.string.travel_invite_heading), style = OguriTheme.typography.sectionTitle, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp))
                 Column(Modifier.fillMaxWidth().padding(vertical = 16.dp).clip(RoundedCornerShape(8.dp)).background(OguriTheme.colors.surfaceCard).border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))) {
                     Text(preview.title, Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint70).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = OguriTheme.colors.textOnMint)
@@ -425,7 +425,7 @@ internal fun TravelInviteRoute(
                         }
                     }
                 }
-                Text(stringResource(Res.string.travel_invite_description), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
+                Text(stringResource(Res.string.travel_invite_description), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                 state.failure?.let { TravelInlineFailure(it) }
             } else if (state.busy) TravelLoading(Modifier.fillMaxWidth())
             else if (token == null) Text(stringResource(Res.string.travel_invite_missing))
