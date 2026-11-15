@@ -155,7 +155,7 @@ class TravelAccessRevocationTest {
         }
 
     @Test
-    fun orderConflictPreservesTheAttemptAndRequiresAnExplicitSaveAgainstTheLatestOrder() =
+    fun orderConflictRequiresAnExplicitSaveThatPreservesNewVisits() =
         runTest {
             val visits = listOf(
                 TravelVisit("first", 1, TravelVisitDetails("First", null, null, null, null), 1),
@@ -178,7 +178,8 @@ class TravelAccessRevocationTest {
             assertEquals(listOf<TravelVisitChange>(attempted), plans.saveAttempts)
 
             plans.saveFailure = null
-            plans.currentPlan = plans.currentPlan.copy(revision = 2, dayOrderRevisions = mapOf(1 to 2L))
+            val addedVisit = TravelVisit("added", 1, TravelVisitDetails("Added", null, null, null, null), 1)
+            plans.currentPlan = plans.currentPlan.copy(revision = 2, dayOrderRevisions = mapOf(1 to 2L), visits = visits + addedVisit)
             val reopened = createTravelPlannerTestViewModel(plans, recovery)
             reopened.loadPlan("plan")
             advanceUntilIdle()
@@ -188,7 +189,11 @@ class TravelAccessRevocationTest {
             assertEquals(1, plans.saveAttempts.size)
             reopened.applyUnappliedOrder()
             advanceUntilIdle()
-            assertEquals(listOf<TravelVisitChange>(attempted, attempted.copy(expectedOrderRevision = 2)), plans.saveAttempts)
+            assertEquals(
+                listOf<TravelVisitChange>(attempted, attempted.copy(expectedOrderRevision = 2, visitIds = desired + addedVisit.id)),
+                plans.saveAttempts,
+            )
+            assertEquals(2, plans.saveRequestIds.distinct().size)
             assertNull(reopened.state.value.unappliedOrder)
             assertNull(recovery.load("plan").unappliedOrder)
         }

@@ -76,7 +76,6 @@ import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
-import com.bigong.oguri.feature.travelplanner.ui.model.canApplyTo
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
 import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
@@ -257,8 +256,8 @@ internal fun TravelPlanScreen(
 
                 if (unappliedOrder != null) {
                     val latestById = plan.visits.associateBy(TravelVisit::id)
-                    val sameOrder = !unappliedOrder.isOutsideTrip(plan) && savedVisits.map(TravelVisit::id) == unappliedOrder.visitIds
-                    val canReapply = unappliedOrder.canApplyTo(plan)
+                    val rebasedVisitIds = unappliedOrder.rebasedVisitIds(plan)
+                    val sameOrder = savedVisits.map(TravelVisit::id) == rebasedVisitIds
                     val shape = RoundedCornerShape(8.dp)
                     Column(
                         Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
@@ -282,7 +281,7 @@ internal fun TravelPlanScreen(
                         if (!state.needsLatestPlan) {
                             when {
                                 sameOrder -> Text(stringResource(Res.string.travel_order_matches), style = OguriTheme.typography.caption)
-                                !canReapply -> Text(stringResource(Res.string.travel_order_cannot_reapply), style = OguriTheme.typography.caption)
+                                rebasedVisitIds == null -> Text(stringResource(Res.string.travel_order_cannot_reapply), style = OguriTheme.typography.caption)
                             }
                         }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -291,9 +290,9 @@ internal fun TravelPlanScreen(
                             }
                             if (state.needsLatestPlan) {
                                 TravelTextButton(onClick = onReload, enabled = !state.isLoading) { Text(stringResource(Res.string.travel_reload)) }
-                            } else if (!sameOrder && canReapply) {
+                            } else if (!sameOrder && rebasedVisitIds != null) {
                                 TravelTextButton(onClick = onApplyUnappliedOrder, enabled = canEdit) {
-                                    Text(stringResource(Res.string.travel_apply_order), style = OguriTheme.typography.labelMedium, color = Mint70)
+                                    Text(stringResource(Res.string.travel_apply_order), style = OguriTheme.typography.labelLarge, color = OguriTheme.colors.textPrimary)
                                 }
                             }
                         }
@@ -562,7 +561,7 @@ internal fun travelDayLabel(
         stringResource(Res.string.travel_unassigned)
     } else if (dayNumber in 1..dates.dayCount) {
         val date = dates.dateOn(dayNumber)
-        stringResource(Res.string.travel_day, dayNumber, travelWeekDate(date))
+        stringResource(Res.string.travel_day, dayNumber, travelMonthDay(date))
     } else {
         stringResource(Res.string.travel_day_outside_trip, dayNumber)
     }
