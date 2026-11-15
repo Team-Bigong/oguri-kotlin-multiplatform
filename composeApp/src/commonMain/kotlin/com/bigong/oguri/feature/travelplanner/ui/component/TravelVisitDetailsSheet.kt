@@ -1,5 +1,14 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.Alignment
+import org.jetbrains.compose.resources.painterResource
+import oguri.composeapp.generated.resources.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,28 +48,45 @@ internal fun TravelVisitDetailsSheet(
     onDismiss: () -> Unit,
     onDirectionsOpened: () -> Unit,
 ) {
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), dragHandle = { TravelSheetHandle() }, containerColor = OguriTheme.colors.backgroundPrimary, onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(
-            Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(stringResource(Res.string.travel_visit_details), style = OguriTheme.typography.sectionTitle)
-            if (offline) Text(stringResource(Res.string.travel_offline_snapshot), style = OguriTheme.typography.bodySmall)
-            SelectionContainer {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(title, style = OguriTheme.typography.cardTitle)
-                    Text(travelDayLabel(dates, visit.dayNumber))
-                    visit.details.category?.let { Text(stringResource(it.label())) }
-                    (visit.details.location ?: place?.address)?.let { Text(it) }
-                    visit.details.note?.let { note ->
-                        Text(note)
-                        Text(stringResource(Res.string.travel_visit_note_shared), style = OguriTheme.typography.bodySmall)
+    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), dragHandle = { TravelSheetHandle() }, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp), containerColor = OguriTheme.colors.backgroundSecondary, onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().height(430.dp)) {
+            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(Res.string.travel_visit_details), style = OguriTheme.typography.cardTitle)
+                Text(stringResource(if (offline) Res.string.travel_offline_readonly else Res.string.travel_readonly), Modifier.weight(1f), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                TravelIconButton(onClick = onDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
+            }
+            SelectionContainer(Modifier.weight(1f)) {
+                Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.padding(horizontal = 4.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(title, style = OguriTheme.typography.sectionTitle, color = OguriTheme.colors.textPrimary)
+                        val location = visit.details.location ?: place?.address
+                        val attribution = stringResource(Res.string.travel_google_maps_attribution).takeIf { place != null }
+                        Text(listOfNotNull(location, attribution).joinToString(" · "), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
                     }
+                    TravelVisitInfoRow(stringResource(Res.string.travel_visit_day), travelDayLabel(dates, visit.dayNumber))
+                    visit.details.category?.let { TravelVisitInfoRow(stringResource(Res.string.travel_category_label), stringResource(it.label())) }
+                    HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+                    visit.details.note?.let { note ->
+                        Text(stringResource(Res.string.travel_note_label), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        val shape = RoundedCornerShape(8.dp)
+                        Text(note, Modifier.fillMaxWidth().background(OguriTheme.colors.surfaceCard, shape).border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(12.dp), style = OguriTheme.typography.bodyMedium)
+                    }
+                    if (place?.attributions?.isNotEmpty() == true) GooglePlacesAttribution(place.attributions, includeGoogleBranding = false)
                 }
             }
-            if (place != null) GooglePlacesAttribution(place.attributions)
-            TravelDirectionsButton(visit.details.googlePlaceId, place?.name ?: visit.details.location, onOpened = onDirectionsOpened)
-            TravelTextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_cancel)) }
+            HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+            Box(Modifier.fillMaxWidth().padding(20.dp)) {
+                TravelDirectionsButton(visit.details.googlePlaceId, place?.name ?: visit.details.location, outlined = true, modifier = Modifier.fillMaxWidth(), onOpened = onDirectionsOpened)
+            }
         }
+    }
+}
+
+@Composable
+private fun TravelVisitInfoRow(label: String, value: String) {
+    HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+    Row(Modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(label, Modifier.weight(1f), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+        Text(value, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textPrimary)
     }
 }

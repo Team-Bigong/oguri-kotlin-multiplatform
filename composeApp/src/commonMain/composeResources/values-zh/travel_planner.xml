@@ -109,7 +109,7 @@
     <string name="travel_edit_trip">编辑旅行信息</string>
     <string name="travel_details_move_unassigned">超出日期的%1$d个行程不会删除，将移至最后一天末尾。</string>
     <string name="travel_details_keep_local_times">现有到访安排的当地时间保持不变。</string>
-    <string name="travel_offer_ownership">提出所有权转让</string>
+    <string name="travel_offer_ownership">转让所有权</string>
     <string name="travel_accept_ownership">接受所有权</string>
     <string name="travel_ownership_pending">等待接受所有权</string>
     <string name="travel_recent_changes">最近更改</string>
@@ -304,4 +304,11 @@
     <string name="travel_reminder_toggle">出发前提醒</string>
     <string name="travel_reminder_date_hint">只能选择出发日%1$s之前的时间。更改旅行日期将取消提醒。</string>
     <string name="travel_two_days">%1$s和%2$s</string>
+    <string name="travel_me">我</string>
+    <string name="travel_transfer_offer_title">接受所有权吗？</string>
+    <string name="travel_transfer_offer_description">%1$s发出了请求。接受后您将负责编辑旅行信息和管理成员。</string>
+    <string name="travel_invite_expiry_hint">此链接可使用至%1$s</string>
+    <string name="travel_offline_readonly">离线 · 只读</string>
+    <string name="travel_readonly">只读</string>
+    <string name="travel_category_label">类别</string>
 </resources>

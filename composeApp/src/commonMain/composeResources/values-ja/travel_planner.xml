@@ -109,7 +109,7 @@
     <string name="travel_edit_trip">旅行情報を編集</string>
     <string name="travel_details_move_unassigned">期間外の訪問%1$d件は削除せず、最終日の最後に移動します。</string>
     <string name="travel_details_keep_local_times">既存の訪問予定の現地時刻は変わりません。</string>
-    <string name="travel_offer_ownership">所有権の譲渡を依頼</string>
+    <string name="travel_offer_ownership">所有権を譲る</string>
     <string name="travel_accept_ownership">所有権を引き受ける</string>
     <string name="travel_ownership_pending">所有権の承認待ち</string>
     <string name="travel_recent_changes">最近の変更</string>
@@ -304,4 +304,11 @@
     <string name="travel_reminder_toggle">出発前の通知</string>
     <string name="travel_reminder_date_hint">出発日の%1$sより前の時刻を選べます。旅行期間を変更すると予約はキャンセルされます。</string>
     <string name="travel_two_days">%1$sと%2$s</string>
+    <string name="travel_me">自分</string>
+    <string name="travel_transfer_offer_title">所有権を受け取りますか？</string>
+    <string name="travel_transfer_offer_description">%1$sさんからのリクエストです。承認すると旅行情報の編集とメンバー管理を担当します。</string>
+    <string name="travel_invite_expiry_hint">このリンクは%1$sまで使えます</string>
+    <string name="travel_offline_readonly">オフライン · 閲覧専用</string>
+    <string name="travel_readonly">閲覧専用</string>
+    <string name="travel_category_label">カテゴリ</string>
 </resources>

@@ -27,13 +27,15 @@ internal fun TravelDirectionsButton(
     destination: String?,
     enabled: Boolean = true,
     compact: Boolean = false,
+    outlined: Boolean = false,
+    modifier: Modifier = Modifier,
     onOpened: () -> Unit,
 ) {
     val target = destination?.takeIf { it.isNotBlank() }
     if (target == null && placeId == null) return
     val uriHandler = LocalUriHandler.current
     var failed by remember(placeId, target) { mutableStateOf(false) }
-    TravelTextButton(enabled = enabled, onClick = {
+    val openDirections = {
         val url =
             URLBuilder()
                 .apply {
@@ -44,7 +46,10 @@ internal fun TravelDirectionsButton(
                 }.buildString()
         failed = runCatching { uriHandler.openUri(url) }.isFailure
         if (!failed) onOpened()
-    }) { Text(stringResource(if (compact) Res.string.travel_directions_compact else Res.string.travel_directions), style = OguriTheme.typography.labelMedium) }
+    }
+    val content: @Composable () -> Unit = { Text(stringResource(if (compact) Res.string.travel_directions_compact else Res.string.travel_directions), style = if (outlined) OguriTheme.typography.cardTitle else OguriTheme.typography.labelMedium) }
+    if (outlined) TravelOutlineButton(onClick = openDirections, enabled = enabled, modifier = modifier, content = content)
+    else TravelTextButton(onClick = openDirections, enabled = enabled, modifier = modifier, content = content)
     if (failed) {
         Text(
             stringResource(Res.string.travel_directions_unavailable),

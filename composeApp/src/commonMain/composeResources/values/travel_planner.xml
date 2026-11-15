@@ -109,7 +109,7 @@
     <string name="travel_edit_trip">Edit trip details</string>
     <string name="travel_details_move_unassigned">%1$d visits will move to the end of the last day.</string>
     <string name="travel_details_keep_local_times">Existing visits keep their local clock times.</string>
-    <string name="travel_offer_ownership">Offer ownership</string>
+    <string name="travel_offer_ownership">Transfer ownership</string>
     <string name="travel_accept_ownership">Accept ownership</string>
     <string name="travel_ownership_pending">Waiting for acceptance</string>
     <string name="travel_recent_changes">Recent changes</string>
@@ -304,4 +304,11 @@
     <string name="travel_reminder_toggle">Departure reminder</string>
     <string name="travel_reminder_date_hint">Choose a time before departure on %1$s. Changing the trip dates cancels the reminder.</string>
     <string name="travel_two_days">%1$s and %2$s</string>
+    <string name="travel_me">Me</string>
+    <string name="travel_transfer_offer_title">Take ownership?</string>
+    <string name="travel_transfer_offer_description">%1$s sent a request. Accept to manage trip information and members.</string>
+    <string name="travel_invite_expiry_hint">This link is valid until %1$s</string>
+    <string name="travel_offline_readonly">Offline · Read only</string>
+    <string name="travel_readonly">Read only</string>
+    <string name="travel_category_label">Category</string>
 </resources>

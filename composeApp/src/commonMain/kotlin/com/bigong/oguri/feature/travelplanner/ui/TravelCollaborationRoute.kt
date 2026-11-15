@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import kotlinx.datetime.toLocalDateTime
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,6 +30,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -130,43 +135,61 @@ internal fun TravelMembersRoute(
             }
             val members = state.members
             if (members != null) {
-                TravelManagementSection(stringResource(Res.string.travel_members))
+                if (!showMembers && members.ownershipTarget == members.currentMemberId && !members.isOwner) {
+                    val shape = RoundedCornerShape(8.dp)
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).background(com.bigong.oguri.core.designsystem.Mint5, shape)
+                        .border(1.dp, Mint40, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(stringResource(Res.string.travel_transfer_offer_title), style = OguriTheme.typography.cardSubtitle)
+                        Text(stringResource(Res.string.travel_transfer_offer_description, members.members.firstOrNull { it.owner }?.nickname ?: stringResource(Res.string.travel_member)), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        TravelOutlineButton(modifier = Modifier.fillMaxWidth(), enabled = !state.busy, onClick = {
+                            confirmationKind = "accept"; confirmation = { viewModel.acceptOwnership(planId) }
+                        }) { Text(stringResource(Res.string.travel_accept_ownership)) }
+                    }
+                    Spacer(Modifier.height(18.dp))
+                }
+                TravelManagementSection(
+                    if (members.members.size > 1) stringResource(Res.string.travel_member_count, members.members.size) else stringResource(Res.string.travel_members),
+                    Res.drawable.ic_travel_members,
+                    onClick = { showMembers = true },
+                )
                 Spacer(Modifier.height(10.dp))
                 val colors = OguriTheme.colors
                 val shape = RoundedCornerShape(8.dp)
-                if (showMembers) {
-                members.members.forEach { member ->
+                Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderStrong, shape)) {
+                members.members.forEachIndexed { index, member ->
+                    if (index > 0) HorizontalDivider(color = colors.borderSubtle)
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(shape).background(colors.surfaceCard)
-                            .border(1.dp, colors.borderStrong, shape).padding(horizontal = 14.dp, vertical = 13.dp),
+                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 13.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(Modifier.size(40.dp).background(Mint40, CircleShape), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(40.dp).background(if (member.owner) Mint40 else com.bigong.oguri.core.designsystem.Orange20, CircleShape), contentAlignment = Alignment.Center) {
                             Icon(painterResource(Res.drawable.ic_travel_member), null, Modifier.size(22.dp), tint = Neutral0)
                         }
                         Text(
                             member.nickname ?: stringResource(Res.string.travel_member),
                             Modifier.weight(1f), color = Neutral100, style = travelTextStyle(15, 18, FontWeight.Medium),
                         )
-                        if (member.owner) {
-                            Text(stringResource(Res.string.travel_owner_role), color = colors.textTertiary, style = travelTextStyle(12, 14, FontWeight.Medium))
+                        if (member.owner || member.id == members.currentMemberId) {
+                            Text(listOfNotNull(stringResource(Res.string.travel_owner_role).takeIf { member.owner }, stringResource(Res.string.travel_me).takeIf { member.id == members.currentMemberId }).joinToString(" · "), color = colors.textTertiary, style = travelTextStyle(12, 14, FontWeight.Medium))
                         }
                         if (members.isOwner && !member.owner) {
                             var menuOpen by remember(member.id) { mutableStateOf(false) }
                             Box {
                                 com.bigong.oguri.feature.travelplanner.ui.component.TravelIconButton(onClick = { menuOpen = true }, enabled = !state.busy) {
-                                    Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), Modifier.size(24.dp))
+                                    Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), Modifier.size(24.dp).rotate(90f))
                                 }
-                                if (menuOpen) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, onDismissRequest = { menuOpen = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
-                                    androidx.compose.material3.Surface(color = colors.surfaceCard, shape = shape, shadowElevation = 4.dp) {
+                                if (menuOpen) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, with(LocalDensity.current) { 40.dp.roundToPx() }), onDismissRequest = { menuOpen = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
+                                    androidx.compose.material3.Surface(modifier = Modifier.width(140.dp).border(1.dp, colors.borderStrong, shape), color = colors.surfaceCard, shape = shape, shadowElevation = 4.dp) {
                                         Column {
-                                            TravelTextButton(enabled = !state.busy, onClick = { menuOpen = false; confirmationKind = "remove"; confirmation = { viewModel.remove(planId, member.id) } }) {
-                                                Text(stringResource(Res.string.travel_remove_member), color = com.bigong.oguri.core.designsystem.Orange50)
+                                            TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), enabled = !state.busy && members.ownershipTarget != member.id, onClick = { menuOpen = false; confirmationKind = "transfer"; confirmation = { viewModel.offerOwnership(planId, member.id) } }) {
+                                                Text(stringResource(if (members.ownershipTarget == member.id) Res.string.travel_ownership_pending else Res.string.travel_offer_ownership), style = OguriTheme.typography.bodyMedium)
                                             }
-                                            TravelTextButton(enabled = !state.busy && members.ownershipTarget != member.id, onClick = { menuOpen = false; confirmationKind = "transfer"; confirmation = { viewModel.offerOwnership(planId, member.id) } }) {
-                                                Text(stringResource(if (members.ownershipTarget == member.id) Res.string.travel_ownership_pending else Res.string.travel_offer_ownership))
+                                            HorizontalDivider(color = colors.borderSubtle)
+                                            TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), enabled = !state.busy, onClick = { menuOpen = false; confirmationKind = "remove"; confirmation = { viewModel.remove(planId, member.id) } }) {
+                                                Text(stringResource(Res.string.travel_remove_member), style = OguriTheme.typography.bodyMedium, color = com.bigong.oguri.core.designsystem.Orange50)
                                             }
+
                                         }
                                     }
                                 }
@@ -175,8 +198,6 @@ internal fun TravelMembersRoute(
                     }
 
                 }
-                } else {
-                    TravelManagementRow(stringResource(Res.string.travel_participating_members), !state.busy, trailing = stringResource(Res.string.travel_member_count, members.members.size)) { showMembers = true }
                 }
                 if (!showMembers) {
                 if (members.isOwner) {
@@ -206,7 +227,12 @@ internal fun TravelMembersRoute(
                                     clipboard.setText(AnnotatedString(travelInviteLink(it)))
                                     copied = true
                                 }
-                            }) { Text(stringResource(if (copied) Res.string.travel_invite_copied else Res.string.travel_copy_invite)) }
+                            }) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(painterResource(if (copied) Res.drawable.ic_travel_check else Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
+                                    Text(stringResource(if (copied) Res.string.travel_invite_copied else Res.string.travel_copy_invite))
+                                }
+                            }
                         }
                         if (state.invite != null || members.hasActiveInvite) Box(
                             Modifier.heightIn(min = 45.dp)
@@ -217,15 +243,18 @@ internal fun TravelMembersRoute(
                             Text(stringResource(Res.string.travel_revoke_invite), style = travelTextStyle(13, 16), color = colors.textTertiary)
                         }
                     }
+                    members.inviteExpiresAt?.let { expires ->
+                        Text(stringResource(Res.string.travel_invite_expiry_hint, travelWeekDate(expires.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date)), Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)
+                    }
                 }
                 Spacer(Modifier.height(30.dp))
-                TravelManagementSection(stringResource(Res.string.travel_manage_title))
+                TravelManagementSection(stringResource(Res.string.travel_manage_title), Res.drawable.ic_travel_map)
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider(color = colors.borderSubtle)
                 TravelManagementRow(stringResource(Res.string.travel_trip_info), !state.busy) { viewModel.loadDetails(planId) }
                 HorizontalDivider(color = colors.borderSubtle)
                 Spacer(Modifier.height(26.dp))
-                TravelManagementSection(stringResource(Res.string.travel_private_settings))
+                TravelManagementSection(stringResource(Res.string.travel_private_settings), Res.drawable.ic_travel_bell)
                 Spacer(Modifier.height(8.dp))
                 HorizontalDivider(color = colors.borderSubtle)
                 val reminderLabel = reminderState.settings?.let {
@@ -245,15 +274,13 @@ internal fun TravelMembersRoute(
                     }
                     HorizontalDivider(color = colors.borderSubtle)
                 } else {
-                    if (members.ownershipTarget == members.currentMemberId) {
-                        TravelPrimaryButton(enabled = !state.busy, onClick = {
-                            confirmationKind = "accept"; confirmation = { viewModel.acceptOwnership(planId) }
-                        }) { Text(stringResource(Res.string.travel_accept_ownership)) }
+                    Spacer(Modifier.height(32.dp))
+                    HorizontalDivider(color = colors.borderSubtle)
+                    TravelManagementRow(stringResource(Res.string.travel_leave_trip), !state.busy, destructive = true) {
+                        confirmationKind = "leave"; confirmation = { viewModel.leave(planId) }
                     }
-                    Text(stringResource(Res.string.travel_leave_explanation))
-                    TravelTextButton(enabled = !state.busy, onClick = { confirmationKind = "leave"; confirmation = { viewModel.leave(planId) } }) {
-                        Text(stringResource(Res.string.travel_leave_trip))
-                    }
+                    HorizontalDivider(color = colors.borderSubtle)
+                    Text(stringResource(Res.string.travel_leave_explanation), Modifier.padding(horizontal = 24.dp, vertical = 10.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)
                 }
                 }
             }
@@ -310,11 +337,11 @@ internal fun TravelMembersRoute(
 }
 
 @Composable
-private fun TravelManagementSection(label: String) {
-    Text(
-        label, Modifier.padding(horizontal = 24.dp),
-        style = travelTextStyle(12, 14, FontWeight.Medium), color = OguriTheme.colors.textTertiary,
-    )
+private fun TravelManagementSection(label: String, icon: org.jetbrains.compose.resources.DrawableResource, onClick: (() -> Unit)? = null) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).noRippleClickable(enabled = onClick != null, onClick = { onClick?.invoke() }).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Icon(painterResource(icon), null, Modifier.size(24.dp), tint = Mint40)
+        Text(label, style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+    }
 }
 
 @Composable
@@ -350,7 +377,7 @@ internal fun TravelInviteRoute(
     onBack: () -> Unit,
     onJoined: (String) -> Unit,
 ) {
-    val loadedState by viewModel.state.collectAsStateWithLifecycle()
+    val loadedState = viewModel.state.collectAsStateWithLifecycle().value
     val state = if (viewModel.matchesInvite(token)) loadedState else TravelCollaborationState(busy = token != null)
     LaunchedEffect(viewModel, token) { if (token != null) viewModel.preview(token) }
     LaunchedEffect(viewModel, token, state.joinedPlanId) {
@@ -360,23 +387,31 @@ internal fun TravelInviteRoute(
         title = stringResource(Res.string.travel_invitation),
         onBack = onBack,
         isSaving = state.busy && state.preview != null,
+        showTopDivider = false,
     ) {
         val preview = state.preview
         val terminal = state.failure in listOf(com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_EXPIRED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_REVOKED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_TRIP_DELETED)
-        Column(Modifier.weight(1f).fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = if (terminal) 24.dp else 20.dp, vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = if (preview != null && !terminal) Arrangement.Top else Arrangement.Center) {
             if (terminal) {
                 androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_empty), null, Modifier.size(180.dp))
                 Text(stringResource(Res.string.travel_invite_expired_title), style = OguriTheme.typography.cardTitle, modifier = Modifier.padding(top = 24.dp))
                 Text(stringResource(Res.string.travel_invite_expired_message), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary, modifier = Modifier.padding(vertical = 12.dp))
                 TravelOutlineButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_go_to_plans)) }
             } else if (preview != null && token != null) {
-                androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_parasol), null, Modifier.size(140.dp))
+                Spacer(Modifier.height(12.dp))
+                androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_parasol), null, Modifier.size(160.dp))
+                Spacer(Modifier.height(24.dp))
                 preview.invitedBy?.let { Text(stringResource(Res.string.travel_invited_by, it), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary) }
-                Text(stringResource(Res.string.travel_invite_heading), style = OguriTheme.typography.sectionTitle, modifier = Modifier.padding(vertical = 12.dp))
+                Text(stringResource(Res.string.travel_invite_heading), style = OguriTheme.typography.sectionTitle, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp))
                 Column(Modifier.fillMaxWidth().padding(vertical = 16.dp).clip(RoundedCornerShape(8.dp)).background(OguriTheme.colors.surfaceCard).border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))) {
-                    Text(preview.title, Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint70).padding(18.dp), style = OguriTheme.typography.cardTitle, color = OguriTheme.colors.textOnMint)
-                    Text(travelCardDates(com.bigong.oguri.domain.model.TravelDates(preview.startDate, preview.endDate), true), Modifier.padding(18.dp), style = OguriTheme.typography.cardSubtitle)
-                    preview.city?.let { Text(it + " · " + stringResource(Res.string.travel_member_count, preview.memberCount ?: 1), Modifier.padding(start = 18.dp, bottom = 18.dp), style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary) }
+                    Text(preview.title, Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint70).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = OguriTheme.colors.textOnMint)
+                    Text(travelCardDates(com.bigong.oguri.domain.model.TravelDates(preview.startDate, preview.endDate), true), Modifier.padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 10.dp), style = OguriTheme.typography.cardSubtitle)
+                    preview.city?.let { city ->
+                        Row(Modifier.padding(start = 18.dp, end = 18.dp, bottom = 18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
+                            Text(city + " · " + stringResource(Res.string.travel_member_count, preview.memberCount ?: 1), style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary)
+                        }
+                    }
                 }
                 Text(stringResource(Res.string.travel_invite_description), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
                 state.failure?.let { TravelInlineFailure(it) }
