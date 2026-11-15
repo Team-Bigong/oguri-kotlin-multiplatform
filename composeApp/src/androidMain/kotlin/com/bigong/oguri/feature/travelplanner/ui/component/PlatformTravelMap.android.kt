@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Typeface
 import android.graphics.Paint
 import android.os.Bundle
 import androidx.compose.runtime.Composable
@@ -15,6 +16,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import com.bigong.oguri.core.designsystem.OguriTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.viewinterop.AndroidView
@@ -33,6 +40,8 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Dot
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.PolylineOptions
 import kotlinx.coroutines.delay
 
@@ -71,6 +80,14 @@ internal actual fun PlatformTravelMap(
     var tilesLoaded by remember(mapView) { mutableStateOf(false) }
     var mapSize by remember(mapView) { mutableStateOf(IntSize.Zero) }
     val density = context.resources.displayMetrics.density
+    val labelStyle = OguriTheme.typography.labelMedium
+    val selectedLabelStyle = OguriTheme.typography.labelLarge
+    val labelSize = with(LocalDensity.current) { labelStyle.fontSize.toPx() }
+    val selectedLabelSize = with(LocalDensity.current) { selectedLabelStyle.fontSize.toPx() }
+    val foreground = OguriTheme.colors.textOnMint.toArgb()
+    val fontResolver = LocalFontFamilyResolver.current
+    val labelTypeface = fontResolver.resolve(labelStyle.fontFamily, labelStyle.fontWeight ?: FontWeight.Normal, labelStyle.fontStyle ?: FontStyle.Normal).value as Typeface
+    val selectedLabelTypeface = fontResolver.resolve(selectedLabelStyle.fontFamily, selectedLabelStyle.fontWeight ?: FontWeight.Normal, selectedLabelStyle.fontStyle ?: FontStyle.Normal).value as Typeface
 
     DisposableEffect(mapView) {
         mapView.onCreate(Bundle())
@@ -111,14 +128,15 @@ internal actual fun PlatformTravelMap(
     }
     val renderedMap = map
     if (renderedMap != null) {
-        LaunchedEffect(renderedMap, scene) {
+        LaunchedEffect(renderedMap, scene, foreground, labelSize, selectedLabelSize, labelTypeface, selectedLabelTypeface) {
             renderedMap.clear()
             scene.lines.forEach { line ->
                 renderedMap.addPolyline(
                     PolylineOptions()
                         .addAll(line.points.map { it.toLatLng() })
                         .color(line.colorArgb)
-                        .width(3 * density)
+                        .width(2 * density)
+                        .pattern(listOf(Dot(), Gap(6 * density)))
                         .geodesic(true),
                 )
             }
@@ -130,7 +148,7 @@ internal actual fun PlatformTravelMap(
                             .title(marker.title ?: marker.label)
                             .anchor(0.5f, 0.5f)
                             .zIndex(if (marker.selected) 1f else 0f)
-                            .icon(BitmapDescriptorFactory.fromBitmap(marker.bitmap(density))),
+                            .icon(BitmapDescriptorFactory.fromBitmap(marker.bitmap(density, foreground, labelSize, selectedLabelSize, labelTypeface, selectedLabelTypeface))),
                     )?.tag = marker.id
             }
         }
@@ -177,7 +195,14 @@ internal actual fun PlatformTravelMap(
 
 private fun TravelCoordinates.toLatLng(): LatLng = LatLng(latitude, longitude)
 
-private fun TravelMapMarker.bitmap(density: Float): Bitmap {
+private fun TravelMapMarker.bitmap(
+    density: Float,
+    foreground: Int,
+    labelSize: Float,
+    selectedLabelSize: Float,
+    labelTypeface: Typeface,
+    selectedLabelTypeface: Typeface,
+): Bitmap {
     val size = ((if (selected) 44 else 26) * density).toInt().coerceAtLeast(1)
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
@@ -188,14 +213,15 @@ private fun TravelMapMarker.bitmap(density: Float): Bitmap {
         canvas.drawCircle(middle, middle, middle, paint)
     }
     val radius = (if (selected) 16 else 13) * density
-    paint.color = android.graphics.Color.WHITE
+    paint.color = foreground
     canvas.drawCircle(middle, middle, radius, paint)
     paint.color = colorArgb
     canvas.drawCircle(middle, middle, radius - 2 * density, paint)
     label?.let {
-        paint.color = android.graphics.Color.WHITE
+        paint.color = foreground
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = (if (selected) 14 else 12) * density
+        paint.textSize = if (selected) selectedLabelSize else labelSize
+        paint.typeface = if (selected) selectedLabelTypeface else labelTypeface
         canvas.drawText(it, middle, middle - (paint.ascent() + paint.descent()) / 2, paint)
     }
     return bitmap
