@@ -53,6 +53,7 @@ import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanSkeleton
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
@@ -87,6 +88,11 @@ import oguri.composeapp.generated.resources.ic_travel_more
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.ic_travel_plus
+import oguri.composeapp.generated.resources.img_oguri_empty
+import oguri.composeapp.generated.resources.travel_go_to_plans
+import oguri.composeapp.generated.resources.travel_trip_unavailable_message
+import oguri.composeapp.generated.resources.travel_unavailable
+import oguri.composeapp.generated.resources.travel_trip
 import oguri.composeapp.generated.resources.travel_add_visit
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
@@ -98,7 +104,6 @@ import oguri.composeapp.generated.resources.travel_completed_trip
 import oguri.composeapp.generated.resources.ic_travel_row_arrow
 import oguri.composeapp.generated.resources.travel_find_next_holiday
 import oguri.composeapp.generated.resources.travel_has_note
-import oguri.composeapp.generated.resources.travel_list
 import oguri.composeapp.generated.resources.travel_manage
 import oguri.composeapp.generated.resources.travel_move_down
 import oguri.composeapp.generated.resources.travel_move_up
@@ -130,6 +135,7 @@ import org.jetbrains.compose.resources.stringResource
 internal fun TravelPlanScreen(
     state: TravelPlannerUiState,
     onBack: () -> Unit,
+    onOpenPlans: () -> Unit,
     onReload: () -> Unit,
     onRetrySave: () -> Unit,
     onUndoVisit: () -> Unit,
@@ -157,19 +163,20 @@ internal fun TravelPlanScreen(
 ) {
     val plan = state.plan
     val failure = state.failure
+    val loadingPlan = plan == null && (failure == null || (state.isLoading && failure == TravelPlanFailure.CONNECTION))
     val offlineMessage = stringResource(Res.string.travel_offline_snapshot)
     TravelPlannerPage(
-        title = plan?.summary?.details?.title ?: stringResource(Res.string.travel_list),
+        title = plan?.summary?.details?.title ?: stringResource(Res.string.travel_trip),
         onBack = onBack,
         isSaving = state.isSaving,
         showTopDivider = false,
-        loadingTitle = plan == null && failure == null,
+        loadingTitle = loadingPlan,
         actions = {
             if (plan != null) {
                 TravelIconButton(onClick = onMembers, enabled = !state.isSaving && !state.canRetrySave) {
                     Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), tint = Neutral100)
                 }
-            } else if (failure == null) {
+            } else if (loadingPlan) {
                 TravelIconButton(onClick = onMembers, enabled = false) {
                     Icon(painterResource(Res.drawable.ic_travel_more), contentDescription = null, tint = Neutral100)
                 }
@@ -177,15 +184,31 @@ internal fun TravelPlanScreen(
         },
     ) {
         if (plan == null) {
-            if (failure == TravelPlanFailure.SIGN_IN_REQUIRED) {
-                TravelInlineFailure(failure, onSignIn, stringResource(Res.string.travel_sign_in))
-            } else if (failure != null) {
-                TravelLoadFailure(failure, onReload)
-            } else {
-                TravelPlanSkeleton(Modifier.weight(1f))
-                TravelBottomAction(enabled = false, onClick = {}) {
-                    Text(stringResource(Res.string.travel_add_visit))
+            when {
+                loadingPlan -> {
+                    TravelPlanSkeleton(Modifier.weight(1f))
+                    TravelBottomAction(enabled = false, onClick = {}) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(18.dp))
+                            Text(stringResource(Res.string.travel_add_visit))
+                        }
+                    }
                 }
+                failure == TravelPlanFailure.UNAVAILABLE -> TravelPlansEmpty(
+                    illustration = Res.drawable.img_oguri_empty,
+                    message = stringResource(Res.string.travel_trip_unavailable_message),
+                    actionLabel = stringResource(Res.string.travel_go_to_plans),
+                    onAction = onOpenPlans,
+                    title = stringResource(Res.string.travel_unavailable),
+                    modifier = Modifier.weight(1f),
+                    illustrationSize = 180.dp,
+                    outlinedAction = true,
+                )
+                failure == TravelPlanFailure.SIGN_IN_REQUIRED -> TravelInlineFailure(
+                    failure, onSignIn, stringResource(Res.string.travel_sign_in),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+                )
+                failure != null -> TravelLoadFailure(failure, onReload)
             }
             return@TravelPlannerPage
         }
@@ -217,6 +240,7 @@ internal fun TravelPlanScreen(
             onOverview = onOverview,
         )
 
+        val showPartialFailure = state.dayPlacesIncomplete && !state.isOffline
         val unappliedOrder = state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay || it.isOutsideTrip(plan) }
         val cityCenter = TravelCity.centerOf(plan.summary.details.city)
         val scene =
@@ -225,7 +249,7 @@ internal fun TravelPlanScreen(
             }
         TravelPlanPane(
             scene = scene,
-            hideMap = unappliedOrder != null,
+            hideMap = unappliedOrder != null || showPartialFailure || state.needsLatestPlan,
             emptyDay = visits.isEmpty(),
             viewportRequest = state.viewportRequest,
             focusedVisitId = state.mapFocusedVisitId,
@@ -233,16 +257,18 @@ internal fun TravelPlanScreen(
             modifier = Modifier.weight(1f),
             status = {
                 if (state.isLoadingDayPlaces) TravelLoading(Modifier.fillMaxWidth())
-                if (state.dayPlacesIncomplete && !state.isOffline) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                        Text(stringResource(Res.string.travel_place_details_unavailable), Modifier.weight(1f))
-                        TravelTextButton(onClick = onRetryPlaces) { Text(stringResource(Res.string.travel_retry)) }
-                    }
+                if (showPartialFailure) {
+                    TravelIssueCard(
+                        title = stringResource(Res.string.travel_place_details_unavailable),
+                        onRetry = onRetryPlaces,
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp),
+                    )
                 }
 
                 if (failure != null && !(failure == TravelPlanFailure.CONNECTION && (state.isOffline || state.canRetrySave)) && !(failure == TravelPlanFailure.CONFLICT && unappliedOrder != null) && state.visitDraft == null && state.placeSearch == null) {
                     TravelInlineFailure(
                         failure = failure,
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 8.dp),
                         onRetry =
                             when {
                                 state.canRetrySave -> onRetrySave

@@ -77,14 +77,14 @@
     <string name="travel_sign_in">Sign in</string>
     <string name="travel_guest_plans">Sign in to create and manage your trips.</string>
     <string name="travel_find_next_holiday">Find your next holiday</string>
-    <string name="travel_city_unavailable">Could not load the recommended city. You can enter a city below or try again.</string>
+    <string name="travel_city_unavailable">Could not load the recommended city</string>
     <string name="travel_choose_time_zone">Choose the local time zone</string>
     <string name="travel_recommended_dates">Recommended dates · %1$s – %2$s</string>
     <string name="travel_matching_plan">You already have a trip for these dates · %1$s</string>
     <string name="travel_open_plan">Open saved trip</string>
-    <string name="travel_choose_city">Choose a suggested city</string>
+    <string name="travel_choose_city">Choose a city</string>
     <string name="travel_search_cities">Search cities</string>
-    <string name="travel_search_cities_empty">No cities found. Try a different name.</string>
+    <string name="travel_search_cities_empty">No cities found</string>
     <string name="travel_members">Members</string>
     <string name="travel_member">Member</string>
     <string name="travel_owner_name">%1$s · Owner</string>
@@ -133,7 +133,7 @@
     <string name="travel_reminder_pending">Scheduled</string>
     <string name="travel_reminder_sending">Sending</string>
     <string name="travel_reminder_sent">Sent</string>
-    <string name="travel_reminder_failed">Could not deliver. Choose a new time to try again.</string>
+    <string name="travel_reminder_failed">Choose a new time to schedule another reminder.</string>
     <string name="travel_reminder_turn_off">Turn off reminder</string>
     <string name="travel_reminder_date">Reminder date</string>
     <string name="travel_reminder_time">Reminder time</string>
@@ -321,4 +321,15 @@
     <string name="travel_invite_deleted_message">This trip is no longer available</string>
     <string name="travel_action_accept">Accept</string>
     <string name="travel_list_retry">Try again</string>
+    <string name="travel_trip">Trip</string>
+    <string name="travel_trip_unavailable_message">It was deleted or you no longer have access.</string>
+    <string name="travel_conflict_title">The itinerary changed</string>
+    <string name="travel_conflict_message">Review the latest itinerary before saving.</string>
+    <string name="travel_manage_load_failure_message">You can still view your itinerary.</string>
+    <string name="travel_invite_join_failure_title">Could not join the trip</string>
+    <string name="travel_invite_join_failure_message">Check your connection and try again.</string>
+    <string name="travel_invite_missing_title">Could not verify the invitation link</string>
+    <string name="travel_city_unavailable_message">Search for a city or try again.</string>
+    <string name="travel_search_cities_empty_hint">Try searching for a different name.</string>
+    <string name="travel_reminder_delivery_failed_title">Could not deliver the reminder</string>
 </resources>

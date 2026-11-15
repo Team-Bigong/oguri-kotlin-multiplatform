@@ -389,6 +389,7 @@ fun MainNavHost(
                 },
                 onSignIn = navigator::navigateToTravelLogin,
                 onBack = { navigator.popBackStack() },
+                onOpenPlans = navigator::closeManagedTravelPlan,
             )
         }
         composable<RouteModel.MyPage> {

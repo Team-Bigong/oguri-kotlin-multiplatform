@@ -86,11 +86,11 @@ internal fun TravelPlansScreen(
         val plans = state.plans
         when {
             !signedIn -> TravelSignInContent(onSignIn = onSignIn, showPageTitle = onBack == null)
-            failure != null -> {
+            failure != null && !state.isLoading -> {
                 TravelPlansHeading(showPageTitle = onBack == null)
                 TravelPlansEmpty(Res.drawable.img_oguri_empty, stringResource(Res.string.travel_list_failure_message), stringResource(Res.string.travel_list_retry), onRetry, stringResource(Res.string.travel_list_failure_title), Modifier.weight(1f), illustrationSize = 200.dp)
             }
-            plans == null -> {
+            plans == null || failure != null -> {
                 TravelPlansHeading(showPageTitle = onBack == null)
                 Column(Modifier.padding(horizontal = 20.dp, vertical = 24.dp).travelLoadingSemantics()) {
                     SkeletonBox(Modifier.fillMaxWidth().height(134.dp))
@@ -194,6 +194,7 @@ internal fun TravelPlansEmpty(
     modifier: Modifier = Modifier,
     showPlus: Boolean = false,
     illustrationSize: androidx.compose.ui.unit.Dp = 160.dp,
+    outlinedAction: Boolean = false,
 ) {
     Column(
         modifier = modifier.fillMaxWidth().padding(horizontal = 24.dp),
@@ -206,7 +207,11 @@ internal fun TravelPlansEmpty(
         Spacer(Modifier.height(12.dp))
         Text(message, style = OguriTheme.typography.bodyMedium, color = Neutral70, textAlign = TextAlign.Center)
         Spacer(Modifier.height(28.dp))
-        TravelPrimaryButton(onClick = onAction, modifier = Modifier.fillMaxWidth()) {
+        if (outlinedAction) {
+            TravelOutlineButton(onClick = onAction, modifier = Modifier.fillMaxWidth()) {
+                Text(actionLabel)
+            }
+        } else TravelPrimaryButton(onClick = onAction, modifier = Modifier.fillMaxWidth()) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (showPlus) Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(18.dp))
                 Text(actionLabel)

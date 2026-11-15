@@ -52,6 +52,7 @@ import oguri.composeapp.generated.resources.travel_city_search_placeholder
 import oguri.composeapp.generated.resources.travel_recommended_cities
 import oguri.composeapp.generated.resources.travel_search_cities
 import oguri.composeapp.generated.resources.travel_search_cities_empty
+import oguri.composeapp.generated.resources.travel_search_cities_empty_hint
 import oguri.composeapp.generated.resources.travel_search_close
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
@@ -105,7 +106,18 @@ internal fun TravelCitySearchDialog(
                 when {
                     state.loading && state.suggestions.isEmpty() -> TravelSearchResultsSkeleton()
                     state.failure != null -> TravelInlineFailure(state.failure, onRetry = { onQuery(state.query) })
-                    state.query.trim().length >= 2 && state.suggestions.isEmpty() -> Text(stringResource(Res.string.travel_search_cities_empty), style = OguriTheme.typography.bodyMedium)
+                    state.query.trim().length >= 2 && state.suggestions.isEmpty() -> Column(
+                        Modifier.fillMaxWidth().padding(top = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(stringResource(Res.string.travel_search_cities_empty), style = OguriTheme.typography.cardSubtitle)
+                        Text(
+                            stringResource(Res.string.travel_search_cities_empty_hint),
+                            style = OguriTheme.typography.bodySmall,
+                            color = colors.textTertiary,
+                        )
+                    }
                 }
                 if (state.query.isBlank()) {
                     Column(

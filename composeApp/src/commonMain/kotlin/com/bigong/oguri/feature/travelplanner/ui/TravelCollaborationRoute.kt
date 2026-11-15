@@ -53,6 +53,8 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInviteSkeleton
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
+import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
@@ -133,6 +135,19 @@ internal fun TravelMembersRoute(
         reminderState.failure?.let(viewModel::applyAccessFailure)
     }
     TravelPlannerPage(stringResource(if (showMembers) Res.string.travel_participating_members else Res.string.travel_manage), { if (showMembers) showMembers = false else onBack() }, state.busy, showTopDivider = false) {
+        if (state.members == null && state.failure == TravelPlanFailure.CONNECTION) {
+            TravelPlansEmpty(
+                illustration = Res.drawable.img_oguri_empty,
+                message = stringResource(Res.string.travel_manage_load_failure_message),
+                actionLabel = stringResource(Res.string.travel_list_retry),
+                onAction = { viewModel.members(planId) },
+                title = stringResource(Res.string.travel_list_failure_title),
+                modifier = Modifier.weight(1f),
+                illustrationSize = 180.dp,
+                outlinedAction = true,
+            )
+            return@TravelPlannerPage
+        }
         Column(Modifier.verticalScroll(rememberScrollState()).padding(top = 16.dp)) {
             if (state.detailsPlan == null) {
                 state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.members(planId) }) }
@@ -406,6 +421,19 @@ internal fun TravelInviteRoute(
     ) {
         val preview = state.preview
         val terminal = state.failure in listOf(com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_EXPIRED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_REVOKED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_TRIP_DELETED)
+        if (token == null || (preview == null && state.failure == TravelPlanFailure.INVALID)) {
+            TravelPlansEmpty(
+                illustration = Res.drawable.img_oguri_empty,
+                message = stringResource(Res.string.travel_invite_missing),
+                actionLabel = stringResource(Res.string.travel_go_to_plans),
+                onAction = onOpenPlans,
+                title = stringResource(Res.string.travel_invite_missing_title),
+                modifier = Modifier.weight(1f),
+                illustrationSize = 180.dp,
+                outlinedAction = true,
+            )
+            return@TravelPlannerPage
+        }
         if (preview == null && state.busy) {
             TravelInviteSkeleton(Modifier.weight(1f))
             TravelBottomAction(enabled = false, onClick = {}) {
@@ -425,7 +453,7 @@ internal fun TravelInviteRoute(
                 Text(stringResource(title), style = OguriTheme.typography.cardTitle, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 24.dp))
                 Text(stringResource(if (deleted) Res.string.travel_invite_deleted_message else Res.string.travel_invite_expired_message), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary, textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 16.dp, bottom = 28.dp))
                 TravelOutlineButton(onClick = onOpenPlans, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.travel_go_to_plans)) }
-            } else if (preview != null && token != null) {
+            } else if (preview != null) {
                 Spacer(Modifier.height(12.dp))
                 androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_parasol), null, Modifier.size(160.dp))
                 Spacer(Modifier.height(24.dp))
@@ -442,11 +470,23 @@ internal fun TravelInviteRoute(
                     }
                 }
                 Text(stringResource(Res.string.travel_invite_description), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                state.failure?.let { TravelInlineFailure(it) }
-            } else if (token == null) Text(stringResource(Res.string.travel_invite_missing))
-            else state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.preview(token) }) }
+                state.failure?.let {
+                    if (it == TravelPlanFailure.CONNECTION) {
+                        TravelIssueCard(
+                            title = stringResource(Res.string.travel_invite_join_failure_title),
+                            description = stringResource(Res.string.travel_invite_join_failure_message),
+                            onRetry = { if (signedIn) viewModel.join(token) else onSignIn() },
+                            modifier = Modifier.padding(top = 16.dp),
+                        )
+                    } else {
+                        TravelInlineFailure(it)
+                    }
+                }
+            } else {
+                state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.preview(token) }) }
+            }
         }
-        if (!terminal && preview != null && token != null) com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction(enabled = !state.busy, onClick = { if (signedIn) viewModel.join(token) else onSignIn() }) {
+        if (!terminal && preview != null) TravelBottomAction(enabled = !state.busy, onClick = { if (signedIn) viewModel.join(token) else onSignIn() }) {
             Text(stringResource(if (signedIn) Res.string.travel_join_trip else Res.string.travel_sign_in))
         }
     }

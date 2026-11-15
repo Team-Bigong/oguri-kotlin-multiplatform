@@ -105,6 +105,7 @@ internal fun TravelPlanRoute(
     onFindNextHoliday: () -> Unit,
     onSignIn: () -> Unit,
     onBack: () -> Unit,
+    onOpenPlans: () -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val changesState by collaborationViewModel.state.collectAsStateWithLifecycle()
@@ -171,6 +172,7 @@ internal fun TravelPlanRoute(
     TravelPlanScreen(
         state = state,
         onBack = onBack,
+        onOpenPlans = onOpenPlans,
         onReload = { viewModel.loadPlan(planId, rebaseDraft = true) },
         onRetrySave = viewModel::retrySave,
         onUndoVisit = viewModel::undoVisit,

@@ -38,6 +38,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -220,7 +221,11 @@ internal fun TravelPlaceSearchSheet(
                         search.failure != null -> item {
                             if (search.failure == TravelPlanFailure.CONNECTION) {
                                 Column(Modifier.fillMaxWidth().padding(vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(stringResource(Res.string.travel_place_search_unavailable), style = OguriTheme.typography.cardSubtitle)
+                                    Text(
+                                        stringResource(Res.string.travel_place_search_unavailable),
+                                        style = OguriTheme.typography.cardSubtitle,
+                                        modifier = Modifier.semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+                                    )
                                     Text(stringResource(Res.string.travel_search_preserved_hint), style = OguriTheme.typography.bodySmall, color = colors.textTertiary)
                                     Row {
                                         TravelTextButton(onClick = { onQuery(search.query) }, enabled = canEdit) { Text(stringResource(Res.string.travel_retry)) }
