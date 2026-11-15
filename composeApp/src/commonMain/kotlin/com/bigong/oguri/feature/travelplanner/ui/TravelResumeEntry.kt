@@ -72,7 +72,7 @@ internal fun TravelHomeGuide(viewModel: TravelPlannerViewModel?, onCreate: () ->
             stringResource(Res.string.travel_home_guide), Modifier.weight(1f),
             style = travelTextStyle(13, 16), color = colors.textTertiary,
         )
-        Text(stringResource(Res.string.travel_home_create_plan), style = travelTextStyle(13, 16, FontWeight.SemiBold), color = Neutral100)
+        Text(stringResource(Res.string.travel_home_create_plan), style = OguriTheme.typography.labelLarge, color = Neutral100)
         Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp), tint = colors.textTertiary)
     }
 }
