@@ -280,9 +280,9 @@ internal fun CreateTravelPlanScreen(
                     color = com.bigong.oguri.core.designsystem.Orange50,
                 )
             }
-            Spacer(Modifier.height(8.dp))
-            Text(titleLabel, style = OguriTheme.typography.labelMedium, color = colors.textTertiary)
             Spacer(Modifier.height(24.dp))
+            Text(titleLabel, style = OguriTheme.typography.labelMedium, color = colors.textTertiary)
+            Spacer(Modifier.height(8.dp))
             BasicTextField(
                 value = title,
                 onValueChange = { if (it.length <= TravelPlanDetails.MAX_TEXT_LENGTH) title = it },
