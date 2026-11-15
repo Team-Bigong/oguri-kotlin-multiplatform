@@ -208,14 +208,15 @@ internal fun TravelVisitEditor(
             }
             if (placeId == null && !comparing) TravelDirectionsButton(null, draft.location, enabled = !isSaving && !canRetrySave, onOpened = onDirectionsOpened)
             }
-            Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                if (comparing && original != null) TravelTextButton(enabled = canEdit, onClick = {
+            Column(Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                androidx.compose.material3.HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+                if (comparing && original != null) TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), enabled = canEdit, onClick = {
                     onDraftChange(draft.useSavedValues())
-                }) { Text(stringResource(Res.string.travel_use_saved), style = OguriTheme.typography.labelMedium) }
-                else if (draft.visit != null) TravelTextButton(enabled = canEdit, onClick = { confirmRemoval = true }) {
-                    Text(stringResource(Res.string.travel_delete_visit_action), color = com.bigong.oguri.core.designsystem.Orange50)
+                }) { Text(stringResource(Res.string.travel_use_saved), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary) }
+                else if (draft.visit != null) TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), enabled = canEdit, onClick = { confirmRemoval = true }) {
+                    Text(stringResource(Res.string.travel_delete_visit_action), style = OguriTheme.typography.labelMedium, color = com.bigong.oguri.core.designsystem.Orange50)
                 }
-                TravelPrimaryButton(enabled = canEdit && (placeId != null || draft.name.isNotBlank()), onClick = onApply, modifier = Modifier.weight(1f)) {
+                TravelPrimaryButton(enabled = canEdit && (placeId != null || draft.name.isNotBlank()), onClick = onApply, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), textStyle = OguriTheme.typography.cardTitle) {
                     Text(stringResource(if (comparing) Res.string.travel_apply_mine else Res.string.travel_apply))
                 }
             }
