@@ -145,7 +145,7 @@ internal fun TravelPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textStyle: TextStyle = OguriTheme.typography.cardSubtitle,
+    textStyle: TextStyle = OguriTheme.typography.cardTitle,
     content: @Composable () -> Unit,
 ) {
     TravelButton(
