@@ -11,7 +11,7 @@ import org.jetbrains.compose.resources.painterResource
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.designsystem.*
 import com.bigong.oguri.feature.travelplanner.ui.TravelDateButton
-import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
+import com.bigong.oguri.feature.travelplanner.ui.travelMonthDay
 import com.bigong.oguri.feature.travelplanner.ui.travelCardDates
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -219,7 +219,16 @@ internal fun TravelDetailsDialog(
                                 Text(stringResource(Res.string.travel_source), style = OguriTheme.typography.cardSubtitle)
                             }
                             Column(Modifier.fillMaxWidth().background(Mint5, shape).border(1.dp, Mint40, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                if (source.startDate != null && source.endDate != null) Text(stringResource(Res.string.travel_card_date_range, travelWeekDate(source.startDate), travelWeekDate(source.endDate)), style = OguriTheme.typography.cardSubtitle)
+                                if (source.startDate != null && source.endDate != null) {
+                                    Text(
+                                        text = stringResource(
+                                            Res.string.travel_card_date_range,
+                                            travelMonthDay(source.startDate),
+                                            travelMonthDay(source.endDate),
+                                        ),
+                                        style = OguriTheme.typography.cardSubtitle,
+                                    )
+                                }
                                 Text(stringResource(Res.string.travel_source_explanation), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                                     Row(
