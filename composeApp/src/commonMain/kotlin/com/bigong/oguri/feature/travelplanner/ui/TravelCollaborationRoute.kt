@@ -51,7 +51,8 @@ import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelReminderStatus
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelInviteSkeleton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
@@ -405,6 +406,13 @@ internal fun TravelInviteRoute(
     ) {
         val preview = state.preview
         val terminal = state.failure in listOf(com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_EXPIRED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_REVOKED, com.bigong.oguri.domain.model.TravelPlanFailure.INVITE_TRIP_DELETED)
+        if (preview == null && state.busy) {
+            TravelInviteSkeleton(Modifier.weight(1f))
+            TravelBottomAction(enabled = false, onClick = {}) {
+                Text(stringResource(Res.string.travel_join_trip))
+            }
+            return@TravelPlannerPage
+        }
         Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = if (terminal) 24.dp else 20.dp, vertical = 20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = if (preview != null && !terminal) Arrangement.Top else Arrangement.Center) {
             if (terminal) {
                 androidx.compose.foundation.Image(painterResource(Res.drawable.img_oguri_empty), null, Modifier.size(180.dp))
@@ -435,8 +443,7 @@ internal fun TravelInviteRoute(
                 }
                 Text(stringResource(Res.string.travel_invite_description), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                 state.failure?.let { TravelInlineFailure(it) }
-            } else if (state.busy) TravelLoading(Modifier.fillMaxWidth())
-            else if (token == null) Text(stringResource(Res.string.travel_invite_missing))
+            } else if (token == null) Text(stringResource(Res.string.travel_invite_missing))
             else state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.preview(token) }) }
         }
         if (!terminal && preview != null && token != null) com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction(enabled = !state.busy, onClick = { if (signedIn) viewModel.join(token) else onSignIn() }) {

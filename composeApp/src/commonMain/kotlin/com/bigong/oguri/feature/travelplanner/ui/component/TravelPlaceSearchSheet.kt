@@ -164,7 +164,7 @@ internal fun TravelPlaceSearchSheet(
                 Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                if (state.isSaving || (!manual && search.isLoading)) {
+                if (state.isSaving) {
                     item { TravelLoading(Modifier.fillMaxWidth()) }
                 }
                 state.failure?.let { failure ->
@@ -216,6 +216,7 @@ internal fun TravelPlaceSearchSheet(
                         )
                     }
                     when {
+                        search.isLoading -> item { TravelSearchResultsSkeleton() }
                         search.failure != null -> item {
                             if (search.failure == TravelPlanFailure.CONNECTION) {
                                 Column(Modifier.fillMaxWidth().padding(vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {

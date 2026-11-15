@@ -89,6 +89,7 @@ internal fun TravelPlannerPage(
     actions: @Composable RowScope.() -> Unit = {},
     showTopDivider: Boolean = true,
     modifier: Modifier = Modifier,
+    loadingTitle: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     PlatformBackHandler(enabled = isSaving) {}
@@ -108,7 +109,11 @@ internal fun TravelPlannerPage(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
+                        if (loadingTitle) {
+                            SkeletonBox(Modifier.size(width = 96.dp, height = 18.dp), RoundedCornerShape(4.dp))
+                        } else {
+                            TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
+                        }
                         TravelIconButton(
                             onClick = onBack,
                             modifier = Modifier.align(Alignment.CenterStart),

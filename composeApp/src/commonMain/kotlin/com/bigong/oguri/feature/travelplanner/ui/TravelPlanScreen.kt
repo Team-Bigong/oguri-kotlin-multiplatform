@@ -53,7 +53,7 @@ import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.ui.component.SkeletonBox
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanSkeleton
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
@@ -163,10 +163,15 @@ internal fun TravelPlanScreen(
         onBack = onBack,
         isSaving = state.isSaving,
         showTopDivider = false,
+        loadingTitle = plan == null && failure == null,
         actions = {
             if (plan != null) {
                 TravelIconButton(onClick = onMembers, enabled = !state.isSaving && !state.canRetrySave) {
                     Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), tint = Neutral100)
+                }
+            } else if (failure == null) {
+                TravelIconButton(onClick = onMembers, enabled = false) {
+                    Icon(painterResource(Res.drawable.ic_travel_more), contentDescription = null, tint = Neutral100)
                 }
             }
         },
@@ -177,10 +182,9 @@ internal fun TravelPlanScreen(
             } else if (failure != null) {
                 TravelLoadFailure(failure, onReload)
             } else {
-                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    TravelLoading(Modifier.fillMaxWidth(0.65f))
-                    SkeletonBox(Modifier.fillMaxWidth().height(230.dp))
-                    TravelLoading(Modifier.fillMaxWidth(0.45f))
+                TravelPlanSkeleton(Modifier.weight(1f))
+                TravelBottomAction(enabled = false, onClick = {}) {
+                    Text(stringResource(Res.string.travel_add_visit))
                 }
             }
             return@TravelPlannerPage

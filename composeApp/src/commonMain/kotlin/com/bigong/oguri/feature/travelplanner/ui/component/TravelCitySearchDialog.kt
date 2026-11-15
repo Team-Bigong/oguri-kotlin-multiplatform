@@ -103,7 +103,7 @@ internal fun TravelCitySearchDialog(
                     },
                 )
                 when {
-                    state.loading -> TravelLoading(Modifier.fillMaxWidth())
+                    state.loading && state.suggestions.isEmpty() -> TravelSearchResultsSkeleton()
                     state.failure != null -> TravelInlineFailure(state.failure, onRetry = { onQuery(state.query) })
                     state.query.trim().length >= 2 && state.suggestions.isEmpty() -> Text(stringResource(Res.string.travel_search_cities_empty), style = OguriTheme.typography.bodyMedium)
                 }

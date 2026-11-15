@@ -48,7 +48,7 @@ import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
+import com.bigong.oguri.feature.travelplanner.ui.component.travelLoadingSemantics
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
@@ -87,23 +87,21 @@ internal fun TravelPlansScreen(
         when {
             !signedIn -> TravelSignInContent(onSignIn = onSignIn, showPageTitle = onBack == null)
             failure != null -> {
-                Column(Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (onBack == null) Text(stringResource(Res.string.travel_list), style = OguriTheme.typography.sectionTitle)
-                    Text(stringResource(Res.string.travel_list_description), style = OguriTheme.typography.cardSubtitle, color = colors.textTertiary)
-                }
-                HorizontalDivider(color = colors.borderSubtle)
+                TravelPlansHeading(showPageTitle = onBack == null)
                 TravelPlansEmpty(Res.drawable.img_oguri_empty, stringResource(Res.string.travel_list_failure_message), stringResource(Res.string.travel_list_retry), onRetry, stringResource(Res.string.travel_list_failure_title), Modifier.weight(1f), illustrationSize = 200.dp)
             }
-            plans == null -> Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SkeletonBox(Modifier.fillMaxWidth().height(134.dp))
-                TravelLoading(Modifier.fillMaxWidth(0.5f))
+            plans == null -> {
+                TravelPlansHeading(showPageTitle = onBack == null)
+                Column(Modifier.padding(horizontal = 20.dp, vertical = 24.dp).travelLoadingSemantics()) {
+                    SkeletonBox(Modifier.fillMaxWidth().height(134.dp))
+                    Spacer(Modifier.height(16.dp))
+                    SkeletonBox(Modifier.fillMaxWidth().height(45.dp))
+                    Spacer(Modifier.height(28.dp))
+                    SkeletonBox(Modifier.fillMaxWidth(0.5f).height(16.dp), RoundedCornerShape(4.dp))
+                }
             }
             plans.isEmpty() -> {
-                Column(Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (onBack == null) Text(stringResource(Res.string.travel_list), style = OguriTheme.typography.sectionTitle, color = Neutral100)
-                    Text(stringResource(Res.string.travel_list_description), style = OguriTheme.typography.cardSubtitle, color = colors.textTertiary)
-                }
-                HorizontalDivider(color = colors.borderSubtle)
+                TravelPlansHeading(showPageTitle = onBack == null)
                 TravelPlansEmpty(Res.drawable.img_oguri_parasol, stringResource(Res.string.travel_empty_description), stringResource(Res.string.travel_create), onCreate, stringResource(Res.string.travel_empty_title), Modifier.weight(1f), showPlus = true)
             }
             else -> {
@@ -113,21 +111,7 @@ internal fun TravelPlansScreen(
                 val pastState = stringResource(if (showPast) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
                 LazyColumn {
                     item {
-                        Column(
-                            Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 24.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                        ) {
-                            if (onBack == null) {
-                                Text(stringResource(Res.string.travel_list), style = travelTextStyle(22, 26, FontWeight.Bold), color = Neutral100)
-                            }
-                            Text(
-                                stringResource(Res.string.travel_list_description),
-                                style = travelTextStyle(15, 18, FontWeight.Medium),
-                                color = colors.textTertiary,
-                            )
-
-                        }
-                        HorizontalDivider(color = colors.borderSubtle)
+                        TravelPlansHeading(showPageTitle = onBack == null, bottomPadding = 24.dp)
                     }
                     items(current, key = TravelPlanSummary::id) { plan ->
                         TravelPlanCard(plan, now.toLocalDateTime(plan.details.timeZone).date) { onOpen(plan.id) }
@@ -176,6 +160,28 @@ internal fun TravelPlansScreen(
             }
         }
     }
+}
+
+@Composable
+private fun TravelPlansHeading(
+    showPageTitle: Boolean,
+    bottomPadding: androidx.compose.ui.unit.Dp = 16.dp,
+) {
+    val colors = OguriTheme.colors
+    Column(
+        Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = bottomPadding),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        if (showPageTitle) {
+            Text(stringResource(Res.string.travel_list), style = travelTextStyle(22, 26, FontWeight.Bold), color = Neutral100)
+        }
+        Text(
+            stringResource(Res.string.travel_list_description),
+            style = travelTextStyle(15, 18, FontWeight.Medium),
+            color = colors.textTertiary,
+        )
+    }
+    HorizontalDivider(color = colors.borderSubtle)
 }
 
 @Composable
