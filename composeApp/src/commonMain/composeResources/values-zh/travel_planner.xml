@@ -80,7 +80,7 @@
     <string name="travel_city_unavailable">无法加载推荐城市</string>
     <string name="travel_choose_time_zone">选择当地时区</string>
     <string name="travel_recommended_dates">推荐日期 · %1$s 至 %2$s</string>
-    <string name="travel_matching_plan">你已有同一城市和日期的旅行 · %1$s</string>
+    <string name="travel_matching_plan">这段时间已有旅行计划</string>
     <string name="travel_open_plan">打开已有旅行</string>
     <string name="travel_choose_city">请选择城市</string>
     <string name="travel_search_cities">搜索城市</string>

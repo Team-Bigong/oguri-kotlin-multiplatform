@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint20
 import com.bigong.oguri.core.designsystem.Mint30
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import oguri.composeapp.generated.resources.calendar_month_day
@@ -331,9 +333,27 @@ internal fun CreateTravelPlanScreen(
                 }
             }
             if (matchingPlan != null) {
-                Text(stringResource(Res.string.travel_matching_plan, matchingPlan.details.title))
-                TravelTextButton(onClick = { onOpenExisting(matchingPlan.id) }, enabled = canEdit) {
-                    Text(stringResource(Res.string.travel_open_plan))
+                val shape = RoundedCornerShape(8.dp)
+                Column(
+                    Modifier.fillMaxWidth().padding(top = 24.dp)
+                        .background(Mint5, shape).border(1.dp, Mint20, shape)
+                        .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(stringResource(Res.string.travel_matching_plan), style = OguriTheme.typography.cardSubtitle)
+                    val range = travelCardDates(matchingPlan.details.dates, includeYear = false)
+                    Text(
+                        "${matchingPlan.details.title} · $range",
+                        style = OguriTheme.typography.caption,
+                        color = colors.textSecondary,
+                    )
+                    TravelTextButton(
+                        onClick = { onOpenExisting(matchingPlan.id) },
+                        modifier = Modifier.align(Alignment.End),
+                        enabled = canEdit,
+                    ) {
+                        Text(stringResource(Res.string.travel_open_plan))
+                    }
                 }
             }
             if (state.failure == TravelPlanFailure.SIGN_IN_REQUIRED && signedIn) {

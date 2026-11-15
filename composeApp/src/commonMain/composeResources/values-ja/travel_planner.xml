@@ -80,7 +80,7 @@
     <string name="travel_city_unavailable">おすすめの都市を読み込めませんでした</string>
     <string name="travel_choose_time_zone">現地のタイムゾーンを選択</string>
     <string name="travel_recommended_dates">おすすめの期間 · %1$s〜%2$s</string>
-    <string name="travel_matching_plan">同じ都市と日付の旅行があります · %1$s</string>
+    <string name="travel_matching_plan">同じ期間に作成した旅行があります</string>
     <string name="travel_open_plan">保存した旅行を開く</string>
     <string name="travel_choose_city">都市を選んでください</string>
     <string name="travel_search_cities">都市を検索</string>

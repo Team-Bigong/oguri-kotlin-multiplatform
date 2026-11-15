@@ -80,7 +80,7 @@
     <string name="travel_city_unavailable">Could not load the recommended city</string>
     <string name="travel_choose_time_zone">Choose the local time zone</string>
     <string name="travel_recommended_dates">Recommended dates · %1$s – %2$s</string>
-    <string name="travel_matching_plan">You already have a trip for these dates · %1$s</string>
+    <string name="travel_matching_plan">You already have a trip for these dates</string>
     <string name="travel_open_plan">Open saved trip</string>
     <string name="travel_choose_city">Choose a city</string>
     <string name="travel_search_cities">Search cities</string>
