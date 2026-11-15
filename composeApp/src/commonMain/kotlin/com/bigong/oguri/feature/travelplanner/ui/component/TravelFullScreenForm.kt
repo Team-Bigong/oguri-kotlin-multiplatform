@@ -25,16 +25,23 @@ internal fun TravelFullScreenForm(
     dismissButton: @Composable () -> Unit = {},
     shape: Shape = RoundedCornerShape(0.dp),
     containerColor: Color = OguriTheme.colors.backgroundSecondary,
+    contentPadding: PaddingValues = PaddingValues(20.dp),
+    showBottomActions: Boolean = true,
+    actions: @Composable () -> Unit = { Spacer(Modifier.size(48.dp)) },
 ) {
-    Dialog(onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
+    Dialog(onDismissRequest, properties = travelDialogProperties()) {
+        TravelDialogSystemBars()
         TravelPlannerPage(title = "", onBack = null) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 TravelIconButton(onClick = onDismissRequest) { Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_back)) }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { ProvideTextStyle(OguriTheme.typography.cardTitle, title) }
-                Spacer(Modifier.size(48.dp))
+                actions()
             }
-            Box(Modifier.weight(1f).fillMaxWidth().padding(20.dp)) { ProvideTextStyle(OguriTheme.typography.bodyMedium, text) }
-            Row(Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) { dismissButton(); confirmButton() }
+            Box(Modifier.weight(1f).fillMaxWidth().padding(contentPadding)) { ProvideTextStyle(OguriTheme.typography.bodyMedium, text) }
+            if (showBottomActions) {
+                HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+                Row(Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) { dismissButton(); confirmButton() }
+            }
         }
     }
 }

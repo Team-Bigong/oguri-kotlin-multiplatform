@@ -241,7 +241,6 @@ internal fun TravelPlanRoute(
             onQuery = { viewModel.searchPlaces(it, language) },
             onSelect = viewModel::selectPlace,
             onAdd = viewModel::addPlace,
-            onShowVisit = viewModel::openExistingPlace,
             onDismiss = viewModel::closePlaceSearch,
             onRetrySave = viewModel::retrySave,
             onLeaveWithPendingSave = onBack,

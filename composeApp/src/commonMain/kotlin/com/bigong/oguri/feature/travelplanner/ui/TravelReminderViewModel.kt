@@ -28,7 +28,8 @@ class TravelReminderViewModel(
     internal fun load(planId: String) =
         perform {
             val settings = repository.settings(planId)
-            mutableState.update { it.copy(settings = settings) }
+            val permissionDenied = com.bigong.oguri.core.notification.travelReminderPermissionDenied()
+            mutableState.update { it.copy(settings = settings, permissionDenied = permissionDenied) }
         }
 
     internal fun schedule(
@@ -45,6 +46,11 @@ class TravelReminderViewModel(
             repository.schedule(planId, settings, time)
             mutableState.update { it.copy(settings = repository.settings(planId)) }
         }
+    }
+
+    internal suspend fun refreshPermission() {
+        val denied = com.bigong.oguri.core.notification.travelReminderPermissionDenied()
+        mutableState.update { it.copy(permissionDenied = denied) }
     }
 
     internal fun cancel(planId: String) {

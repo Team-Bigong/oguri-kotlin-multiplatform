@@ -110,9 +110,10 @@ class TravelCollaborationRepository(
             .update()
     }
 
-    fun hasActiveInvite(planId: UUID, at: OffsetDateTime): Boolean =
-        jdbc.sql("SELECT EXISTS (SELECT 1 FROM travel_plan_invites WHERE travel_plan_id = :plan AND revoked_at IS NULL AND expires_at > :at)")
-            .param("plan", planId).param("at", at).query(Boolean::class.java).single()
+    fun activeInviteExpiresAt(planId: UUID, at: OffsetDateTime): OffsetDateTime? =
+        jdbc.sql("SELECT expires_at FROM travel_plan_invites WHERE travel_plan_id = :plan AND revoked_at IS NULL AND expires_at > :at ORDER BY expires_at DESC LIMIT 1")
+            .param("plan", planId).param("at", at)
+            .query { row, _ -> row.getObject("expires_at", OffsetDateTime::class.java) }.optional().orElse(null)
 
     fun invite(hash: String): TravelInviteRow? =
         jdbc

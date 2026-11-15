@@ -190,7 +190,7 @@ fun PlaceDetailScreen(
                                 onCreate = onCreateTravelPlan,
                                 modifier =
                                     Modifier
-                                        .fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)
+                                        .fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp)
                                         .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
                             )
                         }

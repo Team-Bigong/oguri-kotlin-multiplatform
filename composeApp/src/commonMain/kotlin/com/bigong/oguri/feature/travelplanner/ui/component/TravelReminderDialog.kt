@@ -1,5 +1,21 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.ui.Alignment
+import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
+import com.bigong.oguri.feature.travelplanner.ui.travelClockTime
+import org.jetbrains.compose.resources.painterResource
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.minus
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.Column
@@ -9,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.compose.foundation.border
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,88 +53,106 @@ internal fun TravelReminderDialog(
     onCancel: () -> Unit,
     onReload: () -> Unit,
     onDismiss: () -> Unit,
+    onRefreshPermission: suspend () -> Unit = {},
 ) {
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    androidx.compose.runtime.LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) { onRefreshPermission() }
+    }
     val settings = state.settings
-    var date by rememberSaveable { mutableStateOf("") }
-    var time by rememberSaveable { mutableStateOf("") }
+    val reminder = settings?.reminder
+    val scheduled = reminder?.scheduledAt?.toLocalDateTime(settings.tripTimeZone)
+    var date by rememberSaveable(settings?.dates, reminder?.id) { mutableStateOf(scheduled?.date?.toString() ?: settings?.dates?.start?.minus(DatePeriod(days = 1))?.toString().orEmpty()) }
+    var time by rememberSaveable(settings?.dates, reminder?.id) { mutableStateOf(scheduled?.time?.toString() ?: "20:00") }
+    var enabled by rememberSaveable(settings?.dates, reminder?.id) { mutableStateOf(reminder != null || settings?.canSchedule == true) }
     var chooseDate by remember { mutableStateOf(false) }
     var chooseTime by remember { mutableStateOf(false) }
-    val effectiveZone = settings?.tripTimeZone?.id.orEmpty()
-    val selection = settings?.let { parseTravelReminderTime(date, time, effectiveZone, it, Clock.System.now()) }
+    val selection = settings?.let { parseTravelReminderTime(date, time, it.tripTimeZone.id, it, Clock.System.now()) }
+    val selectedDate = runCatching { kotlinx.datetime.LocalDate.parse(date) }.getOrNull()
+    val selectedTime = runCatching { kotlinx.datetime.LocalTime.parse(time) }.getOrNull()
+    val canChoose = enabled && !state.permissionDenied && !state.busy && settings?.canSchedule == true
     TravelFullScreenForm(
-        shape = RoundedCornerShape(8.dp),
-        containerColor = Neutral0,
         onDismissRequest = { if (!state.busy) onDismiss() },
+        contentPadding = PaddingValues(0.dp),
+        showBottomActions = !state.permissionDenied,
         title = { Text(stringResource(Res.string.travel_my_reminder)) },
         text = {
-            Column(
-                Modifier.heightIn(max = 400.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+            Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+                Column(Modifier.padding(horizontal = 24.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(Res.string.travel_reminder_heading), style = OguriTheme.typography.sectionTitle, color = OguriTheme.colors.textPrimary)
+                    Text(stringResource(Res.string.travel_reminder_explanation), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textTertiary)
+                }
                 if (state.busy) TravelLoading(Modifier.fillMaxWidth())
                 if (settings != null) {
-                    val reminder = settings.reminder
-                    Text(stringResource(Res.string.travel_reminder_explanation))
-                    if (reminder == null) {
-                        Text(stringResource(Res.string.travel_reminder_off))
-                    } else {
-                        Text(
-                            stringResource(
-                                Res.string.travel_reminder_scheduled,
-                                com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(reminder.scheduledAt.toLocalDateTime(reminder.timeZone).date) + " · " + com.bigong.oguri.feature.travelplanner.ui.travelClockTime(reminder.scheduledAt.toLocalDateTime(reminder.timeZone).time),
-                            ),
-                        )
-                        Text(
-                            stringResource(
-                                when (reminder.status) {
-                                    TravelReminderStatus.PENDING -> Res.string.travel_reminder_pending
-                                    TravelReminderStatus.HANDOFF_STARTED -> Res.string.travel_reminder_sending
-                                    TravelReminderStatus.SENT -> Res.string.travel_reminder_sent
-                                    TravelReminderStatus.FAILED, TravelReminderStatus.EXPIRED -> Res.string.travel_reminder_failed
-                                },
-                            ),
-                        )
-                        TravelTextButton(enabled = !state.busy, onClick = onCancel) { Text(stringResource(Res.string.travel_reminder_turn_off)) }
+                    HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+                    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(stringResource(Res.string.travel_reminder_toggle), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
+                        val toggleLabel = stringResource(Res.string.travel_reminder_toggle)
+                        Box(Modifier.size(48.dp).semantics { contentDescription = toggleLabel }
+                            .toggleable(value = enabled && !state.permissionDenied, role = Role.Switch, enabled = !state.busy && !state.permissionDenied && (settings.canSchedule || reminder != null), onValueChange = { enabled = it }), contentAlignment = Alignment.Center) {
+                            Box(Modifier.size(40.dp, 24.dp).background(if (enabled && !state.permissionDenied) Mint70 else com.bigong.oguri.core.designsystem.Neutral30, CircleShape)) {
+                                Box(Modifier.align(if (enabled && !state.permissionDenied) Alignment.CenterEnd else Alignment.CenterStart).padding(2.dp).size(20.dp).background(Neutral0, CircleShape))
+                            }
+                        }
                     }
-                    if (settings.canSchedule) {
-                        TravelOutlineButton(onClick = { chooseDate = true }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
-                            Text(date.takeIf { it.isNotBlank() }?.let { com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(kotlinx.datetime.LocalDate.parse(it)) } ?: stringResource(Res.string.travel_reminder_date))
-                        }
-                        TravelOutlineButton(onClick = { chooseTime = true }, enabled = !state.busy, modifier = Modifier.fillMaxWidth()) {
-                            Text(time.takeIf { it.isNotBlank() }?.let { com.bigong.oguri.feature.travelplanner.ui.travelClockTime(kotlinx.datetime.LocalTime.parse(it)) } ?: stringResource(Res.string.travel_reminder_time))
-                        }
-                        Text(
-                            stringResource(
-                                Res.string.travel_reminder_before_departure,
-                                com.bigong.oguri.feature.travelplanner.ui.travelWeekDate(settings.dates.start),
-                            ),
+                    if (!state.permissionDenied) {
+                        TravelReminderSettingRow(stringResource(Res.string.travel_reminder_date), selectedDate?.let { travelWeekDate(it) }.orEmpty(), canChoose) { chooseDate = true }
+                        TravelReminderSettingRow(stringResource(Res.string.travel_reminder_time), selectedTime?.let { travelClockTime(it) }.orEmpty(), canChoose) { chooseTime = true }
+                        HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+                        Text(stringResource(Res.string.travel_reminder_date_hint, travelWeekDate(settings.dates.start)), Modifier.padding(horizontal = 24.dp, vertical = 16.dp), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                        if (!settings.canSchedule) Text(stringResource(Res.string.travel_reminder_not_available), Modifier.padding(horizontal = 24.dp), style = OguriTheme.typography.bodySmall)
+                        if (reminder != null && reminder.status != TravelReminderStatus.PENDING) Text(
+                            stringResource(when (reminder.status) {
+                                TravelReminderStatus.PENDING -> Res.string.travel_reminder_pending
+                                TravelReminderStatus.HANDOFF_STARTED -> Res.string.travel_reminder_sending
+                                TravelReminderStatus.SENT -> Res.string.travel_reminder_sent
+                                TravelReminderStatus.FAILED, TravelReminderStatus.EXPIRED -> Res.string.travel_reminder_failed
+                            }), Modifier.padding(horizontal = 24.dp), style = OguriTheme.typography.bodySmall,
                         )
-                        if (date.isNotBlank() &&
-                            time.isNotBlank() &&
-                            selection == null
-                        ) {
-                            Text(stringResource(Res.string.travel_reminder_invalid_time))
-                        }
-                    } else {
-                        Text(stringResource(Res.string.travel_reminder_not_available))
                     }
                 }
-                if (state.permissionDenied) Text(stringResource(Res.string.travel_reminder_permission_denied))
+                if (state.permissionDenied) {
+                    HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+                    val shape = RoundedCornerShape(8.dp)
+                    Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp).fillMaxWidth()
+                        .background(com.bigong.oguri.core.designsystem.Orange5, shape)
+                        .border(1.dp, com.bigong.oguri.core.designsystem.Orange20, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Text(stringResource(Res.string.travel_reminder_permission_title), style = OguriTheme.typography.cardSubtitle)
+                        Text(stringResource(Res.string.travel_reminder_permission_denied), style = OguriTheme.typography.caption, color = OguriTheme.colors.textSecondary)
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TravelTextButton(onClick = { com.bigong.oguri.core.notification.openTravelReminderSettings() }) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(stringResource(Res.string.travel_open_settings))
+                                    Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = OguriTheme.colors.textTertiary)
+                                }
+                            }
+                        }
+                    }
+                }
                 state.failure?.let { TravelInlineFailure(it, onRetry = onReload) }
             }
         },
         confirmButton = {
-            if (settings?.canSchedule == true) {
-                TravelTextButton(enabled = !state.busy && selection != null, onClick = {
-                    selection?.let(onSchedule)
-                }) { Text(stringResource(Res.string.travel_reminder_save)) }
-            }
+            TravelPrimaryButton(
+                enabled = !state.busy && settings != null && if (enabled) settings.canSchedule && selection != null else true,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { if (enabled) selection?.let(onSchedule) else if (reminder != null) onCancel() else onDismiss() },
+            ) { Text(stringResource(if (enabled) Res.string.travel_reminder_save else Res.string.travel_apply)) }
         },
-        dismissButton = { TravelTextButton(enabled = !state.busy, onClick = onDismiss) { Text(stringResource(Res.string.travel_search_close)) } },
     )
-    if (chooseDate && settings != null) TravelSingleDatePicker({ chooseDate = false }) {
+    if (chooseDate && settings != null) TravelSingleDatePicker({ chooseDate = false }, initialDate = selectedDate) {
         date = it.toString(); chooseDate = false
     }
-    if (chooseTime) TravelTimePicker({ chooseTime = false }) { time = it; chooseTime = false }
+    if (chooseTime) TravelTimePicker({ chooseTime = false }, initialTime = selectedTime) { time = it; chooseTime = false }
 
+}
+
+@Composable
+private fun TravelReminderSettingRow(label: String, value: String, enabled: Boolean, onClick: () -> Unit) {
+    HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).noRippleClickable(enabled = enabled, onClick = onClick).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(label, Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
+        Text(value, style = travelTextStyle(15, 18), color = OguriTheme.colors.textSecondary)
+        Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = OguriTheme.colors.textPrimary)
+    }
 }

@@ -59,7 +59,6 @@ import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanFailure
-import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.domain.model.TravelVisitCategory
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
@@ -77,7 +76,6 @@ internal fun TravelPlaceSearchSheet(
     onQuery: (String) -> Unit,
     onSelect: (TravelPlace?) -> Unit,
     onAdd: (TravelPlace, Int, TravelVisitCategory?, String?, String?) -> Unit,
-    onShowVisit: (TravelVisit) -> Unit,
     onDismiss: () -> Unit,
     onRetrySave: () -> Unit,
     onLeaveWithPendingSave: () -> Unit,
@@ -95,14 +93,12 @@ internal fun TravelPlaceSearchSheet(
     var manual by rememberSaveable { mutableStateOf(draft != null) }
     var searchCategory by rememberSaveable { mutableStateOf<TravelVisitCategory?>(null) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
-    var openAfterDiscard by remember { mutableStateOf<TravelVisit?>(null) }
     val selected = search.selected
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
     val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
-    val hasDraft by rememberUpdatedState(draft != null && draft.hasPlaceInput())
+    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory))
     val close = {
         if (canDismiss) {
-            openAfterDiscard = null
             if (hasDraft) confirmDiscard = true
             else {
                 if (draft != null) onDraftChange(null)
@@ -119,11 +115,8 @@ internal fun TravelPlaceSearchSheet(
         } else true
     })
     val targetDay = if (manual) draft?.dayNumber ?: day else day
-    val existing = selected?.let { place ->
-        plan.visits.firstOrNull { it.dayNumber == targetDay && it.details.googlePlaceId == place.id }
-    }
 
-    ModalBottomSheet(
+    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
         containerColor = colors.backgroundSecondary,
         onDismissRequest = close,
         sheetState = sheet,
@@ -133,7 +126,7 @@ internal fun TravelPlaceSearchSheet(
                 .background(colors.borderStrong, CircleShape))
         },
     ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.88f).imePadding()) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).imePadding()) {
             Row(
                 Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp, top = 0.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -184,7 +177,7 @@ internal fun TravelPlaceSearchSheet(
                     }
                 }
                 if (manual) {
-                    if (draft != null) item {
+                    if (draft != null) item(key = "manual-place-form") {
                         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                             TravelPlaceField(
                                 draft.name, { onDraftChange(draft.copy(name = it)) }, Res.string.travel_visit_name,
@@ -210,7 +203,7 @@ internal fun TravelPlaceSearchSheet(
                             }
                         }
                     }
-                    item {
+                    item(key = "place-search-input") {
                         TravelPlaceInput(
                             value = search.query,
                             onChange = { if (it.length <= 120) onQuery(it) },
@@ -224,12 +217,16 @@ internal fun TravelPlaceSearchSheet(
                     }
                     when {
                         search.failure != null -> item {
-                            TravelInlineFailure(
-                                search.failure, onRetry = { onQuery(search.query) },
-                                message = if (search.failure == TravelPlanFailure.CONNECTION) {
-                                    stringResource(Res.string.travel_place_search_unavailable)
-                                } else null,
-                            )
+                            if (search.failure == TravelPlanFailure.CONNECTION) {
+                                Column(Modifier.fillMaxWidth().padding(vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(stringResource(Res.string.travel_place_search_unavailable), style = OguriTheme.typography.cardSubtitle)
+                                    Text(stringResource(Res.string.travel_search_preserved_hint), style = OguriTheme.typography.bodySmall, color = colors.textTertiary)
+                                    Row {
+                                        TravelTextButton(onClick = { onQuery(search.query) }, enabled = canEdit) { Text(stringResource(Res.string.travel_retry)) }
+                                        TravelTextButton(onClick = { onManualAdd(); manual = true }, enabled = canEdit) { Text(stringResource(Res.string.travel_manual_add), color = colors.textTertiary) }
+                                    }
+                                }
+                            } else TravelInlineFailure(search.failure, onRetry = { onQuery(search.query) })
                         }
                         search.results.isNotEmpty() -> {
                             item {
@@ -261,32 +258,14 @@ internal fun TravelPlaceSearchSheet(
                             item { GooglePlacesAttribution(search.results.flatMap(TravelPlace::attributions)) }
                         }
                         !search.isLoading && search.query.trim().length >= 2 -> item {
-                            Column(Modifier.fillMaxWidth().padding(vertical = 32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Text(stringResource(Res.string.travel_search_empty), style = OguriTheme.typography.cardTitle)
+                            Column(Modifier.fillMaxWidth().padding(vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(stringResource(Res.string.travel_search_empty), style = OguriTheme.typography.cardSubtitle)
                                 Text(stringResource(Res.string.travel_search_empty_hint), style = OguriTheme.typography.bodySmall, color = colors.textTertiary)
                                 TravelTextButton(onClick = { onManualAdd(); manual = true }, enabled = canEdit) { Text(stringResource(Res.string.travel_manual_action)) }
                             }
                         }
                     }
-                    if (selected != null) item {
-                        existing?.let { visit ->
-                            Text(stringResource(Res.string.travel_already_added), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
-                            TravelTextButton(
-                                onClick = {
-                                    if (hasDraft) {
-                                        openAfterDiscard = visit
-                                        confirmDiscard = true
-                                    } else {
-                                        onShowVisit(visit)
-                                    }
-                                },
-                                enabled = canEdit,
-                            ) {
-                                Text(stringResource(Res.string.travel_show_existing_visit))
-                            }
-                        }
-                    }
-                    item {
+                    if (search.results.isNotEmpty()) item {
                         Box(Modifier.padding(top = if (selected == null) 12.dp else 16.dp)) {
                             TravelCategoryPicker(searchCategory, canEdit) { searchCategory = it }
                         }
@@ -296,7 +275,7 @@ internal fun TravelPlaceSearchSheet(
                     item { TravelLeavePendingSave(onLeaveWithPendingSave) }
                 }
             }
-            TravelBottomAction(
+            if (manual || search.results.isNotEmpty()) TravelBottomAction(
                 enabled = canEdit && if (manual) draft?.name?.isNotBlank() == true
                     else selected != null,
                 onClick = {
@@ -327,19 +306,20 @@ internal fun TravelPlaceSearchSheet(
             onDiscard = {
                 confirmDiscard = false
                 onDraftChange(null)
-                val visit = openAfterDiscard
-                openAfterDiscard = null
-                if (visit == null) onDismiss() else onShowVisit(visit)
+                onDismiss()
             },
         )
     }
 }
 
+internal fun hasUnsavedPlaceInput(draft: TravelVisitDraft?, selected: TravelPlace?, category: TravelVisitCategory?): Boolean =
+    draft?.hasPlaceInput() == true || selected != null || category != null
+
 private fun TravelVisitDraft.hasPlaceInput(): Boolean =
     name.isNotBlank() || location.isNotBlank() || note.isNotBlank() || category != null
 
 @Composable
-private fun TravelPlaceField(
+internal fun TravelPlaceField(
     value: String,
     onChange: (String) -> Unit,
     label: org.jetbrains.compose.resources.StringResource,
@@ -422,11 +402,11 @@ private fun TravelSearchSelectionMark(selected: Boolean) {
 }
 
 @Composable
-internal fun GooglePlacesAttribution(attributions: List<TravelPlaceAttribution>) {
+internal fun GooglePlacesAttribution(attributions: List<TravelPlaceAttribution>, includeGoogleBranding: Boolean = true) {
     val uriHandler = LocalUriHandler.current
     val textColor = OguriTheme.colors.textTertiary
     Column(Modifier.fillMaxWidth().heightIn(min = 24.dp).padding(vertical = 4.dp)) {
-        Text(
+        if (includeGoogleBranding) Text(
             stringResource(Res.string.travel_google_maps_attribution),
             color = textColor,
             style = OguriTheme.typography.caption,

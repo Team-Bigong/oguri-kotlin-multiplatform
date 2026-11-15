@@ -41,6 +41,8 @@ fun ConfirmAlertDialog(
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
     onCancelClick: () -> Unit,
+    iconTint: androidx.compose.ui.graphics.Color = Orange50,
+    messageColor: androidx.compose.ui.graphics.Color = Orange50,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -66,7 +68,7 @@ fun ConfirmAlertDialog(
                 Image(
                     painter = painterResource(iconResource),
                     contentDescription = null,
-                    colorFilter = ColorFilter.tint(Orange50),
+                    colorFilter = ColorFilter.tint(iconTint),
                     modifier = Modifier.size(48.dp),
                 )
 
@@ -82,7 +84,7 @@ fun ConfirmAlertDialog(
                     Text(
                         text = messageText,
                         style = OguriTheme.typography.bodyMedium,
-                        color = Orange50,
+                        color = messageColor,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                     )

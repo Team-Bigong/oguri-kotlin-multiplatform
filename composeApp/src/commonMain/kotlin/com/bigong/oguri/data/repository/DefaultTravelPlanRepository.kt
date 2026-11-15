@@ -182,6 +182,7 @@ class DefaultTravelPlanRepository internal constructor(
                 response.members.map { TravelMember(it.id, it.nickname, it.owner) },
                 response.ownershipTarget,
                 response.hasActiveInvite,
+                response.inviteExpiresAt?.let(kotlin.time.Instant::parse),
             )
         }
 

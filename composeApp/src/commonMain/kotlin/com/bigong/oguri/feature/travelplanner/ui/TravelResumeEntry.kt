@@ -72,7 +72,7 @@ internal fun TravelHomeGuide(viewModel: TravelPlannerViewModel?, onCreate: () ->
             stringResource(Res.string.travel_home_guide), Modifier.weight(1f),
             style = travelTextStyle(13, 16), color = colors.textTertiary,
         )
-        Text(stringResource(Res.string.travel_home_create_plan), style = travelTextStyle(13, 16, FontWeight.SemiBold), color = Neutral100)
+        Text(stringResource(Res.string.travel_home_create_plan), style = OguriTheme.typography.labelLarge, color = Neutral100)
         Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp), tint = colors.textTertiary)
     }
 }
@@ -129,8 +129,18 @@ private fun TravelEntryCard(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(label, style = travelTextStyle(11, 14), color = colors.textTertiary)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(plan.details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
-                Text(travelCardDates(plan.details.dates, includeYear = false), style = travelTextStyle(12, 14), color = colors.textTertiary)
+                Text(
+                    plan.details.title,
+                    modifier = Modifier.alignByBaseline(),
+                    style = travelTextStyle(15, 18, FontWeight.Medium),
+                    color = Neutral100,
+                )
+                Text(
+                    travelCardDates(plan.details.dates, includeYear = false),
+                    modifier = Modifier.alignByBaseline(),
+                    style = travelTextStyle(12, 14),
+                    color = colors.textTertiary,
+                )
             }
         }
         if (action != null) Text(action, style = OguriTheme.typography.labelLarge, color = colors.textPrimary)

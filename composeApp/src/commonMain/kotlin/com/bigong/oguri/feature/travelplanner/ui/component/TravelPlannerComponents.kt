@@ -64,7 +64,7 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.common_network_error_message
-import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.ic_travel_back
 import oguri.composeapp.generated.resources.travel_back
 import oguri.composeapp.generated.resources.travel_conflict
@@ -145,7 +145,7 @@ internal fun TravelPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    textStyle: TextStyle = OguriTheme.typography.cardSubtitle,
+    textStyle: TextStyle = OguriTheme.typography.cardTitle,
     content: @Composable () -> Unit,
 ) {
     TravelButton(
@@ -268,7 +268,7 @@ internal fun TravelLoadFailure(
 internal fun TravelInlineFailure(
     failure: TravelPlanFailure,
     onRetry: (() -> Unit)? = null,
-    retryLabel: String = stringResource(Res.string.common_retry_button),
+    retryLabel: String = stringResource(Res.string.travel_retry),
     message: String? = null,
 ) {
     Column(
@@ -304,14 +304,16 @@ internal fun TravelInlineFailure(
 internal fun TravelBottomAction(
     enabled: Boolean,
     onClick: () -> Unit,
+    showDivider: Boolean = true,
+    topPadding: Dp = 12.dp,
     content: @Composable () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
-        HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+        if (showDivider) HorizontalDivider(color = OguriTheme.colors.borderSubtle)
         TravelPrimaryButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 20.dp),
             textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
             content = content,
         )
@@ -326,6 +328,7 @@ internal fun travelTextStyle(size: Int, lineHeight: Int, weight: FontWeight = Fo
             size >= 22 -> sectionTitle
             size >= 18 -> cardTitle
             size >= 15 && weight >= FontWeight.Medium -> cardSubtitle
+            size == 15 -> bodyLarge.copy(fontSize = cardSubtitle.fontSize)
             size >= 15 -> bodyLarge
             size == 14 && weight >= FontWeight.SemiBold -> labelLarge
             size == 14 -> bodyMedium

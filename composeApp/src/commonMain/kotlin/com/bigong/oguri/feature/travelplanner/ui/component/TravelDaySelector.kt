@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -31,7 +32,7 @@ internal fun TravelDaySelector(
         if (listState.layoutInfo.visibleItemsInfo.none { it.index == index }) listState.scrollToItem(index)
     }
     LazyRow(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().height(49.dp),
         state = listState,
         contentPadding = PaddingValues(start = 20.dp, end = 20.dp, top = 0.dp, bottom = 5.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),

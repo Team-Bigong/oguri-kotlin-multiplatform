@@ -38,7 +38,7 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapScene
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.common_retry_button
+import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.ic_travel_chevron_down
 import oguri.composeapp.generated.resources.ic_travel_chevron_up
 import oguri.composeapp.generated.resources.ic_travel_map
@@ -57,26 +57,26 @@ internal fun TravelPlanPane(
     viewportRequest: Int,
     focusedVisitId: String?,
     onMarkerClick: (String) -> Unit,
-    onFitMap: () -> Unit,
     modifier: Modifier = Modifier,
+    hideMap: Boolean = false,
+    emptyDay: Boolean = false,
     status: @Composable () -> Unit,
-    content: @Composable ColumnScope.() -> Unit,
+    content: @Composable ColumnScope.(Boolean) -> Unit,
 ) {
     val density = LocalDensity.current
     var mapExpanded by rememberSaveable { mutableStateOf(true) }
-    var controlsHeight by remember(density) { mutableIntStateOf(with(density) { 48.dp.roundToPx() }) }
     var statusHeight by remember(density) { mutableIntStateOf(0) }
     var legendHeight by remember(density) { mutableIntStateOf(with(density) { 32.dp.roundToPx() }) }
     var mapUnavailable by remember { mutableStateOf(false) }
     var mapAttempt by remember { mutableIntStateOf(0) }
     BoxWithConstraints(modifier) {
         val chromeHeight = with(density) {
-            (controlsHeight + statusHeight + if (scene.lines.isNotEmpty()) legendHeight else 0).toDp()
+            (statusHeight + if (scene.lines.isNotEmpty()) legendHeight else 0).toDp()
         }
         val maxMapHeight = (maxHeight - chromeHeight - (112 * density.fontScale).dp).coerceAtLeast(0.dp)
-        val canShowMap = maxMapHeight >= 120.dp
+        val canShowMap = !hideMap && maxMapHeight >= 120.dp
         val showMap = canShowMap && mapExpanded
-        val mapHeight = 182.dp.coerceAtMost(maxMapHeight)
+        val mapHeight = (if (emptyDay) 200.dp else 182.dp).coerceAtMost(maxMapHeight)
         Column(Modifier.fillMaxSize()) {
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
             Spacer(Modifier.height(16.dp))
@@ -88,7 +88,7 @@ internal fun TravelPlanPane(
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                         Text(stringResource(Res.string.travel_map_unavailable), style = OguriTheme.typography.cardSubtitle)
                         Text(stringResource(Res.string.travel_map_list_available), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                        TravelTextButton(onClick = { mapAttempt++; mapUnavailable = false }) { Text(stringResource(Res.string.common_retry_button)) }
+                        TravelTextButton(onClick = { mapAttempt++; mapUnavailable = false }) { Text(stringResource(Res.string.travel_retry)) }
                     }
                 } else {
                     val shape = RoundedCornerShape(8.dp)
@@ -125,14 +125,14 @@ internal fun TravelPlanPane(
                         Text(
                             stringResource(Res.string.travel_map_sequence),
                             modifier = Modifier.fillMaxWidth().onSizeChanged { legendHeight = it.height }
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                                .padding(horizontal = 24.dp, vertical = 4.dp),
                             color = OguriTheme.colors.textSecondary,
-                            style = OguriTheme.typography.bodySmall,
+                            style = OguriTheme.typography.labelSmall,
                         )
                     }
                 }
             }
-            if (canShowMap && (!showMap || mapUnavailable)) {
+            if (canShowMap && !showMap) {
                 val shape = RoundedCornerShape(8.dp)
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 44.dp)
@@ -150,21 +150,10 @@ internal fun TravelPlanPane(
                     Icon(painterResource(Res.drawable.ic_travel_chevron_down), null, Modifier.size(16.dp), tint = OguriTheme.colors.textSecondary)
                 }
             }
-            Spacer(Modifier.height(8.dp))
-            if (canShowMap && showMap && !mapUnavailable && scene.markers.isNotEmpty()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().onSizeChanged { controlsHeight = it.height }.padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    if (showMap && !mapUnavailable && scene.markers.isNotEmpty()) {
-                        TravelTextButton(onClick = onFitMap) { Text(stringResource(Res.string.travel_map_fit)) }
-                    }
-                }
-            }
             Column(Modifier.fillMaxWidth().onSizeChanged { statusHeight = it.height }) {
                 status()
             }
-            content()
+            content(canShowMap && showMap && !mapUnavailable)
         }
     }
 }
