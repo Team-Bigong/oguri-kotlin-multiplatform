@@ -129,8 +129,18 @@ private fun TravelEntryCard(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(label, style = travelTextStyle(11, 14), color = colors.textTertiary)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(plan.details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
-                Text(travelCardDates(plan.details.dates, includeYear = false), style = travelTextStyle(12, 14), color = colors.textTertiary)
+                Text(
+                    plan.details.title,
+                    modifier = Modifier.alignByBaseline(),
+                    style = travelTextStyle(15, 18, FontWeight.Medium),
+                    color = Neutral100,
+                )
+                Text(
+                    travelCardDates(plan.details.dates, includeYear = false),
+                    modifier = Modifier.alignByBaseline(),
+                    style = travelTextStyle(12, 14),
+                    color = colors.textTertiary,
+                )
             }
         }
         if (action != null) Text(action, style = OguriTheme.typography.labelLarge, color = colors.textPrimary)
