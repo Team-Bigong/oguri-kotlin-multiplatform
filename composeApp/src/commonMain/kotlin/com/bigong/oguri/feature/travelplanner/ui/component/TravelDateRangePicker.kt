@@ -14,9 +14,12 @@ import androidx.compose.ui.Alignment
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint20
 import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Orange5
+import com.bigong.oguri.core.designsystem.Orange20
 import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelDateSelection
+import com.bigong.oguri.feature.travelplanner.ui.travelDateLabel
 import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
 import org.jetbrains.compose.resources.painterResource
 import kotlin.time.Clock
@@ -50,16 +53,50 @@ internal fun TravelDateRangePicker(
             }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
                 Spacer(Modifier.height(4.dp))
-                Box(Modifier.fillMaxWidth().heightIn(min = 44.dp).background(Mint5, RoundedCornerShape(8.dp)).border(1.dp, Mint20, RoundedCornerShape(8.dp)).padding(12.dp), contentAlignment = Alignment.CenterStart) {
-                    Text(if (selected == null) selection.start?.let { travelWeekDate(it) } ?: stringResource(Res.string.travel_select_dates)
-                        else stringResource(Res.string.travel_selected_range, travelWeekDate(selected.start), travelWeekDate(selected.endInclusive), selected.dayCount), style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+                val start = selection.start
+                val end = selection.end
+                val rangeShape = RoundedCornerShape(8.dp)
+                if (start != null && end != null && selected == null) {
+                    Column(
+                        Modifier.fillMaxWidth().background(Orange5, rangeShape)
+                            .border(1.dp, Orange20, rangeShape).padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Text(
+                            stringResource(Res.string.travel_card_date_range, travelDateLabel(start), travelDateLabel(end)),
+                            style = OguriTheme.typography.cardSubtitle,
+                            color = colors.textPrimary,
+                        )
+                        Text(
+                            stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
+                            color = Orange50,
+                            style = OguriTheme.typography.caption,
+                        )
+                    }
+                } else {
+                    Box(
+                        Modifier.fillMaxWidth().heightIn(min = 44.dp).background(Mint5, rangeShape)
+                            .border(1.dp, Mint20, rangeShape).padding(12.dp),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        val label = if (selected == null) {
+                            start?.let { travelWeekDate(it) } ?: stringResource(Res.string.travel_select_dates)
+                        } else {
+                            stringResource(
+                                Res.string.travel_selected_range,
+                                travelWeekDate(selected.start),
+                                travelWeekDate(selected.endInclusive),
+                                selected.dayCount,
+                            )
+                        }
+                        Text(label, style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+                    }
                 }
                 Spacer(Modifier.height(12.dp))
                 TravelMonthCalendar(LocalDate.parse(monthText), selection.start, selection.end, recommendedStart, recommendedEnd, { monthText = it.toString() }, { day ->
                     val next = selection.select(day)
                     startText = next.start?.toString(); endText = next.end?.toString()
                 })
-                if (selection.end != null && selected == null) Text(stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS), color = Orange50, style = OguriTheme.typography.caption)
                 if (recommendedStart != null && recommendedEnd != null) Row(Modifier.padding(top = 12.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(4.dp).background(Mint70, CircleShape))
                     Text(stringResource(Res.string.travel_calendar_recommendation, recommendedEnd.day), style = OguriTheme.typography.caption, color = colors.textTertiary)

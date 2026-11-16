@@ -159,7 +159,7 @@ fun NavDisplay(
         val withdrawCompletedMessage = stringResource(Res.string.snackbar_withdraw_completed)
         val homeTabLabel = stringResource(Res.string.bottom_navigation_home)
         val calendarTabLabel = stringResource(Res.string.bottom_navigation_calendar)
-        val travelTabLabel = if (travelEnabled) stringResource(Res.string.bottom_navigation_travel) else null
+        val travelTabLabel = stringResource(Res.string.bottom_navigation_travel)
         val myPageTabLabel = stringResource(Res.string.bottom_navigation_my)
         val incomingDeepLinkUrl =
             appGraph.deepLinkStore.incomingUrl

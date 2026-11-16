@@ -15,6 +15,7 @@ import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelDayPlaces
 import com.bigong.oguri.domain.model.TravelInvitePreview
+import com.bigong.oguri.domain.model.TravelIssuedInvite
 import com.bigong.oguri.domain.model.TravelMember
 import com.bigong.oguri.domain.model.TravelMembers
 import com.bigong.oguri.domain.model.TravelPlace
@@ -183,10 +184,15 @@ class DefaultTravelPlanRepository internal constructor(
                 response.ownershipTarget,
                 response.hasActiveInvite,
                 response.inviteExpiresAt?.let(kotlin.time.Instant::parse),
+                response.inviteToken,
             )
         }
 
-    override suspend fun issue(planId: String): String = request { remote.issueInvite(planId).token }
+    override suspend fun issue(planId: String): TravelIssuedInvite =
+        request {
+            val response = remote.issueInvite(planId)
+            TravelIssuedInvite(response.token, response.expiresAt?.let(kotlin.time.Instant::parse))
+        }
 
     override suspend fun revoke(planId: String): Unit = request { remote.revokeInvite(planId) }
 

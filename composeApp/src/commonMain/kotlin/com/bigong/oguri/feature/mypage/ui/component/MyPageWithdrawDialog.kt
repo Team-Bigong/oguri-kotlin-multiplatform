@@ -25,14 +25,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral30
 import com.bigong.oguri.core.designsystem.Neutral60
-import com.bigong.oguri.core.designsystem.Neutral70
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.designsystem.WarningAmber
+import com.bigong.oguri.core.ui.component.dialogSecondaryButtonColor
 import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
@@ -150,7 +149,23 @@ fun MyPageWithdrawDialog(
                     modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
                 ) {
                     val confirmButtonBackground = if (isConfirmEnabled) Mint70 else Neutral30
-                    val confirmButtonTextColor = if (isConfirmEnabled) Neutral0 else Neutral70
+                    val confirmButtonTextColor = OguriTheme.colors.textOnMint
+
+                    Box(
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .background(color = dialogSecondaryButtonColor, shape = RoundedCornerShape(8.dp))
+                                .noRippleClickable(onClick = onDismissRequest)
+                                .padding(vertical = 14.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(Res.string.mypage_dialog_cancel),
+                            style = OguriTheme.typography.bodyMedium,
+                            color = Neutral90,
+                        )
+                    }
 
                     Box(
                         modifier =
@@ -170,22 +185,6 @@ fun MyPageWithdrawDialog(
                             text = stringResource(Res.string.mypage_dialog_confirm),
                             style = OguriTheme.typography.bodyMedium,
                             color = confirmButtonTextColor,
-                        )
-                    }
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .background(color = Neutral10, shape = RoundedCornerShape(8.dp))
-                                .noRippleClickable(onClick = onDismissRequest)
-                                .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.mypage_dialog_cancel),
-                            style = OguriTheme.typography.bodyMedium,
-                            color = Neutral90,
                         )
                     }
                 }

@@ -48,7 +48,7 @@
     <string name="travel_move_visit">%1$sの順番を変更</string>
     <string name="travel_visit_removed">この訪問予定は別の端末で削除されました。</string>
     <string name="travel_search_places">場所を検索</string>
-    <string name="travel_search_city">%1$s周辺で見つかりました · Google マップの検索結果</string>
+    <string name="travel_search_city">%1$s周辺で見つかりました</string>
     <string name="travel_search_empty">検索結果がありません</string>
     <string name="travel_search_results">検索結果に戻る</string>
     <string name="travel_add_to_day">%1$d日目に追加</string>
@@ -77,14 +77,14 @@
     <string name="travel_sign_in">ログイン</string>
     <string name="travel_guest_plans">旅行の日程を作成・管理するにはログインしてください</string>
     <string name="travel_find_next_holiday">次の休暇を探す</string>
-    <string name="travel_city_unavailable">おすすめの都市を読み込めませんでした。都市を入力するか、再試行してください。</string>
+    <string name="travel_city_unavailable">おすすめの都市を読み込めませんでした</string>
     <string name="travel_choose_time_zone">現地のタイムゾーンを選択</string>
     <string name="travel_recommended_dates">おすすめの期間 · %1$s〜%2$s</string>
-    <string name="travel_matching_plan">同じ都市と日付の旅行があります · %1$s</string>
+    <string name="travel_matching_plan">同じ期間に作成した旅行があります</string>
     <string name="travel_open_plan">保存した旅行を開く</string>
-    <string name="travel_choose_city">おすすめの都市を選択</string>
+    <string name="travel_choose_city">都市を選んでください</string>
     <string name="travel_search_cities">都市を検索</string>
-    <string name="travel_search_cities_empty">都市が見つかりません。別の名前で検索してください。</string>
+    <string name="travel_search_cities_empty">都市が見つかりませんでした</string>
     <string name="travel_members">メンバー</string>
     <string name="travel_member">メンバー</string>
     <string name="travel_owner_name">%1$s · オーナー</string>
@@ -92,6 +92,7 @@
     <string name="travel_invite_explanation">リンクから参加した人は予定を編集できます。新しいリンクを作ると以前のリンクは無効になります。</string>
     <string name="travel_create_invite">招待リンクを作成</string>
     <string name="travel_invite_copied">リンクをコピーしました</string>
+    <string name="travel_invite_copy_unavailable">ここでリンクをコピーするには、現在のリンクを無効にして新しく作成してください。</string>
     <string name="travel_copy_invite">招待リンクをコピー</string>
     <string name="travel_revoke_invite">招待リンクを無効にする</string>
     <string name="travel_delete_trip">旅行を削除</string>
@@ -132,7 +133,7 @@
     <string name="travel_reminder_pending">予約済み</string>
     <string name="travel_reminder_sending">送信中</string>
     <string name="travel_reminder_sent">送信済み</string>
-    <string name="travel_reminder_failed">配信できませんでした。新しい時刻で再予約できます。</string>
+    <string name="travel_reminder_failed">新しい時刻を選んで再予約できます。</string>
     <string name="travel_reminder_turn_off">リマインダーを解除</string>
     <string name="travel_reminder_date">通知日</string>
     <string name="travel_reminder_time">通知時刻</string>
@@ -179,7 +180,7 @@
     <string name="travel_city_barcelona">バルセロナ</string>
     <string name="travel_overview_map_fit">すべての訪問先を表示</string>
     <string name="travel_place_search_unavailable">場所の検索中に問題が発生しました</string>
-    <string name="travel_all_days_tab">すべて</string>
+    <string name="travel_all_days_tab">全日程</string>
     <string name="travel_manage_title">旅行の管理</string>
     <string name="travel_itinerary">訪問予定</string>
     <string name="travel_calendar_date">%1$d年%2$d月%3$d日</string>
@@ -320,4 +321,15 @@
     <string name="travel_invite_deleted_message">この旅行はもう使えません</string>
     <string name="travel_action_accept">引き継ぐ</string>
     <string name="travel_list_retry">もう一度試す</string>
+    <string name="travel_trip">旅行</string>
+    <string name="travel_trip_unavailable_message">削除されたか、参加資格がなくなった旅行です。</string>
+    <string name="travel_conflict_title">日程が変更されました</string>
+    <string name="travel_conflict_message">最新の日程を確認してから保存してください。</string>
+    <string name="travel_manage_load_failure_message">旅行の日程は引き続き確認できます。</string>
+    <string name="travel_invite_join_failure_title">旅行に参加できませんでした</string>
+    <string name="travel_invite_join_failure_message">接続を確認してから、もう一度お試しください。</string>
+    <string name="travel_invite_missing_title">招待リンクを確認できませんでした</string>
+    <string name="travel_city_unavailable_message">都市を検索するか、もう一度お試しください。</string>
+    <string name="travel_search_cities_empty_hint">別の名前で検索してください。</string>
+    <string name="travel_reminder_delivery_failed_title">通知を届けられませんでした</string>
 </resources>

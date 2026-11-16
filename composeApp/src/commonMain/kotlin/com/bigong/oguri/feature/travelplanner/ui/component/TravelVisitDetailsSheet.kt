@@ -69,7 +69,11 @@ internal fun TravelVisitDetailsSheet(
                     visit.details.note?.let { note ->
                         Text(stringResource(Res.string.travel_note_label), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         val shape = RoundedCornerShape(8.dp)
-                        Text(note, Modifier.fillMaxWidth().background(OguriTheme.colors.surfaceCard, shape).border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(12.dp), style = OguriTheme.typography.bodyMedium)
+                        TravelNoteText(
+                            note,
+                            Modifier.fillMaxWidth().background(OguriTheme.colors.surfaceCard, shape)
+                                .border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(12.dp),
+                        )
                     }
                     if (place?.attributions?.isNotEmpty() == true) GooglePlacesAttribution(place.attributions, includeGoogleBranding = false)
                 }

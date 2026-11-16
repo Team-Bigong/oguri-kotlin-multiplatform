@@ -1,7 +1,5 @@
 package com.bigong.oguri.core.navigation
 
-import com.bigong.oguri.core.network.TRAVEL_PLANNER_ENABLED_IN_RELEASE
-import com.bigong.oguri.core.network.isDebugPlatformBuild
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.bottom_navigation_calendar
 import oguri.composeapp.generated.resources.bottom_navigation_home
@@ -112,13 +110,7 @@ data class BottomNavigationDestination(
     val iconResource: DrawableResource,
 )
 
-internal val travelEnabled: Boolean
-    get() = isDebugPlatformBuild() || TRAVEL_PLANNER_ENABLED_IN_RELEASE
-
-val bottomNavigationDestinations: List<BottomNavigationDestination>
-    get() = if (travelEnabled) travelBottomNavigationDestinations else standardBottomNavigationDestinations
-
-private val standardBottomNavigationDestinations =
+val bottomNavigationDestinations: List<BottomNavigationDestination> =
     listOf(
         BottomNavigationDestination(
             routeModel = RouteModel.Home,
@@ -141,6 +133,13 @@ private val standardBottomNavigationDestinations =
             iconResource = Res.drawable.ic_calendar,
         ),
         BottomNavigationDestination(
+            routeModel = RouteModel.TravelPlans,
+            routeClass = RouteModel.TravelPlans::class,
+            routeSerialName = RouteModel.TravelPlans.serializer().descriptor.serialName,
+            labelResource = Res.string.bottom_navigation_travel,
+            iconResource = Res.drawable.ic_plane,
+        ),
+        BottomNavigationDestination(
             routeModel = RouteModel.MyPage,
             routeClass = RouteModel.MyPage::class,
             routeSerialName =
@@ -151,17 +150,3 @@ private val standardBottomNavigationDestinations =
             iconResource = Res.drawable.ic_mypage,
         ),
     )
-
-private val travelBottomNavigationDestinations =
-    standardBottomNavigationDestinations.toMutableList().apply {
-        add(
-            2,
-            BottomNavigationDestination(
-                routeModel = RouteModel.TravelPlans,
-                routeClass = RouteModel.TravelPlans::class,
-                routeSerialName = RouteModel.TravelPlans.serializer().descriptor.serialName,
-                labelResource = Res.string.bottom_navigation_travel,
-                iconResource = Res.drawable.ic_plane,
-            ),
-        )
-    }.toList()

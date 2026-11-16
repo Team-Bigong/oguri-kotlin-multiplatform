@@ -163,7 +163,7 @@ internal fun TravelDetailsDialog(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(Res.string.travel_city), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(Neutral0, RoundedCornerShape(8.dp))
-                            .border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (cityLookupFailed) Orange20 else OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
                             .noRippleClickable(enabled = !busy && cities.size < 10, onClick = onOpenCitySearch).padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = Mint40)

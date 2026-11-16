@@ -68,11 +68,11 @@ bash scripts/verify_ios_simulator.sh
 
 지표 태그에는 회원·여행·장소 식별자나 사용자 입력을 넣지 않는다. 기본 Actuator 웹 공개 범위는 헬스 체크다. 운영 검증에서 지표를 조회할 때는 내부 관리 경로를 사용한다. 지도 SDK 사용량과 청구액은 공급자 측에서 확인한다.
 
-## 운영 중지와 제한 배포
+## 운영 중지
 
-- 릴리스 빌드에 `TRAVEL_PLANNER_ENABLED_IN_RELEASE=true`를 전달하면 홈 이어보기, 내 여행, 추천의 여행 만들기가 표시된다. Android 배포 워크플로는 같은 이름의 저장소 변수를 읽는다. iOS 릴리스는 Kotlin 프레임워크를 빌드하는 환경 변수로 전달한다. 기본값은 `false`이며 디버그 진입은 계속 열려 있다. 이 빌드 설정은 기존 초대 링크와 이미 전달된 알림의 진입에는 적용하지 않는다.
 - 서버의 `TRAVEL_WRITES_ENABLED=false`는 여행 생성, 방문 편집 명령, 여행 상세 수정과 소유권 제안·수락을 중지한다. 기존 일정 조회, 여행 삭제, 멤버 제외와 나가기는 계속 가능하다.
 - `TRAVEL_INVITES_ENABLED=false`는 초대 발급과 참여를 중지한다. 기존 링크 미리보기와 초대 철회는 계속 가능하다.
+- 초대 링크 재복사에는 서버 재시작과 인스턴스 간에 같은 `TRAVEL_INVITE_TOKEN_SECRET` 또는 `JWT_SECRET`이 필요하다. 키를 변경하면 이미 공유한 링크는 만료·철회 전까지 쓸 수 있고, 그 링크의 재복사는 할 수 없다. V51 이전에 발급된 링크도 같은 방식으로 처리한다.
 - `TRAVEL_REMINDERS_ENABLED=false`는 새 예약과 기기 등록, 서버의 발송 작업을 중지한다. 예약·기기 해제와 이미 전달된 알림의 현재 상태 확인은 계속 가능하다. 아직 유효한 대기 예약은 발송을 다시 활성화하면 처리될 수 있다.
 
 서버 설정은 기본적으로 켜져 있으며 환경 변수 변경은 다음 서버 시작 시 적용된다.
@@ -80,9 +80,9 @@ bash scripts/verify_ios_simulator.sh
 
 ## CI의 여행 지도와 Firebase 설정
 
-- Android CI 디버그 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY_DEBUG`, Android 배포 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY`를 GitHub Actions 시크릿으로 전달한다.
+- Android CI와 배포 지도에는 같은 `GOOGLE_MAPS_ANDROID_API_KEY` GitHub Actions 시크릿을 전달한다. Android 앱 제한을 적용한 키에는 디버그와 배포 패키지명 및 각각의 서명 인증서 SHA-1을 등록한다. Play 앱 서명 사용 시 배포 인증서는 Play Console에서 확인한다.
 - Xcode Cloud에는 각각 `GOOGLE_MAPS_IOS_API_KEY_DEBUG`와 `GOOGLE_MAPS_IOS_API_KEY`를 전달한다. `ci_post_clone.sh`에서 각 환경의 `GOOGLE_MAPS_IOS_API_KEY` 빌드 설정에 적용한다.
-- Xcode Cloud의 `OGURI_IOS_FIREBASE_DEBUG_PLIST_BASE64`와 `OGURI_IOS_FIREBASE_RELEASE_PLIST_BASE64`에는 해당 plist의 Base64 값을 전달한다. 파일 구조와 번들 식별자가 일치하면 앱 리소스 경로에 기록한다.
+- Xcode Cloud의 `OGURI_IOS_FIREBASE_DEBUG_PLIST_BASE64`와 `OGURI_IOS_FIREBASE_RELEASE_PLIST_BASE64`에는 해당 plist의 Base64 값을 전달한다. 릴리스 plist와 릴리스 지도 키는 필수이며, 파일 구조와 번들 식별자가 일치하면 앱 리소스 경로에 기록한다.
 
 ## Galaxy S25 API 36 회귀 검증
 

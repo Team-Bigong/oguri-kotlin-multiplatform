@@ -82,8 +82,8 @@ internal fun TravelPlanPane(
             Spacer(Modifier.height(16.dp))
             if (showMap) {
                 if (mapUnavailable) {
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(150.dp)
-                        .background(OguriTheme.colors.backgroundSecondary, RoundedCornerShape(8.dp))
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 150.dp)
+                        .background(com.bigong.oguri.core.designsystem.Neutral10, RoundedCornerShape(8.dp))
                         .border(1.dp, OguriTheme.colors.borderSubtle, RoundedCornerShape(8.dp)),
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                         Text(stringResource(Res.string.travel_map_unavailable), style = OguriTheme.typography.cardSubtitle)
