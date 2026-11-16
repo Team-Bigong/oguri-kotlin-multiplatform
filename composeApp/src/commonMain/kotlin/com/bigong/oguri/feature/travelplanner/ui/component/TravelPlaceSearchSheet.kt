@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -42,6 +46,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -56,6 +61,7 @@ import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral30
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
 import com.bigong.oguri.domain.model.TravelPlan
@@ -68,6 +74,8 @@ import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import oguri.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
+
+private const val VISIBLE_PLACE_RESULTS = 3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -240,25 +248,13 @@ internal fun TravelPlaceSearchSheet(
                                     style = travelTextStyle(11, 13), color = colors.textTertiary,
                                 )
                             }
-                            items(search.results, key = TravelPlace::id) { place ->
-                                val checked = selected?.id == place.id
-                                Row(
-                                    Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(8.dp))
-                                        .background(if (checked) Mint10 else Color.Transparent)
-                                        .selectable(checked, interactionSource = null, indication = null, enabled = canEdit, role = Role.RadioButton) {
-                                            focus.clearFocus()
-                                            onSelect(place)
-                                        }.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(place.name, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
-                                        place.address?.let { Text(it, style = travelTextStyle(12, 14), color = colors.textTertiary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
+                            item(key = "place-search-results") {
+                                key(search.query, state.searchCity) {
+                                    TravelPlaceSearchResults(search.results, selected, canEdit) { place ->
+                                        focus.clearFocus()
+                                        onSelect(place)
                                     }
-                                    TravelSearchSelectionMark(checked)
                                 }
-                                if (!checked) HorizontalDivider(color = colors.borderSubtle)
                             }
                             item { GooglePlacesAttribution(search.results.flatMap(TravelPlace::attributions)) }
                         }
@@ -396,6 +392,52 @@ private fun TravelPlaceInput(
             }
         },
     )
+}
+
+@Composable
+private fun TravelPlaceSearchResults(
+    places: List<TravelPlace>,
+    selected: TravelPlace?,
+    enabled: Boolean,
+    onSelect: (TravelPlace) -> Unit,
+) {
+    val colors = OguriTheme.colors
+    val nameStyle = travelTextStyle(15, 18, FontWeight.Medium)
+    val addressStyle = travelTextStyle(12, 14)
+    val rowPadding = 8.dp
+    val rowHeight = with(LocalDensity.current) {
+        (nameStyle.lineHeight.toDp() + addressStyle.lineHeight.toDp() + rowPadding * 2).coerceAtLeast(56.dp)
+    }
+    val dividerHeight = DividerDefaults.Thickness
+    Box(
+        Modifier.fillMaxWidth().heightIn(max = (rowHeight + dividerHeight) * VISIBLE_PLACE_RESULTS)
+            .consumeVerticalDragForBottomSheetContent(),
+    ) {
+        LazyColumn(Modifier.fillMaxWidth()) {
+            items(places, key = TravelPlace::id) { place ->
+                val checked = selected?.id == place.id
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = rowHeight).clip(RoundedCornerShape(8.dp))
+                        .background(if (checked) Mint10 else Color.Transparent)
+                        .selectable(checked, interactionSource = null, indication = null, enabled = enabled, role = Role.RadioButton) {
+                            onSelect(place)
+                        }.padding(horizontal = 12.dp, vertical = rowPadding),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(place.name, style = nameStyle, color = Neutral100)
+                        place.address?.let {
+                            Text(it, style = addressStyle, color = colors.textTertiary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        }
+                    }
+                    TravelSearchSelectionMark(checked)
+                }
+                if (checked) Spacer(Modifier.height(dividerHeight))
+                else HorizontalDivider(color = colors.borderSubtle)
+            }
+        }
+    }
 }
 
 @Composable
