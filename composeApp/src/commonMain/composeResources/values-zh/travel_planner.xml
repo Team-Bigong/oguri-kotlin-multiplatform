@@ -180,7 +180,7 @@
     <string name="travel_city_barcelona">巴塞罗那</string>
     <string name="travel_overview_map_fit">查看所有地点</string>
     <string name="travel_place_search_unavailable">查找地点时出现问题</string>
-    <string name="travel_all_days_tab">全部</string>
+    <string name="travel_all_days_tab">全部行程</string>
     <string name="travel_manage_title">管理旅行</string>
     <string name="travel_itinerary">行程安排</string>
     <string name="travel_calendar_date">%1$d年%2$d月%3$d日</string>

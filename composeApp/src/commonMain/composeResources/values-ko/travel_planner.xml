@@ -180,7 +180,7 @@
     <string name="travel_city_barcelona">바르셀로나</string>
     <string name="travel_overview_map_fit">모든 장소 보기</string>
     <string name="travel_place_search_unavailable">장소를 불러오지 못했어요</string>
-    <string name="travel_all_days_tab">전체</string>
+    <string name="travel_all_days_tab">전체 일정</string>
     <string name="travel_manage_title">여행 관리</string>
     <string name="travel_itinerary">방문 일정</string>
     <string name="travel_calendar_date">%1$d년 %2$d월 %3$d일</string>

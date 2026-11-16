@@ -180,7 +180,7 @@
     <string name="travel_city_barcelona">バルセロナ</string>
     <string name="travel_overview_map_fit">すべての訪問先を表示</string>
     <string name="travel_place_search_unavailable">場所の検索中に問題が発生しました</string>
-    <string name="travel_all_days_tab">すべて</string>
+    <string name="travel_all_days_tab">全日程</string>
     <string name="travel_manage_title">旅行の管理</string>
     <string name="travel_itinerary">訪問予定</string>
     <string name="travel_calendar_date">%1$d年%2$d月%3$d日</string>

@@ -180,7 +180,7 @@
     <string name="travel_city_barcelona">Barcelona</string>
     <string name="travel_overview_map_fit">Show all stops</string>
     <string name="travel_place_search_unavailable">There was a problem finding places</string>
-    <string name="travel_all_days_tab">All days</string>
+    <string name="travel_all_days_tab">Full itinerary</string>
     <string name="travel_manage_title">Manage trip</string>
     <string name="travel_itinerary">Itinerary</string>
     <string name="travel_calendar_date">%1$d/%2$d/%3$d</string>

@@ -34,14 +34,21 @@ internal fun Modifier.travelLoadingSemantics(): Modifier =
 @Composable
 internal fun TravelPlanSkeleton(modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth().travelLoadingSemantics()) {
-        Row(
-            Modifier.fillMaxWidth().clipToBounds()
-                .horizontalScroll(rememberScrollState(), enabled = false)
-                .padding(start = 20.dp, top = 4.dp, bottom = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            repeat(3) { SkeletonBox(Modifier.size(width = 112.dp, height = 30.dp), CircleShape) }
-        }
+        TravelDayBar(
+            datesContent = {
+                Row(
+                    Modifier.fillMaxWidth().clipToBounds()
+                        .horizontalScroll(rememberScrollState(), enabled = false)
+                        .padding(start = 20.dp, top = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    repeat(3) { SkeletonBox(Modifier.size(width = 112.dp, height = 30.dp), CircleShape) }
+                }
+            },
+            overviewContent = {
+                SkeletonBox(Modifier.padding(top = 4.dp).size(width = 84.dp, height = 30.dp), CircleShape)
+            },
+        )
         HorizontalDivider(color = OguriTheme.colors.borderSubtle)
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),

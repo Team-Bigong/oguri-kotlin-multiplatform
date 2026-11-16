@@ -2,11 +2,11 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -67,44 +67,37 @@ internal fun TravelCategoryPicker(
     }
 }
 
-/** A null selection gives an action chip button semantics. */
 @Composable
 internal fun TravelChoiceChip(
     label: String,
-    selected: Boolean?,
+    selected: Boolean,
     enabled: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     categoryChip: Boolean = false,
     segmented: Boolean = false,
+    touchPadding: PaddingValues = PaddingValues(vertical = if (categoryChip) 4.dp else if (segmented) 0.dp else 7.dp),
 ) {
     val colors = OguriTheme.colors
-    val isSelected = selected == true
-    val textSize = if (categoryChip) { if (isSelected) 14 else 13 } else 12
+    val textSize = if (categoryChip) { if (selected) 14 else 13 } else 12
     val lineHeight = if (categoryChip) 16 else 14
     val chipHeight = if (categoryChip) 32.dp else if (segmented) 28.dp else 30.dp
-    val touchPadding = if (categoryChip) 4.dp else if (segmented) 0.dp else 7.dp
-    val interaction = if (selected == null) {
-        Modifier.clickable(interactionSource = null, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
-    } else {
-        Modifier.selectable(selected, interactionSource = null, indication = null, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-    }
     Box(
-        modifier.then(interaction)
-            .padding(vertical = touchPadding)
+        modifier.selectable(selected, interactionSource = null, indication = null, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+            .padding(touchPadding)
             .heightIn(min = chipHeight)
             .widthIn(min = if (categoryChip) 52.dp else Dp.Unspecified)
-            .background(if (isSelected) Mint40 else if (segmented) Color.Transparent else colors.surfaceCard, CircleShape)
-            .then(if (isSelected || segmented) Modifier else Modifier.border(1.dp, colors.borderSubtle, CircleShape))
+            .background(if (selected) Mint40 else if (segmented) Color.Transparent else colors.surfaceCard, CircleShape)
+            .then(if (selected || segmented) Modifier else Modifier.border(1.dp, colors.borderSubtle, CircleShape))
             .padding(horizontal = 13.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
             label,
-            style = travelTextStyle(textSize, lineHeight, if (categoryChip && isSelected) FontWeight.SemiBold else if (categoryChip) FontWeight.Normal else FontWeight.Medium),
+            style = travelTextStyle(textSize, lineHeight, if (categoryChip && selected) FontWeight.SemiBold else if (categoryChip) FontWeight.Normal else FontWeight.Medium),
             color = when {
                 !enabled -> colors.textSecondary
-                !isSelected -> colors.textTertiary
+                !selected -> colors.textTertiary
                 categoryChip || segmented -> Neutral100
                 else -> colors.textPrimary
             },
