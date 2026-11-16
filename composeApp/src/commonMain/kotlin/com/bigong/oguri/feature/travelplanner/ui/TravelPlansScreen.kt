@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -113,8 +114,8 @@ internal fun TravelPlansScreen(
                     item {
                         TravelPlansHeading(showPageTitle = onBack == null, bottomPadding = 24.dp)
                     }
-                    items(current, key = TravelPlanSummary::id) { plan ->
-                        TravelPlanCard(plan, now.toLocalDateTime(plan.details.timeZone).date) { onOpen(plan.id) }
+                    itemsIndexed(current, key = { _, plan -> plan.id }) { index, plan ->
+                        TravelPlanCard(plan, now.toLocalDateTime(plan.details.timeZone).date, topPadding = if (index == 0) 24.dp else 0.dp) { onOpen(plan.id) }
                     }
                     item {
                         TravelOutlineButton(onClick = onCreate, modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = if (current.isEmpty()) 24.dp else 0.dp, bottom = 24.dp)) {
@@ -224,6 +225,7 @@ internal fun TravelPlansEmpty(
 private fun TravelPlanCard(
     plan: TravelPlanSummary,
     today: LocalDate?,
+    topPadding: androidx.compose.ui.unit.Dp = 0.dp,
     onClick: () -> Unit,
 ) {
     val details = plan.details
@@ -252,7 +254,7 @@ private fun TravelPlanCard(
     }
     val headingColor = if (OguriTheme.isDarkTheme) Neutral100 else Color.White
     Column(
-        Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 24.dp, bottom = 16.dp)
+        Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 16.dp)
             .clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderStrong, shape)
             .noRippleClickable(onClick = onClick),
     ) {
