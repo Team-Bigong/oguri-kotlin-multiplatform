@@ -16,6 +16,7 @@ expect fun notifyFloatingBottomNavigationState(
     homeTabLabel: String,
     calendarTabLabel: String,
     myPageTabLabel: String,
+    travelTabLabel: String?,
 )
 
 private val floatingBottomNavigationSelectionEvents: MutableSharedFlow<Int> =

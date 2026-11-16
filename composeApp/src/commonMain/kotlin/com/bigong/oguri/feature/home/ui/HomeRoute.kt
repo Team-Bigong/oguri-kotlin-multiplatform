@@ -17,11 +17,11 @@ import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.PreloadNetworkImages
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
-import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.snackbar_home_deleted
 import oguri.composeapp.generated.resources.snackbar_home_saved
 import org.jetbrains.compose.resources.stringResource
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun HomeRoute(
@@ -33,6 +33,8 @@ fun HomeRoute(
     onMoveToCalendarClick: () -> Unit,
     onSearchClick: () -> Unit = {},
     onLoginRequired: () -> Unit,
+    travelResume: (@Composable () -> Unit)? = null,
+    travelGuide: (@Composable () -> Unit)? = null,
 ) {
     val homeUiState = homeViewModel.uiState.collectAsStateWithLifecycle().value
     val recommendationSavedMessage = stringResource(Res.string.snackbar_home_saved)
@@ -105,6 +107,8 @@ fun HomeRoute(
         onPeriodClick = onPeriodClick,
         onMoveToCalendarClick = onMoveToCalendarClick,
         onSearchClick = onSearchClick,
+        travelResume = travelResume,
+        travelGuide = travelGuide,
         scrollToTopTrigger = scrollToTopTrigger,
     )
 

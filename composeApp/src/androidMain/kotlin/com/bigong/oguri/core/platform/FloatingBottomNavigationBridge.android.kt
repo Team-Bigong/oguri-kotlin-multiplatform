@@ -11,4 +11,5 @@ actual fun notifyFloatingBottomNavigationState(
     homeTabLabel: String,
     calendarTabLabel: String,
     myPageTabLabel: String,
+    travelTabLabel: String?,
 ) = Unit

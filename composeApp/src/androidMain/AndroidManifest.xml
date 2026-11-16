@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".OguriApplication"
@@ -12,12 +13,27 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Oguri">
+        <uses-library android:name="org.apache.http.legacy" android:required="false" />
+
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="${admobAndroidAppId}" />
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${googleMapsAndroidApiKey}" />
+
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <service
+            android:name=".core.notification.TravelReminderMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleTop"
             android:exported="true"
             android:screenOrientation="portrait"
             tools:ignore="DiscouragedApi,LockedOrientationActivity">
@@ -25,6 +41,16 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="oguri-kotlin-multiplatform-19hx.onrender.com"
+                    android:path="/trip-invite" />
+                <data android:path="/trip-invite/" />
             </intent-filter>
 
             <intent-filter>

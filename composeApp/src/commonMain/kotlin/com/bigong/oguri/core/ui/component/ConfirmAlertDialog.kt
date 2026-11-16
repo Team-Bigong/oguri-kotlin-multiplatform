@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -31,6 +32,10 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
+internal val dialogSecondaryButtonColor: Color
+    @Composable
+    get() = if (OguriTheme.isDarkTheme) Neutral10 else Color(0xFFF0F0F0)
+
 @Composable
 fun ConfirmAlertDialog(
     iconResource: DrawableResource,
@@ -41,6 +46,9 @@ fun ConfirmAlertDialog(
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
     onCancelClick: () -> Unit,
+    iconTint: androidx.compose.ui.graphics.Color = Orange50,
+    messageColor: androidx.compose.ui.graphics.Color = Orange50,
+    confirmButtonFirst: Boolean = false,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -55,18 +63,18 @@ fun ConfirmAlertDialog(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 24.dp),
             shape = RoundedCornerShape(8.dp),
             color = Neutral0,
         ) {
             Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Image(
                     painter = painterResource(iconResource),
                     contentDescription = null,
-                    colorFilter = ColorFilter.tint(WarningAmber),
+                    colorFilter = ColorFilter.tint(iconTint),
                     modifier = Modifier.size(48.dp),
                 )
 
@@ -82,7 +90,7 @@ fun ConfirmAlertDialog(
                     Text(
                         text = messageText,
                         style = OguriTheme.typography.bodyMedium,
-                        color = Orange50,
+                        color = messageColor,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
                     )
@@ -92,36 +100,40 @@ fun ConfirmAlertDialog(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth().padding(top = if (messageText.isNotBlank()) 18.dp else 14.dp),
                 ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .background(color = Mint70, shape = RoundedCornerShape(8.dp))
-                                .noRippleClickable(onClick = onConfirmClick)
-                                .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = confirmButtonText,
-                            style = OguriTheme.typography.bodyMedium,
-                            color = Neutral0,
-                        )
-                    }
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .background(color = Neutral10, shape = RoundedCornerShape(8.dp))
-                                .noRippleClickable(onClick = onCancelClick)
-                                .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = cancelButtonText,
-                            style = OguriTheme.typography.bodyMedium,
-                            color = Neutral90,
-                        )
+                    listOf(confirmButtonFirst, !confirmButtonFirst).forEach { isConfirmButton ->
+                        if (isConfirmButton) {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .background(color = Mint70, shape = RoundedCornerShape(8.dp))
+                                        .noRippleClickable(onClick = onConfirmClick)
+                                        .padding(vertical = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = confirmButtonText,
+                                    style = OguriTheme.typography.bodyMedium,
+                                    color = OguriTheme.colors.textOnMint,
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .background(color = dialogSecondaryButtonColor, shape = RoundedCornerShape(8.dp))
+                                        .noRippleClickable(onClick = onCancelClick)
+                                        .padding(vertical = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = cancelButtonText,
+                                    style = OguriTheme.typography.bodyMedium,
+                                    color = Neutral90,
+                                )
+                            }
+                        }
                     }
                 }
             }
