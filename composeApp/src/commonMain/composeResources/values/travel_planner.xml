@@ -48,7 +48,7 @@
     <string name="travel_move_visit">Change the order of %1$s</string>
     <string name="travel_visit_removed">This visit was deleted on another device.</string>
     <string name="travel_search_places">Search for a place</string>
-    <string name="travel_search_city">Found near %1$s · Google Maps results</string>
+    <string name="travel_search_city">Found near %1$s</string>
     <string name="travel_search_empty">No search results</string>
     <string name="travel_search_results">Back to results</string>
     <string name="travel_add_to_day">Add to day %1$d</string>

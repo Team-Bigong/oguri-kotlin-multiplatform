@@ -48,7 +48,7 @@
     <string name="travel_move_visit">%1$sの順番を変更</string>
     <string name="travel_visit_removed">この訪問予定は別の端末で削除されました。</string>
     <string name="travel_search_places">場所を検索</string>
-    <string name="travel_search_city">%1$s周辺で見つかりました · Google マップの検索結果</string>
+    <string name="travel_search_city">%1$s周辺で見つかりました</string>
     <string name="travel_search_empty">検索結果がありません</string>
     <string name="travel_search_results">検索結果に戻る</string>
     <string name="travel_add_to_day">%1$d日目に追加</string>

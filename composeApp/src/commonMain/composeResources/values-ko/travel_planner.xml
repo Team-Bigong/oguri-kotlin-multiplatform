@@ -48,7 +48,7 @@
     <string name="travel_move_visit">%1$s 순서 변경</string>
     <string name="travel_visit_removed">다른 기기에서 이 방문 일정을 삭제했어요.</string>
     <string name="travel_search_places">장소 검색</string>
-    <string name="travel_search_city">%1$s 주변에서 찾았어요 · Google 지도 검색 결과</string>
+    <string name="travel_search_city">%1$s 주변에서 찾았어요</string>
     <string name="travel_search_empty">검색 결과가 없어요</string>
     <string name="travel_search_results">검색 결과로 돌아가기</string>
     <string name="travel_add_to_day">%1$d일차에 추가</string>

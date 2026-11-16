@@ -243,10 +243,24 @@ internal fun TravelPlaceSearchSheet(
                         }
                         search.results.isNotEmpty() -> {
                             item {
-                                Text(
-                                    stringResource(Res.string.travel_search_city, state.searchCity ?: plan.summary.details.city),
-                                    style = travelTextStyle(11, 13), color = colors.textTertiary,
-                                )
+                                Row(
+                                    Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Text(
+                                        stringResource(Res.string.travel_search_city, state.searchCity ?: plan.summary.details.city),
+                                        modifier = Modifier.weight(1f),
+                                        style = travelTextStyle(11, 13),
+                                        color = colors.textTertiary,
+                                    )
+                                    Text(
+                                        stringResource(Res.string.travel_google_maps_attribution),
+                                        style = OguriTheme.typography.caption,
+                                        color = colors.textTertiary,
+                                        softWrap = false,
+                                    )
+                                }
                             }
                             item(key = "place-search-results") {
                                 key(search.query, state.searchCity) {
@@ -256,7 +270,10 @@ internal fun TravelPlaceSearchSheet(
                                     }
                                 }
                             }
-                            item { GooglePlacesAttribution(search.results.flatMap(TravelPlace::attributions)) }
+                            val attributions = search.results.flatMap(TravelPlace::attributions)
+                            if (attributions.isNotEmpty()) {
+                                item { GooglePlacesAttribution(attributions, includeGoogleBranding = false) }
+                            }
                         }
                         !search.isLoading && search.query.trim().length >= 2 -> item {
                             Column(Modifier.fillMaxWidth().padding(vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {

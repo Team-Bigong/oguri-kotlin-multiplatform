@@ -48,7 +48,7 @@
     <string name="travel_move_visit">调整 %1$s 的顺序</string>
     <string name="travel_visit_removed">这条到访安排已在其他设备上删除。</string>
     <string name="travel_search_places">搜索地点</string>
-    <string name="travel_search_city">在%1$s附近找到 · Google 地图搜索结果</string>
+    <string name="travel_search_city">在%1$s附近找到</string>
     <string name="travel_search_empty">没有搜索结果</string>
     <string name="travel_search_results">返回搜索结果</string>
     <string name="travel_add_to_day">添加到第 %1$d 天</string>
