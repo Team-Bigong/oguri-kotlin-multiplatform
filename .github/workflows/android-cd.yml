@@ -80,6 +80,10 @@ jobs:
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
         run: |
+          if [ -z "${GOOGLE_MAPS_ANDROID_API_KEY}" ]; then
+            echo "GOOGLE_MAPS_ANDROID_API_KEY is not set"
+            exit 1
+          fi
           if [ -z "${ANDROID_SIGNING_STORE_PASSWORD}" ] || [ -z "${ANDROID_SIGNING_KEY_ALIAS}" ] || [ -z "${ANDROID_SIGNING_KEY_PASSWORD}" ]; then
             echo "Android signing secrets are not fully set"
             exit 1

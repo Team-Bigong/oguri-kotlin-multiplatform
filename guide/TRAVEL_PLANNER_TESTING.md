@@ -80,9 +80,9 @@ bash scripts/verify_ios_simulator.sh
 
 ## CI의 여행 지도와 Firebase 설정
 
-- Android CI 디버그 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY_DEBUG`, Android 배포 지도에는 `GOOGLE_MAPS_ANDROID_API_KEY`를 GitHub Actions 시크릿으로 전달한다.
+- Android CI와 배포 지도에는 같은 `GOOGLE_MAPS_ANDROID_API_KEY` GitHub Actions 시크릿을 전달한다. Android 앱 제한을 적용한 키에는 디버그와 배포 패키지명 및 각각의 서명 인증서 SHA-1을 등록한다. Play 앱 서명 사용 시 배포 인증서는 Play Console에서 확인한다.
 - Xcode Cloud에는 각각 `GOOGLE_MAPS_IOS_API_KEY_DEBUG`와 `GOOGLE_MAPS_IOS_API_KEY`를 전달한다. `ci_post_clone.sh`에서 각 환경의 `GOOGLE_MAPS_IOS_API_KEY` 빌드 설정에 적용한다.
-- Xcode Cloud의 `OGURI_IOS_FIREBASE_DEBUG_PLIST_BASE64`와 `OGURI_IOS_FIREBASE_RELEASE_PLIST_BASE64`에는 해당 plist의 Base64 값을 전달한다. 파일 구조와 번들 식별자가 일치하면 앱 리소스 경로에 기록한다.
+- Xcode Cloud의 `OGURI_IOS_FIREBASE_DEBUG_PLIST_BASE64`와 `OGURI_IOS_FIREBASE_RELEASE_PLIST_BASE64`에는 해당 plist의 Base64 값을 전달한다. 릴리스 plist와 릴리스 지도 키는 필수이며, 파일 구조와 번들 식별자가 일치하면 앱 리소스 경로에 기록한다.
 
 ## Galaxy S25 API 36 회귀 검증
 
