@@ -235,7 +235,7 @@ fun MainNavHost(
             }
         }
         composable<RouteModel.Home> {
-            val travelViewModel = if (travelEnabled && travelSession.tokens != null) {
+            val travelViewModel = if (travelSession.tokens != null) {
                 viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
             } else null
             HomeRoute(
@@ -256,10 +256,7 @@ fun MainNavHost(
                     if (travelViewModel != null) {
                         { TravelResumeEntry(travelViewModel) { navigator.navigateToTravelPlan(it) } }
                     } else null,
-                travelGuide =
-                    if (travelEnabled) {
-                        { TravelHomeGuide(travelViewModel) { navigator.navigateToCreateTravelPlan() } }
-                    } else null,
+                travelGuide = { TravelHomeGuide(travelViewModel) { navigator.navigateToCreateTravelPlan() } },
                 onLoginRequired = navigator::navigateToLogin,
             )
         }
@@ -339,7 +336,7 @@ fun MainNavHost(
         composable<RouteModel.TravelPlans> {
             TravelPlansRoute(
                 viewModel = viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() },
-                onBack = if (travelEnabled) null else ({ navigator.popBackStack() }),
+                onBack = null,
                 signedIn = travelSession.tokens != null,
                 onSignIn = navigator::navigateToTravelLogin,
                 onCreate = { navigator.navigateToCreateTravelPlan() },
@@ -423,7 +420,7 @@ fun MainNavHost(
         }
         composable<RouteModel.PlaceDetail> { navBackStackEntry ->
             val route = navBackStackEntry.toRoute<RouteModel.PlaceDetail>()
-            val travelViewModel = if (travelEnabled && travelSession.tokens != null) {
+            val travelViewModel = if (travelSession.tokens != null) {
                 viewModel(key = "travel-destination-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
             } else null
             val travelState = travelViewModel?.state?.collectAsStateWithLifecycle()?.value
@@ -436,15 +433,10 @@ fun MainNavHost(
                 placeId = route.placeId,
                 startDate = route.startDate,
                 endDate = route.endDate,
-                onCreateTravelPlan =
-                    if (travelEnabled) {
-                        {
-                            recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.CLICKED)
-                            navigator.navigateToCreateTravelPlan(route.placeId, route.startDate, route.endDate)
-                        }
-                    } else {
-                        null
-                    },
+                onCreateTravelPlan = {
+                    recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.CLICKED)
+                    navigator.navigateToCreateTravelPlan(route.placeId, route.startDate, route.endDate)
+                },
                 matchingTravelPlans = travelState?.plans.orEmpty(),
                 onOpenTravelPlan = { navigator.navigateToTravelPlan(it) },
                 onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.CITY, TravelRecommendationEntry.EXPOSED) },
@@ -480,15 +472,10 @@ fun MainNavHost(
                 snackbarHostState = snackbarHostState,
                 startDate = route.startDate,
                 endDate = route.endDate,
-                onCreateTravelPlan =
-                    if (travelEnabled) {
-                        {
-                            recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
-                            navigator.navigateToCreateTravelPlan(startDate = route.startDate, endDate = route.endDate)
-                        }
-                    } else {
-                        null
-                    },
+                onCreateTravelPlan = {
+                    recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.CLICKED)
+                    navigator.navigateToCreateTravelPlan(startDate = route.startDate, endDate = route.endDate)
+                },
                 onTravelEntryVisible = { recordRecommendation(TravelRecommendationSource.PERIOD, TravelRecommendationEntry.EXPOSED) },
                 onBackClick = { navigator.popBackStack() },
                 onLoginRequired = navigator::navigateToLogin,
