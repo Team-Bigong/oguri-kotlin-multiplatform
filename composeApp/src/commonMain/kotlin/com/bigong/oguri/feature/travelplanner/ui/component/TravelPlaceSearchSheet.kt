@@ -84,7 +84,7 @@ internal fun TravelPlaceSearchSheet(
     plan: TravelPlan,
     onQuery: (String) -> Unit,
     onSelect: (TravelPlace?) -> Unit,
-    onAdd: (TravelPlace, Int, TravelVisitCategory?, String?, String?) -> Unit,
+    onAdd: (TravelPlace, Int, TravelVisitCategory?, String) -> Unit,
     onDismiss: () -> Unit,
     onRetrySave: () -> Unit,
     onLeaveWithPendingSave: () -> Unit,
@@ -100,12 +100,13 @@ internal fun TravelPlaceSearchSheet(
     val day = state.selectedDay
     val draft = state.visitDraft
     var manual by rememberSaveable { mutableStateOf(draft != null) }
+    var searchNote by rememberSaveable { mutableStateOf("") }
     var searchCategory by rememberSaveable { mutableStateOf<TravelVisitCategory?>(null) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
     val selected = search.selected
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
     val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
-    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory))
+    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory, searchNote))
     val close = {
         if (canDismiss) {
             if (hasDraft) confirmDiscard = true
@@ -284,7 +285,16 @@ internal fun TravelPlaceSearchSheet(
                         }
                     }
                     if (search.results.isNotEmpty()) item {
-                        Box(Modifier.padding(top = if (selected == null) 12.dp else 16.dp)) {
+                        Column(
+                            Modifier.padding(top = if (selected == null) 12.dp else 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            TravelNoteField(
+                                note = searchNote,
+                                onChange = { searchNote = it },
+                                label = Res.string.travel_visit_note,
+                                enabled = canEdit,
+                            )
                             TravelCategoryPicker(searchCategory, canEdit) { searchCategory = it }
                         }
                     }
@@ -304,8 +314,7 @@ internal fun TravelPlaceSearchSheet(
                             selected,
                             targetDay,
                             searchCategory,
-                            null,
-                            null,
+                            searchNote,
                         )
                     }
                 },
@@ -330,8 +339,12 @@ internal fun TravelPlaceSearchSheet(
     }
 }
 
-internal fun hasUnsavedPlaceInput(draft: TravelVisitDraft?, selected: TravelPlace?, category: TravelVisitCategory?): Boolean =
-    draft?.hasPlaceInput() == true || selected != null || category != null
+internal fun hasUnsavedPlaceInput(
+    draft: TravelVisitDraft?,
+    selected: TravelPlace?,
+    category: TravelVisitCategory?,
+    searchNote: String,
+): Boolean = draft?.hasPlaceInput() == true || selected != null || category != null || searchNote.isNotBlank()
 
 private fun TravelVisitDraft.hasPlaceInput(): Boolean =
     name.isNotBlank() || location.isNotBlank() || note.isNotBlank() || category != null

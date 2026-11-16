@@ -648,15 +648,21 @@ class TravelPlannerViewModel(
     internal fun addPlace(
         place: TravelPlace,
         dayNumber: Int,
-        category: TravelVisitCategory? = null,
-        name: String? = null,
-        location: String? = null,
+        category: TravelVisitCategory?,
+        note: String,
     ) {
         changeVisit(
             change =
                 TravelVisitChange.Add(
                     dayNumber,
-                    TravelVisitDetails(name, location, null, null, place.id, category),
+                    TravelVisitDetails(
+                        name = null,
+                        location = null,
+                        localTime = null,
+                        note = note.trim().ifEmpty { null },
+                        googlePlaceId = place.id,
+                        category = category,
+                    ),
                     state.value.plan?.structureRevision ?: return,
                 ),
             selectedDayAfterSave = dayNumber,
