@@ -1,8 +1,10 @@
 import SwiftUI
 import ComposeApp
 import KakaoSDKCommon
+import KakaoSDKAuth
 import FirebaseCore
 import FirebaseCrashlytics
+import GoogleMaps
 
 #if DEBUG
 private let firebaseConfigurationPlistName = "GoogleService-Info-Debug"
@@ -12,10 +14,16 @@ private let firebaseConfigurationPlistName = "GoogleService-Info-Release"
 
 @main
 struct iOSApp: App {
+    @UIApplicationDelegateAdaptor(TravelReminderPushDelegate.self) private var reminderDelegate
     init() {
         configureFirebase()
+        if let key = Bundle.main.object(forInfoDictionaryKey: "GOOGLE_MAPS_IOS_API_KEY") as? String,
+           !key.isEmpty, !key.hasPrefix("$("), GMSServices.provideAPIKey(key) {
+            PlatformTravelMap_iosKt.installTravelMapHostFactory(value: GoogleTravelMapFactory())
+        }
         if let kakaoAppKey = Bundle.main.object(forInfoDictionaryKey: "KEY_KAKAO") as? String, !kakaoAppKey.isEmpty {
             KakaoSDK.initSDK(appKey: kakaoAppKey)
+            KakaoAuthProvider_iosKt.installKakaoLoginHost(host: KakaoLoginBridge())
         }
         AmplitudeBridge.shared.startObserving()
         KakaoShareDispatcher.shared.startObserving()
@@ -26,10 +34,15 @@ struct iOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .onContinueUserActivity(NSUserActivityTypeBrowsingWeb) { activity in
+                    if let url = activity.webpageURL {
+                        DeepLinkStoreProviderKt.handleIncomingAppUrl(urlText: url.absoluteString)
+                    }
+                }
                 .onOpenURL { url in
                     let urlText = url.absoluteString
-                    if urlText.hasPrefix("kakao"), urlText.contains("://oauth") {
-                        KakaoAuthProvider_iosKt.handleKakaoLoginOpenUrl(url: urlText)
+                    if AuthApi.isKakaoTalkLoginUrl(url) {
+                        _ = AuthController.handleOpenUrl(url: url)
                     } else {
                         DeepLinkStoreProviderKt.handleIncomingAppUrl(urlText: urlText)
                     }

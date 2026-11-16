@@ -35,6 +35,7 @@ import oguri.composeapp.generated.resources.img_oguri_walking
 import oguri.composeapp.generated.resources.login_google_with_account
 import oguri.composeapp.generated.resources.login_guest_browse
 import oguri.composeapp.generated.resources.login_kakao_with_account
+import oguri.composeapp.generated.resources.travel_cancel
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -45,6 +46,7 @@ actual fun LoginScreen(
     onKakaoLoginClick: () -> Unit,
     onAppleLoginClick: () -> Unit,
     onGuestBrowseClick: () -> Unit,
+    isReturnToTravel: Boolean,
 ) {
     Box(
         modifier =
@@ -92,7 +94,7 @@ actual fun LoginScreen(
 
             Spacer(modifier = Modifier.height(height = 14.dp))
             Text(
-                text = stringResource(Res.string.login_guest_browse),
+                text = stringResource(if (isReturnToTravel) Res.string.travel_cancel else Res.string.login_guest_browse),
                 style = OguriTheme.typography.bodySmall,
                 color = Neutral50,
                 modifier = Modifier.noRippleClickable(onClick = onGuestBrowseClick),

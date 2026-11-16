@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -68,6 +69,8 @@ fun HomeScreen(
     onMoveToCalendarClick: () -> Unit,
     onSearchClick: () -> Unit,
     scrollToTopTrigger: Int,
+    travelResume: (@Composable () -> Unit)? = null,
+    travelGuide: (@Composable () -> Unit)? = null,
 ) {
     if (homeUiState.isLoading) {
         HomeSkeletonContent()
@@ -150,6 +153,9 @@ fun HomeScreen(
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )
             }
+            if (travelResume != null) {
+                item(key = "travel_resume") { travelResume() }
+            }
             item {
                 Spacer(modifier = Modifier.height(28.dp))
                 GuideHeader(
@@ -175,6 +181,7 @@ fun HomeScreen(
                     )
                 }
             }
+            if (travelGuide != null) item(key = "travel_guide") { travelGuide() }
             if (homeUiState.weeklyTopPlaces.isNotEmpty()) {
                 item {
                     Spacer(modifier = Modifier.height(28.dp))

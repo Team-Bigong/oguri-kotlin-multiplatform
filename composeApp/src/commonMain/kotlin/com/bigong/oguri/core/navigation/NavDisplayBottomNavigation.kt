@@ -70,7 +70,7 @@ internal fun BottomNavigationBar(
                                     HapticType.Selection.perform()
                                     onDestinationClick(destination, isSelected)
                                 },
-                            ).padding(horizontal = 18.dp, vertical = 10.dp)
+                            ).padding(horizontal = 4.dp, vertical = 10.dp)
                             .weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(4.dp),

@@ -36,6 +36,7 @@ import kotlin.random.Random
 @Service
 class MemberService(
     private val memberRepository: MemberRepository,
+    private val travelCollaborationService: TravelCollaborationService,
     private val adjectiveRepository: AdjectiveRepository,
     private val nounRepository: NounRepository,
     private val jwtTokenProvider: JwtTokenProvider,
@@ -248,6 +249,7 @@ class MemberService(
 
     @Transactional
     fun withdraw(memberId: String) {
+        travelCollaborationService.prepareAccountRemoval(memberId, administrative = false)
         if (!memberRepository.existsById(memberId)) {
             throw ResponseStatusException(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다.")
         }

@@ -15,7 +15,9 @@
 		86CFAA1C2F6C00910011BF87 /* KakaoSDKShare in Frameworks */ = {isa = PBXBuildFile; productRef = 86CFAA1B2F6C00910011BF87 /* KakaoSDKShare */; };
 		86CFAA1E2F6C00910011BF87 /* KakaoSDKTemplate in Frameworks */ = {isa = PBXBuildFile; productRef = 86CFAA1D2F6C00910011BF87 /* KakaoSDKTemplate */; };
 		86FBCAE12F6D402F00D24773 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 86FBCAE02F6D402F00D24773 /* GoogleMobileAds */; };
+		9DB5265D2F81010000AABB01 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 9DB5265D2F81010000AABB02 /* GoogleMaps */; };
 		A1B2C3D42F70000100AAA111 /* AmplitudeUnified in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D52F70000100AAA111 /* AmplitudeUnified */; };
+		F80282945AE44223A3406DB1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = F80282945AE44223A3406DB2 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -55,7 +57,9 @@
 			files = (
 				A1B2C3D42F70000100AAA111 /* AmplitudeUnified in Frameworks */,
 				86FBCAE12F6D402F00D24773 /* GoogleMobileAds in Frameworks */,
+				9DB5265D2F81010000AABB01 /* GoogleMaps in Frameworks */,
 				86565C8F2F6E7FA800AC6E1C /* FirebaseAnalytics in Frameworks */,
+				F80282945AE44223A3406DB1 /* FirebaseMessaging in Frameworks */,
 				86CFAA1E2F6C00910011BF87 /* KakaoSDKTemplate in Frameworks */,
 				86840E262F66EC09007C5D22 /* KakaoSDKCommon in Frameworks */,
 				86CFAA1C2F6C00910011BF87 /* KakaoSDKShare in Frameworks */,
@@ -114,7 +118,9 @@
 				86CFAA1B2F6C00910011BF87 /* KakaoSDKShare */,
 				86CFAA1D2F6C00910011BF87 /* KakaoSDKTemplate */,
 				86FBCAE02F6D402F00D24773 /* GoogleMobileAds */,
+				9DB5265D2F81010000AABB02 /* GoogleMaps */,
 				86565C8E2F6E7FA800AC6E1C /* FirebaseAnalytics */,
+				F80282945AE44223A3406DB2 /* FirebaseMessaging */,
 				86565C902F6E7FA800AC6E1C /* FirebaseCrashlytics */,
 			);
 			productName = iosApp;
@@ -149,6 +155,7 @@
 			mainGroup = 498123707EE9EF62D42083EE;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				9DB5265D2F81010000AABB03 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
 				A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */,
 				86840E222F66EC09007C5D22 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
@@ -193,25 +200,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\n\nif [ -z \"$JAVA_HOME\" ]; then\n  if JAVA_HOME_CANDIDATE=$(/usr/libexec/java_home -v 17 2>/dev/null); then\n    export JAVA_HOME=\"$JAVA_HOME_CANDIDATE\"\n  elif [ -d \"/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\" ]; then\n    export JAVA_HOME=\"/opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\"\n  elif [ -d \"/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\" ]; then\n    export JAVA_HOME=\"/usr/local/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home\"\n  else\n    echo \"Java 17 runtime is required to build the Kotlin framework.\" >&2\n    exit 1\n  fi\nfi\n\nexport PATH=\"$JAVA_HOME/bin:$PATH\"\njava -version\n\ncd \"$SRCROOT/..\"\n./gradlew :composeApp:embedAndSignAppleFrameworkForXcode\n";
-		};
-		8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */ = {
-			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Localize InfoPlist Display Name";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" = \"Debug\" ]; then\n  APP_DISPLAY_NAME_EN=\"Oguri Debug\"\n  APP_DISPLAY_NAME_KO=\"오구리 Debug\"\n  APP_DISPLAY_NAME_JA=\"オグリ Debug\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri Debug\"\nelse\n  APP_DISPLAY_NAME_EN=\"Oguri\"\n  APP_DISPLAY_NAME_KO=\"오구리\"\n  APP_DISPLAY_NAME_JA=\"オグリ\"\n  APP_DISPLAY_NAME_ZH_HANS=\"Oguri\"\nfi\n\nwrite_info_plist_strings() {\n  LOCALE_IDENTIFIER=\"$1\"\n  LOCALIZED_APP_DISPLAY_NAME=\"$2\"\n  LOCALE_RESOURCES_DIRECTORY=\"$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH/$LOCALE_IDENTIFIER.lproj\"\n  mkdir -p \"$LOCALE_RESOURCES_DIRECTORY\"\n  /usr/bin/printf 'CFBundleDisplayName = \"%s\";\\nCFBundleName = \"%s\";\\n' \"$LOCALIZED_APP_DISPLAY_NAME\" \"$LOCALIZED_APP_DISPLAY_NAME\" > \"$LOCALE_RESOURCES_DIRECTORY/InfoPlist.strings\"\n}\n\nwrite_info_plist_strings \"en\" \"$APP_DISPLAY_NAME_EN\"\nwrite_info_plist_strings \"ko\" \"$APP_DISPLAY_NAME_KO\"\nwrite_info_plist_strings \"ja\" \"$APP_DISPLAY_NAME_JA\"\nwrite_info_plist_strings \"zh-Hans\" \"$APP_DISPLAY_NAME_ZH_HANS\"\n";
 		};
 		8A1F8C342FA0000100BEE101 /* Localize InfoPlist Display Name */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -334,6 +322,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OGURI_APS_ENVIRONMENT = development;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -374,6 +363,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OGURI_APS_ENVIRONMENT = production;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -488,7 +478,7 @@
 			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.27.2;
+				minimumVersion = 2.30.0;
 			};
 		};
 		86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
@@ -497,6 +487,14 @@
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 13.1.0;
+			};
+		};
+		9DB5265D2F81010000AABB03 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 11.2.0;
 			};
 		};
 		A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */ = {
@@ -550,10 +548,20 @@
 			package = 86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
 			productName = GoogleMobileAds;
 		};
+		9DB5265D2F81010000AABB02 /* GoogleMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9DB5265D2F81010000AABB03 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
+			productName = GoogleMaps;
+		};
 		A1B2C3D52F70000100AAA111 /* AmplitudeUnified */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */;
 			productName = AmplitudeUnified;
+		};
+		F80282945AE44223A3406DB2 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

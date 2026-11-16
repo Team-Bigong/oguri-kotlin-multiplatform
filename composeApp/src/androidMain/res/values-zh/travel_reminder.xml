@@ -1,0 +1,4 @@
+<resources>
+    <string name="travel_reminder_push_title">旅行提醒</string>
+    <string name="travel_reminder_push_body">打开 Oguri 查看行程。</string>
+</resources>

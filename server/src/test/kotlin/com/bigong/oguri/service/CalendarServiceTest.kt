@@ -30,11 +30,14 @@ class CalendarServiceTest {
 
     @Test
     fun `월 필터는 페이지 크기만큼 후보를 확보해 중순 이후 일정도 반환한다`() {
+        // Keep the pagination fixture ahead of the production past-date filter.
+        val recommendationYear = LocalDate.now().year + 1
+
         // given
         `when`(publicHolidayRepository.findAll()).thenReturn(
             listOf(
                 PublicHoliday(
-                    holidayDate = LocalDate.of(2026, 6, 6),
+                    holidayDate = LocalDate.of(recommendationYear, 6, 6),
                     name = "현충일",
                     isActualHoliday = true,
                 ),
@@ -45,7 +48,7 @@ class CalendarServiceTest {
         // when
         val response =
             calendarService.getCalendarData(
-                year = 2026,
+                year = recommendationYear,
                 month = 6,
                 memberId = MEMBER_ID,
                 dayOffCount = 2,
@@ -58,7 +61,7 @@ class CalendarServiceTest {
         assertTrue(response.hasNext)
         assertTrue(
             response.periods.any { period ->
-                period.startDate.isAfter(LocalDate.of(2026, 6, 14))
+                period.startDate.isAfter(LocalDate.of(recommendationYear, 6, 14))
             },
         )
     }

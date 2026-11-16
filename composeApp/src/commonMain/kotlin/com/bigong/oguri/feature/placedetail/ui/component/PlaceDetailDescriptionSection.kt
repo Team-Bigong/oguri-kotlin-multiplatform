@@ -7,8 +7,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import com.bigong.oguri.core.designsystem.Neutral90
-import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 
 @Composable
 fun PlaceDetailDescriptionSection(
@@ -17,8 +17,8 @@ fun PlaceDetailDescriptionSection(
 ) {
     Text(
         text = description.toBoldAnnotatedText(),
-        style = OguriTheme.typography.bodyLarge,
-        color = Neutral90,
+        style = travelTextStyle(14, 21),
+        color = Neutral100,
         modifier = modifier,
     )
 }
