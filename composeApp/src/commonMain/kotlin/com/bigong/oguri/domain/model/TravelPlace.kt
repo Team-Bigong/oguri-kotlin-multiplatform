@@ -1,5 +1,8 @@
 package com.bigong.oguri.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class TravelCoordinates(
     val latitude: Double,
     val longitude: Double,
@@ -27,7 +30,14 @@ data class TravelDayPlaces(
     val incomplete: Boolean,
 )
 
+@Serializable
 data class TravelCitySuggestion(
     val id: String,
     val label: String,
-)
+    val name: String = label,
+    val regionLabel: String? = null,
+    val timeZone: String? = null,
+    val coordinates: TravelCoordinates? = null,
+) {
+    val contextualName: String get() = regionLabel?.let { "$name · $it" } ?: name
+}

@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemKey
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
@@ -158,7 +159,6 @@ fun PeriodDetailScreen(
                     }
                 val dDayColor = if (isNextYearPeriod) Orange50 else Mint70
 
-                val featuredPlaceCount = if (onCreateTravelPlan != null) minOf(2, pagedPlaces.itemCount) else pagedPlaces.itemCount
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(count = 2),
                     modifier = Modifier.weight(weight = 1f),
@@ -234,19 +234,24 @@ fun PeriodDetailScreen(
                             )
                         }
                     } else {
-                        for (index in 0 until featuredPlaceCount) {
-                            val place: Place = pagedPlaces[index] ?: continue
-                            item(
-                                key = place.id,
-                                span = { GridItemSpan(1) },
-                            ) {
-                                PlaceCard(
-                                    place = place,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onClick = { onPlaceClick(place.id) },
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                            }
+                        items(count = pagedPlaces.itemCount, key = pagedPlaces.itemKey { it.id }) { index ->
+                            val place: Place = pagedPlaces[index] ?: return@items
+                            PlaceCard(
+                                place = place,
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { onPlaceClick(place.id) },
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                        }
+                    }
+                    if (pagedPlaces.loadState.append is LoadState.Loading) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            SkeletonBox(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .height(120.dp),
+                            )
                         }
                     }
                     if (onCreateTravelPlan != null) {
@@ -274,25 +279,6 @@ fun PeriodDetailScreen(
                                     }
                                 }
                             }
-                        }
-                    }
-
-                    for (index in featuredPlaceCount until pagedPlaces.itemCount) {
-                        val place: Place = pagedPlaces[index] ?: continue
-                        item(key = place.id, span = { GridItemSpan(1) }) {
-                            PlaceCard(place = place, modifier = Modifier.fillMaxWidth(), onClick = { onPlaceClick(place.id) })
-                            Spacer(Modifier.height(6.dp))
-                        }
-                    }
-
-                    if (pagedPlaces.loadState.append is LoadState.Loading) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            SkeletonBox(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .height(120.dp),
-                            )
                         }
                     }
                 }

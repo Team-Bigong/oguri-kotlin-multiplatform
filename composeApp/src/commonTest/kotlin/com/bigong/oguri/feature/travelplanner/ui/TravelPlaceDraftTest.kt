@@ -13,15 +13,21 @@ class TravelPlaceDraftTest {
     @Test
     fun googlePlaceSelectionAndCategoryRequireDiscardConfirmationWithoutAManualDraft() {
         val place = TravelPlace("place", "Market", "Address", TravelCoordinates(1.0, 2.0), emptyList())
-        assertTrue(hasUnsavedPlaceInput(null, place, null))
-        assertTrue(hasUnsavedPlaceInput(null, null, TravelVisitCategory.SHOPPING))
+        assertTrue(hasUnsavedPlaceInput(null, place, null, ""))
+        assertTrue(hasUnsavedPlaceInput(null, null, TravelVisitCategory.SHOPPING, ""))
+    }
+
+    @Test
+    fun searchNotesRequireDiscardConfirmationEvenAfterTheSelectionIsCleared() {
+        assertTrue(hasUnsavedPlaceInput(null, null, null, "Meet at the entrance"))
+        assertFalse(hasUnsavedPlaceInput(null, null, null, "   "))
     }
 
     @Test
     fun emptyFormsCanCloseButManualNotesArePreserved() {
         val draft = TravelVisitDraft(dayNumber = 2)
-        assertFalse(hasUnsavedPlaceInput(null, null, null))
-        assertFalse(hasUnsavedPlaceInput(draft, null, null))
-        assertTrue(hasUnsavedPlaceInput(draft.copy(note = "Meet at the entrance"), null, null))
+        assertFalse(hasUnsavedPlaceInput(null, null, null, ""))
+        assertFalse(hasUnsavedPlaceInput(draft, null, null, ""))
+        assertTrue(hasUnsavedPlaceInput(draft.copy(note = "Meet at the entrance"), null, null, ""))
     }
 }

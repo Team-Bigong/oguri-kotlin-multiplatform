@@ -57,6 +57,19 @@ class TravelHttpIntegrationTest {
     }
 
     @Test
+    fun `도시 목록이 비어 있으면 외부 검색 없이 빈 결과를 반환한다`() {
+        val result =
+            request(
+                "POST",
+                "/travel-places/cities/search",
+                200,
+                memberToken(),
+                mapOf("query" to "시드니", "language" to "ko"),
+            )
+        assertTrue(result.isArray && result.isEmpty)
+    }
+
+    @Test
     fun `초대 참여부터 편집 충돌과 멤버 제외까지 실제 HTTP로 검증한다`() {
         val owner = memberToken()
         val member = memberToken()
@@ -75,11 +88,13 @@ class TravelHttpIntegrationTest {
         val membersWithoutInvite = request("GET", "$trip/members", 200, owner)
         assertTrue(!membersWithoutInvite.get("hasActiveInvite").asBoolean())
         assertTrue(membersWithoutInvite.get("inviteExpiresAt").isNull)
+        assertTrue(membersWithoutInvite.get("inviteToken").isNull)
         val issued = request("POST", "$trip/invites", 200, owner)
         val token = issued.get("token").asText()
         val membersWithInvite = request("GET", "$trip/members", 200, owner)
         assertTrue(membersWithInvite.get("hasActiveInvite").asBoolean())
         assertEquals(issued.get("expiresAt").asText(), membersWithInvite.get("inviteExpiresAt").asText())
+        assertEquals(token, membersWithInvite.get("inviteToken").asText())
         val invite = mapOf("token" to token)
         val preview = request("POST", "/trip-invites/preview", 200, body = invite)
         assertEquals("Trip", preview.get("title").asText())
@@ -90,7 +105,18 @@ class TravelHttpIntegrationTest {
         assertEquals(tripId, request("POST", "/trip-invites/join", 200, member, invite).get("planId").asText())
 
         assertEquals(2, request("GET", "/trips", 200, member).single().get("memberCount").asInt())
-        assertTrue(request("GET", "$trip/members", 200, member).get("inviteExpiresAt").isNull)
+        val memberView = request("GET", "$trip/members", 200, member)
+        assertTrue(memberView.get("inviteExpiresAt").isNull)
+        assertTrue(memberView.get("inviteToken").isNull)
+
+        JdbcClient.create(dataSource)
+            .sql("UPDATE travel_plan_invites SET token_nonce = NULL WHERE travel_plan_id = :trip")
+            .param("trip", UUID.fromString(tripId))
+            .update()
+        val legacyInvite = request("GET", "$trip/members", 200, owner)
+        assertTrue(legacyInvite.get("hasActiveInvite").asBoolean())
+        assertTrue(legacyInvite.get("inviteToken").isNull)
+        request("POST", "/trip-invites/preview", 200, body = invite)
 
         val original = TravelVisitRequest("Museum", null, null, null, null, TravelVisitCategory.SIGHTSEEING)
         val added = request("POST", "$trip/commands", 200, owner, TravelPlanCommand.AddVisit(UUID.randomUUID(), 1, original, 0))
@@ -127,6 +153,7 @@ class TravelHttpIntegrationTest {
         val membersAfterRemoval = request("GET", "$trip/members", 200, owner)
         assertTrue(!membersAfterRemoval.get("hasActiveInvite").asBoolean())
         assertTrue(membersAfterRemoval.get("inviteExpiresAt").isNull)
+        assertTrue(membersAfterRemoval.get("inviteToken").isNull)
         request("GET", "$trip?knownRevision=${updated.get("revision").asLong()}", 404, member)
         request("POST", "$trip/commands", 404, member, edit.copy(requestId = UUID.randomUUID()))
         assertEquals("INVITE_REVOKED", request("POST", "/trip-invites/join", 410, member, invite).get("code").asText())

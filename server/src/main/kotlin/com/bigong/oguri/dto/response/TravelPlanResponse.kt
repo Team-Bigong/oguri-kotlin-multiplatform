@@ -15,6 +15,7 @@ data class TravelPlanSummaryResponse(
     val source: TravelPlanSourceResponse?,
     val memberCount: Int? = null,
     val cities: List<String> = listOf(city),
+    val catalogCities: List<TravelCitySuggestion> = emptyList(),
 )
 
 data class TravelPlanSourceResponse(

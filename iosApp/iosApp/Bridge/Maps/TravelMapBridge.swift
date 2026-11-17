@@ -46,7 +46,8 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: timeout)
     }
 
-    func render(scene: TravelMapScene, viewportRequest: Int32, focusedVisitId: String?, pinStyle: TravelMapPinStyle) {
+    func render(scene: TravelMapScene, viewportRequest: Int32, focusedVisitId: String?, pinStyle: TravelMapPinStyle, darkTheme: Bool) {
+        map.overrideUserInterfaceStyle = darkTheme ? .dark : .light
         map.clear()
         routeLines.removeAll()
         for line in scene.lines {
@@ -70,7 +71,7 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         for pin in scene.markers {
             let marker = GMSMarker(position: pin.coordinates.coordinate)
             marker.title = pin.title ?? pin.label
-            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, selected: pin.selected, style: pinStyle)
+            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, labelColorArgb: pin.labelColorArgb, selected: pin.selected, style: pinStyle)
             marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
             marker.zIndex = pin.selected ? 1 : 0
             marker.userData = pin.id
@@ -158,7 +159,7 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         return UIFont.systemFont(ofSize: size)
     }
 
-    private func makeIcon(label: String?, colorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
+    private func makeIcon(label: String?, colorArgb: Int32, labelColorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
         let side: CGFloat = selected ? 44 : 26
         let size = CGSize(width: side, height: side)
         return UIGraphicsImageRenderer(size: size).image { _ in
@@ -169,14 +170,14 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
             }
             let diameter: CGFloat = selected ? 32 : 26
             let frame = CGRect(x: (side - diameter) / 2, y: (side - diameter) / 2, width: diameter, height: diameter)
-            UIColor(argb: style.foregroundArgb).setFill()
+            UIColor(argb: style.outlineArgb).setFill()
             UIBezierPath(ovalIn: frame).fill()
             color.setFill()
             UIBezierPath(ovalIn: frame.insetBy(dx: 2, dy: 2)).fill()
             guard let label else { return }
             let text = NSAttributedString(string: label, attributes: [
                 .font: pinFont(uri: selected ? style.selectedLabelFontUri : style.labelFontUri, size: CGFloat(selected ? style.selectedLabelSize : style.labelSize)),
-                .foregroundColor: UIColor(argb: style.foregroundArgb)
+                .foregroundColor: UIColor(argb: labelColorArgb)
             ])
             let bounds = text.size()
             text.draw(at: CGPoint(x: (side - bounds.width) / 2, y: (side - bounds.height) / 2))

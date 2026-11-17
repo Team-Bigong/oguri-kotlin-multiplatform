@@ -1,5 +1,6 @@
 package com.bigong.oguri.data.remote.model.response
 
+import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
@@ -45,7 +46,18 @@ internal data class TravelPlanErrorResponse(
 internal data class TravelCitySuggestionResponse(
     val id: String,
     val label: String,
-)
+    val name: String = label,
+    val regionLabel: String? = null,
+    val timeZone: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+) {
+    fun toDomain(): TravelCitySuggestion =
+        TravelCitySuggestion(
+            id, label, name, regionLabel, timeZone,
+            if (latitude != null && longitude != null) TravelCoordinates(latitude, longitude) else null,
+        )
+}
 
 @Serializable
 internal data class TravelCityTimeZoneResponse(

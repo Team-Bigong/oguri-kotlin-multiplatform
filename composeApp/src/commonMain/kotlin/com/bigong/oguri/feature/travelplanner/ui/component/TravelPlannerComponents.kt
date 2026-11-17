@@ -24,6 +24,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -43,17 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.bigong.oguri.core.designsystem.Mint40
-import com.bigong.oguri.core.designsystem.Mint5
-import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Mint90
-import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Neutral10
-import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral20
-import com.bigong.oguri.core.designsystem.Neutral5
-import com.bigong.oguri.core.designsystem.Neutral50
-import com.bigong.oguri.core.designsystem.Neutral90
+import com.bigong.oguri.core.designsystem.LightOguriColorPalette
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
@@ -67,7 +58,8 @@ import oguri.composeapp.generated.resources.common_network_error_message
 import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.ic_travel_back
 import oguri.composeapp.generated.resources.travel_back
-import oguri.composeapp.generated.resources.travel_conflict
+import oguri.composeapp.generated.resources.travel_conflict_title
+import oguri.composeapp.generated.resources.travel_conflict_message
 import oguri.composeapp.generated.resources.travel_invalid_request
 import oguri.composeapp.generated.resources.travel_invite_expired
 import oguri.composeapp.generated.resources.travel_invite_revoked
@@ -81,6 +73,11 @@ import oguri.composeapp.generated.resources.travel_visit_removed
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+// The filled mint accent uses the same dark foreground in both palettes.
+internal val travelAccentForeground: Color = LightOguriColorPalette.textPrimary
+
+internal val TravelSheetScrim: Color = Color.Black.copy(alpha = 0.45f)
+
 @Composable
 internal fun TravelPlannerPage(
     title: String,
@@ -89,11 +86,16 @@ internal fun TravelPlannerPage(
     actions: @Composable RowScope.() -> Unit = {},
     showTopDivider: Boolean = true,
     modifier: Modifier = Modifier,
+    loadingTitle: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     PlatformBackHandler(enabled = isSaving) {}
     PlatformBackGestureContainer(enabled = !isSaving && onBack != null, onBack = { onBack?.invoke() }) {
-        Box(modifier.fillMaxSize().background(Neutral5)) {
+        Surface(
+            modifier = modifier.fillMaxSize(),
+            color = OguriTheme.colors.backgroundSecondary,
+            contentColor = OguriTheme.colors.textPrimary,
+        ) {
             Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
                 if (onBack == null && title.isNotEmpty()) {
                     Row(
@@ -108,18 +110,22 @@ internal fun TravelPlannerPage(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
+                        if (loadingTitle) {
+                            SkeletonBox(Modifier.size(width = 96.dp, height = 18.dp), RoundedCornerShape(4.dp))
+                        } else {
+                            TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
+                        }
                         TravelIconButton(
                             onClick = onBack,
                             modifier = Modifier.align(Alignment.CenterStart),
                             enabled = !isSaving,
                         ) {
-                            Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_back), tint = Neutral100)
+                            Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_back), tint = OguriTheme.colors.textPrimary)
                         }
                         Row(Modifier.align(Alignment.CenterEnd), content = actions)
                     }
                 }
-                if (showTopDivider && (onBack != null || title.isNotEmpty())) HorizontalDivider(color = Neutral20)
+                if (showTopDivider && (onBack != null || title.isNotEmpty())) HorizontalDivider(color = OguriTheme.colors.borderSubtle)
                 content()
             }
             if (isSaving) CenteredLoadingIndicator()
@@ -134,7 +140,7 @@ private fun TravelPageTitle(title: String, modifier: Modifier, textAlign: TextAl
         modifier = modifier,
         textAlign = textAlign,
         style = travelTextStyle(18, 21, FontWeight.SemiBold),
-        color = Neutral100,
+        color = OguriTheme.colors.textPrimary,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -152,8 +158,8 @@ internal fun TravelPrimaryButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        backgroundColor = if (!enabled) Neutral10 else Mint70,
-        contentColor = OguriTheme.colors.textOnMint,
+        backgroundColor = if (!enabled) OguriTheme.colors.backgroundTertiary else OguriTheme.colors.mint,
+        contentColor = travelAccentForeground,
         minHeight = 45.dp,
         textStyle = textStyle,
         content = content,
@@ -178,9 +184,9 @@ internal fun TravelOutlineButton(
     content: @Composable () -> Unit,
 ) {
     TravelButton(
-        onClick, modifier, enabled, Mint5, borderColor = Mint70,
+        onClick, modifier, enabled, OguriTheme.colors.mintContainer, borderColor = OguriTheme.colors.mint,
         textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
-        contentColor = Mint70,
+        contentColor = OguriTheme.colors.textPrimary,
         minHeight = 45.dp,
         content = content,
     )
@@ -212,7 +218,7 @@ private fun TravelButton(
     backgroundColor: Color,
     borderColor: Color? = null,
     textStyle: TextStyle = OguriTheme.typography.labelLarge,
-    contentColor: Color = Neutral100,
+    contentColor: Color = OguriTheme.colors.textPrimary,
     minHeight: Dp = 48.dp,
     content: @Composable () -> Unit,
 ) {
@@ -228,7 +234,7 @@ private fun TravelButton(
             ).padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else Neutral50) {
+        CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else OguriTheme.colors.textTertiary) {
             ProvideTextStyle(textStyle, content)
         }
     }
@@ -236,15 +242,17 @@ private fun TravelButton(
 
 @Composable
 internal fun TravelFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Neutral90,
-    unfocusedTextColor = Neutral90,
-    focusedBorderColor = Neutral90,
-    unfocusedBorderColor = Neutral20,
-    focusedLabelColor = Neutral90,
-    unfocusedLabelColor = Neutral50,
-    cursorColor = Neutral90,
-    focusedContainerColor = Neutral0,
-    unfocusedContainerColor = Neutral0,
+    focusedPlaceholderColor = OguriTheme.colors.textTertiary,
+    unfocusedPlaceholderColor = OguriTheme.colors.textTertiary,
+    focusedTextColor = OguriTheme.colors.textPrimary,
+    unfocusedTextColor = OguriTheme.colors.textPrimary,
+    focusedBorderColor = OguriTheme.colors.textPrimary,
+    unfocusedBorderColor = OguriTheme.colors.borderSubtle,
+    focusedLabelColor = OguriTheme.colors.textPrimary,
+    unfocusedLabelColor = OguriTheme.colors.textTertiary,
+    cursorColor = OguriTheme.colors.textPrimary,
+    focusedContainerColor = OguriTheme.colors.surfaceCard,
+    unfocusedContainerColor = OguriTheme.colors.surfaceCard,
 )
 
 @Composable
@@ -270,33 +278,69 @@ internal fun TravelInlineFailure(
     onRetry: (() -> Unit)? = null,
     retryLabel: String = stringResource(Res.string.travel_retry),
     message: String? = null,
+    modifier: Modifier = Modifier,
 ) {
+    val isConflict = failure == TravelPlanFailure.CONFLICT && message == null
+    TravelIssueCard(
+        title = message ?: stringResource(
+            when (failure) {
+                TravelPlanFailure.SIGN_IN_REQUIRED -> Res.string.travel_sign_in_required
+                TravelPlanFailure.UNAVAILABLE -> Res.string.travel_unavailable
+                TravelPlanFailure.CONFLICT -> Res.string.travel_conflict_title
+                TravelPlanFailure.VISIT_REMOVED -> Res.string.travel_visit_removed
+                TravelPlanFailure.UNDO_UNAVAILABLE -> Res.string.travel_undo_unavailable
+                TravelPlanFailure.VISIT_LIMIT -> Res.string.travel_visit_limit
+                TravelPlanFailure.RATE_LIMIT -> Res.string.travel_rate_limit
+                TravelPlanFailure.INVALID -> Res.string.travel_invalid_request
+                TravelPlanFailure.INVITE_EXPIRED -> Res.string.travel_invite_expired
+                TravelPlanFailure.INVITE_REVOKED -> Res.string.travel_invite_revoked
+                TravelPlanFailure.INVITE_TRIP_DELETED -> Res.string.travel_invite_trip_deleted
+                TravelPlanFailure.CONNECTION -> Res.string.common_network_error_message
+            },
+        ),
+        description = if (isConflict) stringResource(Res.string.travel_conflict_message) else null,
+        onRetry = onRetry,
+        retryLabel = retryLabel,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun TravelIssueCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    onRetry: (() -> Unit)? = null,
+    retryLabel: String = stringResource(Res.string.travel_retry),
+    secondaryAction: (@Composable () -> Unit)? = null,
+) {
+    val shape = RoundedCornerShape(8.dp)
+    val colors = OguriTheme.colors
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.fillMaxWidth()
+            .background(OguriTheme.colors.orangeContainer, shape)
+            .border(1.dp, OguriTheme.colors.borderSubtle, shape)
+            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = if (onRetry == null) 14.dp else 4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(
-            text =
-                message ?: stringResource(
-                    when (failure) {
-                        TravelPlanFailure.SIGN_IN_REQUIRED -> Res.string.travel_sign_in_required
-                        TravelPlanFailure.UNAVAILABLE -> Res.string.travel_unavailable
-                        TravelPlanFailure.CONFLICT -> Res.string.travel_conflict
-                        TravelPlanFailure.VISIT_REMOVED -> Res.string.travel_visit_removed
-                        TravelPlanFailure.UNDO_UNAVAILABLE -> Res.string.travel_undo_unavailable
-                        TravelPlanFailure.VISIT_LIMIT -> Res.string.travel_visit_limit
-                        TravelPlanFailure.RATE_LIMIT -> Res.string.travel_rate_limit
-                        TravelPlanFailure.INVALID -> Res.string.travel_invalid_request
-                        TravelPlanFailure.INVITE_EXPIRED -> Res.string.travel_invite_expired
-                        TravelPlanFailure.INVITE_REVOKED -> Res.string.travel_invite_revoked
-                        TravelPlanFailure.INVITE_TRIP_DELETED -> Res.string.travel_invite_trip_deleted
-                        TravelPlanFailure.CONNECTION -> Res.string.common_network_error_message
-                    },
-                ),
-            color = com.bigong.oguri.core.designsystem.Orange50,
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        )
-        if (onRetry != null) TravelTextButton(onClick = onRetry) { Text(retryLabel, color = OguriTheme.colors.textPrimary) }
+        Column(
+            Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(title, style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+            if (description != null) {
+                Text(description, style = OguriTheme.typography.caption, color = colors.textSecondary)
+            }
+        }
+        if (onRetry != null) {
+            androidx.compose.foundation.layout.FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            ) {
+                secondaryAction?.invoke()
+                TravelTextButton(onClick = onRetry) { Text(retryLabel, color = colors.textPrimary) }
+            }
+        }
     }
 }
 

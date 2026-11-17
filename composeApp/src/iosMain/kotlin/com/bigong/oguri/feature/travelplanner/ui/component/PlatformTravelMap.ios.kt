@@ -8,6 +8,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import com.bigong.oguri.core.designsystem.LightOguriColorPalette
 import com.bigong.oguri.core.designsystem.OguriTheme
 import oguri.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -17,7 +18,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import platform.UIKit.UIView
 
 data class TravelMapPinStyle(
-    val foregroundArgb: Int,
+    val outlineArgb: Int,
     val labelSize: Float,
     val selectedLabelSize: Float,
     val labelFontUri: String,
@@ -30,6 +31,7 @@ interface TravelMapHost {
         viewportRequest: Int,
         focusedVisitId: String?,
         pinStyle: TravelMapPinStyle,
+        darkTheme: Boolean,
     )
 
     fun dispose()
@@ -60,7 +62,7 @@ internal actual fun PlatformTravelMap(
     modifier: Modifier,
 ) {
     val pinStyle = TravelMapPinStyle(
-        OguriTheme.colors.textOnMint.toArgb(),
+        LightOguriColorPalette.surfaceCard.toArgb(),
         OguriTheme.typography.labelMedium.fontSize.value * LocalDensity.current.fontScale,
         OguriTheme.typography.labelLarge.fontSize.value * LocalDensity.current.fontScale,
         Res.getUri("font/pretendard_medium.ttf"),
@@ -81,8 +83,9 @@ internal actual fun PlatformTravelMap(
     DisposableEffect(host) {
         onDispose { host.dispose() }
     }
-    LaunchedEffect(host, scene, viewportRequest, focusedVisitId, pinStyle) {
-        host.render(scene, viewportRequest, focusedVisitId, pinStyle)
+    val darkTheme = OguriTheme.isDarkTheme
+    LaunchedEffect(host, scene, viewportRequest, focusedVisitId, pinStyle, darkTheme) {
+        host.render(scene, viewportRequest, focusedVisitId, pinStyle, darkTheme)
     }
     UIKitView(factory = { container }, modifier = modifier)
 }

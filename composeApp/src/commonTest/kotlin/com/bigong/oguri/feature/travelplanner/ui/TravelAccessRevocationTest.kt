@@ -62,6 +62,29 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun addingASearchedPlaceSavesItsNoteAndKeepsItWhenRetrying() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            val place = TravelPlace("market", "Market", null, TravelCoordinates(1.0, 2.0), emptyList())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+
+            plans.saveFailure = TravelPlanFailure.CONNECTION
+            viewModel.addPlace(place, dayNumber = 2, category = TravelVisitCategory.SHOPPING, note = "  Meet at the entrance  ")
+            advanceUntilIdle()
+            val first = assertIs<TravelVisitChange.Add>(plans.saveAttempts.single())
+            assertEquals("Meet at the entrance", first.details.note)
+            assertEquals(place.id, first.details.googlePlaceId)
+            assertEquals(2, first.dayNumber)
+
+            plans.saveFailure = null
+            viewModel.retrySave()
+            advanceUntilIdle()
+            assertEquals(listOf<TravelVisitChange>(first, first), plans.saveAttempts)
+        }
+
+    @Test
     fun visitSaveConflictIsRecordedBeforeALaterConfirmedSave() =
         runTest {
             val plans = AccessPlans(plan)

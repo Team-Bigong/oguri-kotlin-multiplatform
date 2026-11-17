@@ -21,16 +21,16 @@ internal fun TravelFormSheet(
     onDismissRequest: () -> Unit,
     title: @Composable () -> Unit,
     text: @Composable () -> Unit = {},
-    confirmButton: @Composable () -> Unit = {},
-    dismissButton: @Composable () -> Unit = {},
+    confirmButton: @Composable RowScope.() -> Unit = {},
+    dismissButton: @Composable RowScope.() -> Unit = {},
     shape: Shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     containerColor: Color = OguriTheme.colors.backgroundSecondary,
 ) {
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor, dragHandle = { TravelSheetHandle() }) {
+    ModalBottomSheet(scrimColor = TravelSheetScrim, onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor, contentColor = OguriTheme.colors.textPrimary, dragHandle = { TravelSheetHandle() }) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ProvideTextStyle(OguriTheme.typography.cardTitle, title)
             ProvideTextStyle(OguriTheme.typography.bodyMedium, text)
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { dismissButton(); confirmButton() }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) { dismissButton(); confirmButton() }
         }
     }
 }
@@ -41,9 +41,10 @@ internal fun TravelDiscardConfirmation(onDiscard: () -> Unit, onKeep: () -> Unit
         iconResource = Res.drawable.ic_alert,
         titleText = stringResource(Res.string.travel_discard_title),
         messageText = stringResource(Res.string.travel_discard_message),
-        confirmButtonText = stringResource(Res.string.travel_search_close),
-        cancelButtonText = stringResource(Res.string.travel_keep_writing),
-        onDismissRequest = onKeep, onConfirmClick = onDiscard, onCancelClick = onKeep,
+        confirmButtonText = stringResource(Res.string.travel_keep_writing),
+        cancelButtonText = stringResource(Res.string.travel_search_close),
+        onDismissRequest = onKeep, onConfirmClick = onKeep, onCancelClick = onDiscard,
+        confirmButtonFirst = true,
     )
 }
 

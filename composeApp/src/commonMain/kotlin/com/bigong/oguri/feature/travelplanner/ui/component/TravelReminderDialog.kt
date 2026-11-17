@@ -9,7 +9,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
-import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
 import com.bigong.oguri.feature.travelplanner.ui.travelClockTime
@@ -90,7 +89,7 @@ internal fun TravelReminderDialog(
                         val toggleLabel = stringResource(Res.string.travel_reminder_toggle)
                         Box(Modifier.size(48.dp).semantics { contentDescription = toggleLabel }
                             .toggleable(value = enabled && !state.permissionDenied, role = Role.Switch, enabled = !state.busy && !state.permissionDenied && (settings.canSchedule || reminder != null), onValueChange = { enabled = it }), contentAlignment = Alignment.Center) {
-                            Box(Modifier.size(40.dp, 24.dp).background(if (enabled && !state.permissionDenied) Mint70 else com.bigong.oguri.core.designsystem.Neutral30, CircleShape)) {
+                            Box(Modifier.size(40.dp, 24.dp).background(if (enabled && !state.permissionDenied) OguriTheme.colors.mint else OguriTheme.colors.borderStrong, CircleShape)) {
                                 Box(Modifier.align(if (enabled && !state.permissionDenied) Alignment.CenterEnd else Alignment.CenterStart).padding(2.dp).size(20.dp).background(Neutral0, CircleShape))
                             }
                         }
@@ -101,14 +100,22 @@ internal fun TravelReminderDialog(
                         HorizontalDivider(color = OguriTheme.colors.borderSubtle)
                         Text(stringResource(Res.string.travel_reminder_date_hint, travelWeekDate(settings.dates.start)), Modifier.padding(horizontal = 24.dp, vertical = 16.dp), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         if (!settings.canSchedule) Text(stringResource(Res.string.travel_reminder_not_available), Modifier.padding(horizontal = 24.dp), style = OguriTheme.typography.bodySmall)
-                        if (reminder != null && reminder.status != TravelReminderStatus.PENDING) Text(
-                            stringResource(when (reminder.status) {
-                                TravelReminderStatus.PENDING -> Res.string.travel_reminder_pending
-                                TravelReminderStatus.HANDOFF_STARTED -> Res.string.travel_reminder_sending
-                                TravelReminderStatus.SENT -> Res.string.travel_reminder_sent
-                                TravelReminderStatus.FAILED, TravelReminderStatus.EXPIRED -> Res.string.travel_reminder_failed
-                            }), Modifier.padding(horizontal = 24.dp), style = OguriTheme.typography.bodySmall,
-                        )
+                        when (reminder?.status) {
+                            TravelReminderStatus.FAILED, TravelReminderStatus.EXPIRED -> TravelIssueCard(
+                                title = stringResource(Res.string.travel_reminder_delivery_failed_title),
+                                description = stringResource(Res.string.travel_reminder_failed),
+                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                            )
+                            TravelReminderStatus.HANDOFF_STARTED, TravelReminderStatus.SENT -> Text(
+                                stringResource(
+                                    if (reminder.status == TravelReminderStatus.SENT) Res.string.travel_reminder_sent
+                                    else Res.string.travel_reminder_sending,
+                                ),
+                                Modifier.padding(horizontal = 24.dp),
+                                style = OguriTheme.typography.bodySmall,
+                            )
+                            null, TravelReminderStatus.PENDING -> Unit
+                        }
                     }
                 }
                 if (state.permissionDenied) {
@@ -129,7 +136,9 @@ internal fun TravelReminderDialog(
                         }
                     }
                 }
-                state.failure?.let { TravelInlineFailure(it, onRetry = onReload) }
+                state.failure?.let {
+                    TravelInlineFailure(it, onRetry = onReload, modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                }
             }
         },
         confirmButton = {

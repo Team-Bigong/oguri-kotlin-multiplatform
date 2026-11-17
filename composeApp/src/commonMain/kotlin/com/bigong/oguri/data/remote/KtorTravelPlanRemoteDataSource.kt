@@ -198,18 +198,20 @@ internal class KtorTravelPlanRemoteDataSource(
         query: String,
         language: String,
     ): List<TravelCitySuggestionResponse> =
-        authRequestExecutor.execute {
+        authRequestExecutor.executeForSession(sessionVersion) { token ->
             httpClient
                 .post("$BASE_URL$CITIES_PATH/search") {
+                    attributes.put(RequestAccessToken, token)
                     contentType(ContentType.Application.Json)
                     setBody(TravelPlaceSearchRequest(query, language))
                 }.body()
         }
 
     suspend fun cityTimeZone(placeId: String): TravelCityTimeZoneResponse =
-        authRequestExecutor.execute {
+        authRequestExecutor.executeForSession(sessionVersion) { token ->
             httpClient
                 .post("$BASE_URL$CITIES_PATH/time-zone") {
+                    attributes.put(RequestAccessToken, token)
                     contentType(ContentType.Application.Json)
                     setBody(TravelCityTimeZoneRequest(placeId))
                 }.body()
