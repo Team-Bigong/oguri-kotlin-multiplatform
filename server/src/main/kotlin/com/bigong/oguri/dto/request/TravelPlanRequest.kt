@@ -19,6 +19,8 @@ data class CreateTravelPlanRequest(
     @get:JsonInclude(JsonInclude.Include.NON_NULL)
     val source: TravelPlanSourceRequest?,
     val cities: List<String> = listOf(city),
+    @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
+    val cityIds: Map<String, Long>? = null,
 )
 
 @JvmRecord

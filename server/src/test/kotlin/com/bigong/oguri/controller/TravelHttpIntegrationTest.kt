@@ -57,6 +57,19 @@ class TravelHttpIntegrationTest {
     }
 
     @Test
+    fun `도시 목록이 비어 있으면 외부 검색 없이 빈 결과를 반환한다`() {
+        val result =
+            request(
+                "POST",
+                "/travel-places/cities/search",
+                200,
+                memberToken(),
+                mapOf("query" to "시드니", "language" to "ko"),
+            )
+        assertTrue(result.isArray && result.isEmpty)
+    }
+
+    @Test
     fun `초대 참여부터 편집 충돌과 멤버 제외까지 실제 HTTP로 검증한다`() {
         val owner = memberToken()
         val member = memberToken()

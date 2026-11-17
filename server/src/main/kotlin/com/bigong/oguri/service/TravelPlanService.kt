@@ -14,6 +14,7 @@ import com.bigong.oguri.dto.response.TravelPlanSummaryResponse
 import com.bigong.oguri.dto.response.TravelVisitResponse
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.MemberRepository
+import com.bigong.oguri.repository.TravelCatalogCityRepository
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelPlanViewRepository
@@ -21,6 +22,7 @@ import com.bigong.oguri.repository.TravelUsageActivity
 import com.bigong.oguri.repository.TravelUsageEdit
 import com.bigong.oguri.repository.TravelUsageEntry
 import com.bigong.oguri.repository.TravelUsageRepository
+import com.bigong.oguri.repository.resolveCityReferences
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -41,6 +43,7 @@ class TravelPlanService(
     private val views: TravelPlanViewRepository,
     private val collaboration: TravelCollaborationRepository,
     private val usage: TravelUsageRepository,
+    private val cityCatalog: TravelCatalogCityRepository,
 ) {
     @Transactional
     fun create(
@@ -72,6 +75,7 @@ class TravelPlanService(
                         creationFingerprint = fingerprint,
                         city = request.city.trim(),
                         cities = request.cities.map(String::trim),
+                        cityReferences = cityCatalog.resolveCityReferences(request.cityIds.orEmpty()),
                         timeZone = request.timeZone.trim(),
                         title = request.title.trim(),
                         startDate = request.startDate,
@@ -147,15 +151,14 @@ class TravelPlanService(
     }
 
     @Transactional
-    fun cityForPlaces(
+    internal fun cityForPlaces(
         memberId: String,
         planId: UUID,
         selectedCity: String? = null,
-    ): String {
+    ): TravelPlaceSearchCity {
         requireMember(memberId)
-        val plan = accessiblePlan(memberId, planId)
-        require(selectedCity == null || selectedCity in plan.cityNames())
-        return selectedCity ?: plan.city
+        val city = accessiblePlan(memberId, planId).cityForPlaces(selectedCity)
+        return TravelPlaceSearchCity(city.label, city.catalogCity?.let { TravelPlaceSearchCenter(it.latitude, it.longitude) })
     }
 
     @Transactional
@@ -363,6 +366,7 @@ class TravelPlanService(
             },
             memberCount,
             cityNames(),
+            catalogCities().map { (label, catalogCity) -> catalogCity.toSuggestion(label) },
         )
 
     private fun TravelPlan.toResponseFor(memberId: String): TravelPlanResponse =
