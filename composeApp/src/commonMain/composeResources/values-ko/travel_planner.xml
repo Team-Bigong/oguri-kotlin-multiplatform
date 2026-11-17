@@ -271,7 +271,7 @@
     <string name="travel_create_recommendation">추천받은 %1$s 중에서 실제로 떠나는 날짜를 골라요</string>
     <string name="travel_city_search_placeholder">도시 이름을 검색해요</string>
     <string name="travel_recommended_cities">오구리가 추천하는 도시</string>
-    <string name="travel_city_search_hint">여기에 없는 도시는 이름으로 검색하면 Google 지도에서 찾아드려요.</string>
+    <string name="travel_city_search_hint">도시 이름으로 검색해 보세요.</string>
     <string name="travel_previous_month">이전 달</string>
     <string name="travel_next_month">다음 달</string>
     <string name="travel_select_dates">여행 날짜를 선택해 주세요</string>

@@ -242,7 +242,8 @@ internal fun TravelPlanScreen(
 
         val showPartialFailure = state.dayPlacesIncomplete && !state.isOffline
         val unappliedOrder = state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay || it.isOutsideTrip(plan) }
-        val cityCenter = TravelCity.centerOf(plan.summary.details.city)
+        val details = plan.summary.details
+        val cityCenter = details.catalogCities[details.city]?.coordinates ?: TravelCity.centerOf(details.city)
         val scene =
             remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter) {
                 travelMapScene(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter)

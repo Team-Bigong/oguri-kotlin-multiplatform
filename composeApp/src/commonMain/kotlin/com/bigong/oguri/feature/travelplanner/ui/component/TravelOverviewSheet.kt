@@ -82,8 +82,9 @@ internal fun TravelOverviewSheet(
 ) {
     val dates = plan.summary.details.dates
     val scene =
-        remember(plan.visits, state.places, plan.summary.details.city) {
-            travelOverviewScene(plan.visits, state.places, TravelCity.centerOf(plan.summary.details.city))
+        remember(plan.visits, state.places, plan.summary.details) {
+            val details = plan.summary.details
+            travelOverviewScene(plan.visits, state.places, details.catalogCities[details.city]?.coordinates ?: TravelCity.centerOf(details.city))
         }
     val startWithMap = LocalDensity.current.fontScale <= 1.3f
     var showMap by remember { mutableStateOf(startWithMap) }

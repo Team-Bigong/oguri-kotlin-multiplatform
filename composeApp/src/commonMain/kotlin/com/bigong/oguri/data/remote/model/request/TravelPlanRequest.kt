@@ -14,6 +14,7 @@ internal data class CreateTravelPlanRequest(
     val endDate: String,
     val source: TravelPlanSourceRequest? = null,
     val cities: List<String>,
+    val cityIds: Map<String, Long> = emptyMap(),
 )
 
 @Serializable
@@ -116,6 +117,7 @@ internal data class TravelDetailsRequest(
     val expectedRevision: Long,
     val confirmedUnassignedCount: Int,
     val cities: List<String> = listOf(city),
+    val cityIds: Map<String, Long> = emptyMap(),
 )
 
 @Serializable

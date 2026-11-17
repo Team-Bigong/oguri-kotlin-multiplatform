@@ -41,6 +41,7 @@ import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
+import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
@@ -95,7 +96,7 @@ internal fun TravelDetailsDialog(
     onOpenCitySearch: () -> Unit,
     onCloseCitySearch: () -> Unit,
     onSearchCities: (String) -> Unit,
-    onChooseCity: (com.bigong.oguri.domain.model.TravelCitySuggestion) -> Unit,
+    onChooseCity: (TravelCitySuggestion) -> Unit,
     onResolveCityTimeZone: suspend (String) -> String?,
     onReload: () -> Unit,
     onApply: (TravelPlanDetails, Int) -> Unit,
@@ -108,7 +109,10 @@ internal fun TravelDetailsDialog(
     val showEditor = canEdit && editing
     var title by remember(plan.revision) { mutableStateOf(current.title) }
     var cities by remember(plan.revision) { mutableStateOf(current.cities) }
-    var zones by remember(plan.revision) { mutableStateOf(mapOf(current.city to current.timeZone.id)) }
+    var catalogCities by remember(plan.revision) { mutableStateOf(current.catalogCities) }
+    var zones by remember(plan.revision) {
+        mutableStateOf(current.catalogCities.mapNotNull { (label, city) -> city.timeZone?.let { label to it } }.toMap() + (current.city to current.timeZone.id))
+    }
     val city = cities.firstOrNull().orEmpty()
     var resolvingCity by remember { mutableStateOf(false) }
     var cityLookupFailed by remember { mutableStateOf(false) }
@@ -126,8 +130,10 @@ internal fun TravelDetailsDialog(
     }
     LaunchedEffect(citySearch?.selected, citySearch?.loading) {
         if (citySearch?.selected != null && !citySearch.loading) {
-            val label = citySearch.selected.label.take(TravelPlanDetails.MAX_TEXT_LENGTH)
+            val suggestion = citySearch.selected
+            val label = catalogCities.values.firstOrNull { it.id == suggestion.id }?.label ?: suggestion.label
             cities = (cities + label).distinct().take(10)
+            if (label in cities) catalogCities = catalogCities + (label to suggestion.copy(label = label))
             citySearch.timeZone?.takeIf { it in TimeZone.availableZoneIds }?.let { zones = zones + (label to it) }
             onCloseCitySearch()
         }
@@ -167,12 +173,16 @@ internal fun TravelDetailsDialog(
                             .noRippleClickable(enabled = !busy && cities.size < 10, onClick = onOpenCitySearch).padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = Mint40)
-                            Text(cities.joinToString(" · "), Modifier.weight(1f), style = travelTextStyle(15, 18))
+                            Text(cities.joinToString(" · ") { catalogCities[it]?.contextualName ?: it }, Modifier.weight(1f), style = travelTextStyle(15, 18))
                             Text(stringResource(Res.string.travel_search_cities), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         }
                         if (cities.size > 1) {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                cities.forEach { selected -> TravelTextButton(enabled = !busy, onClick = { cities = cities - selected }) { Text("$selected ×") } }
+                                cities.forEach { selected ->
+                                    TravelTextButton(enabled = !busy, onClick = { cities = cities - selected }) {
+                                        Text("${catalogCities[selected]?.contextualName ?: selected} ×")
+                                    }
+                                }
                             }
                             Text(stringResource(Res.string.travel_primary_city), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         }
@@ -208,7 +218,7 @@ internal fun TravelDetailsDialog(
                             Text(stringResource(Res.string.travel_info_dates, travelCardDates(current.dates, includeYear = true), current.dates.dayCount), style = OguriTheme.typography.cardSubtitle)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
-                                Text(current.cities.joinToString(" · "), style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary)
+                                Text(current.cities.joinToString(" · ") { current.catalogCities[it]?.contextualName ?: it }, style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary)
                             }
                         }
                     }
@@ -251,7 +261,10 @@ internal fun TravelDetailsDialog(
             if (showEditor) {
                 TravelPrimaryButton(modifier = Modifier.fillMaxWidth(), enabled = !busy && valid && failure != TravelPlanFailure.CONFLICT, onClick = {
                     if (dates != null && timeZone != null) {
-                        onApply(TravelPlanDetails(city.trim(), timeZone, title.trim(), dates, current.source, cities), affected)
+                        onApply(
+                            TravelPlanDetails(city.trim(), timeZone, title.trim(), dates, current.source, cities, catalogCities.filterKeys { it in cities }),
+                            affected,
+                        )
                     }
                 }) { Text(stringResource(Res.string.travel_apply)) }
             } else if (canEdit) {

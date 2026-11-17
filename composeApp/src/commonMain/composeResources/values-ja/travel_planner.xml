@@ -271,7 +271,7 @@
     <string name="travel_create_recommendation">おすすめの%1$sの中から実際に出かける日付を選んでください</string>
     <string name="travel_city_search_placeholder">都市名を検索</string>
     <string name="travel_recommended_cities">オグリのおすすめ都市</string>
-    <string name="travel_city_search_hint">ここにない都市は名前で検索すると Google マップで探せます。</string>
+    <string name="travel_city_search_hint">都市名で検索できます。</string>
     <string name="travel_previous_month">前の月</string>
     <string name="travel_next_month">次の月</string>
     <string name="travel_select_dates">旅行日程を選んでください</string>

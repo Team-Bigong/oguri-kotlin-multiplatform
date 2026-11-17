@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -153,17 +152,22 @@ internal fun TravelCitySearchDialog(
                     ) {
                         items(state.suggestions, key = { it.id }) { suggestion ->
                             Row(
-                                Modifier.fillMaxWidth().height(rowHeight)
-                                    .noRippleClickable(enabled = !state.loading, onClick = { onChoose(suggestion) }),
+                                Modifier.fillMaxWidth().heightIn(min = rowHeight)
+                                    .noRippleClickable(enabled = !state.loading, onClick = { onChoose(suggestion) })
+                                    .padding(vertical = 6.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
                                 Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = colors.textTertiary)
-                                Text(suggestion.label, style = resultStyle, color = colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    Text(suggestion.name, style = resultStyle, color = colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    suggestion.regionLabel?.let { region ->
+                                        Text(region, style = OguriTheme.typography.caption, color = colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    }
+                                }
                             }
                         }
                     }
-                    GooglePlacesAttribution(emptyList())
                 }
             }
         }
