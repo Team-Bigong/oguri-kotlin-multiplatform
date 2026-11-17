@@ -123,6 +123,7 @@ for file in allCountries.zip alternateNamesV2.zip admin1CodesASCII.txt countryIn
     curl -fL --retry 2 "https://download.geonames.org/export/dump/$file" -o "/tmp/oguri-geonames/$file" || exit 1
 done
 python3 scripts/import_geonames.py /tmp/oguri-geonames
+psql -X -v ON_ERROR_STOP=1 -f scripts/normalize_city_labels.sql
 ```
 
 출처는 [GeoNames](https://www.geonames.org/export/)이며 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)을 따른다. 현재 거주지 데이터에 국가·지역을 붙이고, 한국어 대표 이름과 한글·영문 별칭을 골라 적재한다. 기존 도시 ID는 유지하고 중복 별칭은 건너뛴다.
