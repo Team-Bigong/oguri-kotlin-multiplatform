@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint20
 import com.bigong.oguri.core.designsystem.Mint30
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import oguri.composeapp.generated.resources.calendar_month_day
@@ -67,6 +69,7 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelCitySearchDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelFieldColors
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelLoading
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
@@ -95,6 +98,9 @@ import oguri.composeapp.generated.resources.travel_city_sydney
 import oguri.composeapp.generated.resources.travel_city_taipei
 import oguri.composeapp.generated.resources.travel_city_tokyo
 import oguri.composeapp.generated.resources.travel_city_unavailable
+import oguri.composeapp.generated.resources.travel_city_unavailable_message
+import oguri.composeapp.generated.resources.travel_choose_city
+import oguri.composeapp.generated.resources.travel_save_failed_label
 import oguri.composeapp.generated.resources.travel_create
 import oguri.composeapp.generated.resources.travel_creation_options
 import oguri.composeapp.generated.resources.travel_default_title
@@ -234,7 +240,12 @@ internal fun CreateTravelPlanScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = Mint30)
-                    Text(cities.joinToString(" · "), Modifier.weight(1f), style = travelTextStyle(15, 18), color = colors.textPrimary)
+                    Text(
+                        if (cities.isEmpty()) stringResource(Res.string.travel_choose_city) else cities.joinToString(" · "),
+                        Modifier.weight(1f),
+                        style = travelTextStyle(15, 18),
+                        color = if (cities.isEmpty()) colors.textTertiary else colors.textPrimary,
+                    )
                     Text(stringResource(Res.string.travel_search_cities), style = OguriTheme.typography.labelMedium, color = colors.textTertiary)
                 }
                 if (cities.size > 1) {
@@ -251,15 +262,19 @@ internal fun CreateTravelPlanScreen(
                 }
             }
             if (state.creationCityFailed) {
-                Text(stringResource(Res.string.travel_city_unavailable))
-                TravelTextButton(onClick = onRetryDestination) { Text(stringResource(Res.string.travel_retry)) }
+                TravelIssueCard(
+                    title = stringResource(Res.string.travel_city_unavailable),
+                    description = stringResource(Res.string.travel_city_unavailable_message),
+                    onRetry = onRetryDestination.takeIf { canEdit },
+                    modifier = Modifier.padding(top = 8.dp),
+                )
             }
             Spacer(Modifier.height(24.dp))
             Text(stringResource(Res.string.travel_actual_dates), style = OguriTheme.typography.labelMedium, color = colors.textTertiary)
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TravelDateButton(startLabel, startDate, canEdit, Modifier.weight(1f)) { isDatePickerForStart = true }
-                TravelDateButton(endLabel, endDate, canEdit, Modifier.weight(1f)) { isDatePickerForStart = false }
+                TravelDateButton(endLabel, endDate, canEdit, Modifier.weight(1f), isError = hasInvalidDates) { isDatePickerForStart = false }
             }
             if (recommendedStart != null && recommendedEnd != null) {
                 Text(
@@ -278,6 +293,8 @@ internal fun CreateTravelPlanScreen(
             if (hasInvalidDates) {
                 Text(
                     stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
+                    modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp),
+                    style = OguriTheme.typography.caption,
                     color = com.bigong.oguri.core.designsystem.Orange50,
                 )
             }
@@ -301,20 +318,42 @@ internal fun CreateTravelPlanScreen(
                 },
             )
             state.failure?.takeUnless { it == TravelPlanFailure.SIGN_IN_REQUIRED }?.let {
-                TravelInlineFailure(
-                    it,
-                    onRetry =
-                        when {
-                            state.creationRecoveryFailed -> onRetryRecovery
-                            state.canRetrySave -> onRetrySave
-                            else -> null
-                        },
-                )
+                if (state.canRetrySave) {
+                    TravelIssueCard(
+                        title = stringResource(Res.string.travel_save_failed_label),
+                        onRetry = onRetrySave.takeUnless { state.isSaving },
+                        modifier = Modifier.padding(top = 24.dp),
+                    )
+                } else {
+                    TravelInlineFailure(
+                        it,
+                        onRetry = onRetryRecovery.takeIf { state.creationRecoveryFailed },
+                        modifier = Modifier.padding(top = 24.dp),
+                    )
+                }
             }
             if (matchingPlan != null) {
-                Text(stringResource(Res.string.travel_matching_plan, matchingPlan.details.title))
-                TravelTextButton(onClick = { onOpenExisting(matchingPlan.id) }, enabled = canEdit) {
-                    Text(stringResource(Res.string.travel_open_plan))
+                val shape = RoundedCornerShape(8.dp)
+                Column(
+                    Modifier.fillMaxWidth().padding(top = 24.dp)
+                        .background(Mint5, shape).border(1.dp, Mint20, shape)
+                        .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(stringResource(Res.string.travel_matching_plan), style = OguriTheme.typography.cardSubtitle)
+                    val range = travelCardDates(matchingPlan.details.dates, includeYear = false)
+                    Text(
+                        "${matchingPlan.details.title} · $range",
+                        style = OguriTheme.typography.caption,
+                        color = colors.textSecondary,
+                    )
+                    TravelTextButton(
+                        onClick = { onOpenExisting(matchingPlan.id) },
+                        modifier = Modifier.align(Alignment.End),
+                        enabled = canEdit,
+                    ) {
+                        Text(stringResource(Res.string.travel_open_plan))
+                    }
                 }
             }
             if (state.failure == TravelPlanFailure.SIGN_IN_REQUIRED && signedIn) {
@@ -372,13 +411,14 @@ internal fun TravelDateButton(
     date: LocalDate?,
     enabled: Boolean,
     modifier: Modifier = Modifier,
+    isError: Boolean = false,
     onClick: () -> Unit,
 ) {
     val colors = OguriTheme.colors
     val shape = RoundedCornerShape(8.dp)
     Column(
         modifier.heightIn(min = 64.dp).clip(shape).background(colors.surfaceCard)
-            .border(1.dp, colors.borderStrong, shape).noRippleClickable(enabled = enabled, onClick = onClick)
+            .border(1.dp, if (isError) com.bigong.oguri.core.designsystem.Orange20 else colors.borderStrong, shape).noRippleClickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(label, style = OguriTheme.typography.caption, color = colors.textTertiary)

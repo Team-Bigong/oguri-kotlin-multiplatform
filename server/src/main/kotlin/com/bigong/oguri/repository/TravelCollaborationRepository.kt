@@ -99,21 +99,46 @@ class TravelCollaborationRepository(
         memberId: String,
         hash: String,
         expiresAt: OffsetDateTime,
-    ) {
+        nonce: UUID,
+    ): OffsetDateTime =
         jdbc
             .sql(
-                "INSERT INTO travel_plan_invites (token_hash, travel_plan_id, issued_by, expires_at) VALUES (:hash, :plan, :member, :expiry)",
+                """
+                INSERT INTO travel_plan_invites (token_hash, travel_plan_id, issued_by, expires_at, token_nonce)
+                VALUES (:hash, :plan, :member, :expiry, :nonce)
+                RETURNING expires_at
+                """.trimIndent(),
             ).param("hash", hash)
             .param("plan", planId)
             .param("member", memberId)
             .param("expiry", expiresAt)
-            .update()
-    }
+            .param("nonce", nonce)
+            .query { row, _ -> row.getObject("expires_at", OffsetDateTime::class.java) }
+            .single()
 
-    fun activeInviteExpiresAt(planId: UUID, at: OffsetDateTime): OffsetDateTime? =
-        jdbc.sql("SELECT expires_at FROM travel_plan_invites WHERE travel_plan_id = :plan AND revoked_at IS NULL AND expires_at > :at ORDER BY expires_at DESC LIMIT 1")
-            .param("plan", planId).param("at", at)
-            .query { row, _ -> row.getObject("expires_at", OffsetDateTime::class.java) }.optional().orElse(null)
+    fun activeInviteForOwner(planId: UUID, ownerId: String, at: OffsetDateTime): ActiveTravelInviteRow? =
+        jdbc
+            .sql(
+                """
+                SELECT invite.token_hash, invite.token_nonce, invite.expires_at
+                FROM travel_plan_invites invite
+                JOIN travel_plans plan ON plan.id = invite.travel_plan_id
+                WHERE plan.id = :plan AND plan.owner_id = :owner
+                  AND invite.revoked_at IS NULL AND invite.expires_at > :at
+                ORDER BY invite.expires_at DESC
+                LIMIT 1
+                """.trimIndent(),
+            ).param("plan", planId)
+            .param("owner", ownerId)
+            .param("at", at)
+            .query { row, _ ->
+                ActiveTravelInviteRow(
+                    row.getString("token_hash"),
+                    row.getObject("token_nonce", UUID::class.java),
+                    row.getObject("expires_at", OffsetDateTime::class.java),
+                )
+            }.optional()
+            .orElse(null)
 
     fun invite(hash: String): TravelInviteRow? =
         jdbc
@@ -317,6 +342,12 @@ data class TravelMemberRow(
     val id: String,
     val nickname: String?,
     val owner: Boolean,
+)
+
+data class ActiveTravelInviteRow(
+    val hash: String,
+    val nonce: UUID?,
+    val expiresAt: OffsetDateTime,
 )
 
 data class TravelInviteRow(

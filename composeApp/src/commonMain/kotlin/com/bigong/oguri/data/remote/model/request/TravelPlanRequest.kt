@@ -13,7 +13,7 @@ internal data class CreateTravelPlanRequest(
     val startDate: String,
     val endDate: String,
     val source: TravelPlanSourceRequest? = null,
-    val cities: List<String> = listOf(city),
+    val cities: List<String>,
 )
 
 @Serializable

@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -31,6 +32,10 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
 
+internal val dialogSecondaryButtonColor: Color
+    @Composable
+    get() = if (OguriTheme.isDarkTheme) Neutral10 else Color(0xFFF0F0F0)
+
 @Composable
 fun ConfirmAlertDialog(
     iconResource: DrawableResource,
@@ -43,6 +48,7 @@ fun ConfirmAlertDialog(
     onCancelClick: () -> Unit,
     iconTint: androidx.compose.ui.graphics.Color = Orange50,
     messageColor: androidx.compose.ui.graphics.Color = Orange50,
+    confirmButtonFirst: Boolean = false,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -94,36 +100,40 @@ fun ConfirmAlertDialog(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth().padding(top = if (messageText.isNotBlank()) 18.dp else 14.dp),
                 ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .background(color = Mint70, shape = RoundedCornerShape(8.dp))
-                                .noRippleClickable(onClick = onConfirmClick)
-                                .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = confirmButtonText,
-                            style = OguriTheme.typography.bodyMedium,
-                            color = OguriTheme.colors.textOnMint,
-                        )
-                    }
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .background(color = Neutral10, shape = RoundedCornerShape(8.dp))
-                                .noRippleClickable(onClick = onCancelClick)
-                                .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = cancelButtonText,
-                            style = OguriTheme.typography.bodyMedium,
-                            color = Neutral90,
-                        )
+                    listOf(confirmButtonFirst, !confirmButtonFirst).forEach { isConfirmButton ->
+                        if (isConfirmButton) {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .background(color = Mint70, shape = RoundedCornerShape(8.dp))
+                                        .noRippleClickable(onClick = onConfirmClick)
+                                        .padding(vertical = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = confirmButtonText,
+                                    style = OguriTheme.typography.bodyMedium,
+                                    color = OguriTheme.colors.textOnMint,
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .background(color = dialogSecondaryButtonColor, shape = RoundedCornerShape(8.dp))
+                                        .noRippleClickable(onClick = onCancelClick)
+                                        .padding(vertical = 14.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = cancelButtonText,
+                                    style = OguriTheme.typography.bodyMedium,
+                                    color = Neutral90,
+                                )
+                            }
+                        }
                     }
                 }
             }

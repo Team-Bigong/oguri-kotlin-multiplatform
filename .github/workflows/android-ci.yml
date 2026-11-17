@@ -68,5 +68,10 @@ jobs:
 
       - name: Build debug app for verification
         env:
-          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY_DEBUG }}
-        run: ./gradlew :composeApp:assembleDebug --stacktrace
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
+        run: |
+          if [ -z "${GOOGLE_MAPS_ANDROID_API_KEY}" ]; then
+            echo "GOOGLE_MAPS_ANDROID_API_KEY is not set"
+            exit 1
+          fi
+          ./gradlew :composeApp:assembleDebug --stacktrace

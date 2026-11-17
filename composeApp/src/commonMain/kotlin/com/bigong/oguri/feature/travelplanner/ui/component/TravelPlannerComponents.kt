@@ -55,6 +55,8 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange5
+import com.bigong.oguri.core.designsystem.Orange20
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
@@ -67,7 +69,8 @@ import oguri.composeapp.generated.resources.common_network_error_message
 import oguri.composeapp.generated.resources.travel_retry
 import oguri.composeapp.generated.resources.ic_travel_back
 import oguri.composeapp.generated.resources.travel_back
-import oguri.composeapp.generated.resources.travel_conflict
+import oguri.composeapp.generated.resources.travel_conflict_title
+import oguri.composeapp.generated.resources.travel_conflict_message
 import oguri.composeapp.generated.resources.travel_invalid_request
 import oguri.composeapp.generated.resources.travel_invite_expired
 import oguri.composeapp.generated.resources.travel_invite_revoked
@@ -89,6 +92,7 @@ internal fun TravelPlannerPage(
     actions: @Composable RowScope.() -> Unit = {},
     showTopDivider: Boolean = true,
     modifier: Modifier = Modifier,
+    loadingTitle: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     PlatformBackHandler(enabled = isSaving) {}
@@ -108,7 +112,11 @@ internal fun TravelPlannerPage(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                         contentAlignment = Alignment.Center,
                     ) {
-                        TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
+                        if (loadingTitle) {
+                            SkeletonBox(Modifier.size(width = 96.dp, height = 18.dp), RoundedCornerShape(4.dp))
+                        } else {
+                            TravelPageTitle(title, Modifier.fillMaxWidth().padding(horizontal = 72.dp), TextAlign.Center)
+                        }
                         TravelIconButton(
                             onClick = onBack,
                             modifier = Modifier.align(Alignment.CenterStart),
@@ -270,33 +278,69 @@ internal fun TravelInlineFailure(
     onRetry: (() -> Unit)? = null,
     retryLabel: String = stringResource(Res.string.travel_retry),
     message: String? = null,
+    modifier: Modifier = Modifier,
 ) {
+    val isConflict = failure == TravelPlanFailure.CONFLICT && message == null
+    TravelIssueCard(
+        title = message ?: stringResource(
+            when (failure) {
+                TravelPlanFailure.SIGN_IN_REQUIRED -> Res.string.travel_sign_in_required
+                TravelPlanFailure.UNAVAILABLE -> Res.string.travel_unavailable
+                TravelPlanFailure.CONFLICT -> Res.string.travel_conflict_title
+                TravelPlanFailure.VISIT_REMOVED -> Res.string.travel_visit_removed
+                TravelPlanFailure.UNDO_UNAVAILABLE -> Res.string.travel_undo_unavailable
+                TravelPlanFailure.VISIT_LIMIT -> Res.string.travel_visit_limit
+                TravelPlanFailure.RATE_LIMIT -> Res.string.travel_rate_limit
+                TravelPlanFailure.INVALID -> Res.string.travel_invalid_request
+                TravelPlanFailure.INVITE_EXPIRED -> Res.string.travel_invite_expired
+                TravelPlanFailure.INVITE_REVOKED -> Res.string.travel_invite_revoked
+                TravelPlanFailure.INVITE_TRIP_DELETED -> Res.string.travel_invite_trip_deleted
+                TravelPlanFailure.CONNECTION -> Res.string.common_network_error_message
+            },
+        ),
+        description = if (isConflict) stringResource(Res.string.travel_conflict_message) else null,
+        onRetry = onRetry,
+        retryLabel = retryLabel,
+        modifier = modifier,
+    )
+}
+
+@Composable
+internal fun TravelIssueCard(
+    title: String,
+    modifier: Modifier = Modifier,
+    description: String? = null,
+    onRetry: (() -> Unit)? = null,
+    retryLabel: String = stringResource(Res.string.travel_retry),
+    secondaryAction: (@Composable () -> Unit)? = null,
+) {
+    val shape = RoundedCornerShape(8.dp)
+    val colors = OguriTheme.colors
     Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier.fillMaxWidth()
+            .background(Orange5, shape)
+            .border(1.dp, Orange20, shape)
+            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = if (onRetry == null) 14.dp else 4.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(
-            text =
-                message ?: stringResource(
-                    when (failure) {
-                        TravelPlanFailure.SIGN_IN_REQUIRED -> Res.string.travel_sign_in_required
-                        TravelPlanFailure.UNAVAILABLE -> Res.string.travel_unavailable
-                        TravelPlanFailure.CONFLICT -> Res.string.travel_conflict
-                        TravelPlanFailure.VISIT_REMOVED -> Res.string.travel_visit_removed
-                        TravelPlanFailure.UNDO_UNAVAILABLE -> Res.string.travel_undo_unavailable
-                        TravelPlanFailure.VISIT_LIMIT -> Res.string.travel_visit_limit
-                        TravelPlanFailure.RATE_LIMIT -> Res.string.travel_rate_limit
-                        TravelPlanFailure.INVALID -> Res.string.travel_invalid_request
-                        TravelPlanFailure.INVITE_EXPIRED -> Res.string.travel_invite_expired
-                        TravelPlanFailure.INVITE_REVOKED -> Res.string.travel_invite_revoked
-                        TravelPlanFailure.INVITE_TRIP_DELETED -> Res.string.travel_invite_trip_deleted
-                        TravelPlanFailure.CONNECTION -> Res.string.common_network_error_message
-                    },
-                ),
-            color = com.bigong.oguri.core.designsystem.Orange50,
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        )
-        if (onRetry != null) TravelTextButton(onClick = onRetry) { Text(retryLabel, color = OguriTheme.colors.textPrimary) }
+        Column(
+            Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(title, style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+            if (description != null) {
+                Text(description, style = OguriTheme.typography.caption, color = colors.textSecondary)
+            }
+        }
+        if (onRetry != null) {
+            androidx.compose.foundation.layout.FlowRow(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+            ) {
+                secondaryAction?.invoke()
+                TravelTextButton(onClick = onRetry) { Text(retryLabel, color = colors.textPrimary) }
+            }
+        }
     }
 }
 

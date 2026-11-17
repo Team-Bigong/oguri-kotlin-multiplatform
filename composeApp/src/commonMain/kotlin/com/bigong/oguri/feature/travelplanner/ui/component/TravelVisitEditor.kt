@@ -62,6 +62,8 @@ import oguri.composeapp.generated.resources.travel_invalid_time
 import oguri.composeapp.generated.resources.travel_leave_pending_save
 import oguri.composeapp.generated.resources.travel_pending_save_preserved
 import oguri.composeapp.generated.resources.travel_reload
+import oguri.composeapp.generated.resources.travel_save_failed_label
+import oguri.composeapp.generated.resources.travel_pending_save_preserved
 import oguri.composeapp.generated.resources.travel_visit_location
 import oguri.composeapp.generated.resources.travel_visit_name
 import oguri.composeapp.generated.resources.travel_visit_note
@@ -136,19 +138,37 @@ internal fun TravelVisitEditor(
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             TravelConflictComparison(draft, dates)
             if (isSaving) TravelLoading(modifier = Modifier.fillMaxWidth())
+            if (canRetrySave && !isSaving) {
+                val canLeave = onLeaveWithPendingSave != null
+                TravelIssueCard(
+                    title = stringResource(Res.string.travel_save_failed_label),
+                    description = if (canLeave) stringResource(Res.string.travel_pending_save_preserved) else null,
+                    onRetry = onRetrySave,
+                    secondaryAction = onLeaveWithPendingSave?.let { onLeave ->
+                        { TravelTextButton(onClick = onLeave) { Text(stringResource(Res.string.travel_leave_pending_save)) } }
+                    },
+                )
+            }
             if (!comparing && placeId != null) {
                 val shape = RoundedCornerShape(8.dp)
-                Row(
-                    Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint5, shape)
-                        .border(1.dp, com.bigong.oguri.core.designsystem.Mint40, shape).padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(draft.placeTitle ?: draft.name, style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
-                        Text(listOfNotNull(placeAddress, stringResource(Res.string.travel_google_maps_attribution)).joinToString(" · "), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                        if (attributions.isNotEmpty()) GooglePlacesAttribution(attributions, includeGoogleBranding = false)
+                TravelDirectionsButton(
+                    placeId, draft.placeTitle,
+                    compact = true,
+                    enabled = !isSaving && !canRetrySave,
+                    onOpened = onDirectionsOpened,
+                ) { directions ->
+                    Row(
+                        Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint5, shape)
+                            .border(1.dp, com.bigong.oguri.core.designsystem.Mint40, shape).padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(draft.placeTitle ?: draft.name, style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+                            Text(listOfNotNull(placeAddress, stringResource(Res.string.travel_google_maps_attribution)).joinToString(" · "), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                            if (attributions.isNotEmpty()) GooglePlacesAttribution(attributions, includeGoogleBranding = false)
+                        }
+                        directions()
                     }
-                    TravelDirectionsButton(placeId, draft.placeTitle, compact = true, enabled = !isSaving && !canRetrySave, onOpened = onDirectionsOpened)
                 }
             }
             if ((placeId == null || original.details.name != null) && (!comparing || TravelVisitField.NAME in comparisonFields)) {
@@ -186,25 +206,21 @@ internal fun TravelVisitEditor(
                     Res.string.travel_manual_location_placeholder, TravelVisitDetails.MAX_LOCATION_LENGTH, canEdit)
             }
             if (!comparing || TravelVisitField.NOTE in comparisonFields) {
-                TravelPlaceField(
+                TravelNoteField(
                     draft.note, { onDraftChange(draft.copy(note = it)) },
                     if (comparing) Res.string.travel_note_mine else Res.string.travel_visit_note,
-                    Res.string.travel_manual_note_placeholder, TravelVisitDetails.MAX_NOTE_LENGTH, canEdit,
-                    multiline = true, supportingText = Res.string.travel_visit_note_shared.takeUnless { comparing },
+                    canEdit, supportingText = Res.string.travel_visit_note_shared.takeUnless { comparing },
                 )
             }
             if (!comparing || TravelVisitField.CATEGORY in comparisonFields) {
                 TravelCategoryPicker(draft.category, canEdit) { onDraftChange(draft.copy(category = it)) }
             }
-            failure?.takeUnless { comparing && it == TravelPlanFailure.CONFLICT }?.let {
-                if (it == TravelPlanFailure.CONFLICT || (it == TravelPlanFailure.CONNECTION && !canRetrySave)) {
+            failure?.takeUnless { canRetrySave || (comparing && it == TravelPlanFailure.CONFLICT) }?.let {
+                if (it == TravelPlanFailure.CONFLICT || it == TravelPlanFailure.CONNECTION) {
                     TravelInlineFailure(it, onReload, stringResource(Res.string.travel_reload))
                 } else {
-                    TravelInlineFailure(it, onRetrySave.takeIf { canRetrySave })
+                    TravelInlineFailure(it)
                 }
-            }
-            if (canRetrySave && !isSaving && onLeaveWithPendingSave != null) {
-                TravelLeavePendingSave(onLeaveWithPendingSave)
             }
             if (placeId == null && !comparing) TravelDirectionsButton(null, draft.location, enabled = !isSaving && !canRetrySave, onOpened = onDirectionsOpened)
             }

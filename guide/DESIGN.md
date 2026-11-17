@@ -226,7 +226,7 @@ sRGB 상대 휘도로 계산한 정적 토큰 비교다. 아래의 충족·미�
 | `PlaceCard` | 사진 → 도시·국가 → 2줄 요약, 8dp 모서리 | 카드 클릭으로 상세 진입. 중첩 저장 조작은 별도 의미 제공 |
 | `SaveToggleButton` | `checked`, `onCheckedChange`, 시각 크기 32dp | 선택·해제 아이콘과 햅틱. 저장 여부·행동 이름·실제 터치 영역을 보완 검증 |
 | `LabeledTextField` | 라벨·값·placeholder·선택 단위, 48dp | 값과 변경 callback을 외부에서 전달. 오류·도움말과 label 연결은 별도 보완 |
-| `ConfirmAlertDialog` | 아이콘·제목·설명·확정/취소, 8dp | 뒤로가기·바깥 누르기 닫힘. 파괴적 행동의 의미·포커스 복귀 검증 |
+| `ConfirmAlertDialog` | 아이콘·제목·설명·확정/취소, 8dp. 기본 순서는 회색 취소·민트 확인이며 저장 없이 닫기는 민트 계속 작성·회색 닫기 | 라이트 보조 버튼은 Figma Gray50 `#F0F0F0`, 다크는 기존 Neutral10. 뒤로가기·바깥 누르기 닫힘. 파괴적 행동의 의미·포커스 복귀 검증 |
 | `SkeletonBox` | 8dp 모서리·shimmer, 화면별 skeleton | 초기 로딩과 추가 페이지 로딩을 원래 콘텐츠 구조에 맞춤 |
 | `NetworkErrorRetryContent` | 캐릭터·오류 문구·48dp 재시도 | 빈 결과와 요청 실패를 구분. 일부 영역 실패를 전체 화면 오류로 확대하지 않음 |
 | `OguriSnackBarHost` | 단일 host, SUCCESS·ALERT·INFO | 탭·시스템 inset에 맞춘 위치. 현재 시각 구현은 message·type만 렌더링 |

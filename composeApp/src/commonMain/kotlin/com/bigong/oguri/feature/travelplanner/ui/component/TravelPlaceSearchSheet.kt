@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
@@ -21,6 +23,7 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -38,9 +42,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
@@ -55,6 +61,7 @@ import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral30
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
 import com.bigong.oguri.domain.model.TravelPlan
@@ -68,6 +75,8 @@ import oguri.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+private const val VISIBLE_PLACE_RESULTS = 3
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun TravelPlaceSearchSheet(
@@ -75,7 +84,7 @@ internal fun TravelPlaceSearchSheet(
     plan: TravelPlan,
     onQuery: (String) -> Unit,
     onSelect: (TravelPlace?) -> Unit,
-    onAdd: (TravelPlace, Int, TravelVisitCategory?, String?, String?) -> Unit,
+    onAdd: (TravelPlace, Int, TravelVisitCategory?, String) -> Unit,
     onDismiss: () -> Unit,
     onRetrySave: () -> Unit,
     onLeaveWithPendingSave: () -> Unit,
@@ -91,12 +100,13 @@ internal fun TravelPlaceSearchSheet(
     val day = state.selectedDay
     val draft = state.visitDraft
     var manual by rememberSaveable { mutableStateOf(draft != null) }
+    var searchNote by rememberSaveable { mutableStateOf("") }
     var searchCategory by rememberSaveable { mutableStateOf<TravelVisitCategory?>(null) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
     val selected = search.selected
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
     val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
-    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory))
+    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory, searchNote))
     val close = {
         if (canDismiss) {
             if (hasDraft) confirmDiscard = true
@@ -164,7 +174,7 @@ internal fun TravelPlaceSearchSheet(
                 Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                if (state.isSaving || (!manual && search.isLoading)) {
+                if (state.isSaving) {
                     item { TravelLoading(Modifier.fillMaxWidth()) }
                 }
                 state.failure?.let { failure ->
@@ -188,9 +198,8 @@ internal fun TravelPlaceSearchSheet(
                                 Res.string.travel_manual_location_placeholder, TravelVisitDetails.MAX_LOCATION_LENGTH, canEdit,
                                 supportingText = Res.string.travel_manual_location_hint,
                             )
-                            TravelPlaceField(
-                                draft.note, { onDraftChange(draft.copy(note = it)) }, Res.string.travel_visit_note,
-                                Res.string.travel_manual_note_placeholder, TravelVisitDetails.MAX_NOTE_LENGTH, canEdit, multiline = true,
+                            TravelNoteField(
+                                draft.note, { onDraftChange(draft.copy(note = it)) }, Res.string.travel_visit_note, canEdit,
                             )
                             TravelCategoryPicker(draft.category, canEdit) { onDraftChange(draft.copy(category = it)) }
                         }
@@ -216,10 +225,15 @@ internal fun TravelPlaceSearchSheet(
                         )
                     }
                     when {
+                        search.isLoading -> item { TravelSearchResultsSkeleton() }
                         search.failure != null -> item {
                             if (search.failure == TravelPlanFailure.CONNECTION) {
                                 Column(Modifier.fillMaxWidth().padding(vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    Text(stringResource(Res.string.travel_place_search_unavailable), style = OguriTheme.typography.cardSubtitle)
+                                    Text(
+                                        stringResource(Res.string.travel_place_search_unavailable),
+                                        style = OguriTheme.typography.cardSubtitle,
+                                        modifier = Modifier.semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+                                    )
                                     Text(stringResource(Res.string.travel_search_preserved_hint), style = OguriTheme.typography.bodySmall, color = colors.textTertiary)
                                     Row {
                                         TravelTextButton(onClick = { onQuery(search.query) }, enabled = canEdit) { Text(stringResource(Res.string.travel_retry)) }
@@ -230,32 +244,37 @@ internal fun TravelPlaceSearchSheet(
                         }
                         search.results.isNotEmpty() -> {
                             item {
-                                Text(
-                                    stringResource(Res.string.travel_search_city, state.searchCity ?: plan.summary.details.city),
-                                    style = travelTextStyle(11, 13), color = colors.textTertiary,
-                                )
-                            }
-                            items(search.results, key = TravelPlace::id) { place ->
-                                val checked = selected?.id == place.id
                                 Row(
-                                    Modifier.fillMaxWidth().heightIn(min = 56.dp).clip(RoundedCornerShape(8.dp))
-                                        .background(if (checked) Mint10 else Color.Transparent)
-                                        .selectable(checked, interactionSource = null, indication = null, enabled = canEdit, role = Role.RadioButton) {
-                                            focus.clearFocus()
-                                            onSelect(place)
-                                        }.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(place.name, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
-                                        place.address?.let { Text(it, style = travelTextStyle(12, 14), color = colors.textTertiary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
-                                    }
-                                    TravelSearchSelectionMark(checked)
+                                    Text(
+                                        stringResource(Res.string.travel_search_city, state.searchCity ?: plan.summary.details.city),
+                                        modifier = Modifier.weight(1f),
+                                        style = travelTextStyle(11, 13),
+                                        color = colors.textTertiary,
+                                    )
+                                    Text(
+                                        stringResource(Res.string.travel_google_maps_attribution),
+                                        style = OguriTheme.typography.caption,
+                                        color = colors.textTertiary,
+                                        softWrap = false,
+                                    )
                                 }
-                                if (!checked) HorizontalDivider(color = colors.borderSubtle)
                             }
-                            item { GooglePlacesAttribution(search.results.flatMap(TravelPlace::attributions)) }
+                            item(key = "place-search-results") {
+                                key(search.query, state.searchCity) {
+                                    TravelPlaceSearchResults(search.results, selected, canEdit) { place ->
+                                        focus.clearFocus()
+                                        onSelect(place)
+                                    }
+                                }
+                            }
+                            val attributions = search.results.flatMap(TravelPlace::attributions)
+                            if (attributions.isNotEmpty()) {
+                                item { GooglePlacesAttribution(attributions, includeGoogleBranding = false) }
+                            }
                         }
                         !search.isLoading && search.query.trim().length >= 2 -> item {
                             Column(Modifier.fillMaxWidth().padding(vertical = 44.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -266,7 +285,16 @@ internal fun TravelPlaceSearchSheet(
                         }
                     }
                     if (search.results.isNotEmpty()) item {
-                        Box(Modifier.padding(top = if (selected == null) 12.dp else 16.dp)) {
+                        Column(
+                            Modifier.padding(top = if (selected == null) 12.dp else 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp),
+                        ) {
+                            TravelNoteField(
+                                note = searchNote,
+                                onChange = { searchNote = it },
+                                label = Res.string.travel_visit_note,
+                                enabled = canEdit,
+                            )
                             TravelCategoryPicker(searchCategory, canEdit) { searchCategory = it }
                         }
                     }
@@ -286,8 +314,7 @@ internal fun TravelPlaceSearchSheet(
                             selected,
                             targetDay,
                             searchCategory,
-                            null,
-                            null,
+                            searchNote,
                         )
                     }
                 },
@@ -312,8 +339,12 @@ internal fun TravelPlaceSearchSheet(
     }
 }
 
-internal fun hasUnsavedPlaceInput(draft: TravelVisitDraft?, selected: TravelPlace?, category: TravelVisitCategory?): Boolean =
-    draft?.hasPlaceInput() == true || selected != null || category != null
+internal fun hasUnsavedPlaceInput(
+    draft: TravelVisitDraft?,
+    selected: TravelPlace?,
+    category: TravelVisitCategory?,
+    searchNote: String,
+): Boolean = draft?.hasPlaceInput() == true || selected != null || category != null || searchNote.isNotBlank()
 
 private fun TravelVisitDraft.hasPlaceInput(): Boolean =
     name.isNotBlank() || location.isNotBlank() || note.isNotBlank() || category != null
@@ -391,6 +422,52 @@ private fun TravelPlaceInput(
             }
         },
     )
+}
+
+@Composable
+private fun TravelPlaceSearchResults(
+    places: List<TravelPlace>,
+    selected: TravelPlace?,
+    enabled: Boolean,
+    onSelect: (TravelPlace) -> Unit,
+) {
+    val colors = OguriTheme.colors
+    val nameStyle = travelTextStyle(15, 18, FontWeight.Medium)
+    val addressStyle = travelTextStyle(12, 14)
+    val rowPadding = 8.dp
+    val rowHeight = with(LocalDensity.current) {
+        (nameStyle.lineHeight.toDp() + addressStyle.lineHeight.toDp() + rowPadding * 2).coerceAtLeast(56.dp)
+    }
+    val dividerHeight = DividerDefaults.Thickness
+    Box(
+        Modifier.fillMaxWidth().heightIn(max = (rowHeight + dividerHeight) * VISIBLE_PLACE_RESULTS)
+            .consumeVerticalDragForBottomSheetContent(),
+    ) {
+        LazyColumn(Modifier.fillMaxWidth()) {
+            items(places, key = TravelPlace::id) { place ->
+                val checked = selected?.id == place.id
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = rowHeight).clip(RoundedCornerShape(8.dp))
+                        .background(if (checked) Mint10 else Color.Transparent)
+                        .selectable(checked, interactionSource = null, indication = null, enabled = enabled, role = Role.RadioButton) {
+                            onSelect(place)
+                        }.padding(horizontal = 12.dp, vertical = rowPadding),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(place.name, style = nameStyle, color = Neutral100)
+                        place.address?.let {
+                            Text(it, style = addressStyle, color = colors.textTertiary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        }
+                    }
+                    TravelSearchSelectionMark(checked)
+                }
+                if (checked) Spacer(Modifier.height(dividerHeight))
+                else HorizontalDivider(color = colors.borderSubtle)
+            }
+        }
+    }
 }
 
 @Composable

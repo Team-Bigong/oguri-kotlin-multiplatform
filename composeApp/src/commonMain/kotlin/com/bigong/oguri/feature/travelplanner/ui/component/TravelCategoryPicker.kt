@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -75,15 +76,15 @@ internal fun TravelChoiceChip(
     modifier: Modifier = Modifier,
     categoryChip: Boolean = false,
     segmented: Boolean = false,
+    touchPadding: PaddingValues = PaddingValues(vertical = if (categoryChip) 4.dp else if (segmented) 0.dp else 7.dp),
 ) {
     val colors = OguriTheme.colors
     val textSize = if (categoryChip) { if (selected) 14 else 13 } else 12
     val lineHeight = if (categoryChip) 16 else 14
     val chipHeight = if (categoryChip) 32.dp else if (segmented) 28.dp else 30.dp
-    val touchPadding = if (categoryChip) 4.dp else if (segmented) 0.dp else 7.dp
     Box(
         modifier.selectable(selected, interactionSource = null, indication = null, enabled = enabled, role = Role.RadioButton, onClick = onClick)
-            .padding(vertical = touchPadding)
+            .padding(touchPadding)
             .heightIn(min = chipHeight)
             .widthIn(min = if (categoryChip) 52.dp else Dp.Unspecified)
             .background(if (selected) Mint40 else if (segmented) Color.Transparent else colors.surfaceCard, CircleShape)
