@@ -22,6 +22,11 @@ data class TravelDayPlacesResponse(
 data class TravelCitySuggestion(
     val id: String,
     val label: String,
+    val name: String,
+    val regionLabel: String,
+    val timeZone: String,
+    val latitude: Double,
+    val longitude: Double,
 )
 
 data class TravelCityTimeZoneResponse(

@@ -6,6 +6,7 @@ import com.bigong.oguri.dto.request.TravelPlanCommand
 import com.bigong.oguri.dto.request.TravelVisitRequest
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.MemberRepository
+import com.bigong.oguri.repository.TravelCatalogCityRepository
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelPlanViewRepository
@@ -34,6 +35,7 @@ class TravelPlanChangesTest {
             mock(TravelPlanViewRepository::class.java),
             collaboration,
             mock(TravelUsageRepository::class.java),
+            mock(TravelCatalogCityRepository::class.java),
         )
     private val member = "change-author"
     private val plan =

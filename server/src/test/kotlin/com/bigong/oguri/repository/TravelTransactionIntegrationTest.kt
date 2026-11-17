@@ -1,6 +1,7 @@
 package com.bigong.oguri.repository
 
 import com.bigong.oguri.domain.Member
+import com.bigong.oguri.domain.TravelCatalogCity
 import com.bigong.oguri.domain.TravelPlan
 import com.bigong.oguri.domain.TravelPlanConflict
 import com.bigong.oguri.domain.TravelPlanMembership
@@ -13,6 +14,7 @@ import com.bigong.oguri.dto.response.TravelPlanResponse
 import com.bigong.oguri.dto.response.TravelVisitResponse
 import com.bigong.oguri.service.RegisterTravelReminderDevice
 import com.bigong.oguri.service.ScheduleTravelReminder
+import com.bigong.oguri.service.TravelCityCatalog
 import com.bigong.oguri.service.TravelCollaborationService
 import com.bigong.oguri.service.TravelDetailsChange
 import com.bigong.oguri.service.TravelPlanService
@@ -70,6 +72,7 @@ class TravelTransactionIntegrationTest {
     private lateinit var reminders: TravelReminderRepository
     private lateinit var reminderService: TravelReminderService
     private lateinit var changes: TravelCollaborationRepository
+    private lateinit var cityCatalog: TravelCityCatalog
 
     @BeforeAll
     fun prepareRealRepositoriesAndTransactions() {
@@ -96,6 +99,7 @@ class TravelTransactionIntegrationTest {
                     PersistenceManagedTypes.of(
                         Member::class.java.name,
                         TravelPlan::class.java.name,
+                        TravelCatalogCity::class.java.name,
                         TravelVisit::class.java.name,
                         TravelPlanMembership::class.java.name,
                     ),
@@ -119,6 +123,8 @@ class TravelTransactionIntegrationTest {
         val repositories = JpaRepositoryFactory(SharedEntityManagerCreator.createSharedEntityManager(entityManagerFactory))
         val plans = repositories.getRepository(TravelPlanRepository::class.java)
         val members = repositories.getRepository(MemberRepository::class.java)
+        val catalogRepository = repositories.getRepository(TravelCatalogCityRepository::class.java)
+        cityCatalog = TravelCityCatalog(catalogRepository)
         changes = TravelCollaborationRepository(jdbc)
         val usage = TravelUsageRepository(jdbc)
         service =
@@ -130,9 +136,10 @@ class TravelTransactionIntegrationTest {
                 TravelPlanViewRepository(jdbc),
                 changes,
                 usage,
+                catalogRepository,
             )
         reminders = TravelReminderRepository(jdbc)
-        collaboration = TravelCollaborationService(service, plans, members, changes, reminders, usage, 7)
+        collaboration = TravelCollaborationService(service, plans, members, changes, reminders, usage, catalogRepository, 7)
         val delivery = mock(TravelReminderDelivery::class.java)
         `when`(delivery.configured).thenReturn(true)
         reminderService = TravelReminderService(service, reminders, delivery, usage)
@@ -151,6 +158,43 @@ class TravelTransactionIntegrationTest {
                 .load()
                 .clean()
         }
+    }
+
+    @Test
+    fun `같은 이름의 도시는 검색과 계획 저장에서 각각의 도시로 남는다`() {
+        val australia = catalogCityFixture("호주 · 뉴사우스웨일스주", "AU", "Australia/Sydney", -33.87, 151.21, 5_000_000)
+        val canada = catalogCityFixture("캐나다 · 노바스코샤주", "CA", "America/Glace_Bay", 46.14, -60.19, 30_000)
+        val owner = member()
+        val results = cityCatalog.search(owner, "syd")
+        assertEquals(listOf(australia.toString(), canada.toString()), results.map { it.id })
+        assertEquals(listOf("시드니", "시드니"), results.map { it.name })
+        assertTrue(cityCatalog.search(owner, "시%").isEmpty())
+        assertEquals("America/Glace_Bay", cityCatalog.timeZone(owner, canada.toString()))
+        val australiaLabel = results[0].label
+        val canadaLabel = results[1].label
+        val request =
+            creation().copy(
+                city = canadaLabel,
+                timeZone = "America/Glace_Bay",
+                cities = listOf(canadaLabel, australiaLabel),
+                cityIds = mapOf(canadaLabel to canada, australiaLabel to australia),
+            )
+        val plan = tx { service.create(owner, request) }
+        assertEquals(plan, tx { service.create(owner, request) })
+        assertEquals(listOf(canada.toString(), australia.toString()), tx { service.get(owner, plan.id) }.summary.catalogCities.map { it.id })
+        assertEquals(46.14, tx { service.cityForPlaces(owner, plan.id) }.center?.latitude)
+        assertEquals(-33.87, tx { service.cityForPlaces(owner, plan.id, australiaLabel) }.center?.latitude)
+
+        tx {
+            collaboration.updateDetails(
+                owner,
+                plan.id,
+                TravelDetailsChange(australiaLabel, plan.title, "Australia/Sydney", plan.startDate, plan.endDate, 0, 0),
+            )
+        }
+        val updated = tx { service.get(owner, plan.id) }.summary
+        assertEquals(listOf(australiaLabel), updated.cities)
+        assertEquals(australia.toString(), updated.catalogCities.single().id)
     }
 
     @Test
@@ -1185,6 +1229,28 @@ class TravelTransactionIntegrationTest {
             .update()
         repeat(visits) { index -> tx { service.execute(owner, id, add("Visit $index")) } }
         return Fixture(id, owner, other)
+    }
+
+    private fun catalogCityFixture(
+        region: String,
+        country: String,
+        zone: String,
+        latitude: Double,
+        longitude: Double,
+        population: Long,
+    ): Long {
+        val id =
+            jdbc.sql(
+                """
+                INSERT INTO cities (name, region_label, country_code, time_zone, latitude, longitude, population)
+                VALUES ('시드니', :region, :country, :zone, :latitude, :longitude, :population)
+                RETURNING id
+                """,
+            ).param("region", region).param("country", country).param("zone", zone)
+                .param("latitude", latitude).param("longitude", longitude).param("population", population)
+                .query(Long::class.javaObjectType).single()
+        jdbc.sql("INSERT INTO city_aliases (city_id, name) VALUES (:id, 'Sydney')").param("id", id).update()
+        return id
     }
 
     private fun member(): String =
