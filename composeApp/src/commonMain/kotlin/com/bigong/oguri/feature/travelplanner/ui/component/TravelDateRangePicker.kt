@@ -11,12 +11,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint20
-import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.core.designsystem.Orange20
-import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelDateSelection
 import com.bigong.oguri.feature.travelplanner.ui.travelDateLabel
@@ -45,7 +42,15 @@ internal fun TravelDateRangePicker(
     val first = initial?.start ?: recommendedStart ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     var monthText by rememberSaveable { mutableStateOf(LocalDate(first.year, first.month, 1).toString()) }
     val colors = OguriTheme.colors
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), dragHandle = { TravelSheetHandle() }, onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp), containerColor = colors.backgroundSecondary) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
+        containerColor = colors.backgroundSecondary,
+        contentColor = colors.textPrimary,
+        scrimColor = TravelSheetScrim,
+        dragHandle = { TravelSheetHandle() },
+    ) {
         Column(Modifier.fillMaxWidth().height(584.dp)) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(Res.string.travel_choose_range), Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = colors.textPrimary)
@@ -69,13 +74,13 @@ internal fun TravelDateRangePicker(
                         )
                         Text(
                             stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
-                            color = Orange50,
+                            color = colors.error,
                             style = OguriTheme.typography.caption,
                         )
                     }
                 } else {
                     Box(
-                        Modifier.fillMaxWidth().heightIn(min = 44.dp).background(Mint5, rangeShape)
+                        Modifier.fillMaxWidth().heightIn(min = 44.dp).background(OguriTheme.colors.mintContainer, rangeShape)
                             .border(1.dp, Mint20, rangeShape).padding(12.dp),
                         contentAlignment = Alignment.CenterStart,
                     ) {
@@ -98,7 +103,7 @@ internal fun TravelDateRangePicker(
                     startText = next.start?.toString(); endText = next.end?.toString()
                 })
                 if (recommendedStart != null && recommendedEnd != null) Row(Modifier.padding(top = 12.dp, bottom = 16.dp), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(4.dp).background(Mint70, CircleShape))
+                    Box(Modifier.size(4.dp).background(OguriTheme.colors.mint, CircleShape))
                     Text(stringResource(Res.string.travel_calendar_recommendation, recommendedEnd.day), style = OguriTheme.typography.caption, color = colors.textTertiary)
                 }
             }
@@ -116,15 +121,15 @@ internal fun TravelTimePicker(onDismiss: () -> Unit, initialTime: LocalTime? = n
         title = { Text(stringResource(Res.string.travel_reminder_time)) },
         text = { TimePicker(state = state, colors = TimePickerDefaults.colors(
             clockDialColor = OguriTheme.colors.backgroundSecondary,
-            clockDialSelectedContentColor = com.bigong.oguri.core.designsystem.Neutral0,
+            clockDialSelectedContentColor = travelAccentForeground,
             clockDialUnselectedContentColor = OguriTheme.colors.textPrimary,
-            selectorColor = Mint70, containerColor = OguriTheme.colors.backgroundSecondary,
-            periodSelectorBorderColor = Mint70,
-            periodSelectorSelectedContainerColor = Mint70,
+            selectorColor = OguriTheme.colors.mint, containerColor = OguriTheme.colors.backgroundSecondary,
+            periodSelectorBorderColor = OguriTheme.colors.mint,
+            periodSelectorSelectedContainerColor = OguriTheme.colors.mint,
             periodSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
-            periodSelectorSelectedContentColor = com.bigong.oguri.core.designsystem.Neutral0,
+            periodSelectorSelectedContentColor = travelAccentForeground,
             periodSelectorUnselectedContentColor = OguriTheme.colors.textSecondary,
-            timeSelectorSelectedContainerColor = Mint5,
+            timeSelectorSelectedContainerColor = OguriTheme.colors.mintContainer,
             timeSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
             timeSelectorSelectedContentColor = OguriTheme.colors.textPrimary,
             timeSelectorUnselectedContentColor = OguriTheme.colors.textSecondary,

@@ -25,7 +25,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
@@ -72,7 +71,7 @@ internal fun TravelHomeGuide(viewModel: TravelPlannerViewModel?, onCreate: () ->
             stringResource(Res.string.travel_home_guide), Modifier.weight(1f),
             style = travelTextStyle(13, 16), color = colors.textTertiary,
         )
-        Text(stringResource(Res.string.travel_home_create_plan), style = OguriTheme.typography.labelLarge, color = Neutral100)
+        Text(stringResource(Res.string.travel_home_create_plan), style = OguriTheme.typography.labelLarge, color = OguriTheme.colors.textPrimary)
         Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp), tint = colors.textTertiary)
     }
 }
@@ -133,7 +132,7 @@ private fun TravelEntryCard(
                     plan.details.title,
                     modifier = Modifier.alignByBaseline(),
                     style = travelTextStyle(15, 18, FontWeight.Medium),
-                    color = Neutral100,
+                    color = OguriTheme.colors.textPrimary,
                 )
                 Text(
                     travelCardDates(plan.details.dates, includeYear = false),

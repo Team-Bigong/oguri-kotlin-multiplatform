@@ -38,7 +38,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.domain.model.TravelDates
@@ -120,9 +119,10 @@ internal fun TravelVisitEditor(
                 }
             },
         )
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
+    ModalBottomSheet(scrimColor = TravelSheetScrim,
         dragHandle = { TravelSheetHandle() },
-        containerColor = com.bigong.oguri.core.designsystem.Neutral5,
+        containerColor = OguriTheme.colors.backgroundSecondary,
+        contentColor = OguriTheme.colors.textPrimary,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         onDismissRequest = { if (canDismiss) dismissDraft() },
         sheetState = sheetState,
@@ -158,8 +158,8 @@ internal fun TravelVisitEditor(
                     onOpened = onDirectionsOpened,
                 ) { directions ->
                     Row(
-                        Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint5, shape)
-                            .border(1.dp, com.bigong.oguri.core.designsystem.Mint40, shape).padding(14.dp),
+                        Modifier.fillMaxWidth().background(OguriTheme.colors.mintContainer, shape)
+                            .border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -179,7 +179,7 @@ internal fun TravelVisitEditor(
                 Text(stringResource(Res.string.travel_visit_day), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                        .background(Neutral0, RoundedCornerShape(8.dp))
+                        .background(OguriTheme.colors.surfaceCard, RoundedCornerShape(8.dp))
                         .border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
                         .noRippleClickable(enabled = canEdit, onClick = { showDayMenu = true }).padding(horizontal = 13.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -230,7 +230,7 @@ internal fun TravelVisitEditor(
                     onDraftChange(draft.useSavedValues())
                 }) { Text(stringResource(Res.string.travel_use_saved), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary) }
                 else if (draft.visit != null) TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), enabled = canEdit, onClick = { confirmRemoval = true }) {
-                    Text(stringResource(Res.string.travel_delete_visit_action), style = OguriTheme.typography.labelMedium, color = com.bigong.oguri.core.designsystem.Orange50)
+                    Text(stringResource(Res.string.travel_delete_visit_action), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.error)
                 }
                 TravelPrimaryButton(enabled = canEdit && (placeId != null || draft.name.isNotBlank()), onClick = onApply, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), textStyle = OguriTheme.typography.cardTitle) {
                     Text(stringResource(if (comparing) Res.string.travel_apply_mine else Res.string.travel_apply))

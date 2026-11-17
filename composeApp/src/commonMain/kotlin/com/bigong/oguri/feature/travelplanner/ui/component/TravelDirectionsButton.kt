@@ -63,7 +63,7 @@ internal fun TravelDirectionsButton(
             Text(
                 stringResource(Res.string.travel_directions_unavailable),
                 style = OguriTheme.typography.caption,
-                color = com.bigong.oguri.core.designsystem.Orange50,
+                color = OguriTheme.colors.error,
                 modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             )
         }

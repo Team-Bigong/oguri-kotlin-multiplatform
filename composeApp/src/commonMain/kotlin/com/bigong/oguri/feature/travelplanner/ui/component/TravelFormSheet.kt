@@ -26,7 +26,7 @@ internal fun TravelFormSheet(
     shape: Shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     containerColor: Color = OguriTheme.colors.backgroundSecondary,
 ) {
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor, dragHandle = { TravelSheetHandle() }) {
+    ModalBottomSheet(scrimColor = TravelSheetScrim, onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor, contentColor = OguriTheme.colors.textPrimary, dragHandle = { TravelSheetHandle() }) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ProvideTextStyle(OguriTheme.typography.cardTitle, title)
             ProvideTextStyle(OguriTheme.typography.bodyMedium, text)

@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import com.bigong.oguri.core.util.extension.noRippleClickable
-import com.bigong.oguri.core.designsystem.Mint5
-import com.bigong.oguri.core.designsystem.Mint20
-import com.bigong.oguri.core.designsystem.Mint30
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.travel_card_date_range
@@ -53,6 +50,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -60,7 +58,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelDates
@@ -68,6 +65,7 @@ import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelCitySearchDialog
+import com.bigong.oguri.feature.travelplanner.ui.component.cityLabel
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelFieldColors
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
@@ -88,15 +86,6 @@ import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_choose_time_zone
 import oguri.composeapp.generated.resources.travel_city
-import oguri.composeapp.generated.resources.travel_city_barcelona
-import oguri.composeapp.generated.resources.travel_city_ho_chi_minh
-import oguri.composeapp.generated.resources.travel_city_jeju
-import oguri.composeapp.generated.resources.travel_city_osaka
-import oguri.composeapp.generated.resources.travel_city_paris
-import oguri.composeapp.generated.resources.travel_city_seoul
-import oguri.composeapp.generated.resources.travel_city_sydney
-import oguri.composeapp.generated.resources.travel_city_taipei
-import oguri.composeapp.generated.resources.travel_city_tokyo
 import oguri.composeapp.generated.resources.travel_city_unavailable
 import oguri.composeapp.generated.resources.travel_city_unavailable_message
 import oguri.composeapp.generated.resources.travel_choose_city
@@ -120,6 +109,7 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.serialization.json.Json
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
 
@@ -143,8 +133,10 @@ internal fun CreateTravelPlanScreen(
     var cityInput by rememberSaveable { mutableStateOf("") }
     var cityEdited by rememberSaveable { mutableStateOf(false) }
     var selectedCities by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var catalogCities by rememberSaveable(stateSaver = CityCatalogSaver) {
+        mutableStateOf(emptyMap<String, TravelCitySuggestion>())
+    }
     var cityTimeZones by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
-    var timeZoneOverride by rememberSaveable { mutableStateOf<String?>(null) }
     var title by rememberSaveable { mutableStateOf("") }
     var startMillis by rememberSaveable { mutableStateOf(source?.startDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()) }
     var endMillis by rememberSaveable { mutableStateOf(source?.endDate?.atStartOfDayIn(TimeZone.UTC)?.toEpochMilliseconds()) }
@@ -155,8 +147,10 @@ internal fun CreateTravelPlanScreen(
             cityEdited = true
             cityInput = details.city
             selectedCities = details.cities
-            timeZoneOverride = details.timeZone.id
-            cityTimeZones = mapOf(details.city to details.timeZone.id)
+            catalogCities = details.catalogCities
+            cityTimeZones =
+                details.catalogCities.mapNotNull { (label, city) -> city.timeZone?.let { label to it } }.toMap() +
+                    (details.city to details.timeZone.id)
             title = details.title
             startMillis =
                 details.dates.start
@@ -176,19 +170,22 @@ internal fun CreateTravelPlanScreen(
     LaunchedEffect(citySearch?.selected, citySearch?.loading) {
         if (citySearch?.selected != null && !citySearch.loading) {
             cityEdited = true
-            val chosen = citySearch.selected.label.take(TravelPlanDetails.MAX_TEXT_LENGTH)
+            val suggestion = citySearch.selected
+            val chosen = catalogCities.values.firstOrNull { it.id == suggestion.id }?.label ?: suggestion.label
             val primary = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) }
             selectedCities = (primary + chosen).distinct().take(10)
+            if (chosen in selectedCities) catalogCities = catalogCities + (chosen to suggestion.copy(label = chosen))
             cityInput = selectedCities.first()
             citySearch.timeZone?.takeIf { it in TimeZone.availableZoneIds }?.let { cityTimeZones = cityTimeZones + (chosen to it) }
-            timeZoneOverride = cityTimeZones[cityInput] ?: suggestedTimeZone(cityInput)
             onCloseCitySearch()
         }
     }
     val cityName = selectedCities.firstOrNull() ?: cityInput.trim()
-    val timeZoneId = timeZoneOverride ?: suggestedTimeZone(cityName)
+    val timeZoneId = cityTimeZones[cityName] ?: suggestedTimeZone(cityName)
     val cityTimeZone = timeZoneId?.let(TimeZone::of)
-    val defaultTitle = stringResource(Res.string.travel_default_title, cityName)
+    val defaultTitle =
+        stringResource(Res.string.travel_default_title, catalogCities[cityName]?.name ?: cityName)
+            .take(TravelPlanDetails.MAX_TEXT_LENGTH)
     val startDate = startMillis?.toTravelDate()
     val endDate = endMillis?.toTravelDate()
     val dates =
@@ -201,7 +198,10 @@ internal fun CreateTravelPlanScreen(
     val canEdit = state.creationReady && !state.isSaving && !state.canRetrySave
     val matchingPlan =
         state.plans?.firstOrNull {
-            it.details.city.equals(cityName, ignoreCase = true) && it.details.dates == dates
+            val savedCity = it.details.catalogCities[it.details.city]
+            val chosenCity = catalogCities[cityName]
+            val sameCity = if (savedCity != null && chosenCity != null) savedCity.id == chosenCity.id else it.details.city.equals(cityName, ignoreCase = true)
+            sameCity && it.details.dates == dates
         }
     val startLabel = stringResource(Res.string.travel_start_date)
     val endLabel = stringResource(Res.string.travel_end_date)
@@ -239,9 +239,9 @@ internal fun CreateTravelPlanScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = Mint30)
+                    Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = colors.textTertiary)
                     Text(
-                        if (cities.isEmpty()) stringResource(Res.string.travel_choose_city) else cities.joinToString(" · "),
+                        if (cities.isEmpty()) stringResource(Res.string.travel_choose_city) else cities.joinToString(" · ") { catalogCities[it]?.contextualName ?: it },
                         Modifier.weight(1f),
                         style = travelTextStyle(15, 18),
                         color = if (cities.isEmpty()) colors.textTertiary else colors.textPrimary,
@@ -253,9 +253,9 @@ internal fun CreateTravelPlanScreen(
                         cities.forEach { city ->
                             TravelTextButton(enabled = canEdit, onClick = {
                                 selectedCities = cities - city
+                                catalogCities = catalogCities - city
                                 cityInput = selectedCities.firstOrNull().orEmpty()
-                                timeZoneOverride = cityTimeZones[cityInput] ?: suggestedTimeZone(cityInput)
-                            }) { Text("$city ×") }
+                            }) { Text("${catalogCities[city]?.contextualName ?: city} ×") }
                         }
                     }
                     Text(stringResource(Res.string.travel_primary_city), style = OguriTheme.typography.caption, color = colors.textTertiary)
@@ -295,7 +295,7 @@ internal fun CreateTravelPlanScreen(
                     stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
                     modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp),
                     style = OguriTheme.typography.caption,
-                    color = com.bigong.oguri.core.designsystem.Orange50,
+                    color = OguriTheme.colors.error,
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -312,7 +312,7 @@ internal fun CreateTravelPlanScreen(
                 decorationBox = { field ->
                     Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(colors.surfaceCard, RoundedCornerShape(8.dp))
                         .border(1.dp, colors.borderStrong, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
-                        if (title.isEmpty()) Text(if (cityName.isBlank()) titleLabel else defaultTitle, style = travelTextStyle(15, 18), color = colors.textPrimary)
+                        if (title.isEmpty()) Text(if (cityName.isBlank()) titleLabel else defaultTitle, style = travelTextStyle(15, 18), color = colors.textTertiary)
                         field()
                     }
                 },
@@ -336,7 +336,7 @@ internal fun CreateTravelPlanScreen(
                 val shape = RoundedCornerShape(8.dp)
                 Column(
                     Modifier.fillMaxWidth().padding(top = 24.dp)
-                        .background(Mint5, shape).border(1.dp, Mint20, shape)
+                        .background(OguriTheme.colors.mintContainer, shape).border(1.dp, OguriTheme.colors.borderSubtle, shape)
                         .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -368,7 +368,13 @@ internal fun CreateTravelPlanScreen(
             enabled = canEdit && dates != null && cityName.isNotEmpty() && cityTimeZone != null,
             onClick = {
                 if (dates != null && cityTimeZone != null) {
-                    onCreate(TravelPlanDetails(cityName, cityTimeZone, title.trim().ifEmpty { defaultTitle }, dates, creationSource, selectedCities.ifEmpty { listOf(cityName) }))
+                    val cities = selectedCities.ifEmpty { listOf(cityName) }
+                    onCreate(
+                        TravelPlanDetails(
+                            cityName, cityTimeZone, title.trim().ifEmpty { defaultTitle }, dates, creationSource, cities,
+                            catalogCities.filterKeys { it in cities },
+                        ),
+                    )
                 }
             },
         ) {
@@ -377,17 +383,22 @@ internal fun CreateTravelPlanScreen(
     }
 
     if (citySearch != null) {
+        val currentCities = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) }
+        val nearbyCities = TravelCity.nearby(cityName, currentCities, catalogCities)
         TravelCitySearchDialog(
             state = citySearch,
-            selectedCities = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) },
-            recommendedCities = listOf(TravelCity.SEOUL, TravelCity.JEJU, TravelCity.OSAKA, TravelCity.TOKYO, TravelCity.TAIPEI, TravelCity.PARIS, TravelCity.HO_CHI_MINH, TravelCity.SYDNEY, TravelCity.BARCELONA).map { cityLabel(it) },
+            selectedCities = currentCities,
+            nearbyCities = nearbyCities.map { cityLabel(it) },
+            recommendedCities = listOf(
+                TravelCity.SEOUL, TravelCity.JEJU, TravelCity.OSAKA, TravelCity.TOKYO, TravelCity.TAIPEI,
+                TravelCity.PARIS, TravelCity.HO_CHI_MINH, TravelCity.SYDNEY, TravelCity.BARCELONA,
+            ).map { cityLabel(it) },
             onQuery = onSearchCities,
             onChoose = onChooseCity,
             onChooseRecommendedCity = { city ->
                 cityEdited = true
-                selectedCities = (selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) } + city).distinct().take(10)
+                selectedCities = (currentCities + city).distinct().take(10)
                 cityInput = selectedCities.first()
-                timeZoneOverride = null
                 onCloseCitySearch()
             },
             onDismiss = onCloseCitySearch,
@@ -461,18 +472,7 @@ private fun TravelDatePicker(
 
 private fun Long.toTravelDate(): LocalDate = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
 
-@Composable
-private fun cityLabel(city: TravelCity): String =
-    stringResource(
-        when (city) {
-            TravelCity.SEOUL -> Res.string.travel_city_seoul
-            TravelCity.JEJU -> Res.string.travel_city_jeju
-            TravelCity.OSAKA -> Res.string.travel_city_osaka
-            TravelCity.TOKYO -> Res.string.travel_city_tokyo
-            TravelCity.TAIPEI -> Res.string.travel_city_taipei
-            TravelCity.PARIS -> Res.string.travel_city_paris
-            TravelCity.HO_CHI_MINH -> Res.string.travel_city_ho_chi_minh
-            TravelCity.SYDNEY -> Res.string.travel_city_sydney
-            TravelCity.BARCELONA -> Res.string.travel_city_barcelona
-        },
-    )
+private val CityCatalogSaver = Saver<Map<String, TravelCitySuggestion>, String>(
+    save = { Json.encodeToString(it) },
+    restore = { Json.decodeFromString(it) },
+)

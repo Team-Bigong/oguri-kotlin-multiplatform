@@ -73,6 +73,7 @@ class DefaultTravelPlanRepository internal constructor(
                         requestId = requestId,
                         city = details.city,
                         cities = details.cities,
+                        cityIds = details.catalogCityIds(),
                         timeZone = details.timeZone.id,
                         title = details.title,
                         startDate = details.dates.start.toString(),
@@ -142,7 +143,7 @@ class DefaultTravelPlanRepository internal constructor(
     override suspend fun cities(
         query: String,
         language: String,
-    ): List<TravelCitySuggestion> = request { remote.cities(query, language).map { TravelCitySuggestion(it.id, it.label) } }
+    ): List<TravelCitySuggestion> = request { remote.cities(query, language).map { it.toDomain() } }
 
     override suspend fun cityTimeZone(placeId: String): String? = request { remote.cityTimeZone(placeId).timeZone }
 
@@ -223,6 +224,7 @@ class DefaultTravelPlanRepository internal constructor(
                     revision,
                     unassignedCount,
                     details.cities,
+                    details.catalogCityIds(),
                 ),
             )
         }
@@ -330,8 +332,12 @@ class DefaultTravelPlanRepository internal constructor(
                         TravelPlanSource(it.destinationId, it.startDate?.let(LocalDate::parse), it.endDate?.let(LocalDate::parse))
                     },
                     cities,
+                    catalogCities.associate { it.label to it.toDomain() },
                 ),
         )
+
+    private fun TravelPlanDetails.catalogCityIds(): Map<String, Long> =
+        catalogCities.mapNotNull { (label, city) -> city.id.toLongOrNull()?.let { label to it } }.toMap()
 
     private fun TravelPlanResponse.toDomain(): TravelPlan =
         TravelPlan(
