@@ -12,10 +12,17 @@ import oguri.composeapp.generated.resources.travel_delete
 import androidx.compose.foundation.border
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -49,6 +57,13 @@ import androidx.compose.ui.zIndex
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -112,7 +127,6 @@ import oguri.composeapp.generated.resources.travel_has_note
 import oguri.composeapp.generated.resources.travel_manage
 import oguri.composeapp.generated.resources.travel_move_down
 import oguri.composeapp.generated.resources.travel_move_up
-import oguri.composeapp.generated.resources.travel_move_visit
 import oguri.composeapp.generated.resources.ic_travel_offline
 import oguri.composeapp.generated.resources.travel_offline_snapshot
 import oguri.composeapp.generated.resources.travel_order_cannot_reapply
@@ -433,8 +447,8 @@ internal fun TravelPlanScreen(
                         onMove = { offset -> onMoveVisit(visit, offset) },
                         onDragStart = {
                             val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
-                            if (row != null) {
-                                HapticType.ImpactLight.perform()
+                            if (row != null && draggedId == null) {
+                                HapticType.ImpactMedium.perform()
                                 releasedDrag = null
                                 draggedId = visit.id
                                 dragPosition = row.offset + row.size / 2f
@@ -546,6 +560,9 @@ internal fun TravelPlanScreen(
     }
 }
 
+private const val REORDER_HOLD_MILLIS = 250L
+private const val DELETE_REVEAL_SETTLE_MILLIS = 200
+
 @Composable
 private fun TravelVisitRow(
     modifier: Modifier,
@@ -567,13 +584,29 @@ private fun TravelVisitRow(
     onDragFinished: (Boolean) -> Unit,
 ) {
     val dragStart by rememberUpdatedState(onDragStart)
-    val drag by rememberUpdatedState(onDrag)
+    val dragBy by rememberUpdatedState(onDrag)
     val dragFinished by rememberUpdatedState(onDragFinished)
-    var showMenu by remember { mutableStateOf(false) }
-    var swiped by remember(visit.id) { mutableStateOf(false) }
+    var deleteRevealed by remember(visit.id) { mutableStateOf(false) }
+    var swiping by remember(visit.id) { mutableStateOf(false) }
+    var swipeDistance by remember(visit.id) { mutableFloatStateOf(0f) }
     val shape = RoundedCornerShape(8.dp)
-    val deleteVisible = swiped && canEdit
     val deleteWidth = 72.dp
+    val deleteWidthPixels = with(LocalDensity.current) { deleteWidth.toPx() }
+    val revealDirection = if (LocalLayoutDirection.current == LayoutDirection.Ltr) -1f else 1f
+    val canDeleteFromSwipe = canEdit && deleteRevealed && !swiping
+    val revealOffset by animateFloatAsState(
+        targetValue = when {
+            !canEdit -> 0f
+            swiping -> swipeDistance
+            deleteRevealed -> deleteWidthPixels
+            else -> 0f
+        },
+        animationSpec = if (swiping) snap() else tween(DELETE_REVEAL_SETTLE_MILLIS, easing = FastOutSlowInEasing),
+        label = "Visit delete reveal",
+    )
+    val deleteLabel = stringResource(Res.string.travel_delete)
+    val moveUpLabel = stringResource(Res.string.travel_move_up)
+    val moveDownLabel = stringResource(Res.string.travel_move_down)
     val colors = OguriTheme.colors
     val rowColor by animateColorAsState(
         targetValue = when {
@@ -582,28 +615,76 @@ private fun TravelVisitRow(
         },
         label = "Travel visit background",
     )
-    Box(modifier.fillMaxWidth().clip(shape)) {
+    Box(
+        modifier.fillMaxWidth().clip(shape)
+            .pointerInput(visit.id, canEdit, deleteWidthPixels, revealDirection) {
+                if (canEdit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = {
+                            swipeDistance = revealOffset
+                            swiping = true
+                        },
+                        onDragEnd = {
+                            deleteRevealed = swipeDistance >= deleteWidthPixels / 2f
+                            swiping = false
+                        },
+                        onDragCancel = { swiping = false },
+                        onHorizontalDrag = { change, amount ->
+                            change.consume()
+                            swipeDistance = (swipeDistance + amount * revealDirection).coerceIn(0f, deleteWidthPixels)
+                        },
+                    )
+                }
+            },
+    ) {
+        Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
+            Box(
+                modifier = Modifier.width(deleteWidth).fillMaxHeight()
+                    .background(colors.orangeContainer)
+                    .then(
+                        if (canDeleteFromSwipe) Modifier.noRippleClickable(onClick = onRemove)
+                        else Modifier.clearAndSetSemantics {},
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(deleteLabel, color = colors.textPrimary, style = OguriTheme.typography.labelLarge)
+            }
+        }
         Row(
-            Modifier.fillMaxWidth().padding(end = if (deleteVisible) deleteWidth else 0.dp)
+            Modifier.fillMaxWidth()
+                .graphicsLayer { translationX = revealOffset * revealDirection }
                 .background(rowColor)
-                .pointerInput(visit.id, canEdit) {
-                    if (canEdit) {
-                        var distance = 0f
-                        detectHorizontalDragGestures(
-                            onDragStart = { distance = 0f },
-                            onHorizontalDrag = { change, amount ->
-                                change.consume()
-                                distance += amount
-                                if (distance < -32.dp.toPx()) swiped = true
-                                else if (distance > 32.dp.toPx()) swiped = false
-                            },
-                        )
-                    }
-                }.semantics { this.selected = selected },
+                .semantics { this.selected = selected },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                Modifier.weight(1f).heightIn(min = 60.dp).noRippleClickable(enabled = canOpen, onClick = onOpen).padding(horizontal = 12.dp),
+                Modifier.weight(1f).heightIn(min = 60.dp)
+                    .noRippleClickable(enabled = canOpen, onClick = onOpen)
+                    .semantics {
+                        if (canEdit) {
+                            customActions = buildList {
+                                if (canMoveUp) {
+                                    add(CustomAccessibilityAction(moveUpLabel) {
+                                        onMove(-1)
+                                        true
+                                    })
+                                }
+                                if (canMoveDown) {
+                                    add(CustomAccessibilityAction(moveDownLabel) {
+                                        onMove(1)
+                                        true
+                                    })
+                                }
+                                if (!canDeleteFromSwipe) {
+                                    add(CustomAccessibilityAction(deleteLabel) {
+                                        onRemove()
+                                        true
+                                    })
+                                }
+                            }
+                        }
+                    }
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Box(Modifier.size(24.dp).background(OguriTheme.colors.mint, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
@@ -617,32 +698,33 @@ private fun TravelVisitRow(
                     }
                 }
             }
-            if (canEdit && (canMoveUp || canMoveDown)) Box {
-                TravelIconButton(onClick = { showMenu = true }, enabled = canEdit,
-                    modifier = Modifier.pointerInput(visit.id, canEdit) {
-                        detectDragGesturesAfterLongPress(onDragStart = { dragStart() }, onDragEnd = { dragFinished(true) }, onDragCancel = { dragFinished(false) }) { change, delta -> change.consume(); drag(delta.y) }
-                    },
-                ) { Icon(painterResource(Res.drawable.ic_travel_drag), stringResource(Res.string.travel_move_visit, title), Modifier.size(20.dp), tint = OguriTheme.colors.textTertiary) }
-                if (showMenu) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, onDismissRequest = { showMenu = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
-                    androidx.compose.material3.Surface(shape = shape, color = OguriTheme.colors.surfaceCard, shadowElevation = 4.dp) {
-                        Column {
-                            TravelTextButton(enabled = canMoveUp, onClick = { showMenu = false; onMove(-1) }) { Text(stringResource(Res.string.travel_move_up)) }
-                            TravelTextButton(enabled = canMoveDown, onClick = { showMenu = false; onMove(1) }) { Text(stringResource(Res.string.travel_move_down)) }
-                            TravelTextButton(onClick = { showMenu = false; onRemove() }) { Text(stringResource(Res.string.travel_delete), color = OguriTheme.colors.error) }
-                        }
-                    }
-                }
-            }
-        }
-        if (deleteVisible) {
-            Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
+            if (canEdit && (canMoveUp || canMoveDown)) {
                 Box(
-                    modifier = Modifier.width(deleteWidth).fillMaxHeight()
-                        .background(OguriTheme.colors.orangeContainer)
-                        .noRippleClickable(onClick = onRemove),
+                    modifier = Modifier.size(48.dp).pointerInput(visit.id) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown()
+                            val endedBeforeHold = withTimeoutOrNull(REORDER_HOLD_MILLIS) {
+                                waitForUpOrCancellation()
+                                true
+                            }
+                            if (endedBeforeHold == true) return@awaitEachGesture
+
+                            dragStart()
+                            var completed = false
+                            try {
+                                completed = drag(down.id) { change ->
+                                    val delta = change.positionChange().y
+                                    change.consume()
+                                    dragBy(delta)
+                                }
+                            } finally {
+                                dragFinished(completed)
+                            }
+                        }
+                    },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(stringResource(Res.string.travel_delete), color = OguriTheme.colors.textPrimary, style = OguriTheme.typography.labelLarge)
+                    Icon(painterResource(Res.drawable.ic_travel_drag), null, Modifier.size(20.dp), tint = colors.textTertiary)
                 }
             }
         }

@@ -290,7 +290,6 @@
     <string name="travel_city_sitges">锡切斯</string>
     <string name="travel_city_girona">赫罗纳</string>
     <string name="travel_recommended_cities">Oguri 推荐的城市</string>
-    <string name="travel_city_search_hint">可以按城市名称搜索。</string>
     <string name="travel_previous_month">上个月</string>
     <string name="travel_next_month">下个月</string>
     <string name="travel_select_dates">请选择旅行日期</string>

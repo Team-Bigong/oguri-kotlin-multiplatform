@@ -72,7 +72,6 @@ import oguri.composeapp.generated.resources.travel_city_versailles
 import oguri.composeapp.generated.resources.travel_city_vung_tau
 import oguri.composeapp.generated.resources.travel_city_wollongong
 import oguri.composeapp.generated.resources.travel_city_yokohama
-import oguri.composeapp.generated.resources.travel_city_search_hint
 import oguri.composeapp.generated.resources.travel_city_search_placeholder
 import oguri.composeapp.generated.resources.travel_nearby_cities
 import oguri.composeapp.generated.resources.travel_recommended_cities
@@ -170,12 +169,6 @@ internal fun TravelCitySearchDialog(
                                 }
                             }
                         }
-                        Text(
-                            stringResource(Res.string.travel_city_search_hint),
-                            Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
-                            style = OguriTheme.typography.caption,
-                            color = colors.textTertiary,
-                        )
                     }
                 }
                 if (state.suggestions.isNotEmpty()) {

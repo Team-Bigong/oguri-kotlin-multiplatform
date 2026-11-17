@@ -290,7 +290,6 @@
     <string name="travel_city_sitges">시체스</string>
     <string name="travel_city_girona">지로나</string>
     <string name="travel_recommended_cities">오구리가 추천하는 도시</string>
-    <string name="travel_city_search_hint">도시 이름으로 검색해 보세요.</string>
     <string name="travel_previous_month">이전 달</string>
     <string name="travel_next_month">다음 달</string>
     <string name="travel_select_dates">여행 날짜를 선택해 주세요</string>
