@@ -9,7 +9,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
-import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
 import com.bigong.oguri.feature.travelplanner.ui.travelClockTime
@@ -90,7 +89,7 @@ internal fun TravelReminderDialog(
                         val toggleLabel = stringResource(Res.string.travel_reminder_toggle)
                         Box(Modifier.size(48.dp).semantics { contentDescription = toggleLabel }
                             .toggleable(value = enabled && !state.permissionDenied, role = Role.Switch, enabled = !state.busy && !state.permissionDenied && (settings.canSchedule || reminder != null), onValueChange = { enabled = it }), contentAlignment = Alignment.Center) {
-                            Box(Modifier.size(40.dp, 24.dp).background(if (enabled && !state.permissionDenied) Mint70 else com.bigong.oguri.core.designsystem.Neutral30, CircleShape)) {
+                            Box(Modifier.size(40.dp, 24.dp).background(if (enabled && !state.permissionDenied) OguriTheme.colors.mint else OguriTheme.colors.borderStrong, CircleShape)) {
                                 Box(Modifier.align(if (enabled && !state.permissionDenied) Alignment.CenterEnd else Alignment.CenterStart).padding(2.dp).size(20.dp).background(Neutral0, CircleShape))
                             }
                         }

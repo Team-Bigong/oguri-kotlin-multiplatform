@@ -40,16 +40,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.deeplink.travelInviteLink
-import com.bigong.oguri.core.designsystem.Mint40
-import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.designsystem.Orange70
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelReminderStatus
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
+import com.bigong.oguri.feature.travelplanner.ui.component.travelAccentForeground
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInviteSkeleton
@@ -156,8 +153,8 @@ internal fun TravelMembersRoute(
             if (members != null) {
                 if (!showMembers && members.ownershipTarget == members.currentMemberId && !members.isOwner) {
                     val shape = RoundedCornerShape(8.dp)
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).background(com.bigong.oguri.core.designsystem.Mint5, shape)
-                        .border(1.dp, Mint40, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).background(OguriTheme.colors.mintContainer, shape)
+                        .border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(stringResource(Res.string.travel_transfer_offer_title), style = OguriTheme.typography.cardSubtitle)
                         Text(stringResource(Res.string.travel_transfer_offer_description, members.members.firstOrNull { it.owner }?.nickname ?: stringResource(Res.string.travel_member)), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         TravelOutlineButton(modifier = Modifier.fillMaxWidth(), enabled = !state.busy, onClick = {
@@ -182,12 +179,12 @@ internal fun TravelMembersRoute(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Box(Modifier.size(40.dp).background(if (member.owner) Mint40 else com.bigong.oguri.core.designsystem.Orange20, CircleShape), contentAlignment = Alignment.Center) {
-                            Icon(painterResource(Res.drawable.ic_travel_member), null, Modifier.size(22.dp), tint = Neutral0)
+                        Box(Modifier.size(40.dp).background(if (member.owner) OguriTheme.colors.mintContainer else OguriTheme.colors.borderSubtle, CircleShape), contentAlignment = Alignment.Center) {
+                            Icon(painterResource(Res.drawable.ic_travel_member), null, Modifier.size(22.dp), tint = OguriTheme.colors.textPrimary)
                         }
                         Text(
                             member.nickname ?: stringResource(Res.string.travel_member),
-                            Modifier.weight(1f), color = Neutral100, style = travelTextStyle(15, 18, FontWeight.Medium),
+                            Modifier.weight(1f), color = OguriTheme.colors.textPrimary, style = travelTextStyle(15, 18, FontWeight.Medium),
                         )
                         if (member.owner || member.id == members.currentMemberId) {
                             Text(listOfNotNull(stringResource(Res.string.travel_owner_role).takeIf { member.owner }, stringResource(Res.string.travel_me).takeIf { member.id == members.currentMemberId }).joinToString(" · "), color = colors.textTertiary, style = travelTextStyle(12, 14, FontWeight.Medium))
@@ -206,7 +203,7 @@ internal fun TravelMembersRoute(
                                             }
                                             HorizontalDivider(color = colors.borderSubtle)
                                             TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), enabled = !state.busy, onClick = { menuOpen = false; confirmationKind = "remove"; confirmation = { viewModel.remove(planId, member.id) } }) {
-                                                Text(stringResource(Res.string.travel_remove_member), style = OguriTheme.typography.bodyMedium, color = com.bigong.oguri.core.designsystem.Orange50)
+                                                Text(stringResource(Res.string.travel_remove_member), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.error)
                                             }
 
                                         }
@@ -355,8 +352,8 @@ internal fun TravelMembersRoute(
         }
         com.bigong.oguri.core.ui.component.ConfirmAlertDialog(
             iconResource = if (confirmationKind in listOf("transfer", "accept")) Res.drawable.ic_info else Res.drawable.ic_alert,
-            iconTint = if (confirmationKind in listOf("transfer", "accept")) com.bigong.oguri.core.designsystem.Mint70 else com.bigong.oguri.core.designsystem.Orange50,
-            messageColor = if (confirmationKind in listOf("transfer", "accept")) OguriTheme.colors.textTertiary else com.bigong.oguri.core.designsystem.Orange50,
+            iconTint = if (confirmationKind in listOf("transfer", "accept")) OguriTheme.colors.mint else OguriTheme.colors.error,
+            messageColor = if (confirmationKind in listOf("transfer", "accept")) OguriTheme.colors.textTertiary else OguriTheme.colors.error,
             titleText = stringResource(labels.first), messageText = stringResource(labels.second),
             confirmButtonText = stringResource(labels.third), cancelButtonText = stringResource(Res.string.travel_cancel),
             onDismissRequest = { confirmation = null }, onCancelClick = { confirmation = null },
@@ -368,7 +365,7 @@ internal fun TravelMembersRoute(
 @Composable
 private fun TravelManagementSection(label: String, icon: org.jetbrains.compose.resources.DrawableResource, onClick: (() -> Unit)? = null) {
     Row(Modifier.fillMaxWidth().heightIn(min = 40.dp).noRippleClickable(enabled = onClick != null, onClick = { onClick?.invoke() }).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Icon(painterResource(icon), null, Modifier.size(24.dp), tint = Mint40)
+        Icon(painterResource(icon), null, Modifier.size(24.dp), tint = OguriTheme.colors.textSecondary)
         Text(label, style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
     }
 }
@@ -390,7 +387,7 @@ private fun TravelManagementRow(
     ) {
         Text(
             label, Modifier.weight(1f), style = travelTextStyle(15, 18, FontWeight.Medium),
-            color = if (destructive) com.bigong.oguri.core.designsystem.Orange50 else Neutral100,
+            color = if (destructive) OguriTheme.colors.error else OguriTheme.colors.textPrimary,
         )
         trailing?.let { Text(it, style = OguriTheme.typography.bodySmall, color = colors.textTertiary) }
         if (!destructive) Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(24.dp), tint = colors.textPrimary)
@@ -460,7 +457,7 @@ internal fun TravelInviteRoute(
                 preview.invitedBy?.let { Text(stringResource(Res.string.travel_invited_by, it), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary) }
                 Text(stringResource(Res.string.travel_invite_heading), style = OguriTheme.typography.sectionTitle, modifier = Modifier.padding(top = 8.dp, bottom = 12.dp))
                 Column(Modifier.fillMaxWidth().padding(vertical = 16.dp).clip(RoundedCornerShape(8.dp)).background(OguriTheme.colors.surfaceCard).border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))) {
-                    Text(preview.title, Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Mint70).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = OguriTheme.colors.textOnMint)
+                    Text(preview.title, Modifier.fillMaxWidth().background(OguriTheme.colors.mint).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = travelAccentForeground)
                     Text(travelCardDates(com.bigong.oguri.domain.model.TravelDates(preview.startDate, preview.endDate), true), Modifier.padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 10.dp), style = OguriTheme.typography.cardSubtitle)
                     preview.city?.let { city ->
                         Row(Modifier.padding(start = 18.dp, end = 18.dp, bottom = 18.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

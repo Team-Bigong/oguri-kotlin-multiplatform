@@ -21,8 +21,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint40
-import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelVisitCategory
 import oguri.composeapp.generated.resources.*
@@ -87,7 +85,7 @@ internal fun TravelChoiceChip(
             .padding(touchPadding)
             .heightIn(min = chipHeight)
             .widthIn(min = if (categoryChip) 52.dp else Dp.Unspecified)
-            .background(if (selected) Mint40 else if (segmented) Color.Transparent else colors.surfaceCard, CircleShape)
+            .background(if (selected) OguriTheme.colors.mintContainer else if (segmented) Color.Transparent else colors.surfaceCard, CircleShape)
             .then(if (selected || segmented) Modifier else Modifier.border(1.dp, colors.borderSubtle, CircleShape))
             .padding(horizontal = 13.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center,
@@ -98,7 +96,6 @@ internal fun TravelChoiceChip(
             color = when {
                 !enabled -> colors.textSecondary
                 !selected -> colors.textTertiary
-                categoryChip || segmented -> Neutral100
                 else -> colors.textPrimary
             },
         )

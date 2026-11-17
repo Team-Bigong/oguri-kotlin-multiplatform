@@ -37,11 +37,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelCitySuggestion
+import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
@@ -153,7 +153,7 @@ internal fun TravelDetailsDialog(
             timeZone != null
     TravelFullScreenForm(
         shape = RoundedCornerShape(8.dp),
-        containerColor = Neutral0,
+        containerColor = OguriTheme.colors.surfaceCard,
         onDismissRequest = { if (!busy) onDismiss() },
         title = { Text(stringResource(if (showEditor) Res.string.travel_edit_trip else Res.string.travel_trip_info)) },
         showBottomActions = showEditor,
@@ -168,11 +168,11 @@ internal fun TravelDetailsDialog(
                     TravelPlaceField(title, { title = it }, Res.string.travel_title, Res.string.travel_title, TravelPlanDetails.MAX_TEXT_LENGTH, !busy)
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(Res.string.travel_city), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(Neutral0, RoundedCornerShape(8.dp))
+                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(OguriTheme.colors.surfaceCard, RoundedCornerShape(8.dp))
                             .border(1.dp, if (cityLookupFailed) Orange20 else OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
                             .noRippleClickable(enabled = !busy && cities.size < 10, onClick = onOpenCitySearch).padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = Mint40)
+                            Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = OguriTheme.colors.textSecondary)
                             Text(cities.joinToString(" · ") { catalogCities[it]?.contextualName ?: it }, Modifier.weight(1f), style = travelTextStyle(15, 18))
                             Text(stringResource(Res.string.travel_search_cities), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         }
@@ -189,7 +189,7 @@ internal fun TravelDetailsDialog(
                     }
                     if (resolvingCity) TravelLoading(Modifier.fillMaxWidth())
                     if (cityLookupFailed) {
-                        Text(stringResource(Res.string.travel_city_lookup_failed), style = OguriTheme.typography.bodySmall, color = Orange50)
+                        Text(stringResource(Res.string.travel_city_lookup_failed), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.error)
                         TravelTextButton(onClick = { cityLookupAttempt++ }, enabled = !busy) { Text(stringResource(Res.string.travel_retry)) }
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -212,8 +212,8 @@ internal fun TravelDetailsDialog(
                     }
                 } else {
                     val shape = RoundedCornerShape(8.dp)
-                    Column(Modifier.fillMaxWidth().clip(shape).background(Neutral0).border(1.dp, OguriTheme.colors.borderStrong, shape)) {
-                        Text(current.title, Modifier.fillMaxWidth().background(Mint70).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = Neutral0)
+                    Column(Modifier.fillMaxWidth().clip(shape).background(OguriTheme.colors.surfaceCard).border(1.dp, OguriTheme.colors.borderStrong, shape)) {
+                        Text(current.title, Modifier.fillMaxWidth().background(OguriTheme.colors.mint).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = travelAccentForeground)
                         Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Text(stringResource(Res.string.travel_info_dates, travelCardDates(current.dates, includeYear = true), current.dates.dayCount), style = OguriTheme.typography.cardSubtitle)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -225,10 +225,10 @@ internal fun TravelDetailsDialog(
                     current.source?.let { source ->
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(painterResource(Res.drawable.ic_calendar), null, Modifier.size(24.dp), tint = Mint40)
+                                Icon(painterResource(Res.drawable.ic_calendar), null, Modifier.size(24.dp), tint = OguriTheme.colors.textSecondary)
                                 Text(stringResource(Res.string.travel_source), style = OguriTheme.typography.cardSubtitle)
                             }
-                            Column(Modifier.fillMaxWidth().background(Mint5, shape).border(1.dp, Mint40, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Column(Modifier.fillMaxWidth().background(OguriTheme.colors.mintContainer, shape).border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 if (source.startDate != null && source.endDate != null) {
                                     Text(
                                         text = stringResource(
@@ -246,7 +246,7 @@ internal fun TravelDetailsDialog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                                     ) {
-                                        Text(stringResource(Res.string.travel_open_source), style = OguriTheme.typography.labelLarge, color = if (busy) Neutral50 else Neutral100)
+                                        Text(stringResource(Res.string.travel_open_source), style = OguriTheme.typography.labelLarge, color = if (busy) OguriTheme.colors.textTertiary else OguriTheme.colors.textPrimary)
                                         Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(16.dp), tint = OguriTheme.colors.textTertiary)
                                     }
                                 }
@@ -275,6 +275,7 @@ internal fun TravelDetailsDialog(
     )
     if (citySearch != null) TravelCitySearchDialog(
         state = citySearch, recommendedCities = current.cities, selectedCities = cities,
+        nearbyCities = TravelCity.nearby(city, cities, catalogCities).map { cityLabel(it) },
         onQuery = onSearchCities, onChoose = onChooseCity,
         onChooseRecommendedCity = { cities = (cities + it).distinct().take(10); onCloseCitySearch() },
         onDismiss = onCloseCitySearch,

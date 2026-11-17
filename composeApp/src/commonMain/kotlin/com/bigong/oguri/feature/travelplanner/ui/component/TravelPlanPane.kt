@@ -1,5 +1,11 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -51,6 +57,9 @@ import oguri.composeapp.generated.resources.travel_map_unavailable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+private const val MAP_EXPAND_MILLIS = 250
+private const val MAP_COLLAPSE_MILLIS = 200
+
 @Composable
 internal fun TravelPlanPane(
     scene: TravelMapScene,
@@ -80,80 +89,111 @@ internal fun TravelPlanPane(
         Column(Modifier.fillMaxSize()) {
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
             Spacer(Modifier.height(16.dp))
-            if (showMap) {
-                if (mapUnavailable) {
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 150.dp)
-                        .background(com.bigong.oguri.core.designsystem.Neutral10, RoundedCornerShape(8.dp))
-                        .border(1.dp, OguriTheme.colors.borderSubtle, RoundedCornerShape(8.dp)),
-                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                        Text(stringResource(Res.string.travel_map_unavailable), style = OguriTheme.typography.cardSubtitle)
-                        Text(stringResource(Res.string.travel_map_list_available), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                        TravelTextButton(onClick = { mapAttempt++; mapUnavailable = false }) { Text(stringResource(Res.string.travel_retry)) }
-                    }
-                } else {
-                    val shape = RoundedCornerShape(8.dp)
-                    Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(mapHeight)
-                        .clip(shape).border(1.dp, OguriTheme.colors.borderSubtle, shape)
-                    ) {
-                        key(mapAttempt) {
-                            PlatformTravelMap(
-                                scene = scene,
-                                viewportRequest = viewportRequest,
-                                focusedVisitId = focusedVisitId,
-                                onMarkerClick = onMarkerClick,
-                                onUnavailable = { mapUnavailable = true },
-                                modifier = Modifier.fillMaxSize(),
-                            )
-                        }
-                        Box(
-                            Modifier.align(Alignment.TopEnd).padding(end = 8.dp).heightIn(min = 44.dp)
-                                .noRippleClickable(onClick = { mapExpanded = false }),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Row(
-                                Modifier.heightIn(min = 30.dp).background(OguriTheme.colors.surfaceCard, CircleShape)
-                                    .border(1.dp, OguriTheme.colors.borderSubtle, CircleShape).padding(horizontal = 10.dp, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
+            if (canShowMap) {
+                AnimatedVisibility(
+                    visible = mapExpanded,
+                    enter = expandVertically(
+                        expandFrom = Alignment.Top,
+                        animationSpec = tween(MAP_EXPAND_MILLIS, easing = LinearOutSlowInEasing),
+                    ),
+                    exit = shrinkVertically(
+                        shrinkTowards = Alignment.Top,
+                        animationSpec = tween(MAP_COLLAPSE_MILLIS, easing = FastOutLinearInEasing),
+                    ),
+                ) {
+                    Column {
+                        if (mapUnavailable) {
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(mapHeight)
+                                .background(OguriTheme.colors.backgroundTertiary, RoundedCornerShape(8.dp))
+                                .border(1.dp, OguriTheme.colors.borderSubtle, RoundedCornerShape(8.dp)),
+                                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+                                Text(stringResource(Res.string.travel_map_unavailable), style = OguriTheme.typography.cardSubtitle)
+                                Text(stringResource(Res.string.travel_map_list_available), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    TravelTextButton(enabled = showMap, onClick = { mapAttempt++; mapUnavailable = false }) {
+                                        Text(stringResource(Res.string.travel_retry))
+                                    }
+                                    TravelTextButton(enabled = showMap, onClick = { mapExpanded = false }) {
+                                        Text(stringResource(Res.string.travel_map_hide))
+                                    }
+                                }
+                            }
+                        } else {
+                            val shape = RoundedCornerShape(8.dp)
+                            Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(mapHeight)
+                                .clip(shape).border(1.dp, OguriTheme.colors.borderSubtle, shape)
                             ) {
-                                Text(stringResource(Res.string.travel_map_hide), style = travelTextStyle(12, 14), color = OguriTheme.colors.textSecondary)
-                                Icon(painterResource(Res.drawable.ic_travel_chevron_up), null, Modifier.size(14.dp), tint = OguriTheme.colors.textSecondary)
+                                key(mapAttempt) {
+                                    PlatformTravelMap(
+                                        scene = scene,
+                                        viewportRequest = viewportRequest,
+                                        focusedVisitId = focusedVisitId,
+                                        onMarkerClick = onMarkerClick,
+                                        onUnavailable = { mapUnavailable = true },
+                                        modifier = Modifier.fillMaxSize(),
+                                    )
+                                }
+                                Box(
+                                    Modifier.align(Alignment.TopEnd).padding(end = 8.dp).heightIn(min = 44.dp)
+                                        .noRippleClickable(enabled = showMap, onClick = { mapExpanded = false }),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Row(
+                                        Modifier.heightIn(min = 30.dp).background(OguriTheme.colors.surfaceCard, CircleShape)
+                                            .border(1.dp, OguriTheme.colors.borderSubtle, CircleShape).padding(horizontal = 10.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                    ) {
+                                        Text(stringResource(Res.string.travel_map_hide), style = travelTextStyle(12, 14), color = OguriTheme.colors.textSecondary)
+                                        Icon(painterResource(Res.drawable.ic_travel_chevron_up), null, Modifier.size(14.dp), tint = OguriTheme.colors.textSecondary)
+                                    }
+                                }
+                            }
+                            if (scene.lines.isNotEmpty()) {
+                                Text(
+                                    stringResource(Res.string.travel_map_sequence),
+                                    modifier = Modifier.fillMaxWidth().onSizeChanged { legendHeight = it.height }
+                                        .padding(horizontal = 24.dp, vertical = 4.dp),
+                                    color = OguriTheme.colors.textSecondary,
+                                    style = OguriTheme.typography.labelSmall,
+                                )
                             }
                         }
                     }
-                    if (scene.lines.isNotEmpty()) {
-                        Text(
-                            stringResource(Res.string.travel_map_sequence),
-                            modifier = Modifier.fillMaxWidth().onSizeChanged { legendHeight = it.height }
-                                .padding(horizontal = 24.dp, vertical = 4.dp),
-                            color = OguriTheme.colors.textSecondary,
-                            style = OguriTheme.typography.labelSmall,
-                        )
-                    }
                 }
-            }
-            if (canShowMap && !showMap) {
-                val shape = RoundedCornerShape(8.dp)
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 44.dp)
-                        .background(OguriTheme.colors.surfaceCard, shape)
-                        .border(1.dp, OguriTheme.colors.borderSubtle, shape)
-                        .noRippleClickable(onClick = { mapExpanded = !mapExpanded }),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
+                AnimatedVisibility(
+                    visible = !mapExpanded,
+                    enter = expandVertically(
+                        expandFrom = Alignment.Top,
+                        animationSpec = tween(MAP_COLLAPSE_MILLIS, easing = FastOutLinearInEasing),
+                    ),
+                    exit = shrinkVertically(
+                        shrinkTowards = Alignment.Top,
+                        animationSpec = tween(MAP_EXPAND_MILLIS, easing = LinearOutSlowInEasing),
+                    ),
                 ) {
-                    Icon(painterResource(Res.drawable.ic_travel_map), null, Modifier.size(18.dp), tint = OguriTheme.colors.mint)
-                    Text(
-                        stringResource(if (showMap) Res.string.travel_map_hide else Res.string.travel_map_show),
-                        style = travelTextStyle(13, 16), color = OguriTheme.colors.textSecondary,
-                    )
-                    Icon(painterResource(Res.drawable.ic_travel_chevron_down), null, Modifier.size(16.dp), tint = OguriTheme.colors.textSecondary)
+                    val shape = RoundedCornerShape(8.dp)
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 20.dp).heightIn(min = 44.dp)
+                            .background(OguriTheme.colors.surfaceCard, shape)
+                            .border(1.dp, OguriTheme.colors.borderSubtle, shape)
+                            .noRippleClickable(enabled = !showMap, onClick = { mapExpanded = true }),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(painterResource(Res.drawable.ic_travel_map), null, Modifier.size(18.dp), tint = OguriTheme.colors.mint)
+                        Text(
+                            stringResource(Res.string.travel_map_show),
+                            style = travelTextStyle(13, 16), color = OguriTheme.colors.textSecondary,
+                        )
+                        Icon(painterResource(Res.drawable.ic_travel_chevron_down), null, Modifier.size(16.dp), tint = OguriTheme.colors.textSecondary)
+                    }
                 }
             }
             Column(Modifier.fillMaxWidth().onSizeChanged { statusHeight = it.height }) {
                 status()
             }
-            content(canShowMap && showMap && !mapUnavailable)
+            content(showMap && !mapUnavailable)
         }
     }
 }

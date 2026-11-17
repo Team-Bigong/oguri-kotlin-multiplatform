@@ -43,13 +43,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelOverviewState
 import com.bigong.oguri.feature.travelplanner.ui.model.travelDayColor
+import com.bigong.oguri.feature.travelplanner.ui.model.travelMapLabelColor
 import com.bigong.oguri.feature.travelplanner.ui.model.travelOverviewScene
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import oguri.composeapp.generated.resources.Res
@@ -104,11 +104,12 @@ internal fun TravelOverviewSheet(
         state.places[visit.details.googlePlaceId]?.name ?: visit.details.name
             ?: stringResource(Res.string.travel_visit_fallback, plan.visits.indexOf(visit) + 1)
     }
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
+    ModalBottomSheet(scrimColor = TravelSheetScrim,
         dragHandle = { TravelSheetHandle() },
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = com.bigong.oguri.core.designsystem.Neutral5,
+        containerColor = OguriTheme.colors.backgroundSecondary,
+        contentColor = OguriTheme.colors.textPrimary,
         shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     ) {
         Column(Modifier.fillMaxHeight(0.92f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -187,8 +188,9 @@ internal fun TravelOverviewSheet(
                         }
                         items(visits, key = { it.id }) { visit ->
                             Row(Modifier.fillMaxWidth().noRippleClickable(onClick = { onSelectVisit(visit.id) }).height(50.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Box(Modifier.size(24.dp).background(Color(travelDayColor(day)), CircleShape), contentAlignment = Alignment.Center) {
-                                    Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = Neutral0)
+                                val dayColor = travelDayColor(day)
+                                Box(Modifier.size(24.dp).background(Color(dayColor), CircleShape), contentAlignment = Alignment.Center) {
+                                    Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = travelMapLabelColor(dayColor))
                                 }
                                 Text(title(visit), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }

@@ -19,16 +19,13 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Neutral30
-import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.notification.consumeTravelReminderOpening
 import com.bigong.oguri.core.notification.travelReminderOpening
 import com.bigong.oguri.core.notification.travelReminderTokenVersion
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
+import com.bigong.oguri.feature.travelplanner.ui.component.travelAccentForeground
 import com.bigong.oguri.core.ui.component.dialogSecondaryButtonColor
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
@@ -75,7 +72,7 @@ internal fun TravelReminderEntry(
         val hasConfirmAction = needsSignIn || failure == TravelPlanFailure.CONNECTION
         com.bigong.oguri.feature.travelplanner.ui.component.TravelFormSheet(
             shape = RoundedCornerShape(8.dp),
-            containerColor = Neutral0,
+            containerColor = OguriTheme.colors.surfaceCard,
             onDismissRequest = dismiss,
             title = { Text(stringResource(Res.string.travel_my_reminder)) },
             text = { TravelInlineFailure(if (needsSignIn) TravelPlanFailure.SIGN_IN_REQUIRED else requireNotNull(failure)) },
@@ -118,8 +115,8 @@ private fun ReminderActionButton(
     enabled: Boolean = true,
 ) {
     val background = when {
-        !enabled -> Neutral30
-        primary -> Mint70
+        !enabled -> OguriTheme.colors.borderStrong
+        primary -> OguriTheme.colors.mint
         else -> dialogSecondaryButtonColor
     }
     Box(
@@ -133,7 +130,11 @@ private fun ReminderActionButton(
         Text(
             text = text,
             style = OguriTheme.typography.bodyMedium,
-            color = if (primary) OguriTheme.colors.textOnMint else Neutral90,
+            color = when {
+                !enabled -> OguriTheme.colors.textSecondary
+                primary -> travelAccentForeground
+                else -> OguriTheme.colors.textPrimary
+            },
         )
     }
 }

@@ -14,9 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import com.bigong.oguri.core.util.extension.noRippleClickable
-import com.bigong.oguri.core.designsystem.Mint5
-import com.bigong.oguri.core.designsystem.Mint20
-import com.bigong.oguri.core.designsystem.Mint30
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.travel_card_date_range
@@ -61,7 +58,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelDates
@@ -69,6 +65,7 @@ import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelCitySearchDialog
+import com.bigong.oguri.feature.travelplanner.ui.component.cityLabel
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelFieldColors
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
@@ -89,15 +86,6 @@ import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_choose_time_zone
 import oguri.composeapp.generated.resources.travel_city
-import oguri.composeapp.generated.resources.travel_city_barcelona
-import oguri.composeapp.generated.resources.travel_city_ho_chi_minh
-import oguri.composeapp.generated.resources.travel_city_jeju
-import oguri.composeapp.generated.resources.travel_city_osaka
-import oguri.composeapp.generated.resources.travel_city_paris
-import oguri.composeapp.generated.resources.travel_city_seoul
-import oguri.composeapp.generated.resources.travel_city_sydney
-import oguri.composeapp.generated.resources.travel_city_taipei
-import oguri.composeapp.generated.resources.travel_city_tokyo
 import oguri.composeapp.generated.resources.travel_city_unavailable
 import oguri.composeapp.generated.resources.travel_city_unavailable_message
 import oguri.composeapp.generated.resources.travel_choose_city
@@ -251,7 +239,7 @@ internal fun CreateTravelPlanScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = Mint30)
+                    Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = colors.textTertiary)
                     Text(
                         if (cities.isEmpty()) stringResource(Res.string.travel_choose_city) else cities.joinToString(" · ") { catalogCities[it]?.contextualName ?: it },
                         Modifier.weight(1f),
@@ -307,7 +295,7 @@ internal fun CreateTravelPlanScreen(
                     stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
                     modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 8.dp),
                     style = OguriTheme.typography.caption,
-                    color = com.bigong.oguri.core.designsystem.Orange50,
+                    color = OguriTheme.colors.error,
                 )
             }
             Spacer(Modifier.height(24.dp))
@@ -324,7 +312,7 @@ internal fun CreateTravelPlanScreen(
                 decorationBox = { field ->
                     Box(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(colors.surfaceCard, RoundedCornerShape(8.dp))
                         .border(1.dp, colors.borderStrong, RoundedCornerShape(8.dp)).padding(horizontal = 12.dp), contentAlignment = Alignment.CenterStart) {
-                        if (title.isEmpty()) Text(if (cityName.isBlank()) titleLabel else defaultTitle, style = travelTextStyle(15, 18), color = colors.textPrimary)
+                        if (title.isEmpty()) Text(if (cityName.isBlank()) titleLabel else defaultTitle, style = travelTextStyle(15, 18), color = colors.textTertiary)
                         field()
                     }
                 },
@@ -348,7 +336,7 @@ internal fun CreateTravelPlanScreen(
                 val shape = RoundedCornerShape(8.dp)
                 Column(
                     Modifier.fillMaxWidth().padding(top = 24.dp)
-                        .background(Mint5, shape).border(1.dp, Mint20, shape)
+                        .background(OguriTheme.colors.mintContainer, shape).border(1.dp, OguriTheme.colors.borderSubtle, shape)
                         .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -395,15 +383,21 @@ internal fun CreateTravelPlanScreen(
     }
 
     if (citySearch != null) {
+        val currentCities = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) }
+        val nearbyCities = TravelCity.nearby(cityName, currentCities, catalogCities)
         TravelCitySearchDialog(
             state = citySearch,
-            selectedCities = selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) },
-            recommendedCities = listOf(TravelCity.SEOUL, TravelCity.JEJU, TravelCity.OSAKA, TravelCity.TOKYO, TravelCity.TAIPEI, TravelCity.PARIS, TravelCity.HO_CHI_MINH, TravelCity.SYDNEY, TravelCity.BARCELONA).map { cityLabel(it) },
+            selectedCities = currentCities,
+            nearbyCities = nearbyCities.map { cityLabel(it) },
+            recommendedCities = listOf(
+                TravelCity.SEOUL, TravelCity.JEJU, TravelCity.OSAKA, TravelCity.TOKYO, TravelCity.TAIPEI,
+                TravelCity.PARIS, TravelCity.HO_CHI_MINH, TravelCity.SYDNEY, TravelCity.BARCELONA,
+            ).map { cityLabel(it) },
             onQuery = onSearchCities,
             onChoose = onChooseCity,
             onChooseRecommendedCity = { city ->
                 cityEdited = true
-                selectedCities = (selectedCities.ifEmpty { listOfNotNull(cityInput.takeIf { it.isNotBlank() }) } + city).distinct().take(10)
+                selectedCities = (currentCities + city).distinct().take(10)
                 cityInput = selectedCities.first()
                 onCloseCitySearch()
             },
@@ -477,22 +471,6 @@ private fun TravelDatePicker(
 }
 
 private fun Long.toTravelDate(): LocalDate = Instant.fromEpochMilliseconds(this).toLocalDateTime(TimeZone.UTC).date
-
-@Composable
-private fun cityLabel(city: TravelCity): String =
-    stringResource(
-        when (city) {
-            TravelCity.SEOUL -> Res.string.travel_city_seoul
-            TravelCity.JEJU -> Res.string.travel_city_jeju
-            TravelCity.OSAKA -> Res.string.travel_city_osaka
-            TravelCity.TOKYO -> Res.string.travel_city_tokyo
-            TravelCity.TAIPEI -> Res.string.travel_city_taipei
-            TravelCity.PARIS -> Res.string.travel_city_paris
-            TravelCity.HO_CHI_MINH -> Res.string.travel_city_ho_chi_minh
-            TravelCity.SYDNEY -> Res.string.travel_city_sydney
-            TravelCity.BARCELONA -> Res.string.travel_city_barcelona
-        },
-    )
 
 private val CityCatalogSaver = Saver<Map<String, TravelCitySuggestion>, String>(
     save = { Json.encodeToString(it) },
