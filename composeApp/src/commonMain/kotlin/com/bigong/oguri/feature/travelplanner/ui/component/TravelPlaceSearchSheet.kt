@@ -118,6 +118,7 @@ internal fun TravelPlaceSearchSheet(
             false
         } else true
     })
+    val dismissSheet = rememberTravelSheetDismiss(sheet, close)
     val targetDay = if (manual) draft?.dayNumber ?: day else day
 
     ModalBottomSheet(scrimColor = TravelSheetScrim,
@@ -144,7 +145,7 @@ internal fun TravelPlaceSearchSheet(
                     style = travelTextStyle(12, 14, FontWeight.Medium),
                     color = colors.textTertiary,
                 )
-                TravelIconButton(onClick = close, enabled = canDismiss) {
+                TravelIconButton(onClick = dismissSheet, enabled = canDismiss) {
                     Icon(
                         painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close),
                         modifier = Modifier.size(22.dp), tint = colors.textPrimary,

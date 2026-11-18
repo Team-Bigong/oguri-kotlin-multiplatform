@@ -48,12 +48,14 @@ internal fun TravelVisitDetailsSheet(
     onDismiss: () -> Unit,
     onDirectionsOpened: () -> Unit,
 ) {
-    ModalBottomSheet(scrimColor = TravelSheetScrim, dragHandle = { TravelSheetHandle() }, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp), containerColor = OguriTheme.colors.backgroundSecondary, contentColor = OguriTheme.colors.textPrimary, onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dismissSheet = rememberTravelSheetDismiss(sheetState, onDismiss)
+    ModalBottomSheet(scrimColor = TravelSheetScrim, dragHandle = { TravelSheetHandle() }, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp), containerColor = OguriTheme.colors.backgroundSecondary, contentColor = OguriTheme.colors.textPrimary, onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.fillMaxWidth().height(430.dp)) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(Res.string.travel_visit_details), style = OguriTheme.typography.cardTitle)
                 Text(stringResource(if (offline) Res.string.travel_offline_readonly else Res.string.travel_readonly), Modifier.weight(1f), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                TravelIconButton(onClick = onDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
+                TravelIconButton(onClick = dismissSheet) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
             }
             SelectionContainer(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

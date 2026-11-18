@@ -119,6 +119,7 @@ internal fun TravelVisitEditor(
                 }
             },
         )
+    val dismissSheet = rememberTravelSheetDismiss(sheetState, dismissDraft)
     ModalBottomSheet(scrimColor = TravelSheetScrim,
         dragHandle = { TravelSheetHandle() },
         containerColor = OguriTheme.colors.backgroundSecondary,
@@ -133,7 +134,7 @@ internal fun TravelVisitEditor(
         ) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(Res.string.travel_edit_visit), Modifier.weight(1f), style = OguriTheme.typography.cardTitle)
-                TravelIconButton(onClick = dismissDraft, enabled = canDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
+                TravelIconButton(onClick = dismissSheet, enabled = canDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
             }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             TravelConflictComparison(draft, dates)

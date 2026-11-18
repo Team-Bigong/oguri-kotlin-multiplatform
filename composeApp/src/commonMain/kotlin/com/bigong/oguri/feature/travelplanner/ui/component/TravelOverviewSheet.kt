@@ -104,10 +104,12 @@ internal fun TravelOverviewSheet(
         state.places[visit.details.googlePlaceId]?.name ?: visit.details.name
             ?: stringResource(Res.string.travel_visit_fallback, plan.visits.indexOf(visit) + 1)
     }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dismissSheet = rememberTravelSheetDismiss(sheetState, onDismiss)
     ModalBottomSheet(scrimColor = TravelSheetScrim,
         dragHandle = { TravelSheetHandle() },
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = OguriTheme.colors.backgroundSecondary,
         contentColor = OguriTheme.colors.textPrimary,
         shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
@@ -118,7 +120,7 @@ internal fun TravelOverviewSheet(
                 Spacer(Modifier.size(8.dp))
                 Text(stringResource(Res.string.travel_total_place_count, plan.visits.size), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary)
                 Spacer(Modifier.weight(1f))
-                TravelIconButton(onClick = onDismiss) { androidx.compose.material3.Icon(org.jetbrains.compose.resources.painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
+                TravelIconButton(onClick = dismissSheet) { androidx.compose.material3.Icon(org.jetbrains.compose.resources.painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
             }
             if (showMap) {
                 if (mapUnavailable) {

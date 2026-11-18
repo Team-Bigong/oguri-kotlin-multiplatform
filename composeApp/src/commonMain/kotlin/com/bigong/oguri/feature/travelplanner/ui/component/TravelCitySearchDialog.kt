@@ -98,12 +98,14 @@ internal fun TravelCitySearchDialog(
 ) {
     val colors = OguriTheme.colors
     val searchLabel = stringResource(Res.string.travel_search_cities)
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dismissSheet = rememberTravelSheetDismiss(sheetState, onDismiss)
     ModalBottomSheet(
         scrimColor = TravelSheetScrim,
         dragHandle = null,
         sheetGesturesEnabled = false,
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         containerColor = colors.backgroundSecondary,
         contentColor = colors.textPrimary,
@@ -112,7 +114,7 @@ internal fun TravelCitySearchDialog(
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TravelSheetHandle() }
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(Res.string.travel_search_cities), Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = colors.textPrimary)
-                TravelIconButton(onClick = onDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(24.dp)) }
+                TravelIconButton(onClick = dismissSheet) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(24.dp)) }
             }
             Column(Modifier.weight(1f).padding(start = 20.dp, end = 20.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 TravelTextField(
