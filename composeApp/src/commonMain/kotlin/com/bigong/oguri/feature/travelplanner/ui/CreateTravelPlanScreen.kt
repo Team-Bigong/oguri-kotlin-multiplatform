@@ -241,7 +241,7 @@ internal fun CreateTravelPlanScreen(
                 ) {
                     Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = colors.textTertiary)
                     Text(
-                        if (cities.isEmpty()) stringResource(Res.string.travel_choose_city) else cities.joinToString(" · ") { catalogCities[it]?.contextualName ?: it },
+                        if (cities.isEmpty()) stringResource(Res.string.travel_choose_city) else cities.joinToString(" · ") { catalogCities[it]?.name ?: it },
                         Modifier.weight(1f),
                         style = travelTextStyle(15, 18),
                         color = if (cities.isEmpty()) colors.textTertiary else colors.textPrimary,
@@ -255,7 +255,7 @@ internal fun CreateTravelPlanScreen(
                                 selectedCities = cities - city
                                 catalogCities = catalogCities - city
                                 cityInput = selectedCities.firstOrNull().orEmpty()
-                            }) { Text("${catalogCities[city]?.contextualName ?: city} ×") }
+                            }) { Text("${catalogCities[city]?.name ?: city} ×") }
                         }
                     }
                     Text(stringResource(Res.string.travel_primary_city), style = OguriTheme.typography.caption, color = colors.textTertiary)

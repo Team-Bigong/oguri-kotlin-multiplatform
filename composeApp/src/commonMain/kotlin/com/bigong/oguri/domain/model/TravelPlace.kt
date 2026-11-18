@@ -38,6 +38,4 @@ data class TravelCitySuggestion(
     val regionLabel: String? = null,
     val timeZone: String? = null,
     val coordinates: TravelCoordinates? = null,
-) {
-    val contextualName: String get() = regionLabel?.let { "$name · $it" } ?: name
-}
+)

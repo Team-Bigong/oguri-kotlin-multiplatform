@@ -226,7 +226,7 @@ private fun TravelPlanCard(
     val colors = OguriTheme.colors
     val shape = RoundedCornerShape(8.dp)
     val dayOffset = today?.let { details.dates.start.toEpochDays() - it.toEpochDays() }
-    val cityLabel = details.catalogCities[details.city]?.contextualName ?: details.city
+    val cityLabel = details.catalogCities[details.city]?.name ?: details.city
     val meta = listOfNotNull(cityLabel, plan.memberCount?.let { stringResource(Res.string.travel_member_count, it) })
         .joinToString(" · ")
     if (today == null) {

@@ -173,14 +173,14 @@ internal fun TravelDetailsDialog(
                             .noRippleClickable(enabled = !busy && cities.size < 10, onClick = onOpenCitySearch).padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = OguriTheme.colors.textSecondary)
-                            Text(cities.joinToString(" · ") { catalogCities[it]?.contextualName ?: it }, Modifier.weight(1f), style = travelTextStyle(15, 18))
+                            Text(cities.joinToString(" · ") { catalogCities[it]?.name ?: it }, Modifier.weight(1f), style = travelTextStyle(15, 18))
                             Text(stringResource(Res.string.travel_search_cities), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         }
                         if (cities.size > 1) {
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 cities.forEach { selected ->
                                     TravelTextButton(enabled = !busy, onClick = { cities = cities - selected }) {
-                                        Text("${catalogCities[selected]?.contextualName ?: selected} ×")
+                                        Text("${catalogCities[selected]?.name ?: selected} ×")
                                     }
                                 }
                             }
@@ -218,7 +218,7 @@ internal fun TravelDetailsDialog(
                             Text(stringResource(Res.string.travel_info_dates, travelCardDates(current.dates, includeYear = true), current.dates.dayCount), style = OguriTheme.typography.cardSubtitle)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
-                                Text(current.cities.joinToString(" · ") { current.catalogCities[it]?.contextualName ?: it }, style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary)
+                                Text(current.cities.joinToString(" · ") { current.catalogCities[it]?.name ?: it }, style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary)
                             }
                         }
                     }
@@ -276,6 +276,7 @@ internal fun TravelDetailsDialog(
     if (citySearch != null) TravelCitySearchDialog(
         state = citySearch, recommendedCities = current.cities, selectedCities = cities,
         nearbyCities = TravelCity.nearby(city, cities, catalogCities).map { cityLabel(it) },
+        recommendedCityName = { current.catalogCities[it]?.name ?: it },
         onQuery = onSearchCities, onChoose = onChooseCity,
         onChooseRecommendedCity = { cities = (cities + it).distinct().take(10); onCloseCitySearch() },
         onDismiss = onCloseCitySearch,

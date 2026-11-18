@@ -94,6 +94,7 @@ internal fun TravelCitySearchDialog(
     onDismiss: () -> Unit,
     selectedCities: List<String> = emptyList(),
     nearbyCities: List<String> = emptyList(),
+    recommendedCityName: (String) -> String = { it },
 ) {
     val colors = OguriTheme.colors
     val searchLabel = stringResource(Res.string.travel_search_cities)
@@ -164,7 +165,11 @@ internal fun TravelCitySearchDialog(
                                     .background(if (selected) OguriTheme.colors.mintContainer else colors.surfaceCard, CircleShape)
                                     .then(if (selected) Modifier else Modifier.border(1.dp, colors.borderSubtle, CircleShape))
                                     .padding(horizontal = 14.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
-                                    Text(city, style = OguriTheme.typography.bodyMedium, color = if (selected) colors.textPrimary else colors.textSecondary)
+                                    Text(
+                                        if (nearby) city else recommendedCityName(city),
+                                        style = OguriTheme.typography.bodyMedium,
+                                        color = if (selected) colors.textPrimary else colors.textSecondary,
+                                    )
                                 }
                             }
                         }

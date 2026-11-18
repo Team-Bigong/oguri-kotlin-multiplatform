@@ -204,7 +204,7 @@ internal fun TravelPlaceSearchSheet(
                         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             plan.summary.details.cities.forEach { city ->
                                 TravelChoiceChip(
-                                    plan.summary.details.catalogCities[city]?.contextualName ?: city,
+                                    plan.summary.details.catalogCities[city]?.name ?: city,
                                     (state.searchCity ?: plan.summary.details.city) == city,
                                     canEdit,
                                     { onSearchCity(city) },
@@ -252,7 +252,7 @@ internal fun TravelPlaceSearchSheet(
                                 ) {
                                     Text(
                                         (state.searchCity ?: plan.summary.details.city).let { city ->
-                                            stringResource(Res.string.travel_search_city, plan.summary.details.catalogCities[city]?.contextualName ?: city)
+                                            stringResource(Res.string.travel_search_city, plan.summary.details.catalogCities[city]?.name ?: city)
                                         },
                                         modifier = Modifier.weight(1f),
                                         style = travelTextStyle(11, 13),
