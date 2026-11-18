@@ -1,5 +1,7 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -42,10 +45,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bigong.oguri.core.deeplink.TRAVEL_INVITE_HOST
 import com.bigong.oguri.core.deeplink.travelInviteLink
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.navigation.navigationEnter
+import com.bigong.oguri.core.navigation.navigationExit
+import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.platform.SharePayload
 import com.bigong.oguri.core.platform.shareContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
+import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelReminderStatus
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
@@ -100,6 +107,13 @@ import oguri.composeapp.generated.resources.travel_trip_info
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+private sealed interface TravelManagementPage {
+    data object More : TravelManagementPage
+    data object Members : TravelManagementPage
+    data object Reminder : TravelManagementPage
+    data class Details(val plan: TravelPlan) : TravelManagementPage
+}
+
 @Composable
 internal fun TravelMembersRoute(
     cityViewModel: TravelPlannerViewModel,
@@ -120,6 +134,7 @@ internal fun TravelMembersRoute(
     var showMembers by remember(planId) { mutableStateOf(false) }
     var showReminder by remember(planId) { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val lifecycleState by lifecycle.currentStateFlow.collectAsStateWithLifecycle()
     val inviteTitle = stringResource(Res.string.travel_invite_heading)
     val inviteDescription = stringResource(Res.string.travel_invite_description)
     val shareButtonTitle = stringResource(Res.string.share_button_open_in_app)
@@ -149,197 +164,240 @@ internal fun TravelMembersRoute(
     LaunchedEffect(reminderState.failure) {
         reminderState.failure?.let(viewModel::applyAccessFailure)
     }
-    TravelPlannerPage(stringResource(if (showMembers) Res.string.travel_participating_members else Res.string.travel_manage), { if (showMembers) showMembers = false else onBack() }, state.busy, showTopDivider = false) {
-        if (state.members == null && state.failure == TravelPlanFailure.CONNECTION) {
-            TravelPlansEmpty(
-                illustration = Res.drawable.img_oguri_empty,
-                message = stringResource(Res.string.travel_manage_load_failure_message),
-                actionLabel = stringResource(Res.string.travel_list_retry),
-                onAction = { viewModel.members(planId) },
-                title = stringResource(Res.string.travel_list_failure_title),
-                modifier = Modifier.weight(1f),
-                illustrationSize = 180.dp,
-                outlinedAction = true,
-            )
-            return@TravelPlannerPage
+    val destination = when {
+        showMembers -> TravelManagementPage.Members
+        showReminder -> TravelManagementPage.Reminder
+        else -> state.detailsPlan?.let { TravelManagementPage.Details(it) } ?: TravelManagementPage.More
+    }
+    val closeDetails = {
+        if (!state.busy) {
+            cityViewModel.closeCitySearch()
+            viewModel.dismissDetails()
         }
-        Column(Modifier.verticalScroll(rememberScrollState()).padding(top = 16.dp)) {
-            if (state.detailsPlan == null) {
-                state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.members(planId) }) }
+    }
+    PlatformBackHandler(
+        enabled = destination != TravelManagementPage.More && lifecycleState == Lifecycle.State.RESUMED,
+        onBack = {
+            when (destination) {
+                TravelManagementPage.More -> Unit
+                TravelManagementPage.Members -> if (!state.busy) showMembers = false
+                TravelManagementPage.Reminder -> if (!reminderState.busy) showReminder = false
+                is TravelManagementPage.Details -> closeDetails()
             }
-            val members = state.members
-            if (members != null) {
-                if (!showMembers && members.ownershipTarget == members.currentMemberId && !members.isOwner) {
-                    val shape = RoundedCornerShape(8.dp)
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).background(OguriTheme.colors.mintContainer, shape)
-                        .border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(stringResource(Res.string.travel_transfer_offer_title), style = OguriTheme.typography.cardSubtitle)
-                        Text(stringResource(Res.string.travel_transfer_offer_description, members.members.firstOrNull { it.owner }?.nickname ?: stringResource(Res.string.travel_member)), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                        TravelOutlineButton(modifier = Modifier.fillMaxWidth(), enabled = !state.busy, onClick = {
-                            confirmationKind = "accept"; confirmation = { viewModel.acceptOwnership(planId) }
-                        }) { Text(stringResource(Res.string.travel_accept_ownership)) }
-                    }
-                    Spacer(Modifier.height(18.dp))
-                }
-                TravelManagementSection(
-                    if (members.members.size > 1) stringResource(Res.string.travel_member_count, members.members.size) else stringResource(Res.string.travel_members),
-                    Res.drawable.ic_travel_members,
-                    onClick = { showMembers = true },
-                )
-                Spacer(Modifier.height(10.dp))
-                val colors = OguriTheme.colors
-                val shape = RoundedCornerShape(8.dp)
-                Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderStrong, shape)) {
-                members.members.forEachIndexed { index, member ->
-                    if (index > 0) HorizontalDivider(color = colors.borderSubtle)
-                    Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 13.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Box(Modifier.size(40.dp).background(if (member.owner) OguriTheme.colors.mintContainer else OguriTheme.colors.borderSubtle, CircleShape), contentAlignment = Alignment.Center) {
-                            Icon(painterResource(Res.drawable.ic_travel_member), null, Modifier.size(22.dp), tint = OguriTheme.colors.textPrimary)
-                        }
-                        Text(
-                            member.nickname ?: stringResource(Res.string.travel_member),
-                            Modifier.weight(1f), color = OguriTheme.colors.textPrimary, style = travelTextStyle(15, 18, FontWeight.Medium),
-                        )
-                        if (member.owner || member.id == members.currentMemberId) {
-                            Text(listOfNotNull(stringResource(Res.string.travel_owner_role).takeIf { member.owner }, stringResource(Res.string.travel_me).takeIf { member.id == members.currentMemberId }).joinToString(" · "), color = colors.textTertiary, style = travelTextStyle(12, 14, FontWeight.Medium))
-                        }
-                        if (members.isOwner && !member.owner) {
-                            var menuOpen by remember(member.id) { mutableStateOf(false) }
-                            Box {
-                                com.bigong.oguri.feature.travelplanner.ui.component.TravelIconButton(onClick = { menuOpen = true }, enabled = !state.busy) {
-                                    Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), Modifier.size(24.dp).rotate(90f))
-                                }
-                                if (menuOpen) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, with(LocalDensity.current) { 40.dp.roundToPx() }), onDismissRequest = { menuOpen = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
-                                    androidx.compose.material3.Surface(modifier = Modifier.width(140.dp).border(1.dp, colors.borderStrong, shape), color = colors.surfaceCard, shape = shape, shadowElevation = 4.dp) {
-                                        Column {
-                                            TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), enabled = !state.busy && members.ownershipTarget != member.id, onClick = { menuOpen = false; confirmationKind = "transfer"; confirmation = { viewModel.offerOwnership(planId, member.id) } }) {
-                                                Text(stringResource(if (members.ownershipTarget == member.id) Res.string.travel_ownership_pending else Res.string.travel_offer_ownership), style = OguriTheme.typography.bodyMedium)
-                                            }
-                                            HorizontalDivider(color = colors.borderSubtle)
-                                            TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), enabled = !state.busy, onClick = { menuOpen = false; confirmationKind = "remove"; confirmation = { viewModel.remove(planId, member.id) } }) {
-                                                Text(stringResource(Res.string.travel_remove_member), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.error)
-                                            }
+        },
+    )
 
+    val moreScroll = rememberScrollState()
+    val membersScroll = rememberScrollState()
+    val managementScreen: @Composable (Boolean) -> Unit = { membersOnly ->
+        TravelPlannerPage(stringResource(if (membersOnly) Res.string.travel_participating_members else Res.string.travel_manage), { if (membersOnly) showMembers = false else onBack() }, state.busy, showTopDivider = false) {
+            if (state.members == null && state.failure == TravelPlanFailure.CONNECTION) {
+                TravelPlansEmpty(
+                    illustration = Res.drawable.img_oguri_empty,
+                    message = stringResource(Res.string.travel_manage_load_failure_message),
+                    actionLabel = stringResource(Res.string.travel_list_retry),
+                    onAction = { viewModel.members(planId) },
+                    title = stringResource(Res.string.travel_list_failure_title),
+                    modifier = Modifier.weight(1f),
+                    illustrationSize = 180.dp,
+                    outlinedAction = true,
+                )
+                return@TravelPlannerPage
+            }
+            Column(Modifier.verticalScroll(if (membersOnly) membersScroll else moreScroll).padding(top = 16.dp)) {
+                if (state.detailsPlan == null) {
+                    state.failure?.let { TravelInlineFailure(it, onRetry = { viewModel.members(planId) }) }
+                }
+                val members = state.members
+                if (members != null) {
+                    if (!membersOnly && members.ownershipTarget == members.currentMemberId && !members.isOwner) {
+                        val shape = RoundedCornerShape(8.dp)
+                        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).background(OguriTheme.colors.mintContainer, shape)
+                            .border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(stringResource(Res.string.travel_transfer_offer_title), style = OguriTheme.typography.cardSubtitle)
+                            Text(stringResource(Res.string.travel_transfer_offer_description, members.members.firstOrNull { it.owner }?.nickname ?: stringResource(Res.string.travel_member)), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                            TravelOutlineButton(modifier = Modifier.fillMaxWidth(), enabled = !state.busy, onClick = {
+                                confirmationKind = "accept"; confirmation = { viewModel.acceptOwnership(planId) }
+                            }) { Text(stringResource(Res.string.travel_accept_ownership)) }
+                        }
+                        Spacer(Modifier.height(18.dp))
+                    }
+                    TravelManagementSection(
+                        if (members.members.size > 1) stringResource(Res.string.travel_member_count, members.members.size) else stringResource(Res.string.travel_members),
+                        Res.drawable.ic_travel_members,
+                        onClick = { showMembers = true },
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    val colors = OguriTheme.colors
+                    val shape = RoundedCornerShape(8.dp)
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderStrong, shape)) {
+                    members.members.forEachIndexed { index, member ->
+                        if (index > 0) HorizontalDivider(color = colors.borderSubtle)
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 13.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(Modifier.size(40.dp).background(if (member.owner) OguriTheme.colors.mintContainer else OguriTheme.colors.borderSubtle, CircleShape), contentAlignment = Alignment.Center) {
+                                Icon(painterResource(Res.drawable.ic_travel_member), null, Modifier.size(22.dp), tint = OguriTheme.colors.textPrimary)
+                            }
+                            Text(
+                                member.nickname ?: stringResource(Res.string.travel_member),
+                                Modifier.weight(1f), color = OguriTheme.colors.textPrimary, style = travelTextStyle(15, 18, FontWeight.Medium),
+                            )
+                            if (member.owner || member.id == members.currentMemberId) {
+                                Text(listOfNotNull(stringResource(Res.string.travel_owner_role).takeIf { member.owner }, stringResource(Res.string.travel_me).takeIf { member.id == members.currentMemberId }).joinToString(" · "), color = colors.textTertiary, style = travelTextStyle(12, 14, FontWeight.Medium))
+                            }
+                            if (members.isOwner && !member.owner) {
+                                var menuOpen by remember(member.id) { mutableStateOf(false) }
+                                Box {
+                                    com.bigong.oguri.feature.travelplanner.ui.component.TravelIconButton(onClick = { menuOpen = true }, enabled = !state.busy) {
+                                        Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), Modifier.size(24.dp).rotate(90f))
+                                    }
+                                    if (menuOpen) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, with(LocalDensity.current) { 40.dp.roundToPx() }), onDismissRequest = { menuOpen = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
+                                        androidx.compose.material3.Surface(modifier = Modifier.width(140.dp).border(1.dp, colors.borderStrong, shape), color = colors.surfaceCard, shape = shape, shadowElevation = 4.dp) {
+                                            Column {
+                                                TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), enabled = !state.busy && members.ownershipTarget != member.id, onClick = { menuOpen = false; confirmationKind = "transfer"; confirmation = { viewModel.offerOwnership(planId, member.id) } }) {
+                                                    Text(stringResource(if (members.ownershipTarget == member.id) Res.string.travel_ownership_pending else Res.string.travel_offer_ownership), style = OguriTheme.typography.bodyMedium)
+                                                }
+                                                HorizontalDivider(color = colors.borderSubtle)
+                                                TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp), enabled = !state.busy, onClick = { menuOpen = false; confirmationKind = "remove"; confirmation = { viewModel.remove(planId, member.id) } }) {
+                                                    Text(stringResource(Res.string.travel_remove_member), style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.error)
+                                                }
+
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
 
-                }
-                }
-                if (!showMembers) {
-                if (members.isOwner) {
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        stringResource(Res.string.travel_invite_explanation),
-                        Modifier.padding(horizontal = 24.dp),
-                        style = travelTextStyle(13, 16),
-                        color = colors.textTertiary,
-                    )
-                    Spacer(Modifier.height(14.dp))
-                    FlowRow(
-                        Modifier.padding(horizontal = 20.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        itemVerticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        val inviteToken = members.inviteToken
-                        TravelOutlineButton(enabled = !state.busy, onClick = {
-                            if (inviteToken == null) viewModel.issue(planId, onIssued = shareInvite)
-                            else shareInvite(inviteToken)
-                        }) {
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(painterResource(Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
-                                Text(stringResource(Res.string.travel_share_invite))
+                    }
+                    }
+                    if (!membersOnly) {
+                    if (members.isOwner) {
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            stringResource(Res.string.travel_invite_explanation),
+                            Modifier.padding(horizontal = 24.dp),
+                            style = travelTextStyle(13, 16),
+                            color = colors.textTertiary,
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        FlowRow(
+                            Modifier.padding(horizontal = 20.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            itemVerticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            val inviteToken = members.inviteToken
+                            TravelOutlineButton(enabled = !state.busy, onClick = {
+                                if (inviteToken == null) viewModel.issue(planId, onIssued = shareInvite)
+                                else shareInvite(inviteToken)
+                            }) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(painterResource(Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
+                                    Text(stringResource(Res.string.travel_share_invite))
+                                }
+                            }
+                            if (members.hasActiveInvite) Box(
+                                Modifier.heightIn(min = 45.dp)
+                                    .noRippleClickable(enabled = !state.busy, onClick = { confirmationKind = "revoke"; confirmation = { viewModel.revoke(planId) } })
+                                    .padding(horizontal = 8.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(stringResource(Res.string.travel_revoke_invite), style = travelTextStyle(13, 16), color = colors.textTertiary)
                             }
                         }
-                        if (members.hasActiveInvite) Box(
-                            Modifier.heightIn(min = 45.dp)
-                                .noRippleClickable(enabled = !state.busy, onClick = { confirmationKind = "revoke"; confirmation = { viewModel.revoke(planId) } })
-                                .padding(horizontal = 8.dp),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            Text(stringResource(Res.string.travel_revoke_invite), style = travelTextStyle(13, 16), color = colors.textTertiary)
+                        members.inviteExpiresAt?.let { expires ->
+                            Text(stringResource(Res.string.travel_invite_expiry_hint, travelWeekDate(expires.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date)), Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)
                         }
                     }
-                    members.inviteExpiresAt?.let { expires ->
-                        Text(stringResource(Res.string.travel_invite_expiry_hint, travelWeekDate(expires.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date)), Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)
-                    }
-                }
-                Spacer(Modifier.height(30.dp))
-                TravelManagementSection(stringResource(Res.string.travel_manage_title), Res.drawable.ic_travel_map)
-                Spacer(Modifier.height(8.dp))
-                HorizontalDivider(color = colors.borderSubtle)
-                TravelManagementRow(stringResource(Res.string.travel_trip_info), !state.busy) { viewModel.loadDetails(planId) }
-                HorizontalDivider(color = colors.borderSubtle)
-                Spacer(Modifier.height(26.dp))
-                TravelManagementSection(stringResource(Res.string.travel_private_settings), Res.drawable.ic_travel_bell)
-                Spacer(Modifier.height(8.dp))
-                HorizontalDivider(color = colors.borderSubtle)
-                val reminderLabel = reminderState.settings?.let {
-                    val active = it.reminder?.status == TravelReminderStatus.PENDING
-                    stringResource(if (active) Res.string.travel_reminder_status_on else Res.string.travel_reminder_off)
-                }
-                TravelManagementRow(stringResource(Res.string.travel_my_reminder), !state.busy, trailing = reminderLabel) {
-                    showReminder = true
-                }
-                HorizontalDivider(color = colors.borderSubtle)
-                if (members.isOwner) {
-                    Spacer(Modifier.height(40.dp))
+                    Spacer(Modifier.height(30.dp))
+                    TravelManagementSection(stringResource(Res.string.travel_manage_title), Res.drawable.ic_travel_map)
+                    Spacer(Modifier.height(8.dp))
                     HorizontalDivider(color = colors.borderSubtle)
-                    TravelManagementRow(stringResource(Res.string.travel_delete_trip), !state.busy, destructive = true) {
-                        confirmationKind = "delete"; confirmation = { viewModel.delete(planId) }
+                    TravelManagementRow(stringResource(Res.string.travel_trip_info), !state.busy) { viewModel.loadDetails(planId) }
+                    HorizontalDivider(color = colors.borderSubtle)
+                    Spacer(Modifier.height(26.dp))
+                    TravelManagementSection(stringResource(Res.string.travel_private_settings), Res.drawable.ic_travel_bell)
+                    Spacer(Modifier.height(8.dp))
+                    HorizontalDivider(color = colors.borderSubtle)
+                    val reminderLabel = reminderState.settings?.let {
+                        val active = it.reminder?.status == TravelReminderStatus.PENDING
+                        stringResource(if (active) Res.string.travel_reminder_status_on else Res.string.travel_reminder_off)
+                    }
+                    TravelManagementRow(stringResource(Res.string.travel_my_reminder), !state.busy, trailing = reminderLabel) {
+                        showReminder = true
                     }
                     HorizontalDivider(color = colors.borderSubtle)
-                } else {
-                    Spacer(Modifier.height(32.dp))
-                    HorizontalDivider(color = colors.borderSubtle)
-                    TravelManagementRow(stringResource(Res.string.travel_leave_trip), !state.busy, destructive = true) {
-                        confirmationKind = "leave"; confirmation = { viewModel.leave(planId) }
+                    if (members.isOwner) {
+                        Spacer(Modifier.height(40.dp))
+                        HorizontalDivider(color = colors.borderSubtle)
+                        TravelManagementRow(stringResource(Res.string.travel_delete_trip), !state.busy, destructive = true) {
+                            confirmationKind = "delete"; confirmation = { viewModel.delete(planId) }
+                        }
+                        HorizontalDivider(color = colors.borderSubtle)
+                    } else {
+                        Spacer(Modifier.height(32.dp))
+                        HorizontalDivider(color = colors.borderSubtle)
+                        TravelManagementRow(stringResource(Res.string.travel_leave_trip), !state.busy, destructive = true) {
+                            confirmationKind = "leave"; confirmation = { viewModel.leave(planId) }
+                        }
+                        HorizontalDivider(color = colors.borderSubtle)
+                        Text(stringResource(Res.string.travel_leave_explanation), Modifier.padding(horizontal = 24.dp, vertical = 10.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)
                     }
-                    HorizontalDivider(color = colors.borderSubtle)
-                    Text(stringResource(Res.string.travel_leave_explanation), Modifier.padding(horizontal = 24.dp, vertical = 10.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)
-                }
+                    }
                 }
             }
         }
     }
-    if (showReminder) {
-        TravelReminderDialog(
-            state = reminderState,
-            onSchedule = { reminderViewModel.schedule(planId, it) },
-            onCancel = { reminderViewModel.cancel(planId) },
-            onReload = { reminderViewModel.load(planId) },
-            onDismiss = { showReminder = false },
-            onRefreshPermission = reminderViewModel::refreshPermission,
-        )
-    }
-    state.detailsPlan?.let { plan ->
-        TravelDetailsDialog(
-            plan,
-            state.busy,
-            state.failure,
-            { cityViewModel.closeCitySearch(); viewModel.dismissDetails() },
-            citySearch = cityState.citySearch,
-            onOpenCitySearch = cityViewModel::openCitySearch,
-            onCloseCitySearch = cityViewModel::closeCitySearch,
-            onSearchCities = { cityViewModel.searchCities(it, androidx.compose.ui.text.intl.Locale.current.toLanguageTag()) },
-            onChooseCity = cityViewModel::chooseCity,
-            onResolveCityTimeZone = { city -> cityViewModel.resolveCityTimeZone(city, language) },
-            onReload = { viewModel.loadDetails(planId) },
-            onApply = { details, affected -> viewModel.updateDetails(plan, details, affected, onDetailsChanged) },
-            canEdit = state.members?.isOwner == true,
-            startEditing = false,
-            onOpenSource = { source ->
-                viewModel.dismissDetails()
-                onOpenSource(source)
-            },
-        )
+    AnimatedContent(
+        targetState = destination,
+        contentKey = { it::class },
+        modifier = Modifier.fillMaxSize(),
+        transitionSpec = {
+            val forward = targetState != TravelManagementPage.More
+            navigationEnter(fromRight = forward, parallax = !forward) togetherWith
+                navigationExit(toRight = !forward, parallax = forward)
+        },
+        label = "travel management page",
+    ) { page ->
+        when (page) {
+            TravelManagementPage.More -> managementScreen(false)
+            TravelManagementPage.Members -> managementScreen(true)
+            TravelManagementPage.Reminder -> {
+                TravelReminderDialog(
+                    state = reminderState,
+                    onSchedule = { reminderViewModel.schedule(planId, it) },
+                    onCancel = { reminderViewModel.cancel(planId) },
+                    onReload = { reminderViewModel.load(planId) },
+                    onDismiss = { showReminder = false },
+                    onRefreshPermission = reminderViewModel::refreshPermission,
+                )
+            }
+            is TravelManagementPage.Details -> {
+                TravelDetailsDialog(
+                    page.plan,
+                    state.busy,
+                    state.failure,
+                    closeDetails,
+                    citySearch = cityState.citySearch,
+                    onOpenCitySearch = cityViewModel::openCitySearch,
+                    onCloseCitySearch = cityViewModel::closeCitySearch,
+                    onSearchCities = { cityViewModel.searchCities(it, androidx.compose.ui.text.intl.Locale.current.toLanguageTag()) },
+                    onChooseCity = cityViewModel::chooseCity,
+                    onResolveCityTimeZone = { city -> cityViewModel.resolveCityTimeZone(city, language) },
+                    onReload = { viewModel.loadDetails(planId) },
+                    onApply = { details, affected -> viewModel.updateDetails(page.plan, details, affected, onDetailsChanged) },
+                    canEdit = state.members?.isOwner == true,
+                    startEditing = false,
+                    onOpenSource = { source ->
+                        viewModel.dismissDetails()
+                        onOpenSource(source)
+                    },
+                )
+            }
+        }
     }
     val action = confirmation
     if (action != null) {

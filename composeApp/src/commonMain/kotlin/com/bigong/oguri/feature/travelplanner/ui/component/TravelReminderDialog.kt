@@ -71,6 +71,7 @@ internal fun TravelReminderDialog(
     val selectedTime = runCatching { kotlinx.datetime.LocalTime.parse(time) }.getOrNull()
     val canChoose = enabled && !state.permissionDenied && !state.busy && settings?.canSchedule == true
     TravelFullScreenForm(
+        embedded = true,
         onDismissRequest = { if (!state.busy) onDismiss() },
         contentPadding = PaddingValues(0.dp),
         showBottomActions = !state.permissionDenied,

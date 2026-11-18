@@ -152,6 +152,7 @@ internal fun TravelDetailsDialog(
             dates != null &&
             timeZone != null
     TravelFullScreenForm(
+        embedded = true,
         shape = RoundedCornerShape(8.dp),
         containerColor = OguriTheme.colors.surfaceCard,
         onDismissRequest = { if (!busy) onDismiss() },

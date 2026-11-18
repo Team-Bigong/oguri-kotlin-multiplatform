@@ -1,10 +1,5 @@
 package com.bigong.oguri.core.navigation
 
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -59,9 +54,6 @@ import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
-
-private const val NAVIGATION_FADE_DURATION_MILLIS = 180
-private const val NAVIGATION_SLIDE_DURATION_MILLIS = 240
 
 @Composable
 fun MainNavHost(
@@ -127,57 +119,21 @@ fun MainNavHost(
                 .fillMaxSize()
                 .padding(contentPaddingValues),
         enterTransition = {
-            val initialRoute = initialState.destination.route
-            val targetRoute = targetState.destination.route
-            val initialTabIndex = bottomNavigationTabIndex(routeText = initialRoute)
-            val targetTabIndex = bottomNavigationTabIndex(routeText = targetRoute)
-            val isBottomNavigationTabTransition = initialTabIndex != null && targetTabIndex != null
-
-            if (isBottomNavigationTabTransition) {
-                val isForward = targetTabIndex > initialTabIndex
-                slideInHorizontally(
-                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                    initialOffsetX = { fullWidth -> if (isForward) fullWidth else -fullWidth },
-                ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
-            } else {
-                slideInHorizontally(
-                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                    initialOffsetX = { fullWidth -> fullWidth },
-                ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
-            }
+            val initialTab = bottomNavigationTabIndex(routeText = initialState.destination.route)
+            val targetTab = bottomNavigationTabIndex(routeText = targetState.destination.route)
+            navigationEnter(fromRight = initialTab == null || targetTab == null || targetTab > initialTab)
         },
         exitTransition = {
-            val initialRoute = initialState.destination.route
-            val targetRoute = targetState.destination.route
-            val initialTabIndex = bottomNavigationTabIndex(routeText = initialRoute)
-            val targetTabIndex = bottomNavigationTabIndex(routeText = targetRoute)
-            val isBottomNavigationTabTransition = initialTabIndex != null && targetTabIndex != null
-
-            if (isBottomNavigationTabTransition) {
-                val isForward = targetTabIndex > initialTabIndex
-                slideOutHorizontally(
-                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                    targetOffsetX = { fullWidth -> if (isForward) -fullWidth else fullWidth },
-                ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+            val initialTab = bottomNavigationTabIndex(routeText = initialState.destination.route)
+            val targetTab = bottomNavigationTabIndex(routeText = targetState.destination.route)
+            if (initialTab != null && targetTab != null) {
+                navigationExit(toRight = targetTab <= initialTab)
             } else {
-                slideOutHorizontally(
-                    animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                    targetOffsetX = { fullWidth -> -fullWidth / 3 },
-                ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
+                navigationExit(toRight = false, parallax = true)
             }
         },
-        popEnterTransition = {
-            slideInHorizontally(
-                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                initialOffsetX = { fullWidth -> -fullWidth / 3 },
-            ) + fadeIn(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                animationSpec = tween(durationMillis = NAVIGATION_SLIDE_DURATION_MILLIS),
-                targetOffsetX = { fullWidth -> fullWidth },
-            ) + fadeOut(animationSpec = tween(durationMillis = NAVIGATION_FADE_DURATION_MILLIS))
-        },
+        popEnterTransition = { navigationEnter(fromRight = false, parallax = true) },
+        popExitTransition = { navigationExit(toRight = true) },
     ) {
         composable<RouteModel.Splash> {
             SplashRoute(
