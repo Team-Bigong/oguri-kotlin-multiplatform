@@ -90,9 +90,7 @@
     <string name="travel_owner_name">%1$s · 소유자</string>
     <string name="travel_remove_member">멤버 제외</string>
     <string name="travel_invite_explanation">링크로 참여한 사람은 일정을 편집할 수 있어요. 새 링크를 만들면 이전 링크가 만료돼요.</string>
-    <string name="travel_create_invite">초대 링크 만들기</string>
-    <string name="travel_share_invite">초대 링크 공유하기</string>
-    <string name="travel_replace_invite">새 링크 만들고 공유하기</string>
+    <string name="travel_share_invite">링크 공유하기</string>
     <string name="travel_revoke_invite">초대 링크 철회</string>
     <string name="travel_delete_trip">여행 삭제</string>
     <string name="travel_leave_explanation">나가도 함께 만든 일정은 여행에 남아요.</string>

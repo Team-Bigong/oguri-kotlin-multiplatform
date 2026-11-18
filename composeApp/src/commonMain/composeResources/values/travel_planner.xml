@@ -90,9 +90,7 @@
     <string name="travel_owner_name">%1$s · Owner</string>
     <string name="travel_remove_member">Remove member</string>
     <string name="travel_invite_explanation">Anyone who joins with the link can edit the itinerary. Creating a new link revokes the previous one.</string>
-    <string name="travel_create_invite">Create invite link</string>
-    <string name="travel_share_invite">Share invite link</string>
-    <string name="travel_replace_invite">Create and share a new link</string>
+    <string name="travel_share_invite">Share link</string>
     <string name="travel_revoke_invite">Revoke invite link</string>
     <string name="travel_delete_trip">Delete trip</string>
     <string name="travel_leave_explanation">The itinerary stays with the group after you leave.</string>

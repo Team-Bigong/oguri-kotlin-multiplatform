@@ -71,7 +71,7 @@ import oguri.composeapp.generated.resources.travel_accept_ownership
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_confirm_member_action
-import oguri.composeapp.generated.resources.travel_create_invite
+import oguri.composeapp.generated.resources.travel_share_invite
 import oguri.composeapp.generated.resources.travel_dates_value
 import oguri.composeapp.generated.resources.travel_delete_trip
 import oguri.composeapp.generated.resources.travel_invitation
@@ -255,15 +255,7 @@ internal fun TravelMembersRoute(
                         }) {
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(painterResource(Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
-                                Text(
-                                    stringResource(
-                                        when {
-                                            inviteToken != null -> Res.string.travel_share_invite
-                                            members.hasActiveInvite -> Res.string.travel_replace_invite
-                                            else -> Res.string.travel_create_invite
-                                        },
-                                    ),
-                                )
+                                Text(stringResource(Res.string.travel_share_invite))
                             }
                         }
                         if (members.hasActiveInvite) Box(
