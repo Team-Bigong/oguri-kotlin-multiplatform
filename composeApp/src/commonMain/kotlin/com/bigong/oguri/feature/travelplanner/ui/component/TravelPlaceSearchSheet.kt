@@ -22,7 +22,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -216,7 +215,8 @@ internal fun TravelPlaceSearchSheet(
                     item(key = "place-search-input") {
                         TravelPlaceInput(
                             value = search.query,
-                            onChange = { if (it.length <= 120) onQuery(it) },
+                            onChange = onQuery,
+                            limit = TRAVEL_SEARCH_QUERY_LIMIT,
                             label = stringResource(Res.string.travel_search_places),
                             placeholder = stringResource(Res.string.travel_search_places),
                             enabled = canEdit,
@@ -368,7 +368,8 @@ internal fun TravelPlaceField(
         Text(fieldLabel, style = travelTextStyle(12, 14, FontWeight.Medium), color = OguriTheme.colors.textTertiary)
         TravelPlaceInput(
             value = value,
-            onChange = { if (it.length <= limit) onChange(it) },
+            onChange = onChange,
+            limit = limit,
             label = fieldLabel,
             placeholder = stringResource(placeholder),
             enabled = enabled,
@@ -389,6 +390,7 @@ internal fun TravelPlaceField(
 private fun TravelPlaceInput(
     value: String,
     onChange: (String) -> Unit,
+    limit: Int,
     label: String,
     placeholder: String,
     enabled: Boolean,
@@ -399,9 +401,10 @@ private fun TravelPlaceInput(
     val style = travelTextStyle(15, if (multiline) 21 else 18)
     val focusSource = remember { MutableInteractionSource() }
     val focused by focusSource.collectIsFocusedAsState()
-    BasicTextField(
+    TravelTextField(
         value = value,
         onValueChange = onChange,
+        limit = limit,
         modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
         enabled = enabled,
         singleLine = !multiline,

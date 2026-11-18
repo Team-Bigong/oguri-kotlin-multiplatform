@@ -19,7 +19,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -115,8 +114,8 @@ internal fun TravelCitySearchDialog(
                 TravelIconButton(onClick = onDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(24.dp)) }
             }
             Column(Modifier.weight(1f).padding(start = 20.dp, end = 20.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                BasicTextField(
-                    value = state.query, onValueChange = { if (it.length <= 120) onQuery(it) }, singleLine = true,
+                TravelTextField(
+                    value = state.query, onValueChange = onQuery, limit = TRAVEL_SEARCH_QUERY_LIMIT,
                     textStyle = travelTextStyle(15, 18).copy(color = colors.textPrimary), cursorBrush = SolidColor(colors.textPrimary),
                     modifier = Modifier.fillMaxWidth().semantics { contentDescription = searchLabel },
                     decorationBox = { field ->

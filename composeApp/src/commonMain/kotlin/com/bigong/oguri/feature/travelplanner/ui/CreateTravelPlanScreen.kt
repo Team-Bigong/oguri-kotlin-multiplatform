@@ -5,7 +5,6 @@ import oguri.composeapp.generated.resources.ic_pen
 import oguri.composeapp.generated.resources.ic_calendar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -14,6 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextField
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.travel_card_date_range
@@ -301,9 +301,10 @@ internal fun CreateTravelPlanScreen(
             Spacer(Modifier.height(24.dp))
             Text(titleLabel, style = OguriTheme.typography.labelMedium, color = colors.textTertiary)
             Spacer(Modifier.height(8.dp))
-            BasicTextField(
+            TravelTextField(
                 value = title,
-                onValueChange = { if (it.length <= TravelPlanDetails.MAX_TEXT_LENGTH) title = it },
+                onValueChange = { title = it },
+                limit = TravelPlanDetails.MAX_TEXT_LENGTH,
                 singleLine = true,
                 enabled = canEdit,
                 modifier = Modifier.fillMaxWidth().semantics { contentDescription = titleLabel },
