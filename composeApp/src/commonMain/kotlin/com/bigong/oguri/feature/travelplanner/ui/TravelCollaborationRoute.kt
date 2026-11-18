@@ -108,6 +108,7 @@ internal fun TravelMembersRoute(
     reminderViewModel: TravelReminderViewModel,
     onBack: () -> Unit,
     onClosed: () -> Unit,
+    onDetailsChanged: () -> Unit,
     onSelectDay: (Int) -> Unit,
     dates: TravelDates,
     onOpenSource: (TravelPlanSource) -> Unit,
@@ -330,7 +331,7 @@ internal fun TravelMembersRoute(
             onChooseCity = cityViewModel::chooseCity,
             onResolveCityTimeZone = { city -> cityViewModel.resolveCityTimeZone(city, language) },
             onReload = { viewModel.loadDetails(planId) },
-            onApply = { details, affected -> viewModel.updateDetails(plan, details, affected) },
+            onApply = { details, affected -> viewModel.updateDetails(plan, details, affected, onDetailsChanged) },
             canEdit = state.members?.isOwner == true,
             startEditing = false,
             onOpenSource = { source ->

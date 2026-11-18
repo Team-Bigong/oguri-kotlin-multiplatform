@@ -102,6 +102,7 @@ internal fun TravelPlanRoute(
     requestedDay: StateFlow<Int?>,
     onDayConsumed: () -> Unit,
     onMembers: (String, String) -> Unit,
+    onPlanViewed: () -> Unit,
     onFindNextHoliday: () -> Unit,
     onSignIn: () -> Unit,
     onBack: () -> Unit,
@@ -155,6 +156,7 @@ internal fun TravelPlanRoute(
         if (plan != null && !state.isOffline) {
             delay(250)
             viewModel.recordView(planId, state.selectedDay)
+            onPlanViewed()
         }
     }
     LaunchedEffect(viewModel, planId, state.selectedDay, language, placeIds, detailsRetry, state.isOffline) {

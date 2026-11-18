@@ -117,9 +117,11 @@ class TravelCollaborationViewModel(
         plan: TravelPlan,
         details: TravelPlanDetails,
         affected: Int,
+        onUpdated: () -> Unit,
     ) = perform {
         checkedResult { repository.updateDetails(plan.summary.id, details, plan.revision, affected) }
         mutableState.update { it.copy(detailsPlan = null) }
+        onUpdated()
     }
 
     internal fun dismissDetails() {

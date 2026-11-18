@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -49,6 +51,7 @@ import com.bigong.oguri.feature.travelplanner.ui.TravelInviteRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelMembersRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlanRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
+import com.bigong.oguri.feature.travelplanner.ui.TravelPlannerViewModel
 import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
 import com.bigong.oguri.feature.travelplanner.ui.TravelHomeGuide
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
@@ -81,6 +84,14 @@ fun MainNavHost(
 ) {
     val navigationScope = rememberCoroutineScope()
     val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
+    val homeTravelViewModel by rememberUpdatedState(
+        if (travelSession.tokens != null) {
+            viewModel<TravelPlannerViewModel>(key = "travel-home-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
+        } else {
+            null
+        },
+    )
+
     fun recordRecommendation(source: TravelRecommendationSource, entry: TravelRecommendationEntry) {
         navigationScope.launch {
             try {
@@ -234,10 +245,13 @@ fun MainNavHost(
                 )
             }
         }
-        composable<RouteModel.Home> {
-            val travelViewModel = if (travelSession.tokens != null) {
-                viewModel(key = "travel-session-${travelSession.version}") { appGraph.travelPlannerViewModelProvider() }
-            } else null
+        composable<RouteModel.Home> { entry ->
+            val travelViewModel = homeTravelViewModel
+            LaunchedEffect(entry, travelViewModel) {
+                if (travelViewModel != null) {
+                    entry.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { travelViewModel.refreshResumeIfNeeded() }
+                }
+            }
             HomeRoute(
                 homeViewModel = homeViewModelProvider(),
                 snackbarHostState = snackbarHostState,
@@ -307,7 +321,10 @@ fun MainNavHost(
                         if (token?.let(TravelInviteIntent::clear) != false) navigator.closeTravelInviteToPlans()
                     },
                     onJoined = {
-                        if (token?.let(TravelInviteIntent::clear) == true) navigator.openJoinedTravelPlan(it)
+                        if (token?.let(TravelInviteIntent::clear) == true) {
+                            homeTravelViewModel?.invalidateResume()
+                            navigator.openJoinedTravelPlan(it)
+                        }
                     },
                 )
             }
@@ -329,7 +346,11 @@ fun MainNavHost(
                         key = "travel-reminder-${travelSession.version}",
                     ) { appGraph.travelReminderViewModelProvider() },
                 onBack = { navigator.popBackStack() },
-                onClosed = navigator::closeManagedTravelPlan,
+                onClosed = {
+                    homeTravelViewModel?.invalidateResume(removedPlanId = route.planId)
+                    navigator.closeManagedTravelPlan()
+                },
+                onDetailsChanged = { homeTravelViewModel?.invalidateResume() },
                 onOpenSource = { source -> source.toRecommendationRoute()?.let(navigator::navigateToRouteModel) },
             )
         }
@@ -359,7 +380,10 @@ fun MainNavHost(
                 onSignIn = navigator::navigateToTravelLogin,
                 onOpenExisting = { navigator.navigateToTravelPlan(it, fromCreation = true) },
                 onBack = { navigator.popBackStack() },
-                onCreated = { navigator.navigateToTravelPlan(it, fromCreation = true) },
+                onCreated = {
+                    homeTravelViewModel?.invalidateResume()
+                    navigator.navigateToTravelPlan(it, fromCreation = true)
+                },
             )
         }
         composable<RouteModel.TravelPlan> { entry ->
@@ -380,6 +404,11 @@ fun MainNavHost(
                 requestedDay = entry.savedStateHandle.getStateFlow(TRAVEL_DAY_REQUEST, null),
                 onDayConsumed = { entry.savedStateHandle.set<Int?>(TRAVEL_DAY_REQUEST, null) },
                 onMembers = { start, end -> navigator.navigateToTravelMembers(planId, start, end) },
+                onPlanViewed = {
+                    homeTravelViewModel?.let {
+                        if (it.state.value.resumePlan?.id != planId) it.invalidateResume()
+                    }
+                },
                 onFindNextHoliday = {
                     navigator.openCalendarTab()
                     navigationScope.launch { travelViewModel.recordNextHolidayOpened(planId) }
