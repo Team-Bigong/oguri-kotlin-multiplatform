@@ -81,7 +81,6 @@ internal fun TravelReminderDialog(
                     Text(stringResource(Res.string.travel_reminder_heading), style = OguriTheme.typography.sectionTitle, color = OguriTheme.colors.textPrimary)
                     Text(stringResource(Res.string.travel_reminder_explanation), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textTertiary)
                 }
-                if (state.busy) TravelLoading(Modifier.fillMaxWidth())
                 if (settings != null) {
                     HorizontalDivider(color = OguriTheme.colors.borderSubtle)
                     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {

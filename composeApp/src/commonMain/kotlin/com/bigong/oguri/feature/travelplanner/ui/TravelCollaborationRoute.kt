@@ -285,7 +285,6 @@ internal fun TravelMembersRoute(
                 }
                 TravelManagementRow(stringResource(Res.string.travel_my_reminder), !state.busy, trailing = reminderLabel) {
                     showReminder = true
-                    reminderViewModel.load(planId)
                 }
                 HorizontalDivider(color = colors.borderSubtle)
                 if (members.isOwner) {
