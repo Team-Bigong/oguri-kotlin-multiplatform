@@ -50,7 +50,10 @@ class TravelCollaborationViewModel(
             mutableState.update { it.copy(members = members) }
         }
 
-    internal fun issue(planId: String) =
+    internal fun issue(
+        planId: String,
+        onIssued: (String) -> Unit = {},
+    ) =
         perform {
             val invite = checkedResult { repository.issue(planId) }
             mutableState.update { state ->
@@ -62,6 +65,7 @@ class TravelCollaborationViewModel(
                     ),
                 )
             }
+            onIssued(invite.token)
         }
 
     internal fun revoke(planId: String) =

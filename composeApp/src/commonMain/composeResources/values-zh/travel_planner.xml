@@ -91,9 +91,8 @@
     <string name="travel_remove_member">移除成员</string>
     <string name="travel_invite_explanation">通过链接加入的人可以编辑行程。创建新链接后，旧链接将失效。</string>
     <string name="travel_create_invite">创建邀请链接</string>
-    <string name="travel_invite_copied">已复制链接</string>
-    <string name="travel_invite_copy_unavailable">如需在此复制链接，请撤销当前链接并创建新链接。</string>
-    <string name="travel_copy_invite">复制邀请链接</string>
+    <string name="travel_share_invite">分享邀请链接</string>
+    <string name="travel_replace_invite">创建并分享新链接</string>
     <string name="travel_revoke_invite">撤销邀请链接</string>
     <string name="travel_delete_trip">删除旅行</string>
     <string name="travel_leave_explanation">退出后，共同编辑的行程仍会保留。</string>

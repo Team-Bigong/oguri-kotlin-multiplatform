@@ -91,9 +91,8 @@
     <string name="travel_remove_member">メンバーを除外</string>
     <string name="travel_invite_explanation">リンクから参加した人は予定を編集できます。新しいリンクを作ると以前のリンクは無効になります。</string>
     <string name="travel_create_invite">招待リンクを作成</string>
-    <string name="travel_invite_copied">リンクをコピーしました</string>
-    <string name="travel_invite_copy_unavailable">ここでリンクをコピーするには、現在のリンクを無効にして新しく作成してください。</string>
-    <string name="travel_copy_invite">招待リンクをコピー</string>
+    <string name="travel_share_invite">招待リンクを共有</string>
+    <string name="travel_replace_invite">新しいリンクを作成して共有</string>
     <string name="travel_revoke_invite">招待リンクを無効にする</string>
     <string name="travel_delete_trip">旅行を削除</string>
     <string name="travel_leave_explanation">退出しても共同で作った予定は旅行に残ります。</string>

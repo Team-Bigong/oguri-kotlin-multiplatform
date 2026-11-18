@@ -34,13 +34,16 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.bigong.oguri.core.deeplink.TRAVEL_INVITE_HOST
 import com.bigong.oguri.core.deeplink.travelInviteLink
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.platform.SharePayload
+import com.bigong.oguri.core.platform.shareContent
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlanSource
@@ -68,14 +71,11 @@ import oguri.composeapp.generated.resources.travel_accept_ownership
 import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_confirm_member_action
-import oguri.composeapp.generated.resources.travel_copy_invite
 import oguri.composeapp.generated.resources.travel_create_invite
 import oguri.composeapp.generated.resources.travel_dates_value
 import oguri.composeapp.generated.resources.travel_delete_trip
 import oguri.composeapp.generated.resources.travel_invitation
-import oguri.composeapp.generated.resources.travel_invite_copied
 import oguri.composeapp.generated.resources.travel_invite_explanation
-import oguri.composeapp.generated.resources.travel_invite_copy_unavailable
 import oguri.composeapp.generated.resources.travel_invite_missing
 import oguri.composeapp.generated.resources.travel_invited_by
 import oguri.composeapp.generated.resources.travel_join_trip
@@ -119,9 +119,26 @@ internal fun TravelMembersRoute(
     val language = androidx.compose.ui.text.intl.Locale.current.toLanguageTag()
     var showMembers by remember(planId) { mutableStateOf(false) }
     var showReminder by remember(planId) { mutableStateOf(false) }
-    val clipboard = LocalClipboardManager.current
-    val inviteToken = state.members?.inviteToken
-    var copied by remember(inviteToken) { mutableStateOf(false) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val inviteTitle = stringResource(Res.string.travel_invite_heading)
+    val inviteDescription = stringResource(Res.string.travel_invite_description)
+    val shareButtonTitle = stringResource(Res.string.share_button_open_in_app)
+    val shareInvite: (String) -> Unit = { token ->
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
+            val url = travelInviteLink(token)
+            shareContent(
+                SharePayload(
+                    title = inviteTitle,
+                    description = inviteDescription,
+                    imageUrl = "https://$TRAVEL_INVITE_HOST/assets/official/share-thumbnail.png",
+                    deepLinkUrl = url,
+                    buttonTitle = shareButtonTitle,
+                    fallbackMessage = inviteTitle,
+                    fallbackUrl = url,
+                ),
+            )
+        }
+    }
     var confirmationKind by remember { mutableStateOf("delete") }
     var confirmation by remember { mutableStateOf<(() -> Unit)?>(null) }
     LaunchedEffect(viewModel, reminderViewModel, planId) {
@@ -231,22 +248,22 @@ internal fun TravelMembersRoute(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         itemVerticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (!members.hasActiveInvite) {
-                            TravelOutlineButton(enabled = !state.busy, onClick = { viewModel.issue(planId) }) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(painterResource(Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
-                                    Text(stringResource(Res.string.travel_create_invite))
-                                }
-                            }
-                        } else if (inviteToken != null) {
-                            TravelOutlineButton(enabled = !state.busy, onClick = {
-                                clipboard.setText(AnnotatedString(travelInviteLink(inviteToken)))
-                                copied = true
-                            }) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(painterResource(if (copied) Res.drawable.ic_travel_check else Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
-                                    Text(stringResource(if (copied) Res.string.travel_invite_copied else Res.string.travel_copy_invite))
-                                }
+                        val inviteToken = members.inviteToken
+                        TravelOutlineButton(enabled = !state.busy, onClick = {
+                            if (inviteToken == null) viewModel.issue(planId, onIssued = shareInvite)
+                            else shareInvite(inviteToken)
+                        }) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(painterResource(Res.drawable.ic_travel_link), null, Modifier.size(16.dp))
+                                Text(
+                                    stringResource(
+                                        when {
+                                            inviteToken != null -> Res.string.travel_share_invite
+                                            members.hasActiveInvite -> Res.string.travel_replace_invite
+                                            else -> Res.string.travel_create_invite
+                                        },
+                                    ),
+                                )
                             }
                         }
                         if (members.hasActiveInvite) Box(
@@ -257,14 +274,6 @@ internal fun TravelMembersRoute(
                         ) {
                             Text(stringResource(Res.string.travel_revoke_invite), style = travelTextStyle(13, 16), color = colors.textTertiary)
                         }
-                    }
-                    if (members.hasActiveInvite && inviteToken == null) {
-                        Text(
-                            stringResource(Res.string.travel_invite_copy_unavailable),
-                            Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp),
-                            style = OguriTheme.typography.caption,
-                            color = colors.textTertiary,
-                        )
                     }
                     members.inviteExpiresAt?.let { expires ->
                         Text(stringResource(Res.string.travel_invite_expiry_hint, travelWeekDate(expires.toLocalDateTime(kotlinx.datetime.TimeZone.currentSystemDefault()).date)), Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp), style = OguriTheme.typography.caption, color = colors.textTertiary)
