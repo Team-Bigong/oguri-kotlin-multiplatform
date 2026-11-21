@@ -46,26 +46,37 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: timeout)
     }
 
-    func render(scene: TravelMapScene, viewportRequest: Int32, focusedVisitId: String?, pinStyle: TravelMapPinStyle, darkTheme: Bool) {
+    func render(
+        scene: TravelMapScene,
+        viewportRequest: Int32,
+        focusedVisitId: String?,
+        pinStyle: TravelMapPinStyle,
+        distanceLabels: [String],
+        distanceStyle: TravelMapDistanceStyle,
+        darkTheme: Bool
+    ) {
         map.overrideUserInterfaceStyle = darkTheme ? .dark : .light
         map.clear()
         routeLines.removeAll()
-        for line in scene.lines {
+        for (line, label) in zip(scene.lines, distanceLabels) {
+            let start = line.start.coordinate
+            let end = line.end.coordinate
             let path = GMSMutablePath()
-            var length = 0.0
-            var previous: CLLocationCoordinate2D?
-            line.points.forEach { point in
-                let coordinate = point.coordinate
-                path.add(coordinate)
-                if let previous { length += GMSGeometryDistance(previous, coordinate) }
-                previous = coordinate
-            }
+            path.add(start)
+            path.add(end)
             let polyline = GMSPolyline(path: path)
             polyline.geodesic = true
-            polyline.strokeColor = UIColor(argb: line.colorArgb)
+            polyline.strokeColor = UIColor(argb: distanceStyle.connectionArgb)
             polyline.strokeWidth = 2
             polyline.map = map
-            routeLines.append((polyline, length))
+            routeLines.append((polyline, GMSGeometryDistance(start, end)))
+
+            let marker = GMSMarker(position: line.midpoint.coordinate)
+            marker.icon = makeDistanceIcon(label: label, style: distanceStyle)
+            marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
+            marker.zIndex = -1
+            marker.isTappable = false
+            marker.map = map
         }
         updateLinePattern()
         for pin in scene.markers {
@@ -157,6 +168,27 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         }
         if let name = pinFonts[uri]?.postScriptName, let font = UIFont(name: name as String, size: size) { return font }
         return UIFont.systemFont(ofSize: size)
+    }
+
+    private func makeDistanceIcon(label: String, style: TravelMapDistanceStyle) -> UIImage {
+        let font = pinFont(uri: style.fontUri, size: CGFloat(style.fontSize))
+        let text = NSAttributedString(string: label, attributes: [
+            .font: font,
+            .foregroundColor: UIColor(argb: style.textArgb)
+        ])
+        let outlineWidth = CGFloat(style.outlineWidth)
+        let outline = NSAttributedString(string: label, attributes: [
+            .font: font,
+            .strokeColor: UIColor(argb: style.outlineArgb),
+            .strokeWidth: 200 * outlineWidth / font.pointSize
+        ])
+        let bounds = text.size()
+        let size = CGSize(width: ceil(bounds.width + 2 * outlineWidth), height: ceil(bounds.height + 2 * outlineWidth))
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            let origin = CGPoint(x: outlineWidth, y: outlineWidth)
+            outline.draw(at: origin)
+            text.draw(at: origin)
+        }
     }
 
     private func makeIcon(label: String?, colorArgb: Int32, labelColorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {

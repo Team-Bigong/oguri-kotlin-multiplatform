@@ -60,6 +60,8 @@
     <string name="travel_map_hide">收起地图</string>
     <string name="travel_map_fit">查看当天所有地点</string>
     <string name="travel_map_unavailable">无法加载地图</string>
+    <string name="travel_distance_kilometers">%1$s公里</string>
+    <string name="travel_distance_to_next_place">到下一个地点的直线距离 %1$s</string>
     <string name="travel_map_sequence">连线表示到访顺序。</string>
     <string name="travel_place_details_unavailable">部分地点信息加载失败。</string>
     <string name="travel_visit_fallback">到访地点 %1$d</string>

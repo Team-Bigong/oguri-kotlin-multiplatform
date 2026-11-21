@@ -8,6 +8,7 @@ import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
+import kotlin.math.roundToInt
 
 data class TravelMapMarker(
     val id: String,
@@ -41,10 +42,21 @@ internal fun travelMapLabelColor(fillArgb: Int): Color {
     return if (darkContrast >= lightContrast) darkInk else Color.White
 }
 
-data class TravelMapLine(
-    val points: List<TravelCoordinates>,
+@ConsistentCopyVisibility
+data class TravelMapLine internal constructor(
+    val fromVisitId: String,
+    val toVisitId: String,
+    val start: TravelCoordinates,
+    val end: TravelCoordinates,
 ) {
-    val colorArgb: Int get() = Mint70.toArgb()
+    val midpoint: TravelCoordinates = start.midpointTo(end)
+    private val distanceKilometers: Double = start.distanceTo(end)
+
+    internal val displayDistance: String
+        get() {
+            val tenths = (distanceKilometers * 10).roundToInt()
+            return if (tenths == 0) "<0.1" else "${tenths / 10}.${tenths % 10}"
+        }
 }
 
 data class TravelMapScene(
@@ -70,8 +82,9 @@ internal fun travelMapScene(
         }
     val lines =
         if (numbered) {
-            coordinates.zipWithNext().mapNotNull { (from, to) ->
-                if (from == null || to == null || from == to) null else TravelMapLine(listOf(from, to))
+            coordinates.zipWithNext().mapIndexedNotNull { index, (start, end) ->
+                if (start == null || end == null || start == end) null
+                else TravelMapLine(visits[index].id, visits[index + 1].id, start, end)
             }
         } else {
             emptyList()

@@ -46,6 +46,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.Dot
 import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.PolylineOptions
+import kotlin.math.ceil
 import kotlinx.coroutines.delay
 
 @Composable
@@ -92,9 +93,17 @@ internal actual fun PlatformTravelMap(
     val labelSize = with(LocalDensity.current) { labelStyle.fontSize.toPx() }
     val selectedLabelSize = with(LocalDensity.current) { selectedLabelStyle.fontSize.toPx() }
     val outline = LightOguriColorPalette.surfaceCard.toArgb()
+    val distanceStyle = OguriTheme.typography.caption
+    val distanceSize = with(LocalDensity.current) { distanceStyle.fontSize.toPx() }
+    val distanceColor = OguriTheme.colors.textTertiary.toArgb()
+    val distanceOutline = travelMapDistanceOutline().toArgb()
+    val distanceLabels = scene.lines.map { travelDistanceLabel(it) }
+    val connectionColor = travelConnectionColor.toArgb()
     val fontResolver = LocalFontFamilyResolver.current
     val labelTypeface = fontResolver.resolve(labelStyle.fontFamily, labelStyle.fontWeight ?: FontWeight.Normal, labelStyle.fontStyle ?: FontStyle.Normal).value as Typeface
     val selectedLabelTypeface = fontResolver.resolve(selectedLabelStyle.fontFamily, selectedLabelStyle.fontWeight ?: FontWeight.Normal, selectedLabelStyle.fontStyle ?: FontStyle.Normal).value as Typeface
+
+    val distanceTypeface = fontResolver.resolve(distanceStyle.fontFamily, FontWeight.Normal).value as Typeface
 
     DisposableEffect(mapView) {
         mapView.onCreate(Bundle())
@@ -138,16 +147,33 @@ internal actual fun PlatformTravelMap(
         LaunchedEffect(renderedMap, mapColorScheme) {
             renderedMap.setMapColorScheme(mapColorScheme)
         }
-        LaunchedEffect(renderedMap, scene, mapColorScheme, labelSize, selectedLabelSize, labelTypeface, selectedLabelTypeface) {
+        LaunchedEffect(
+            renderedMap, scene, mapColorScheme, labelSize, selectedLabelSize, labelTypeface, selectedLabelTypeface,
+            distanceLabels, distanceSize, distanceColor, distanceOutline, distanceTypeface, connectionColor,
+        ) {
             renderedMap.clear()
-            scene.lines.forEach { line ->
+            scene.lines.zip(distanceLabels).forEach { (line, distanceLabel) ->
                 renderedMap.addPolyline(
                     PolylineOptions()
-                        .addAll(line.points.map { it.toLatLng() })
-                        .color(line.colorArgb)
+                        .add(line.start.toLatLng(), line.end.toLatLng())
+                        .color(connectionColor)
                         .width(2 * density)
                         .pattern(listOf(Dot(), Gap(6 * density)))
                         .geodesic(true),
+                )
+                renderedMap.addMarker(
+                    MarkerOptions()
+                        .position(line.midpoint.toLatLng())
+                        .anchor(0.5f, 0.5f)
+                        .zIndex(-1f)
+                        .icon(
+                            BitmapDescriptorFactory.fromBitmap(
+                                distanceLabelBitmap(
+                                    distanceLabel, distanceSize, distanceColor, distanceOutline,
+                                    TRAVEL_MAP_DISTANCE_OUTLINE_WIDTH * density, distanceTypeface,
+                                ),
+                            ),
+                        ),
                 )
             }
             scene.markers.forEach { marker ->
@@ -234,5 +260,34 @@ private fun TravelMapMarker.bitmap(
         paint.typeface = if (selected) selectedLabelTypeface else labelTypeface
         canvas.drawText(it, middle, middle - (paint.ascent() + paint.descent()) / 2, paint)
     }
+    return bitmap
+}
+
+private fun distanceLabelBitmap(
+    label: String,
+    textSize: Float,
+    textColor: Int,
+    outlineColor: Int,
+    outlineWidth: Float,
+    typeface: Typeface,
+): Bitmap {
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.textSize = textSize
+        this.typeface = typeface
+        textAlign = Paint.Align.CENTER
+    }
+    val width = ceil(paint.measureText(label) + 2 * outlineWidth).toInt().coerceAtLeast(1)
+    val height = ceil(paint.descent() - paint.ascent() + 2 * outlineWidth).toInt().coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val baseline = (height - paint.ascent() - paint.descent()) / 2
+    paint.color = outlineColor
+    paint.style = Paint.Style.STROKE
+    paint.strokeWidth = 2 * outlineWidth
+    paint.strokeJoin = Paint.Join.ROUND
+    canvas.drawText(label, width / 2f, baseline, paint)
+    paint.color = textColor
+    paint.style = Paint.Style.FILL
+    canvas.drawText(label, width / 2f, baseline, paint)
     return bitmap
 }

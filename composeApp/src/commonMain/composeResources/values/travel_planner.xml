@@ -60,6 +60,8 @@
     <string name="travel_map_hide">Hide map</string>
     <string name="travel_map_fit">Show all stops</string>
     <string name="travel_map_unavailable">Couldn’t load the map</string>
+    <string name="travel_distance_kilometers">%1$s km</string>
+    <string name="travel_distance_to_next_place">Straight-line distance to the next place: %1$s</string>
     <string name="travel_map_sequence">Lines show the order of your visits.</string>
     <string name="travel_place_details_unavailable">Some place details could not load.</string>
     <string name="travel_visit_fallback">Place %1$d</string>

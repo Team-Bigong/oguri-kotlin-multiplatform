@@ -60,6 +60,8 @@
     <string name="travel_map_hide">地図を閉じる</string>
     <string name="travel_map_fit">この日の訪問先をすべて表示</string>
     <string name="travel_map_unavailable">地図を読み込めませんでした</string>
+    <string name="travel_distance_kilometers">%1$s km</string>
+    <string name="travel_distance_to_next_place">次の場所までの直線距離 %1$s</string>
     <string name="travel_map_sequence">線は訪問する順番を示します。</string>
     <string name="travel_place_details_unavailable">一部の場所情報を読み込めませんでした。</string>
     <string name="travel_visit_fallback">訪問先 %1$d</string>

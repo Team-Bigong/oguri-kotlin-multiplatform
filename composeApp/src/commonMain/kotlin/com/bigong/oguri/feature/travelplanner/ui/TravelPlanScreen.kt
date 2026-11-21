@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import oguri.composeapp.generated.resources.ic_travel_drag
 import oguri.composeapp.generated.resources.ic_travel_note
 import oguri.composeapp.generated.resources.ic_travel_undo
@@ -52,6 +53,11 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.Alignment
@@ -63,6 +69,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -94,6 +101,8 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitDetailsShe
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.component.label
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
+import com.bigong.oguri.feature.travelplanner.ui.component.travelConnectionColor
+import com.bigong.oguri.feature.travelplanner.ui.component.travelDistanceLabel
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
@@ -118,6 +127,7 @@ import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_day
 import oguri.composeapp.generated.resources.travel_day_outside_trip
+import oguri.composeapp.generated.resources.travel_distance_to_next_place
 import oguri.composeapp.generated.resources.travel_discard_draft
 import oguri.composeapp.generated.resources.travel_empty_day
 import oguri.composeapp.generated.resources.travel_completed_trip
@@ -267,6 +277,8 @@ internal fun TravelPlanScreen(
             remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter) {
                 travelMapScene(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter)
             }
+        val connectionsFrom = remember(scene.lines) { scene.lines.associateBy { it.fromVisitId } }
+        val connectedTo = remember(scene.lines) { scene.lines.mapTo(mutableSetOf()) { it.toVisitId } }
         TravelPlanPane(
             scene = scene,
             hideMap = unappliedOrder != null || showPartialFailure || state.needsLatestPlan,
@@ -413,7 +425,8 @@ internal fun TravelPlanScreen(
                             if (releasedDrag == release) releasedDrag = null
                         }
                     }
-                    TravelVisitRow(
+                    val nextConnection = connectionsFrom[visit.id]
+                    Column(
                         modifier = Modifier
                             .animateItem(
                                 fadeInSpec = null,
@@ -430,68 +443,74 @@ internal fun TravelPlanScreen(
                                     settleOffset.value
                                 }
                             },
-                        isDragging = isDragging,
-                        visit = visit,
-                        title =
-                            visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
-                                ?: stringResource(Res.string.travel_visit_fallback, index + 1),
-                        number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
-                        selected = state.selectedVisitId == visit.id,
-                        canEdit = canEdit && unappliedOrder == null,
-                        addedAfterConflict = unappliedOrder != null && visit.id !in unappliedOrder.visitIds,
-                        canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
-                        canMoveUp = index > 0,
-                        canMoveDown = index < visits.lastIndex,
-                        onRemove = { onRemoveFromList(visit) },
-                        onOpen = { if (canEdit) onOpenVisit(visit) else onInspectVisit(visit.id) },
-                        onMove = { offset -> onMoveVisit(visit, offset) },
-                        onDragStart = {
-                            val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
-                            if (row != null && draggedId == null) {
-                                HapticType.ImpactMedium.perform()
-                                releasedDrag = null
-                                draggedId = visit.id
-                                dragPosition = row.offset + row.size / 2f
-                                dragOrder = savedVisits.map(TravelVisit::id)
-                            }
-                        },
-                        onDrag = { delta ->
-                            val order = dragOrder
-                            if (order != null && draggedId == visit.id) {
-                                dragPosition += delta
-                                val from = order.indexOf(visit.id)
-                                val visibleRows = visitListState.layoutInfo.visibleItemsInfo
-                                // Wait for the list to lay out the last reorder before crossing another row.
-                                if (visibleRows.firstOrNull { it.key == visit.id }?.index != from) return@TravelVisitRow
-                                val target = visibleRows.firstOrNull { row ->
-                                    dragPosition >= row.offset && dragPosition < row.offset + row.size
-                                }
-                                val to = order.indexOf(target?.key)
-                                val crossedCenter = target != null && when {
-                                    to < from -> dragPosition <= target.offset + target.size / 2f
-                                    to > from -> dragPosition >= target.offset + target.size / 2f
-                                    else -> false
-                                }
-                                if (to in order.indices && crossedCenter) {
-                                    dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
-                                }
-                            }
-                        },
-                        onDragFinished = { apply ->
-                            if (draggedId == visit.id) {
-                                val order = dragOrder
-                                val accepted =
-                                    apply && order != null &&
-                                        onReorderVisits(state.selectedDay, orderRevision, plan.structureRevision, order)
+                    ) {
+                        TravelVisitRow(
+                            isConnectedFromPrevious = visit.id in connectedTo,
+                            isConnectedToNext = nextConnection != null,
+                            isDragging = isDragging,
+                            visit = visit,
+                            title =
+                                visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
+                                    ?: stringResource(Res.string.travel_visit_fallback, index + 1),
+                            number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
+                            selected = state.selectedVisitId == visit.id,
+                            canEdit = canEdit && unappliedOrder == null,
+                            addedAfterConflict = unappliedOrder != null && visit.id !in unappliedOrder.visitIds,
+                            canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
+                            canMoveUp = index > 0,
+                            canMoveDown = index < visits.lastIndex,
+                            onRemove = { onRemoveFromList(visit) },
+                            onOpen = { if (canEdit) onOpenVisit(visit) else onInspectVisit(visit.id) },
+                            onMove = { offset -> onMoveVisit(visit, offset) },
+                            onDragStart = {
                                 val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
-                                if (accepted && row != null && row.index == order.indexOf(visit.id)) {
-                                    releasedDrag = visit.id to (dragPosition - (row.offset + row.size / 2f))
+                                if (row != null && draggedId == null) {
+                                    HapticType.ImpactMedium.perform()
+                                    releasedDrag = null
+                                    draggedId = visit.id
+                                    dragPosition = row.offset + row.size / 2f
+                                    dragOrder = savedVisits.map(TravelVisit::id)
                                 }
-                                if (!accepted) dragOrder = null
-                                draggedId = null
-                            }
-                        },
-                    )
+                            },
+                            onDrag = { delta ->
+                                val order = dragOrder
+                                if (order != null && draggedId == visit.id) {
+                                    dragPosition += delta
+                                    val from = order.indexOf(visit.id)
+                                    val visibleRows = visitListState.layoutInfo.visibleItemsInfo
+                                    // Wait for the list to lay out the last reorder before crossing another row.
+                                    if (visibleRows.firstOrNull { it.key == visit.id }?.index != from) return@TravelVisitRow
+                                    val target = visibleRows.firstOrNull { row ->
+                                        dragPosition >= row.offset && dragPosition < row.offset + row.size
+                                    }
+                                    val to = order.indexOf(target?.key)
+                                    val crossedCenter = target != null && when {
+                                        to < from -> dragPosition <= target.offset + target.size / 2f
+                                        to > from -> dragPosition >= target.offset + target.size / 2f
+                                        else -> false
+                                    }
+                                    if (to in order.indices && crossedCenter) {
+                                        dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
+                                    }
+                                }
+                            },
+                            onDragFinished = { apply ->
+                                if (draggedId == visit.id) {
+                                    val order = dragOrder
+                                    val accepted =
+                                        apply && order != null &&
+                                            onReorderVisits(state.selectedDay, orderRevision, plan.structureRevision, order)
+                                    val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
+                                    if (accepted && row != null && row.index == order.indexOf(visit.id)) {
+                                        releasedDrag = visit.id to (dragPosition - (row.offset + row.size / 2f))
+                                    }
+                                    if (!accepted) dragOrder = null
+                                    draggedId = null
+                                }
+                            },
+                        )
+                        nextConnection?.let { TravelDistanceConnector(travelDistanceLabel(it)) }
+                    }
                 }
                 if (undo != null && undo.position >= visits.size) item(key = "removed-visit") { TravelRemovedVisitRow(undo.title, canEdit, onUndoVisit) }
                 val attributions = state.dayPlaces.values.flatMap { it.attributions }
@@ -565,7 +584,8 @@ private const val DELETE_REVEAL_SETTLE_MILLIS = 200
 
 @Composable
 private fun TravelVisitRow(
-    modifier: Modifier,
+    isConnectedFromPrevious: Boolean,
+    isConnectedToNext: Boolean,
     isDragging: Boolean,
     visit: TravelVisit,
     title: String,
@@ -616,7 +636,7 @@ private fun TravelVisitRow(
         label = "Travel visit background",
     )
     Box(
-        modifier.fillMaxWidth().clip(shape)
+        Modifier.fillMaxWidth().clip(shape)
             .pointerInput(visit.id, canEdit, deleteWidthPixels, revealDirection) {
                 if (canEdit) {
                     detectHorizontalDragGestures(
@@ -654,6 +674,14 @@ private fun TravelVisitRow(
             Modifier.fillMaxWidth()
                 .graphicsLayer { translationX = revealOffset * revealDirection }
                 .background(rowColor)
+                .drawBehind {
+                    if (isConnectedFromPrevious || isConnectedToNext) {
+                        drawVisitConnection(
+                            startY = if (isConnectedFromPrevious) 0f else center.y,
+                            endY = if (isConnectedToNext) size.height else center.y,
+                        )
+                    }
+                }
                 .semantics { this.selected = selected },
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -684,10 +712,10 @@ private fun TravelVisitRow(
                             }
                         }
                     }
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = VisitRowHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(Modifier.size(24.dp).background(OguriTheme.colors.mint, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(VisitPinSize).background(OguriTheme.colors.mint, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
                     Text(number?.toString().orEmpty(), style = OguriTheme.typography.labelMedium, color = travelAccentForeground)
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -729,6 +757,47 @@ private fun TravelVisitRow(
             }
         }
     }
+}
+
+@Composable
+private fun TravelDistanceConnector(label: String) {
+    val description = stringResource(Res.string.travel_distance_to_next_place, label)
+    Box(
+        modifier = Modifier.width(VisitPinCenter * 2).drawBehind {
+            drawVisitConnection(0f, DistanceConnectorPadding.toPx())
+            drawVisitConnection(size.height - DistanceConnectorPadding.toPx(), size.height)
+        },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier
+                .wrapContentWidth(unbounded = true)
+                .padding(vertical = DistanceConnectorPadding)
+                .clearAndSetSemantics { contentDescription = description },
+            color = OguriTheme.colors.textTertiary,
+            style = OguriTheme.typography.caption,
+            maxLines = 1,
+        )
+    }
+}
+
+private val VisitRowHorizontalPadding = 12.dp
+private val VisitPinSize = 24.dp
+private val VisitPinCenter = VisitRowHorizontalPadding + VisitPinSize / 2
+private val DistanceConnectorPadding = 4.dp
+
+private fun DrawScope.drawVisitConnection(startY: Float, endY: Float) {
+    val pinCenter = VisitPinCenter.toPx()
+    val x = if (layoutDirection == LayoutDirection.Ltr) pinCenter else size.width - pinCenter
+    drawLine(
+        color = travelConnectionColor,
+        start = Offset(x, startY),
+        end = Offset(x, endY),
+        strokeWidth = 2.dp.toPx(),
+        cap = StrokeCap.Round,
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.dp.toPx(), 5.dp.toPx())),
+    )
 }
 
 @Composable

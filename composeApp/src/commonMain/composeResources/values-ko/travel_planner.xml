@@ -60,6 +60,8 @@
     <string name="travel_map_hide">지도 접기</string>
     <string name="travel_map_fit">이 날짜 전체 보기</string>
     <string name="travel_map_unavailable">지도를 불러오지 못했어요</string>
+    <string name="travel_distance_kilometers">%1$skm</string>
+    <string name="travel_distance_to_next_place">다음 장소까지 직선거리 %1$s</string>
     <string name="travel_map_sequence">연결선은 방문 순서를 보여줘요.</string>
     <string name="travel_place_details_unavailable">일부 장소 정보를 불러오지 못했어요</string>
     <string name="travel_visit_fallback">방문 장소 %1$d</string>
