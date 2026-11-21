@@ -226,9 +226,8 @@ private fun TravelPlanCard(
     val colors = OguriTheme.colors
     val shape = RoundedCornerShape(8.dp)
     val dayOffset = today?.let { details.dates.start.toEpochDays() - it.toEpochDays() }
-    val cityLabel = details.catalogCities[details.city]?.name ?: details.city
-    val meta = listOfNotNull(cityLabel, plan.memberCount?.let { stringResource(Res.string.travel_member_count, it) })
-        .joinToString(" · ")
+    val cities = details.cities.joinToString(" · ") { city -> details.catalogCities[city]?.name ?: city }
+    val memberLabel = plan.memberCount?.let { stringResource(Res.string.travel_member_count, it) }
     if (today == null) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp)
@@ -238,9 +237,10 @@ private fun TravelPlanCard(
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = OguriTheme.colors.textPrimary)
-                Text(
-                    "${travelCardDates(details.dates, includeYear = true)} · $meta",
-                    style = travelTextStyle(11, 13), color = colors.textTertiary,
+                TravelPlanCardMetadata(
+                    cities = cities,
+                    memberLabel = memberLabel,
+                    dateRange = travelCardDates(details.dates, includeYear = true),
                 )
             }
             Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = colors.textTertiary)
@@ -274,10 +274,42 @@ private fun TravelPlanCard(
                 color = OguriTheme.colors.textPrimary,
             )
             Text(travelCardDates(details.dates, includeYear = true), style = travelTextStyle(15, 18, FontWeight.Medium), color = colors.textPrimary)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = colors.textTertiary)
-                Text(meta, style = travelTextStyle(11, 13), color = colors.textTertiary)
-            }
+            TravelPlanCardMetadata(cities = cities, memberLabel = memberLabel)
+        }
+    }
+}
+
+@Composable
+private fun TravelPlanCardMetadata(
+    cities: String,
+    memberLabel: String?,
+    dateRange: String? = null,
+) {
+    val color = OguriTheme.colors.textTertiary
+    val style = OguriTheme.typography.labelSmall
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        if (dateRange == null) {
+            Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = color)
+        }
+        Text(
+            text = if (dateRange == null) cities else "$dateRange · $cities",
+            modifier = Modifier.weight(1f, fill = false),
+            style = style,
+            color = color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        if (memberLabel != null) {
+            Text(
+                text = "· $memberLabel",
+                modifier = Modifier.padding(start = 4.dp),
+                style = style,
+                color = color,
+                maxLines = 1,
+            )
         }
     }
 }
