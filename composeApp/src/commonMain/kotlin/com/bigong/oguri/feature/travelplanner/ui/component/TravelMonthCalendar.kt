@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
@@ -67,7 +68,15 @@ internal fun TravelMonthCalendar(
                                 Box(Modifier.fillMaxWidth(fill).height(36.dp).align(align).background(colors.mintContainer))
                             }
                             Box(Modifier.size(36.dp).then(if (endpoint) Modifier.background(colors.mint, CircleShape) else Modifier), contentAlignment = Alignment.Center) {
-                                Text(day.toString(), style = OguriTheme.typography.bodyMedium, color = if (endpoint) travelAccentForeground else colors.textPrimary)
+                                Text(
+                                    text = day.toString(),
+                                    style = if (endpoint) OguriTheme.typography.labelLarge else OguriTheme.typography.bodyMedium,
+                                    color = when {
+                                        endpoint -> travelAccentForeground
+                                        inside -> Neutral100
+                                        else -> colors.textPrimary
+                                    },
+                                )
                             }
                             if (recommended && !endpoint && !inside) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 3.dp).size(4.dp).background(colors.mint, CircleShape))
                         }
