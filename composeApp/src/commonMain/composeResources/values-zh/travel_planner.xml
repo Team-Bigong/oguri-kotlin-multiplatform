@@ -138,7 +138,8 @@
     <string name="travel_reminder_time">提醒时间</string>
     <string name="travel_reminder_before_departure">请选择 %1$s 出发前的未来时间。</string>
     <string name="travel_reminder_invalid_time">请检查日期、时间和时区。提醒须晚于当前时间且早于出发日。</string>
-    <string name="travel_reminder_not_available">当前无法预约提醒，或旅行已开始。</string>
+    <string name="travel_reminder_not_available">目前无法预约旅行提醒。</string>
+    <string name="travel_reminder_trip_started">只能在旅行开始前预约提醒。</string>
     <string name="travel_reminder_permission_denied">在设备设置中允许通知后即可预约提醒。旅行计划仍可正常使用。</string>
     <string name="travel_reminder_save">预约提醒</string>
     <string name="travel_manage">更多</string>

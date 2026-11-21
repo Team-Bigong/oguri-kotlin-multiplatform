@@ -138,7 +138,8 @@
     <string name="travel_reminder_time">알림 시각</string>
     <string name="travel_reminder_before_departure">%1$s 출발 전의 미래 시각을 선택해 주세요.</string>
     <string name="travel_reminder_invalid_time">날짜·시각·시간대를 확인해 주세요. 현재 이후이면서 출발일 전이어야 해요.</string>
-    <string name="travel_reminder_not_available">현재 알림을 예약할 수 없거나 여행이 이미 시작됐어요.</string>
+    <string name="travel_reminder_not_available">지금은 여행 알림을 예약할 수 없어요.</string>
+    <string name="travel_reminder_trip_started">여행이 시작되기 전에만 알림을 예약할 수 있어요.</string>
     <string name="travel_reminder_permission_denied">기기 설정에서 알림을 허용하면 예약할 수 있어요. 여행 계획은 그대로 쓸 수 있어요.</string>
     <string name="travel_reminder_save">알림 예약</string>
     <string name="travel_manage">더보기</string>

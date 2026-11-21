@@ -14,6 +14,7 @@ import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
 import com.bigong.oguri.feature.travelplanner.ui.travelClockTime
 import org.jetbrains.compose.resources.painterResource
 import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.minus
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,7 +67,8 @@ internal fun TravelReminderDialog(
     var enabled by rememberSaveable(settings?.dates, reminder?.id) { mutableStateOf(reminder != null || settings?.canSchedule == true) }
     var chooseDate by remember { mutableStateOf(false) }
     var chooseTime by remember { mutableStateOf(false) }
-    val selection = settings?.let { parseTravelReminderTime(date, time, it.tripTimeZone.id, it, Clock.System.now()) }
+    val now = Clock.System.now()
+    val selection = settings?.let { parseTravelReminderTime(date, time, it.tripTimeZone.id, it, now) }
     val selectedDate = runCatching { kotlinx.datetime.LocalDate.parse(date) }.getOrNull()
     val selectedTime = runCatching { kotlinx.datetime.LocalTime.parse(time) }.getOrNull()
     val canChoose = enabled && !state.permissionDenied && !state.busy && settings?.canSchedule == true
@@ -99,7 +101,19 @@ internal fun TravelReminderDialog(
                         TravelReminderSettingRow(stringResource(Res.string.travel_reminder_time), selectedTime?.let { travelClockTime(it) }.orEmpty(), canChoose) { chooseTime = true }
                         HorizontalDivider(color = OguriTheme.colors.borderSubtle)
                         Text(stringResource(Res.string.travel_reminder_date_hint, travelWeekDate(settings.dates.start)), Modifier.padding(horizontal = 24.dp, vertical = 16.dp), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                        if (!settings.canSchedule) Text(stringResource(Res.string.travel_reminder_not_available), Modifier.padding(horizontal = 24.dp), style = OguriTheme.typography.bodySmall)
+                        if (!settings.canSchedule) {
+                            val reason =
+                                if (now < settings.dates.start.atStartOfDayIn(settings.tripTimeZone)) {
+                                    Res.string.travel_reminder_not_available
+                                } else {
+                                    Res.string.travel_reminder_trip_started
+                                }
+                            Text(
+                                stringResource(reason),
+                                Modifier.padding(horizontal = 24.dp),
+                                style = OguriTheme.typography.bodySmall,
+                            )
+                        }
                         when (reminder?.status) {
                             TravelReminderStatus.FAILED, TravelReminderStatus.EXPIRED -> TravelIssueCard(
                                 title = stringResource(Res.string.travel_reminder_delivery_failed_title),

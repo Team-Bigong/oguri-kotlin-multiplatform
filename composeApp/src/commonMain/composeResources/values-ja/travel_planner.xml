@@ -138,7 +138,8 @@
     <string name="travel_reminder_time">通知時刻</string>
     <string name="travel_reminder_before_departure">%1$sの出発前の、未来の時刻を選んでください。</string>
     <string name="travel_reminder_invalid_time">日付・時刻・タイムゾーンを確認してください。現在より後、出発日より前の時刻が必要です。</string>
-    <string name="travel_reminder_not_available">現在予約できないか、旅行がすでに始まっています。</string>
+    <string name="travel_reminder_not_available">現在、旅行の通知を予約できません。</string>
+    <string name="travel_reminder_trip_started">旅行が始まる前にのみ通知を予約できます。</string>
     <string name="travel_reminder_permission_denied">端末の設定で通知を許可すると予約できます。旅行プランはそのまま使えます。</string>
     <string name="travel_reminder_save">通知を予約</string>
     <string name="travel_manage">その他</string>

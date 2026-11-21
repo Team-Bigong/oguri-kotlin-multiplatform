@@ -138,7 +138,8 @@
     <string name="travel_reminder_time">Reminder time</string>
     <string name="travel_reminder_before_departure">Choose a future time before departure on %1$s.</string>
     <string name="travel_reminder_invalid_time">Check the date, time and time zone. The reminder must be in the future and before departure.</string>
-    <string name="travel_reminder_not_available">Reminders are currently unavailable or the trip has already started.</string>
+    <string name="travel_reminder_not_available">Reminder scheduling is currently unavailable.</string>
+    <string name="travel_reminder_trip_started">You can only schedule a reminder before the trip starts.</string>
     <string name="travel_reminder_permission_denied">Allow notifications in device settings to schedule a reminder. You can still use your trip planner.</string>
     <string name="travel_reminder_save">Schedule reminder</string>
     <string name="travel_manage">More</string>
