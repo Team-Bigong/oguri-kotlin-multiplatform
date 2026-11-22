@@ -7,10 +7,10 @@ if (origin && (origin.protocol !== "https:" || origin.href !== `${origin.origin}
   throw new Error("Use an HTTPS origin without a path, query, or fragment.")
 }
 
-const fingerprint = process.env.TRAVEL_ANDROID_SIGNING_SHA256?.trim().toUpperCase()
-const appleAppId = process.env.TRAVEL_IOS_APP_ID?.trim()
-assert.match(fingerprint ?? "", /^([A-F0-9]{2}:){31}[A-F0-9]{2}$/, "Set TRAVEL_ANDROID_SIGNING_SHA256")
-assert.match(appleAppId ?? "", /^[A-Z0-9]{10}\.[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/, "Set TRAVEL_IOS_APP_ID")
+const fingerprint = (process.env.ANDROID_APP_LINKS_SHA256?.trim() || process.env.TRAVEL_ANDROID_SIGNING_SHA256?.trim()).toUpperCase()
+const appleAppId = (process.env.IOS_UNIVERSAL_LINKS_APP_ID?.trim() || process.env.TRAVEL_IOS_APP_ID?.trim())
+assert.match(fingerprint ?? "", /^([A-F0-9]{2}:){31}[A-F0-9]{2}$/, "Set ANDROID_APP_LINKS_SHA256")
+assert.match(appleAppId ?? "", /^[A-Z0-9]{10}\.[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/, "Set IOS_UNIVERSAL_LINKS_APP_ID")
 
 async function read(relativePath, contentType) {
   if (!origin) {
