@@ -90,6 +90,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanSkeleton
 import com.bigong.oguri.core.util.extension.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
+import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanFailure
@@ -170,6 +171,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun TravelPlanScreen(
     state: TravelPlannerUiState,
+    referenceCoordinates: List<TravelCoordinates>,
     onBack: () -> Unit,
     onOpenPlans: () -> Unit,
     onReload: () -> Unit,
@@ -281,8 +283,9 @@ internal fun TravelPlanScreen(
         val details = plan.summary.details
         val cityCenter = details.catalogCities[details.city]?.coordinates ?: TravelCity.centerOf(details.city)
         val scene =
-            remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter) {
+            remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter, referenceCoordinates) {
                 travelMapScene(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter)
+                    .copy(referenceCoordinates = referenceCoordinates)
             }
         val connectionsFrom = remember(scene.lines) { scene.lines.associateBy { it.fromVisitId } }
         val connectedTo = remember(scene.lines) { scene.lines.mapTo(mutableSetOf()) { it.toVisitId } }

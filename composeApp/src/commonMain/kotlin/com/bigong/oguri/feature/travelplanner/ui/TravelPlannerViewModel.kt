@@ -7,6 +7,7 @@ import com.bigong.oguri.domain.model.TravelPendingSave
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanDetails
+import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlanException
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
@@ -506,6 +507,20 @@ class TravelPlannerViewModel(
             }
         }
     }
+
+    internal suspend fun loadReferenceCoordinates(
+        planId: String,
+        dayNumber: Int,
+        language: String,
+        placeIds: Set<String>,
+    ): List<TravelCoordinates> =
+        try {
+            val places = placeRepository.forDay(planId, dayNumber, language).places
+            currentCoroutineContext().ensureActive()
+            placeIds.mapNotNull { places[it]?.coordinates }
+        } catch (_: TravelPlanException) {
+            emptyList()
+        }
 
     internal suspend fun loadOverviewPlaces(
         planId: String,

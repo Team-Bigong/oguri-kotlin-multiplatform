@@ -190,18 +190,18 @@ internal actual fun PlatformTravelMap(
         }
 
         var appliedViewport by remember(renderedMap) { mutableStateOf<Int?>(null) }
-        var fittedMarkers by remember(renderedMap, viewportRequest) { mutableStateOf(false) }
-        LaunchedEffect(renderedMap, viewportRequest, scene.markers.isNotEmpty(), mapSize) {
+        var fittedCoordinates by remember(renderedMap, viewportRequest) { mutableStateOf(false) }
+        LaunchedEffect(renderedMap, viewportRequest, scene.viewportCoordinates.isNotEmpty(), mapSize) {
             if (mapSize.width == 0 || mapSize.height == 0) return@LaunchedEffect
-            val hasMarkers = scene.markers.isNotEmpty()
-            if (appliedViewport == viewportRequest && (fittedMarkers || !hasMarkers)) return@LaunchedEffect
+            val hasCoordinates = scene.viewportCoordinates.isNotEmpty()
+            if (appliedViewport == viewportRequest && (fittedCoordinates || !hasCoordinates)) return@LaunchedEffect
             appliedViewport = viewportRequest
-            fittedMarkers = hasMarkers
+            fittedCoordinates = hasCoordinates
             val focus = scene.markers.firstOrNull { it.id == focusedVisitId }
             if (focus != null) {
                 renderedMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focus.coordinates.toLatLng(), 15f))
             } else {
-                val coordinates = scene.markers.map { it.coordinates.toLatLng() }.distinct()
+                val coordinates = scene.viewportCoordinates.map { it.toLatLng() }.distinct()
                 when (coordinates.size) {
                     0 ->
                         renderedMap.moveCamera(

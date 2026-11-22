@@ -19,7 +19,7 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
     private let onMarkerClick: (String) -> Void
     private var tileTimeout: DispatchWorkItem?
     private var previousViewport: Int32?
-    private var fittedMarkers = false
+    private var fittedCoordinates = false
     private var pendingCamera: (() -> Void)?
     private var routeLines: [(GMSPolyline, Double)] = []
     private var pinFonts: [String: CGFont] = [:]
@@ -89,10 +89,10 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
             marker.map = map
         }
 
-        let hasMarkers = !scene.markers.isEmpty
-        guard previousViewport != viewportRequest || (!fittedMarkers && hasMarkers) else { return }
+        let hasCoordinates = !scene.viewportCoordinates.isEmpty
+        guard previousViewport != viewportRequest || (!fittedCoordinates && hasCoordinates) else { return }
         previousViewport = viewportRequest
-        fittedMarkers = hasMarkers
+        fittedCoordinates = hasCoordinates
         pendingCamera = { [weak self] in self?.positionCamera(for: scene, focusedVisitId: focusedVisitId) }
         applyPendingCamera()
     }
@@ -106,16 +106,16 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
     private func positionCamera(for scene: TravelMapScene, focusedVisitId: String?) {
         if let focused = scene.markers.first(where: { $0.id == focusedVisitId }) {
             map.camera = GMSCameraPosition(target: focused.coordinates.coordinate, zoom: 15)
-        } else if let first = scene.markers.first {
-            let origin = first.coordinates.coordinate
-            let otherPoints = scene.markers.dropFirst().filter {
-                $0.coordinates.latitude != origin.latitude || $0.coordinates.longitude != origin.longitude
+        } else if let first = scene.viewportCoordinates.first {
+            let origin = first.coordinate
+            let otherPoints = scene.viewportCoordinates.dropFirst().filter {
+                $0.latitude != origin.latitude || $0.longitude != origin.longitude
             }
             if otherPoints.isEmpty {
                 map.camera = GMSCameraPosition(target: origin, zoom: 14)
             } else {
                 let bounds = otherPoints.reduce(GMSCoordinateBounds(coordinate: origin, coordinate: origin)) {
-                    $0.includingCoordinate($1.coordinates.coordinate)
+                    $0.includingCoordinate($1.coordinate)
                 }
                 map.moveCamera(GMSCameraUpdate.fit(bounds, withPadding: 28))
             }

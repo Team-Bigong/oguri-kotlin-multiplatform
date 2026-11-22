@@ -59,7 +59,11 @@ data class TravelMapScene(
     val markers: List<TravelMapMarker>,
     val lines: List<TravelMapLine>,
     val cityCenter: TravelCoordinates?,
-)
+    val referenceCoordinates: List<TravelCoordinates> = emptyList(),
+) {
+    val viewportCoordinates: List<TravelCoordinates>
+        get() = markers.map { it.coordinates }.ifEmpty { referenceCoordinates }
+}
 
 internal fun travelMapScene(
     dayNumber: Int,
