@@ -58,6 +58,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelDates
@@ -431,10 +432,11 @@ internal fun TravelDateButton(
     Column(
         modifier.heightIn(min = 64.dp).clip(shape).background(colors.surfaceCard)
             .border(1.dp, if (isError) com.bigong.oguri.core.designsystem.Orange20 else colors.borderStrong, shape).noRippleClickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
+            .padding(horizontal = 13.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterVertically),
     ) {
-        Text(label, style = OguriTheme.typography.caption, color = colors.textTertiary)
-        Text(date?.let { travelWeekDate(it) }.orEmpty(), style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+        Text(label, style = OguriTheme.typography.labelSmall.copy(lineHeight = 13.sp), color = colors.textTertiary)
+        Text(date?.let { travelWeekDate(it) }.orEmpty(), style = OguriTheme.typography.cardSubtitle.copy(lineHeight = 18.sp), color = colors.textPrimary)
     }
 }
 
