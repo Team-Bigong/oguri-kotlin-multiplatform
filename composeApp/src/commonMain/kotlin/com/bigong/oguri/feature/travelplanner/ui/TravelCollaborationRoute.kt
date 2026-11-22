@@ -140,7 +140,7 @@ internal fun TravelMembersRoute(
                 SharePayload(
                     title = inviteTitle,
                     description = inviteDescription,
-                    imageUrl = "https://$TRAVEL_INVITE_HOST/assets/official/share-thumbnail.png",
+                    imageUrl = "https://$TRAVEL_INVITE_HOST/assets/official/travel-invite-thumbnail.png",
                     deepLinkUrl = url,
                     buttonTitle = shareButtonTitle,
                     fallbackMessage = inviteTitle,
