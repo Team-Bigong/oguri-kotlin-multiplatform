@@ -139,7 +139,8 @@ internal fun TravelPlanRoute(
             .toSet()
     LaunchedEffect(viewModel, planId, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            viewModel.loadPlan(planId)
+            val activePlan = viewModel.state.value.plan?.summary?.id == planId
+            if (activePlan) viewModel.refreshPlan(planId) else viewModel.loadPlan(planId)
             while (isActive) {
                 delay(5_000)
                 viewModel.refreshPlan(planId)
