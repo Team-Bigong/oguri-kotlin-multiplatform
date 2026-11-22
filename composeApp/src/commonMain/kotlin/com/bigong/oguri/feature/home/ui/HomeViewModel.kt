@@ -8,7 +8,6 @@ import com.bigong.oguri.domain.usecase.GetMonthlyTopPeriodListUseCase
 import com.bigong.oguri.domain.usecase.GetRecommendPeriodListUseCase
 import com.bigong.oguri.domain.usecase.GetWeeklyTopPlaceListUseCase
 import com.bigong.oguri.domain.usecase.SaveRecommendationUseCase
-import com.bigong.oguri.core.util.extension.isUnauthorized
 import com.bigong.oguri.feature.home.ui.model.HomeSideEffect
 import com.bigong.oguri.feature.home.ui.model.HomeUiState
 import dev.zacsweers.metro.Inject
