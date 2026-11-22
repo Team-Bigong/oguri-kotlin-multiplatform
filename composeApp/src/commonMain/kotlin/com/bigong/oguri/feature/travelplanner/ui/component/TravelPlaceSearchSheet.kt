@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -120,6 +121,7 @@ internal fun TravelPlaceSearchSheet(
     })
     val dismissSheet = rememberTravelSheetDismiss(sheet, close)
     val targetDay = if (manual) draft?.dayNumber ?: day else day
+    val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     ModalBottomSheet(scrimColor = TravelSheetScrim,
         containerColor = colors.backgroundSecondary,
@@ -132,7 +134,7 @@ internal fun TravelPlaceSearchSheet(
                 .background(colors.borderStrong, CircleShape))
         },
     ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).imePadding()) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
             Row(
                 Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp, top = 0.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -308,6 +310,7 @@ internal fun TravelPlaceSearchSheet(
                 }
             }
             if (manual || search.results.isNotEmpty()) TravelBottomAction(
+                bottomPadding = if (keyboardVisible) 0.dp else 20.dp,
                 enabled = canEdit && if (manual) draft?.name?.isNotBlank() == true
                     else selected != null,
                 onClick = {

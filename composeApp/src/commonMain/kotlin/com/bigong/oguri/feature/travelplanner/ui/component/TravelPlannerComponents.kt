@@ -350,6 +350,7 @@ internal fun TravelBottomAction(
     onClick: () -> Unit,
     showDivider: Boolean = true,
     topPadding: Dp = 12.dp,
+    bottomPadding: Dp = 20.dp,
     content: @Composable () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
@@ -357,7 +358,7 @@ internal fun TravelBottomAction(
         TravelPrimaryButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = bottomPadding),
             textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
             content = content,
         )
