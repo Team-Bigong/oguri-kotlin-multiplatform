@@ -1,8 +1,11 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlansEmpty
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlansHeading
 import oguri.composeapp.generated.resources.Res
@@ -24,6 +27,7 @@ internal fun TravelSignInRequired(onSignIn: () -> Unit, onBack: () -> Unit) {
 internal fun ColumnScope.TravelSignInContent(
     onSignIn: () -> Unit,
     showPageTitle: Boolean,
+    bottomPadding: Dp = 0.dp,
 ) {
     TravelPlansHeading(showPageTitle = showPageTitle)
     TravelPlansEmpty(
@@ -32,6 +36,6 @@ internal fun ColumnScope.TravelSignInContent(
         actionLabel = stringResource(Res.string.travel_login_action),
         onAction = onSignIn,
         title = stringResource(Res.string.travel_login_title),
-        modifier = Modifier.weight(1f),
+        modifier = Modifier.weight(1f).padding(bottom = bottomPadding),
     )
 }

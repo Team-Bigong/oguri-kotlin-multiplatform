@@ -38,6 +38,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.ad.AdMobBannerPlacement
+import com.bigong.oguri.core.ad.BottomTabBanner
+import com.bigong.oguri.core.ad.BottomTabBannerContentSpacing
+import com.bigong.oguri.core.ad.BottomTabBannerHeight
 import com.bigong.oguri.core.designsystem.Mint80
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
@@ -77,7 +81,13 @@ internal fun TravelPlansScreen(
     modifier: Modifier = Modifier,
 ) {
     val colors = OguriTheme.colors
-    val navigationPadding = calculateFloatingBottomNavigationAdditionalBottomPadding(hasFloatingBottomNavigation = onBack == null)
+    val isTravelTab = onBack == null
+    val showBanner = isTravelTab && (!signedIn || state.plans != null && state.failure == null)
+    val navigationPadding = calculateFloatingBottomNavigationAdditionalBottomPadding(
+        hasFloatingBottomNavigation = isTravelTab,
+        baseBottomPadding = if (showBanner) BottomTabBannerHeight + BottomTabBannerContentSpacing else 0.dp,
+    )
+    val contentBottomPadding = if (showBanner) navigationPadding + BottomTabBannerContentSpacing else navigationPadding
     TravelPlannerPage(
         title = if (onBack != null) stringResource(Res.string.travel_list) else "",
         onBack = onBack,
@@ -86,7 +96,7 @@ internal fun TravelPlansScreen(
         val failure = state.failure
         val plans = state.plans
         when {
-            !signedIn -> TravelSignInContent(onSignIn = onSignIn, showPageTitle = onBack == null)
+            !signedIn -> TravelSignInContent(onSignIn = onSignIn, showPageTitle = isTravelTab, bottomPadding = contentBottomPadding)
             failure != null && !state.isLoading -> {
                 TravelPlansHeading(showPageTitle = onBack == null)
                 TravelPlansEmpty(Res.drawable.img_oguri_empty, stringResource(Res.string.travel_list_failure_message), stringResource(Res.string.travel_list_retry), onRetry, stringResource(Res.string.travel_list_failure_title), Modifier.weight(1f).padding(bottom = navigationPadding), illustrationSize = 200.dp)
@@ -103,7 +113,7 @@ internal fun TravelPlansScreen(
             }
             plans.isEmpty() -> {
                 TravelPlansHeading(showPageTitle = onBack == null)
-                TravelPlansEmpty(Res.drawable.img_oguri_parasol, stringResource(Res.string.travel_empty_description), stringResource(Res.string.travel_create), onCreate, stringResource(Res.string.travel_empty_title), Modifier.weight(1f).padding(bottom = navigationPadding), showPlus = true)
+                TravelPlansEmpty(Res.drawable.img_oguri_parasol, stringResource(Res.string.travel_empty_description), stringResource(Res.string.travel_create), onCreate, stringResource(Res.string.travel_empty_title), Modifier.weight(1f).padding(bottom = contentBottomPadding), showPlus = true)
             }
             else -> {
                 var showPast by rememberSaveable { mutableStateOf(false) }
@@ -112,7 +122,7 @@ internal fun TravelPlansScreen(
                 val pastState = stringResource(if (showPast) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
-                    contentPadding = PaddingValues(bottom = navigationPadding),
+                    contentPadding = PaddingValues(bottom = contentBottomPadding),
                 ) {
                     item {
                         TravelPlansHeading(showPageTitle = onBack == null, bottomPadding = 24.dp)
@@ -163,6 +173,7 @@ internal fun TravelPlansScreen(
                 }
             }
         }
+        if (showBanner) BottomTabBanner(AdMobBannerPlacement.TRAVEL_BOTTOM)
     }
 }
 
