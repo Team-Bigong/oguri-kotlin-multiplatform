@@ -27,8 +27,10 @@ struct ContentView: View {
                     homeTabLabel: floatingBottomNavigationStateStore.homeTabLabel,
                     calendarTabLabel: floatingBottomNavigationStateStore.calendarTabLabel,
                     myPageTabLabel: floatingBottomNavigationStateStore.myPageTabLabel,
+                    travelTabLabel: floatingBottomNavigationStateStore.travelTabLabel,
                     onTabSelected: handleFloatingTabSelected
                 )
+                .id(floatingBottomNavigationStateStore.travelTabLabel != nil)
                 .frame(height: 78)
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
@@ -39,9 +41,6 @@ struct ContentView: View {
     }
 
     private func handleFloatingTabSelected(_ selectedTabIndex: Int) {
-        if selectedTabIndex < 0 || selectedTabIndex > 2 {
-            return
-        }
         FloatingBottomNavigationBridgeKt.emitFloatingBottomNavigationSelection(tabIndex: Int32(selectedTabIndex))
     }
 }

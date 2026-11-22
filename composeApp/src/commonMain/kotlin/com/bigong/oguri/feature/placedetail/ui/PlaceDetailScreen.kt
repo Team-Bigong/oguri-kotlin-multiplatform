@@ -26,12 +26,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint60
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
@@ -40,6 +43,7 @@ import com.bigong.oguri.core.ui.component.PlaceHorizontalCarousel
 import com.bigong.oguri.core.ui.component.SaveToggleButton
 import com.bigong.oguri.domain.model.Advertisement
 import com.bigong.oguri.domain.model.AdvertisementPlatform
+import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.feature.placedetail.ui.component.ExperienceCard
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailDescriptionSection
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailImagePager
@@ -48,6 +52,8 @@ import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailSkeletonCont
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTopBar
 import com.bigong.oguri.feature.placedetail.ui.component.PlaceDetailTravelInformationCard
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailUiState
+import com.bigong.oguri.feature.travelplanner.ui.TravelDestinationEntry
+import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_binoculars
 import oguri.composeapp.generated.resources.ic_plane
@@ -59,8 +65,8 @@ import oguri.composeapp.generated.resources.place_detail_flight_title_highlight
 import oguri.composeapp.generated.resources.place_detail_relevant_places
 import oguri.composeapp.generated.resources.place_detail_relevant_places_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience
-import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
+import oguri.composeapp.generated.resources.travel_create_from_city
 import org.jetbrains.compose.resources.stringResource
 
 private const val PLACE_DETAIL_TITLE_ITEM_KEY = "place_detail_title"
@@ -76,6 +82,10 @@ fun PlaceDetailScreen(
     onFlightClick: (String) -> Unit,
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
+    onCreateTravelPlan: (() -> Unit)? = null,
+    onTravelEntryVisible: (() -> Unit)? = null,
+    matchingTravelPlans: List<TravelPlanSummary> = emptyList(),
+    onOpenTravelPlan: ((String) -> Unit)? = null,
 ) {
     val placeDetail = placeDetailUiState.placeDetail
     val isInitialLoading = placeDetail == null && placeDetailUiState.isLoading
@@ -134,13 +144,13 @@ fun PlaceDetailScreen(
                             ) {
                                 Text(
                                     text = placeDetail.city,
-                                    style = OguriTheme.typography.sectionTitle,
+                                    style = travelTextStyle(22, 26, FontWeight.Bold),
                                     color = Neutral100,
                                 )
                                 Text(
                                     text = stringResource(Res.string.place_detail_country, placeDetail.country),
-                                    style = OguriTheme.typography.labelMedium,
-                                    color = Neutral40,
+                                    style = travelTextStyle(12, 14, FontWeight.Medium),
+                                    color = OguriTheme.colors.textTertiary,
                                 )
                             }
                             Row(
@@ -154,12 +164,13 @@ fun PlaceDetailScreen(
                                 SaveToggleButton(
                                     checked = placeDetailUiState.isSaved,
                                     onCheckedChange = { onSaveToggleClick() },
+                                    modifier = Modifier.padding(end = 12.dp),
                                 )
                             }
                         }
                     }
                     item {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                         PlaceDetailDescriptionSection(
                             description = placeDetail.description,
                             modifier = Modifier.padding(horizontal = 20.dp),
@@ -172,12 +183,26 @@ fun PlaceDetailScreen(
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }
+                    if (onCreateTravelPlan != null) {
+                        item {
+                            TravelDestinationEntry(
+                                plans = matchingTravelPlans,
+                                onOpen = onOpenTravelPlan,
+                                onCreate = onCreateTravelPlan,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp, bottom = 8.dp)
+                                        .onVisibilityChanged { visible -> if (visible) onTravelEntryVisible?.invoke() },
+                            )
+                        }
+                    }
                     item {
                         Spacer(modifier = Modifier.height(28.dp))
                         GuideHeader(
                             iconResource = Res.drawable.ic_binoculars,
                             titleText = stringResource(Res.string.place_detail_section_experience, placeDetail.city),
-                            highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
+                            iconTint = Mint60,
+                            subtitleColor = Neutral50,
                             subtitleText = stringResource(Res.string.place_detail_section_experience_subtitle),
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )

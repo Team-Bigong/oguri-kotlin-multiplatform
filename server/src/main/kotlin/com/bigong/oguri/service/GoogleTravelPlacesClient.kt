@@ -1,0 +1,160 @@
+package com.bigong.oguri.service
+
+import com.bigong.oguri.dto.response.TravelPlaceAttribution
+import com.bigong.oguri.dto.response.TravelPlaceResponse
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.Timer
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Component
+import org.springframework.web.server.ResponseStatusException
+import java.net.URI
+import java.net.http.HttpClient
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.time.Duration
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletionException
+import java.util.concurrent.Semaphore
+
+@Component
+class GoogleTravelPlacesClient(
+    private val objectMapper: ObjectMapper,
+    private val metrics: MeterRegistry,
+    @param:Value("\${GOOGLE_PLACES_API_KEY:}") private val apiKey: String,
+) {
+    private val client: HttpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build()
+    private val concurrentRequests: Semaphore = Semaphore(32)
+
+    internal fun search(
+        query: String,
+        language: String,
+        center: TravelPlaceSearchCenter? = null,
+    ): List<TravelPlaceResponse> {
+        val body =
+            objectMapper.writeValueAsString(
+                buildMap {
+                    put("textQuery", query)
+                    put("languageCode", language)
+                    put("pageSize", SEARCH_PAGE_SIZE)
+                    if (center != null) {
+                        put(
+                            "locationBias",
+                            mapOf(
+                                "circle" to
+                                    mapOf(
+                                        "center" to mapOf("latitude" to center.latitude, "longitude" to center.longitude),
+                                        "radius" to CITY_SEARCH_RADIUS_METERS,
+                                    ),
+                            ),
+                        )
+                    }
+                },
+            )
+        return request(
+            TravelPlacesOperation.SEARCH,
+            requestBuilder("/places:searchText", SEARCH_FIELDS)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build(),
+        ).join()?.path("places")?.mapNotNull(::toPlace).orEmpty()
+    }
+
+    fun details(
+        placeId: String,
+        language: String,
+    ): CompletableFuture<TravelPlaceResponse?> =
+        request(
+            TravelPlacesOperation.DETAILS,
+            requestBuilder("/places/$placeId?languageCode=$language", PLACE_FIELDS).GET().build(),
+        )
+            .thenApply { node -> node?.let(::toPlace) }
+
+    private fun requestBuilder(
+        path: String,
+        fields: String,
+    ): HttpRequest.Builder {
+        if (apiKey.isBlank()) throw ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE)
+        return HttpRequest
+            .newBuilder(URI.create("$BASE_URL$path"))
+            .timeout(Duration.ofSeconds(5))
+            .header("X-Goog-Api-Key", apiKey)
+            .header("X-Goog-FieldMask", fields)
+    }
+
+    private fun request(
+        operation: TravelPlacesOperation,
+        request: HttpRequest,
+    ): CompletableFuture<JsonNode?> {
+        if (!concurrentRequests.tryAcquire()) {
+            metrics.counter("oguri.travel.places.rejected", "operation", operation.tag, "reason", "concurrency").increment()
+            return CompletableFuture.failedFuture(ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS))
+        }
+        val sample = Timer.start(metrics)
+        val response =
+            try {
+                client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+            } catch (failure: RuntimeException) {
+                CompletableFuture.failedFuture(failure)
+            }
+        return response
+            .whenComplete { _, _ -> concurrentRequests.release() }
+            .thenApply { result ->
+                when (result.statusCode()) {
+                    200 -> objectMapper.readTree(result.body())
+                    404 -> null
+                    429 -> throw ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS)
+                    else -> throw ResponseStatusException(HttpStatus.BAD_GATEWAY)
+                }
+            }.whenComplete { place, failure ->
+                val outcome =
+                    when (val cause = (failure as? CompletionException)?.cause ?: failure) {
+                        null -> if (place == null) "missing" else "completed"
+                        is ResponseStatusException -> if (cause.statusCode == HttpStatus.TOO_MANY_REQUESTS) "provider_limited" else "failed"
+                        else -> "failed"
+                    }
+                sample.stop(metrics.timer("oguri.travel.places.request", "operation", operation.tag, "outcome", outcome))
+            }
+    }
+
+    private fun toPlace(node: JsonNode): TravelPlaceResponse? {
+        val id = node.path("id").asText()
+        val name = node.path("displayName").path("text").asText()
+        if (id.isBlank() || name.isBlank()) return null
+        val location = node.path("location")
+        return TravelPlaceResponse(
+            id = id,
+            name = name,
+            address = node.path("formattedAddress").asText().takeIf(String::isNotBlank),
+            latitude = location.path("latitude").takeIf(JsonNode::isNumber)?.asDouble(),
+            longitude = location.path("longitude").takeIf(JsonNode::isNumber)?.asDouble(),
+            attributions =
+                node.path("attributions").mapNotNull {
+                    val provider = it.path("provider").asText()
+                    if (provider.isBlank()) {
+                        null
+                    } else {
+                        TravelPlaceAttribution(
+                            provider,
+                            it.path("providerUri").asText().takeIf { uri -> uri.startsWith("https://") || uri.startsWith("http://") },
+                        )
+                    }
+                },
+        )
+    }
+
+    private companion object {
+        const val BASE_URL: String = "https://places.googleapis.com/v1"
+        const val SEARCH_PAGE_SIZE: Int = 12
+        const val CITY_SEARCH_RADIUS_METERS: Double = 25_000.0
+        const val PLACE_FIELDS: String = "id,displayName,formattedAddress,location,attributions"
+        val SEARCH_FIELDS: String = PLACE_FIELDS.split(',').joinToString(",") { "places.$it" }
+    }
+}
+
+internal enum class TravelPlacesOperation(val tag: String) {
+    SEARCH("search"),
+    DETAILS("details"),
+}

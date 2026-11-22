@@ -1,11 +1,6 @@
 package com.bigong.oguri.feature.onboarding.ui
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -28,6 +23,8 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.navigation.navigationEnter
+import com.bigong.oguri.core.navigation.navigationExit
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
 import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
@@ -41,8 +38,6 @@ import oguri.composeapp.generated.resources.btn_back
 import oguri.composeapp.generated.resources.onboarding_day_off_skip
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
-
-private const val ONBOARDING_SCREEN_ANIMATION_DURATION_MILLIS = 260
 
 @Composable
 fun OnboardingScreen(
@@ -118,18 +113,7 @@ fun OnboardingScreen(
                 targetState = onboardingUiState.step,
                 modifier = Modifier.fillMaxWidth(),
                 transitionSpec = {
-                    val isForward = targetState.ordinal > initialState.ordinal
-                    (
-                        slideInHorizontally(
-                            animationSpec = tween(durationMillis = ONBOARDING_SCREEN_ANIMATION_DURATION_MILLIS),
-                            initialOffsetX = { fullWidth -> if (isForward) fullWidth else -fullWidth },
-                        ) + fadeIn(animationSpec = tween(durationMillis = ONBOARDING_SCREEN_ANIMATION_DURATION_MILLIS))
-                    ).togetherWith(
-                        slideOutHorizontally(
-                            animationSpec = tween(durationMillis = ONBOARDING_SCREEN_ANIMATION_DURATION_MILLIS),
-                            targetOffsetX = { fullWidth -> if (isForward) -fullWidth / 3 else fullWidth / 3 },
-                        ) + fadeOut(animationSpec = tween(durationMillis = ONBOARDING_SCREEN_ANIMATION_DURATION_MILLIS)),
-                    )
+                    (navigationEnter() togetherWith navigationExit()) using null
                 },
                 label = "onboarding_step_content",
             ) { onboardingStep ->

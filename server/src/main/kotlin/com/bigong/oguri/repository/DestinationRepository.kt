@@ -9,13 +9,21 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface DestinationRepository : JpaRepository<Destination, Int> {
-    @Query("SELECT DISTINCT d FROM Destination d JOIN FETCH d.country LEFT JOIN FETCH d.images")
+    @Query("SELECT DISTINCT d FROM Destination d LEFT JOIN FETCH d.country LEFT JOIN FETCH d.images")
     fun findAllWithCountryAndImages(): List<Destination>
 
-    @Query("SELECT DISTINCT d FROM Destination d JOIN FETCH d.country LEFT JOIN FETCH d.images WHERE d.id = :destinationId")
+    @Query("SELECT DISTINCT d FROM Destination d LEFT JOIN FETCH d.country LEFT JOIN FETCH d.images WHERE d.id = :destinationId")
     fun findByIdWithCountryAndImages(destinationId: Int): Destination?
 
-    @Query("SELECT d FROM Destination d JOIN FETCH d.country WHERE d.name LIKE %:query% OR d.country.name LIKE %:query% ORDER BY d.name ASC")
+    @Query(
+        """
+        SELECT d
+        FROM Destination d
+        JOIN FETCH d.country
+        WHERE d.name LIKE %:query% OR d.country.name LIKE %:query%
+        ORDER BY d.name ASC
+        """,
+    )
     fun findAutocompleteSuggestions(
         @Param("query") query: String,
         pageable: Pageable,

@@ -1,0 +1,156 @@
+package com.bigong.oguri.domain
+
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import java.time.LocalDate
+import java.time.LocalTime
+import java.util.UUID
+
+class TravelPlanCollaborationTest {
+    private fun plan(): TravelPlan =
+        TravelPlan(
+            UUID.randomUUID(),
+            "owner",
+            UUID.randomUUID(),
+            "fingerprint",
+            "Seoul",
+            "Asia/Seoul",
+            "Trip",
+            LocalDate.of(2027, 4, 1),
+            LocalDate.of(2027, 4, 3),
+        )
+
+    private val details = TravelVisitDetails("Museum", "Address", null, "Original")
+
+    @Test
+    fun `여러 도시는 순서를 유지하고 중복 도시 변경은 원자적으로 거절한다`() {
+        val plan = plan()
+        plan.updateDetails("Seoul", "Trip", "Asia/Seoul", plan.startDate, plan.endDate, 0, 0, listOf("Seoul", "Busan"))
+        assertEquals(listOf("Seoul", "Busan"), plan.cityNames())
+        val revision = plan.revision
+        assertThrows(IllegalArgumentException::class.java) {
+            plan.updateDetails("Seoul", "Changed", "Asia/Seoul", plan.startDate, plan.endDate, revision, 0, listOf("Seoul", "Seoul"))
+        }
+        assertEquals(revision, plan.revision)
+        assertEquals(listOf("Seoul", "Busan"), plan.cityNames())
+    }
+
+    @Test
+    fun `날짜 없는 방문을 새로 만들 수 없다`() {
+        val plan = plan()
+        assertThrows(IllegalArgumentException::class.java) { plan.addVisit(0, details) }
+        assertTrue(plan.orderedVisits().isEmpty())
+    }
+
+    @Test
+    fun `전체 날짜 장소 조회는 재방문을 포함하되 외부 조회값은 중복하지 않는다`() {
+        val plan = plan()
+        plan.addVisit(1, details.copy(name = null, location = null, googlePlaceId = "same"))
+        plan.addVisit(2, details.copy(name = null, location = null, googlePlaceId = "same"))
+        plan.addVisit(3, details.copy(name = null, location = null, googlePlaceId = "third"))
+        plan.addVisit(3, details)
+        assertEquals(setOf("same", "third"), plan.googlePlaceIds().toSet())
+        assertEquals(2, plan.googlePlaceIds().size)
+        assertEquals(4, plan.orderedVisits().size)
+    }
+
+    @Test
+    fun `같은 방문의 독립 필드 수정은 서로 덮어쓰지 않는다`() {
+        val plan = plan()
+        plan.addVisit(1, details)
+        val visit = plan.orderedVisits().single()
+        val baseRevision = visit.revision
+        plan.editVisit(visit.id, baseRevision, 1, details.copy(note = "Shared note"), details, 1)
+        plan.editVisit(visit.id, baseRevision, 1, details.copy(localTime = LocalTime.of(10, 30)), details, 1)
+        assertEquals("Shared note", visit.note)
+        assertEquals(LocalTime.of(10, 30), visit.localTime)
+    }
+
+    @Test
+    fun `같은 메모 충돌은 확정된 내용과 버전을 유지한다`() {
+        val plan = plan()
+        plan.addVisit(1, details)
+        val visit = plan.orderedVisits().single()
+        val baseRevision = visit.revision
+        plan.editVisit(visit.id, baseRevision, 1, details.copy(note = "First edit"), details, 1)
+        val revision = plan.revision
+        assertThrows(TravelPlanConflict::class.java) {
+            plan.editVisit(visit.id, baseRevision, 1, details.copy(note = "Second edit"), details, 1)
+        }
+        assertEquals("First edit", visit.note)
+        assertEquals(revision, plan.revision)
+    }
+
+    @Test
+    fun `다른 멤버가 옮긴 방문의 독립 수정은 현재 날짜를 유지한다`() {
+        val plan = plan()
+        plan.addVisit(1, details)
+        val visit = plan.orderedVisits().single()
+        val baseRevision = visit.revision
+        plan.editVisit(visit.id, baseRevision, 2, details, details, 1)
+        plan.editVisit(visit.id, baseRevision, 1, details.copy(note = "New note"), details, 1)
+        assertEquals(2, visit.dayNumber)
+        assertEquals("New note", visit.note)
+    }
+
+    @Test
+    fun `기간 단축은 마지막 날 뒤에 기존 순서대로 장소를 보존한다`() {
+        val plan = plan()
+        plan.addVisit(1, details.copy(name = "First day"))
+        plan.addVisit(2, details.copy(name = "Second day"))
+        plan.addVisit(3, details.copy(name = "Third day"))
+        val originalIds = plan.orderedVisits().map { it.id }.toSet()
+        plan.updateDetails("Seoul", "Trip", "Asia/Seoul", plan.startDate, plan.startDate, plan.revision, 2)
+        assertEquals(originalIds, plan.orderedVisits().map { it.id }.toSet())
+        assertEquals(listOf("First day", "Second day", "Third day"), plan.orderedVisits().map { it.name })
+        assertTrue(plan.orderedVisits().all { it.dayNumber == 1 })
+        assertEquals(
+            3,
+            plan
+                .orderedVisits()
+                .map { it.position }
+                .distinct()
+                .size,
+        )
+    }
+
+    @Test
+    fun `기간 변경 영향 확인이 오래되면 아무 항목도 옮기지 않는다`() {
+        val plan = plan()
+        plan.addVisit(3, details)
+        val revision = plan.revision
+        assertThrows(TravelPlanConflict::class.java) {
+            plan.updateDetails("Seoul", "Trip", "Asia/Seoul", plan.startDate, plan.startDate, revision, 0)
+        }
+        assertEquals(3, plan.orderedVisits().single().dayNumber)
+        assertEquals(revision, plan.revision)
+    }
+
+    @Test
+    fun `순서 충돌과 삭제 후 수정은 기존 계획을 보존한다`() {
+        val plan = plan()
+        plan.addVisit(1, details)
+        val first = plan.orderedVisits().single()
+        val originalOrderRevision = plan.dayOrderRevisions().getValue(1)
+        plan.addVisit(1, details.copy(name = "Second"))
+        assertThrows(TravelPlanConflict::class.java) {
+            plan.reorderDay(1, originalOrderRevision, plan.orderedVisits().map { it.id }.reversed())
+        }
+        plan.removeVisit(first.id, first.revision)
+        assertThrows(TravelPlanConflict::class.java) { plan.editVisit(first.id, first.revision, 1, details) }
+        assertEquals(listOf("Second"), plan.orderedVisits().map { it.name })
+    }
+
+    @Test
+    fun `다른 수정 이후 삭제 되돌리기는 새 장소를 덮어쓰지 않는다`() {
+        val plan = plan()
+        plan.addVisit(1, details)
+        val visit = plan.orderedVisits().single()
+        val snapshot = TravelVisitUndo(visit.id, 1, visit.position, plan.structureRevision, null, visit.details())
+        plan.removeVisit(visit.id, visit.revision)
+        val removalRevision = plan.revision
+        plan.addVisit(1, details.copy(name = "Later visit"))
+        assertThrows(TravelPlanConflict::class.java) { plan.undoVisit(snapshot, removalRevision) }
+        assertEquals(listOf("Later visit"), plan.orderedVisits().map { it.name })
+    }
+}

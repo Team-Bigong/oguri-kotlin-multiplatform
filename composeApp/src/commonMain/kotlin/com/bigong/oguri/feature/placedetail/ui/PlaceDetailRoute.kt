@@ -20,6 +20,7 @@ import com.bigong.oguri.core.ui.component.LoginRequiredDialog
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.PreloadNetworkImages
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
+import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.feature.placedetail.ui.model.PlaceDetailSideEffect
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.collectLatest
@@ -44,6 +45,10 @@ fun PlaceDetailRoute(
     onLoginRequired: () -> Unit,
     onPlaceClick: (Long) -> Unit,
     onPhotoClick: (List<String>, Int) -> Unit,
+    onCreateTravelPlan: (() -> Unit)? = null,
+    onTravelEntryVisible: (() -> Unit)? = null,
+    matchingTravelPlans: List<TravelPlanSummary> = emptyList(),
+    onOpenTravelPlan: ((String) -> Unit)? = null,
 ) {
     val placeDetailViewModel =
         remember {
@@ -120,6 +125,14 @@ fun PlaceDetailRoute(
     PlaceDetailScreen(
         placeDetailUiState = placeDetailUiState,
         onBackClick = onBackClick,
+        onCreateTravelPlan = onCreateTravelPlan,
+        onTravelEntryVisible = onTravelEntryVisible,
+        matchingTravelPlans = matchingTravelPlans.filter {
+            val sourceId = it.details.source?.destinationId
+            sourceId == placeId || sourceId == null && it.details.city.substringBefore(',').trim()
+                .equals(placeDetailUiState.placeDetail?.city, ignoreCase = true)
+        },
+        onOpenTravelPlan = onOpenTravelPlan,
         onRetryClick = {
             placeDetailViewModel.loadPlaceDetail(
                 placeId = placeId,

@@ -1,5 +1,5 @@
 {
-  "originHash" : "357d78e7b57443e8bba9e0ab928a05c3db8eb4fab33ca4429f19e803d77279d0",
+  "originHash" : "afb5f31493006a820d377bc664f718699a784548e958dff23ce6f297120e8043",
   "pins" : [
     {
       "identity" : "abseil-cpp-binary",
@@ -173,6 +173,15 @@
       }
     },
     {
+      "identity" : "ios-maps-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/googlemaps/ios-maps-sdk",
+      "state" : {
+        "revision" : "0a12af046bb5c5dec6b600e23f251d2e610596b1",
+        "version" : "11.4.0"
+      }
+    },
+    {
       "identity" : "jsonsafeencoding-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/segmentio/jsonsafeencoding-swift.git",
@@ -186,8 +195,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/kakao/kakao-ios-sdk",
       "state" : {
-        "revision" : "5978979157a5a0521c9c56fd0156aec794caa21c",
-        "version" : "2.27.2"
+        "revision" : "7a3aecd54167b56dddd29a52f581634db897b8e7",
+        "version" : "2.30.0"
       }
     },
     {

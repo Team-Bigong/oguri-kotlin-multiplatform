@@ -8,6 +8,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
+internal const val TRAVEL_DAY_REQUEST: String = "travel-day-request"
+
 @Stable
 class MainNavigator(
     val navHostController: NavHostController,
@@ -151,6 +153,78 @@ class MainNavigator(
         navHostController.navigate(RouteModel.WebDocument(documentType = documentType.name))
     }
 
+    fun navigateToCreateTravelPlan(
+        destinationId: Long? = null,
+        startDate: String? = null,
+        endDate: String? = null,
+    ) {
+        navHostController.navigate(RouteModel.CreateTravelPlan(destinationId, startDate, endDate)) { launchSingleTop = true }
+    }
+
+    fun navigateToTravelInvite() {
+        navHostController.navigate(RouteModel.TravelInvite) { launchSingleTop = true }
+    }
+
+    fun navigateToTravelMembers(
+        planId: String,
+        startDate: String,
+        endDate: String,
+    ) {
+        navHostController.navigate(RouteModel.TravelMembers(planId, startDate, endDate)) { launchSingleTop = true }
+    }
+
+    fun showTravelDay(dayNumber: Int) {
+        navHostController.previousBackStackEntry?.savedStateHandle?.set(TRAVEL_DAY_REQUEST, dayNumber)
+        popBackStack()
+    }
+
+    fun closeTravelInviteToPlans() {
+        navHostController.navigate(RouteModel.TravelPlans) {
+            popUpTo<RouteModel.TravelInvite> { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    fun openJoinedTravelPlan(planId: String) {
+        navHostController.navigate(RouteModel.TravelPlans) {
+            popUpTo<RouteModel.TravelInvite> { inclusive = true }
+            launchSingleTop = true
+        }
+        navigateToTravelPlan(planId)
+    }
+
+    fun closeManagedTravelPlan() {
+        navHostController.navigate(RouteModel.TravelPlans) {
+            popUpTo<RouteModel.TravelPlan> { inclusive = true }
+            launchSingleTop = true
+        }
+    }
+
+    fun navigateToTravelLogin() {
+        navHostController.navigate(RouteModel.TravelLogin) { launchSingleTop = true }
+    }
+
+    fun navigateToTravelOnboarding() {
+        navHostController.navigate(RouteModel.TravelOnboarding) {
+            launchSingleTop = true
+            popUpTo<RouteModel.TravelLogin> { inclusive = true }
+        }
+    }
+
+    fun openCalendarTab() {
+        navigateToBottomNavigationDestination(bottomNavigationDestinations.first { it.routeModel == RouteModel.Calendar })
+    }
+
+    fun navigateToTravelPlan(
+        planId: String,
+        fromCreation: Boolean = false,
+    ) {
+        navHostController.navigate(RouteModel.TravelPlan(planId)) {
+            launchSingleTop = true
+            if (fromCreation) popUpTo<RouteModel.CreateTravelPlan> { inclusive = true }
+        }
+    }
+
     fun navigateToDisplaySettings() {
         navHostController.navigate(RouteModel.DisplaySettings)
     }
@@ -179,7 +253,11 @@ class MainNavigator(
                 )
             }
 
-            is RouteModel.WebDocument -> {
+            is RouteModel.WebDocument,
+            is RouteModel.TravelPlan,
+            is RouteModel.TravelMembers,
+            is RouteModel.CreateTravelPlan,
+            -> {
                 navHostController.navigate(routeModel)
             }
 
@@ -189,6 +267,10 @@ class MainNavigator(
             RouteModel.Calendar,
             RouteModel.MyPage,
             RouteModel.DisplaySettings,
+            RouteModel.TravelPlans,
+            RouteModel.TravelLogin,
+            RouteModel.TravelInvite,
+            RouteModel.TravelOnboarding,
             RouteModel.Login,
             RouteModel.Splash,
             -> {

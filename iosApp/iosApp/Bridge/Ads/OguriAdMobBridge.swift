@@ -1,3 +1,4 @@
+import ComposeApp
 import UIKit
 import GoogleMobileAds
 
@@ -19,6 +20,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
     private var appOpenAd: AppOpenAd?
     private var isLoadingAppOpenAd = false
     private var isShowingAppOpenAd = false
+    private var appOpenAdRequest: AppOpenAdRequest?
     private var bannerByContainerId: [ObjectIdentifier: BannerView] = [:]
     private var bannerLoadRetryCountByContainerId: [ObjectIdentifier: Int] = [:]
 
@@ -41,7 +43,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         )
         notificationCenter.addObserver(
             self,
-            selector: #selector(handleShowAppOpenNotification),
+            selector: #selector(handleShowAppOpenNotification(_:)),
             name: Notification.Name("OguriAdMobShowAppOpen"),
             object: nil,
         )
@@ -68,8 +70,9 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         preloadAppOpenAd()
     }
 
-    @objc private func handleShowAppOpenNotification() {
-        _ = showAppOpenAdIfAvailable()
+    @objc private func handleShowAppOpenNotification(_ notification: Notification) {
+        guard let request = notification.object as? AppOpenAdRequest else { return }
+        showAppOpenAdIfAvailable(request)
     }
 
     @objc private func handleAttachBannerNotification(_ notification: Notification) {
@@ -120,23 +123,17 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         )
     }
 
-    @discardableResult
-    private func showAppOpenAdIfAvailable() -> Bool {
-        if isShowingAppOpenAd {
-            return false
-        }
+    private func showAppOpenAdIfAvailable(_ request: AppOpenAdRequest) {
+        guard !isShowingAppOpenAd else { return }
         guard let appOpenAd else {
             preloadAppOpenAd()
-            return false
+            return
         }
-
-        guard let rootViewController = UIApplication.shared.topMostViewController() else {
-            return false
-        }
+        guard let rootViewController = UIApplication.shared.topMostViewController() else { return }
 
         isShowingAppOpenAd = true
+        appOpenAdRequest = request
         appOpenAd.present(from: rootViewController)
-        return true
     }
 
     private func attachBanner(to containerView: UIView, placementKey: String) {
@@ -221,18 +218,22 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
 
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
         isShowingAppOpenAd = false
+        appOpenAdRequest = nil
         appOpenAd = nil
         preloadAppOpenAd()
     }
 
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: any Error) {
         isShowingAppOpenAd = false
+        appOpenAdRequest = nil
         appOpenAd = nil
         preloadAppOpenAd()
     }
 
-    func adWillPresentFullScreenContent(_ ad: FullScreenPresentingAd) {
-        isShowingAppOpenAd = true
+    func adDidRecordImpression(_ ad: FullScreenPresentingAd) {
+        let request = appOpenAdRequest
+        appOpenAdRequest = nil
+        request?.reportImpression()
     }
 }
 

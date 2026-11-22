@@ -52,9 +52,9 @@ private fun PlaceDetailResponse.toDomain(): PlaceDetail =
         travelInformation =
             PlaceDetailTravelInformation(
                 exchangeRateInformation = exchangeRateInfo.toDomain(),
-                relativeCostIndex = relativeCostIndex,
-                averageTemperature = averageTemperature,
-                averagePrecipitation = averagePrecipitation,
+                relativeCostIndex = relativeCostIndex ?: DEFAULT_DECIMAL,
+                averageTemperature = averageTemperature ?: DEFAULT_NUMBER,
+                averagePrecipitation = averagePrecipitation ?: DEFAULT_DECIMAL,
                 recommendPeriod = recommendPeriod.toDomain(),
             ),
         description = description,
@@ -63,18 +63,18 @@ private fun PlaceDetailResponse.toDomain(): PlaceDetail =
         relevantPlaces = relevantPlaces.map { placeResponse -> placeResponse.toDomain() },
     )
 
-private fun PlaceDetailExchangeRateInfoResponse.toDomain(): PlaceDetailExchangeRateInformation =
+private fun PlaceDetailExchangeRateInfoResponse?.toDomain(): PlaceDetailExchangeRateInformation =
     PlaceDetailExchangeRateInformation(
-        koreanWonAmount = krwAmount,
-        currencyUnit = currencyUnit,
-        currencyCode = currencyCode,
-        date = date,
+        koreanWonAmount = this?.krwAmount ?: DEFAULT_NUMBER,
+        currencyUnit = this?.currencyUnit ?: DEFAULT_NUMBER,
+        currencyCode = this?.currencyCode.orEmpty(),
+        date = this?.date.orEmpty(),
     )
 
-private fun PlaceDetailRecommendPeriodResponse.toDomain(): PlaceDetailRecommendPeriod =
+private fun PlaceDetailRecommendPeriodResponse?.toDomain(): PlaceDetailRecommendPeriod =
     PlaceDetailRecommendPeriod(
-        startMonth = startMonth,
-        endMonth = endMonth,
+        startMonth = this?.startMonth ?: DEFAULT_NUMBER,
+        endMonth = this?.endMonth ?: DEFAULT_NUMBER,
     )
 
 private fun ExperienceResponse.toDomain(): Experience =
@@ -94,3 +94,6 @@ private fun PlaceResponse.toDomain(): Place =
         thumbnailUrl = thumbnailUrl,
         isSaved = saved,
     )
+
+private const val DEFAULT_NUMBER = 0
+private const val DEFAULT_DECIMAL = 0.0

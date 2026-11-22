@@ -32,6 +32,7 @@ actual fun notifyFloatingBottomNavigationState(
     homeTabLabel: String,
     calendarTabLabel: String,
     myPageTabLabel: String,
+    travelTabLabel: String?,
 ) {
     val userInfo: Map<Any?, Any?> =
         mapOf<Any?, Any?>(
@@ -43,6 +44,7 @@ actual fun notifyFloatingBottomNavigationState(
             KEY_HOME_TAB_LABEL to homeTabLabel,
             KEY_CALENDAR_TAB_LABEL to calendarTabLabel,
             KEY_MYPAGE_TAB_LABEL to myPageTabLabel,
+            "travelTabLabel" to (travelTabLabel ?: ""),
         )
     NSNotificationCenter.defaultCenter.postNotificationName(
         aName = FLOATING_BOTTOM_NAVIGATION_STATE_CHANGED_NOTIFICATION_NAME,

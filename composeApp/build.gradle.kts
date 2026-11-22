@@ -158,8 +158,10 @@ kotlin {
             implementation(libs.androidx.credentials.play.services.auth)
             implementation(libs.google.android.googleid)
             implementation(libs.google.mobile.ads)
+            implementation(libs.play.services.maps)
             implementation(libs.firebase.crashlytics.ktx)
             implementation(libs.firebase.analytics.ktx)
+            implementation(libs.firebase.messaging)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.analytics.android)
             implementation(libs.plugin.session.replay.android)
@@ -191,6 +193,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
@@ -215,6 +218,9 @@ android {
         versionCode = currentProjectVersionValue.toInt()
         versionName = marketingVersionValue
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
+        manifestPlaceholders["googleMapsAndroidApiKey"] =
+            providers.environmentVariable("GOOGLE_MAPS_ANDROID_API_KEY").orNull
+                ?: localProperties.getProperty("google.maps.android.api.key").orEmpty()
     }
     packaging {
         resources {

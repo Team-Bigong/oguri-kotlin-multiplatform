@@ -3,9 +3,11 @@ package com.bigong.oguri.feature.login.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.bigong.oguri.core.platform.PlatformBackGestureContainer
+import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.platform.loginWithApple
 import com.bigong.oguri.core.platform.loginWithGoogle
 import com.bigong.oguri.core.platform.loginWithKakao
@@ -26,11 +28,9 @@ fun LoginRoute(
     onLoginSucceeded: () -> Unit,
     onLoginCompleted: (Boolean) -> Unit,
     onGuestBrowseClick: () -> Unit,
+    isReturnToTravel: Boolean = false,
 ) {
-    val loginViewModel =
-        remember {
-            loginViewModelProvider()
-        }
+    val loginViewModel: LoginViewModel = viewModel { loginViewModelProvider() }
     val loginUiState = loginViewModel.uiState.collectAsStateWithLifecycle().value
     val coroutineScope = rememberCoroutineScope()
     val loginFailedMessage = stringResource(Res.string.snackbar_login_failed)
@@ -54,50 +54,56 @@ fun LoginRoute(
         }
     }
 
-    LoginScreen(
-        isLoading = loginUiState.isLoading,
-        onGoogleLoginClick = {
-            if (loginUiState.isLoading) {
-                return@LoginScreen
-            }
-            coroutineScope.launch {
-                val googleLoginResult = loginWithGoogle()
-                val googleIdentityToken = googleLoginResult.getOrNull()?.trim().orEmpty()
-                if (googleIdentityToken.isBlank()) {
-                    loginViewModel.onLoginFailed()
-                    return@launch
+    PlatformBackHandler(enabled = isReturnToTravel) {
+        if (!loginUiState.isLoading) onGuestBrowseClick()
+    }
+    PlatformBackGestureContainer(enabled = isReturnToTravel && !loginUiState.isLoading, onBack = onGuestBrowseClick) {
+        LoginScreen(
+            isLoading = loginUiState.isLoading,
+            onGoogleLoginClick = {
+                if (loginUiState.isLoading) {
+                    return@LoginScreen
                 }
-                loginViewModel.loginWithGoogleIdentityToken(identityToken = googleIdentityToken)
-            }
-        },
-        onKakaoLoginClick = {
-            if (loginUiState.isLoading) {
-                return@LoginScreen
-            }
-            coroutineScope.launch {
-                val kakaoLoginResult = loginWithKakao()
-                val kakaoAccessToken = kakaoLoginResult.getOrNull()?.trim().orEmpty()
-                if (kakaoAccessToken.isBlank()) {
-                    loginViewModel.onLoginFailed()
-                    return@launch
+                coroutineScope.launch {
+                    val googleLoginResult = loginWithGoogle()
+                    val googleIdentityToken = googleLoginResult.getOrNull()?.trim().orEmpty()
+                    if (googleIdentityToken.isBlank()) {
+                        loginViewModel.onLoginFailed()
+                        return@launch
+                    }
+                    loginViewModel.loginWithGoogleIdentityToken(identityToken = googleIdentityToken)
                 }
-                loginViewModel.loginWithKakaoAccessToken(kakaoAccessToken = kakaoAccessToken)
-            }
-        },
-        onAppleLoginClick = {
-            if (loginUiState.isLoading) {
-                return@LoginScreen
-            }
-            coroutineScope.launch {
-                val appleLoginResult = loginWithApple()
-                val appleToken = appleLoginResult.getOrNull()?.trim().orEmpty()
-                if (appleToken.isBlank()) {
-                    loginViewModel.onLoginFailed()
-                    return@launch
+            },
+            onKakaoLoginClick = {
+                if (loginUiState.isLoading) {
+                    return@LoginScreen
                 }
-                loginViewModel.loginWithAppleIdentityToken(identityToken = appleToken)
-            }
-        },
-        onGuestBrowseClick = onGuestBrowseClick,
-    )
+                coroutineScope.launch {
+                    val kakaoLoginResult = loginWithKakao()
+                    val kakaoAccessToken = kakaoLoginResult.getOrNull()?.trim().orEmpty()
+                    if (kakaoAccessToken.isBlank()) {
+                        loginViewModel.onLoginFailed()
+                        return@launch
+                    }
+                    loginViewModel.loginWithKakaoAccessToken(kakaoAccessToken = kakaoAccessToken)
+                }
+            },
+            onAppleLoginClick = {
+                if (loginUiState.isLoading) {
+                    return@LoginScreen
+                }
+                coroutineScope.launch {
+                    val appleLoginResult = loginWithApple()
+                    val appleToken = appleLoginResult.getOrNull()?.trim().orEmpty()
+                    if (appleToken.isBlank()) {
+                        loginViewModel.onLoginFailed()
+                        return@launch
+                    }
+                    loginViewModel.loginWithAppleIdentityToken(identityToken = appleToken)
+                }
+            },
+            onGuestBrowseClick = { if (!loginUiState.isLoading) onGuestBrowseClick() },
+            isReturnToTravel = isReturnToTravel,
+        )
+    }
 }

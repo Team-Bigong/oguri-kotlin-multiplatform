@@ -21,6 +21,12 @@ spring:
         username: ${SPRING_DATASOURCE_USERNAME:postgres}
         password: ${SPRING_DATASOURCE_PASSWORD:password}
         driver-class-name: org.postgresql.Driver
+        hikari:
+            maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE:10}
+            minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE:2}
+            connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT:30000}
+            max-lifetime: ${SPRING_DATASOURCE_HIKARI_MAX_LIFETIME:1800000}
+            leak-detection-threshold: ${SPRING_DATASOURCE_HIKARI_LEAK_DETECTION_THRESHOLD:20000}
 
     jpa:
         hibernate:
@@ -64,14 +70,6 @@ auth:
     http:
         connect-timeout-millis: ${AUTH_HTTP_CONNECT_TIMEOUT_MILLIS:2000}
         read-timeout-millis: ${AUTH_HTTP_READ_TIMEOUT_MILLIS:3000}
-
-google:
-  web-client-id: ${GOOGLE_WEB_CLIENT_ID:}
-
-auth:
-  http:
-    connect-timeout-millis: ${AUTH_HTTP_CONNECT_TIMEOUT_MILLIS:2000}
-    read-timeout-millis: ${AUTH_HTTP_READ_TIMEOUT_MILLIS:3000}
 
 admin:
     username: ${ADMIN_USERNAME:}

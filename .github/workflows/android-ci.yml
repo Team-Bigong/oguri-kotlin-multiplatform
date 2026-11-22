@@ -4,27 +4,6 @@ on:
   push:
     branches:
       - release-android
-    paths:
-      - "composeApp/**"
-      - "shared/**"
-      - "gradle/**"
-      - "gradlew"
-      - "gradlew.bat"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - ".github/workflows/android-ci.yml"
-  pull_request:
-    branches:
-      - release-android
-    paths:
-      - "composeApp/**"
-      - "shared/**"
-      - "gradle/**"
-      - "gradlew"
-      - "gradlew.bat"
-      - "build.gradle.kts"
-      - "settings.gradle.kts"
-      - ".github/workflows/android-ci.yml"
 
 jobs:
   build:
@@ -76,5 +55,23 @@ jobs:
           mkdir -p composeApp/src/debug
           printf '%s' "${GOOGLE_SERVICES_JSON_DEBUG}" > composeApp/src/debug/google-services.json
 
+      - name: Verify mobile state and recovery
+        run: ./gradlew :composeApp:testDebugUnitTest --stacktrace
+
+      - name: Upload mobile test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-unit-test-reports
+          path: composeApp/build/reports/tests/testDebugUnitTest
+          if-no-files-found: ignore
+
       - name: Build debug app for verification
-        run: ./gradlew :composeApp:assembleDebug --stacktrace
+        env:
+          GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
+        run: |
+          if [ -z "${GOOGLE_MAPS_ANDROID_API_KEY}" ]; then
+            echo "GOOGLE_MAPS_ANDROID_API_KEY is not set"
+            exit 1
+          fi
+          ./gradlew :composeApp:assembleDebug --stacktrace
