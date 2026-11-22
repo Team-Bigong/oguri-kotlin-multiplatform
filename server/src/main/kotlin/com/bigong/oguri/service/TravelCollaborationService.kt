@@ -141,6 +141,7 @@ class TravelCollaborationService(
             city = plan.city,
             memberCount = collaboration.memberCounts(listOf(plan.id))[plan.id] ?: 1,
             existingPlanId = planId.takeIf { alreadyJoined },
+            cities = plan.cityNames(),
         )
     }
 
@@ -346,6 +347,7 @@ data class TravelInvitePreview(
     val city: String? = null,
     val memberCount: Int? = null,
     val existingPlanId: UUID? = null,
+    val cities: List<String> = emptyList(),
 )
 
 data class JoinedTravelPlan(

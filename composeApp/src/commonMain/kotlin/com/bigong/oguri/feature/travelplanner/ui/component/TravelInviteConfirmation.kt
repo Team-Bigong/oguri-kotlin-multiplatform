@@ -93,12 +93,12 @@ internal fun TravelInviteConfirmation(
                         )
                         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(travelCardDates(TravelDates(preview.startDate, preview.endDate), true), style = typography.cardSubtitle)
-                            val city = preview.city
+                            val cities = preview.cities.ifEmpty { listOfNotNull(preview.city) }
                             val members = preview.memberCount?.let { stringResource(Res.string.travel_member_count, it) }
-                            if (city != null || members != null) {
+                            if (cities.isNotEmpty() || members != null) {
                                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                     Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = colors.textTertiary)
-                                    Text(listOfNotNull(city, members).joinToString(" · "), style = typography.labelSmall, color = colors.textTertiary)
+                                    Text((cities + listOfNotNull(members)).joinToString(" · "), style = typography.labelSmall, color = colors.textTertiary)
                                 }
                             }
                         }

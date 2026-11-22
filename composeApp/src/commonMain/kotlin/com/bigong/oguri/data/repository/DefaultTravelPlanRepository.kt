@@ -271,7 +271,7 @@ class DefaultTravelPlanRepository internal constructor(
             val response = remote.previewInvite(token)
             TravelInvitePreview(
                 response.title, LocalDate.parse(response.startDate), LocalDate.parse(response.endDate),
-                response.invitedBy, response.city, response.memberCount, response.existingPlanId,
+                response.invitedBy, response.city, response.memberCount, response.existingPlanId, response.cities,
             )
         }
 
