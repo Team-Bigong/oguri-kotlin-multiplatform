@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,7 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.SkeletonBox
-import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
+import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
 import com.bigong.oguri.feature.travelplanner.ui.component.travelLoadingSemantics
@@ -70,12 +71,14 @@ internal fun TravelPlansScreen(
     onOpen: (String) -> Unit,
     onFindNextHoliday: () -> Unit,
     onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = OguriTheme.colors
+    val navigationPadding = calculateFloatingBottomNavigationAdditionalBottomPadding(hasFloatingBottomNavigation = onBack == null)
     TravelPlannerPage(
         title = if (onBack != null) stringResource(Res.string.travel_list) else "",
         onBack = onBack,
-        modifier = Modifier.floatingNavigationBarsPadding(hasFloatingBottomNavigation = onBack == null),
+        modifier = modifier,
     ) {
         val failure = state.failure
         val plans = state.plans
@@ -83,7 +86,7 @@ internal fun TravelPlansScreen(
             !signedIn -> TravelSignInContent(onSignIn = onSignIn, showPageTitle = onBack == null)
             failure != null && !state.isLoading -> {
                 TravelPlansHeading(showPageTitle = onBack == null)
-                TravelPlansEmpty(Res.drawable.img_oguri_empty, stringResource(Res.string.travel_list_failure_message), stringResource(Res.string.travel_list_retry), onRetry, stringResource(Res.string.travel_list_failure_title), Modifier.weight(1f), illustrationSize = 200.dp)
+                TravelPlansEmpty(Res.drawable.img_oguri_empty, stringResource(Res.string.travel_list_failure_message), stringResource(Res.string.travel_list_retry), onRetry, stringResource(Res.string.travel_list_failure_title), Modifier.weight(1f).padding(bottom = navigationPadding), illustrationSize = 200.dp)
             }
             plans == null || failure != null -> {
                 TravelPlansHeading(showPageTitle = onBack == null)
@@ -97,14 +100,17 @@ internal fun TravelPlansScreen(
             }
             plans.isEmpty() -> {
                 TravelPlansHeading(showPageTitle = onBack == null)
-                TravelPlansEmpty(Res.drawable.img_oguri_parasol, stringResource(Res.string.travel_empty_description), stringResource(Res.string.travel_create), onCreate, stringResource(Res.string.travel_empty_title), Modifier.weight(1f), showPlus = true)
+                TravelPlansEmpty(Res.drawable.img_oguri_parasol, stringResource(Res.string.travel_empty_description), stringResource(Res.string.travel_create), onCreate, stringResource(Res.string.travel_empty_title), Modifier.weight(1f).padding(bottom = navigationPadding), showPlus = true)
             }
             else -> {
                 var showPast by rememberSaveable { mutableStateOf(false) }
                 val now = Clock.System.now()
                 val (past, current) = plans.partition { plan -> plan.hasEnded { now.toLocalDateTime(it).date } }
                 val pastState = stringResource(if (showPast) Res.string.travel_past_expanded else Res.string.travel_past_collapsed)
-                LazyColumn {
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    contentPadding = PaddingValues(bottom = navigationPadding),
+                ) {
                     item {
                         TravelPlansHeading(showPageTitle = onBack == null, bottomPadding = 24.dp)
                     }

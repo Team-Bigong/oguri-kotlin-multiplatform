@@ -1,6 +1,7 @@
 package com.bigong.oguri.core.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
@@ -319,6 +320,7 @@ fun MainNavHost(
                 onCreate = { navigator.navigateToCreateTravelPlan() },
                 onOpen = { navigator.navigateToTravelPlan(it) },
                 onFindNextHoliday = navigator::openCalendarTab,
+                modifier = Modifier.consumeWindowInsets(contentPaddingValues),
             )
         }
         composable<RouteModel.CreateTravelPlan> { entry ->
