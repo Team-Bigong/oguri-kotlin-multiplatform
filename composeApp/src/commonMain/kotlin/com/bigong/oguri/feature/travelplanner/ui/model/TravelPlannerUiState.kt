@@ -45,6 +45,7 @@ internal data class TravelPlannerUiState(
     val placeSearch: TravelPlaceSearchState? = null,
     val overview: TravelOverviewState? = null,
     val dayPlaces: Map<String, TravelPlace> = emptyMap(),
+    val attemptedDayPlaceIds: Set<String> = emptySet(),
     val dayPlacesLanguage: String? = null,
     val isLoadingDayPlaces: Boolean = false,
     val dayPlacesIncomplete: Boolean = false,

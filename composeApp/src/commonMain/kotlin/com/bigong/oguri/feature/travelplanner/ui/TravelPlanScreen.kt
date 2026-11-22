@@ -87,6 +87,8 @@ import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
 import com.bigong.oguri.feature.travelplanner.ui.component.travelAccentForeground
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanSkeleton
+import com.bigong.oguri.core.ui.component.SkeletonBox
+import com.bigong.oguri.feature.travelplanner.ui.component.travelLoadingSemantics
 import com.bigong.oguri.core.util.extension.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
@@ -453,19 +455,21 @@ internal fun TravelPlanScreen(
                                 }
                             },
                     ) {
+                        val placeId = visit.details.googlePlaceId
+                        val title = visit.details.name ?: state.dayPlaces[placeId]?.name
+                        val waitingForTitle = title == null && placeId != null && !state.isOffline &&
+                            (state.isLoadingDayPlaces || placeId !in state.attemptedDayPlaceIds)
                         TravelVisitRow(
                             isConnectedFromPrevious = visit.id in connectedTo,
                             isConnectedToNext = nextConnection != null,
                             isDragging = isDragging,
                             visit = visit,
-                            title =
-                                visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
-                                    ?: stringResource(Res.string.travel_visit_fallback, index + 1),
+                            title = if (waitingForTitle) null else title ?: stringResource(Res.string.travel_visit_fallback, index + 1),
                             number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
                             selected = state.selectedVisitId == visit.id,
                             canEdit = canEdit && unappliedOrder == null,
                             addedAfterConflict = unappliedOrder != null && visit.id !in unappliedOrder.visitIds,
-                            canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
+                            canOpen = !waitingForTitle && !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
                             canMoveUp = index > 0,
                             canMoveDown = index < visits.lastIndex,
                             onRemove = { onRemoveFromList(visit) },
@@ -598,7 +602,7 @@ private fun TravelVisitRow(
     isConnectedToNext: Boolean,
     isDragging: Boolean,
     visit: TravelVisit,
-    title: String,
+    title: String?,
     number: Int?,
     selected: Boolean,
     addedAfterConflict: Boolean,
@@ -729,7 +733,14 @@ private fun TravelVisitRow(
                     Text(number?.toString().orEmpty(), style = OguriTheme.typography.labelMedium, color = travelAccentForeground)
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
+                    if (title == null) {
+                        SkeletonBox(
+                            modifier = Modifier.width(120.dp).height(18.dp).travelLoadingSemantics(),
+                            shape = RoundedCornerShape(4.dp),
+                        )
+                    } else {
+                        Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
+                    }
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         visit.details.category?.let { Text(stringResource(it.label()) + if (addedAfterConflict) " · " + stringResource(Res.string.travel_just_added) else "", style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
                         if (!visit.details.note.isNullOrBlank()) Icon(painterResource(Res.drawable.ic_travel_note), stringResource(Res.string.travel_has_note), Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)

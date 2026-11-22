@@ -443,6 +443,7 @@ class TravelPlannerViewModel(
                     selectedVisitId = null,
                     mapFocusedVisitId = null,
                     dayPlaces = emptyMap(),
+                    attemptedDayPlaceIds = emptySet(),
                     dayPlacesLanguage = null,
                     dayPlacesIncomplete = false,
                     isLoadingDayPlaces = false,
@@ -460,11 +461,16 @@ class TravelPlannerViewModel(
     ) {
         val current = state.value
         if (current.plan?.summary?.id != planId || current.selectedDay != dayNumber) return
+        val placeIds = current.plan.visits
+            .filter { it.dayNumber == dayNumber }
+            .mapNotNull { it.details.googlePlaceId }
+            .toSet()
         val request = ++dayPlacesRequest
         if (!hasPlaces || current.isOffline) {
             mutableState.update {
                 it.copy(
                     dayPlaces = it.dayPlaces.takeIf { _ -> hasPlaces && it.dayPlacesLanguage == language }.orEmpty(),
+                    attemptedDayPlaceIds = emptySet(),
                     dayPlacesLanguage = language,
                     isLoadingDayPlaces = false,
                     dayPlacesIncomplete = hasPlaces,
@@ -492,6 +498,7 @@ class TravelPlannerViewModel(
             mutableState.update {
                 it.copy(
                     dayPlaces = result.places,
+                    attemptedDayPlaceIds = placeIds,
                     dayPlacesLanguage = language,
                     isLoadingDayPlaces = false,
                     dayPlacesIncomplete = result.incomplete,
@@ -503,7 +510,7 @@ class TravelPlannerViewModel(
             when (exception.failure) {
                 TravelPlanFailure.UNAVAILABLE -> forgetUnavailablePlan(planId)
                 TravelPlanFailure.SIGN_IN_REQUIRED -> applyFailure(exception.failure)
-                else -> mutableState.update { it.copy(isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
+                else -> mutableState.update { it.copy(attemptedDayPlaceIds = placeIds, isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
             }
         }
     }
@@ -919,6 +926,10 @@ class TravelPlannerViewModel(
         val change = request.change
         val selectedDayAfterSave = request.selectedDay.takeIf { it in 1..updated.summary.details.dates.dayCount } ?: updated.summary.details.dates.dayCount
         mutableState.update { current ->
+            val visiblePlaceIds = updated.visits
+                .filter { it.dayNumber == selectedDayAfterSave }
+                .mapNotNull { it.details.googlePlaceId }
+                .toSet()
             val addedToVisibleDay = addedPlace != null && (change as? TravelVisitChange.Add)?.dayNumber == current.selectedDay
             val undo =
                 when (change) {
@@ -953,14 +964,12 @@ class TravelPlannerViewModel(
                     if (selectedDayAfterSave != current.selectedDay) {
                         emptyMap()
                     } else {
-                        val ids =
-                            updated.visits
-                                .filter { it.dayNumber == current.selectedDay }
-                                .mapNotNull { it.details.googlePlaceId }
-                                .toSet()
-                        val retained = current.dayPlaces.filterKeys { it in ids }
+                        val retained = current.dayPlaces.filterKeys { it in visiblePlaceIds }
                         if (addedToVisibleDay) retained + (addedPlace.id to addedPlace) else retained
                     },
+                attemptedDayPlaceIds =
+                    if (selectedDayAfterSave == current.selectedDay) current.attemptedDayPlaceIds intersect visiblePlaceIds
+                    else emptySet(),
                 dayPlacesIncomplete =
                     current.dayPlacesIncomplete &&
                         updated.visits.any {
