@@ -139,6 +139,7 @@ fun NavDisplay(
         var hasHandledFirstForegroundStart by remember { mutableStateOf(false) }
         var hasCompletedInitialMainTabEntry by remember { mutableStateOf(false) }
         var hasShownAppOpenAdInCurrentForegroundSession by remember { mutableStateOf(false) }
+        var appOpenAdSession by remember { mutableIntStateOf(0) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
@@ -233,6 +234,7 @@ fun NavDisplay(
                         return@LifecycleEventObserver
                     }
 
+                    appOpenAdSession++
                     hasShownAppOpenAdInCurrentForegroundSession = false
                 }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -243,30 +245,24 @@ fun NavDisplay(
         LaunchedEffect(currentDestination?.route) {
             val currentRouteText = currentDestination?.route
             val previousRoute = previousRouteText
+            val isMainTab = bottomNavigationDestinations.any { it.routeSerialName == routeName(currentRouteText) }
 
-            fun isMainTabRoute(routeText: String): Boolean =
-                isHomeRoute(routeText) || isCalendarRoute(routeText) || isMyPageRoute(routeText)
-
-            fun tryShowAppOpenAdAfterScreenMove() {
-                if (hasShownAppOpenAdInCurrentForegroundSession) {
-                    return
-                }
-
-                val hasShownAppOpenAd = showAppOpenAdIfAvailable()
-                if (hasShownAppOpenAd) {
-                    hasShownAppOpenAdInCurrentForegroundSession = true
-                }
-            }
             if (currentRouteText != null && previousRoute != null) {
-                if (!hasCompletedInitialMainTabEntry && isMainTabRoute(currentRouteText)) {
+                if (!hasCompletedInitialMainTabEntry && isMainTab) {
                     hasCompletedInitialMainTabEntry = true
                 } else if (
                     hasCompletedInitialMainTabEntry &&
+                    !hasShownAppOpenAdInCurrentForegroundSession &&
                     previousRoute != currentRouteText &&
-                    !isTravelPlannerRoute(previousRoute) &&
-                    !isTravelPlannerRoute(currentRouteText)
+                    routeName(previousRoute) !in appOpenAdExcludedRoutes &&
+                    routeName(currentRouteText) !in appOpenAdExcludedRoutes
                 ) {
-                    tryShowAppOpenAdAfterScreenMove()
+                    val requestedSession = appOpenAdSession
+                    showAppOpenAdIfAvailable {
+                        if (requestedSession == appOpenAdSession) {
+                            hasShownAppOpenAdInCurrentForegroundSession = true
+                        }
+                    }
                 }
 
                 if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
@@ -288,7 +284,7 @@ fun NavDisplay(
                     }
                 }
             }
-            if (currentRouteText != null && previousRoute == null && isMainTabRoute(currentRouteText)) {
+            if (currentRouteText != null && previousRoute == null && isMainTab) {
                 hasCompletedInitialMainTabEntry = true
             }
             previousRouteText = currentRouteText
@@ -471,4 +467,17 @@ private val travelRouteNames: Set<String> =
             .descriptor.serialName,
     )
 
-private fun isTravelPlannerRoute(routeText: String?): Boolean = routeText?.substringBefore('/')?.substringBefore('?') in travelRouteNames
+private val appOpenAdExcludedRoutes: Set<String> =
+    setOf(
+        RouteModel.Splash.serializer().descriptor.serialName,
+        RouteModel.Login.serializer().descriptor.serialName,
+        RouteModel.Onboarding.serializer().descriptor.serialName,
+        RouteModel.Search.serializer().descriptor.serialName,
+        RouteModel.WebDocument.serializer().descriptor.serialName,
+        RouteModel.TravelLogin.serializer().descriptor.serialName,
+        RouteModel.TravelOnboarding.serializer().descriptor.serialName,
+    )
+
+private fun routeName(routeText: String?): String? = routeText?.substringBefore('/')?.substringBefore('?')
+
+private fun isTravelPlannerRoute(routeText: String?): Boolean = routeName(routeText) in travelRouteNames

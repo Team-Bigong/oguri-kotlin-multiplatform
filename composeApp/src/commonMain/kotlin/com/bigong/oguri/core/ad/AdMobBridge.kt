@@ -14,7 +14,7 @@ expect fun initializeAdMob()
 
 expect fun preloadAppOpenAd()
 
-expect fun showAppOpenAdIfAvailable(): Boolean
+expect fun showAppOpenAdIfAvailable(onImpression: () -> Unit)
 
 @Composable
 expect fun AdMobBanner(
