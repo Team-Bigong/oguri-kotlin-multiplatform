@@ -25,12 +25,23 @@ data class TravelMapPinStyle(
     val selectedLabelFontUri: String,
 )
 
+data class TravelMapDistanceStyle(
+    val textArgb: Int,
+    val outlineArgb: Int,
+    val connectionArgb: Int,
+    val fontSize: Float,
+    val fontUri: String,
+    val outlineWidth: Float,
+)
+
 interface TravelMapHost {
     fun render(
         scene: TravelMapScene,
         viewportRequest: Int,
         focusedVisitId: String?,
         pinStyle: TravelMapPinStyle,
+        distanceLabels: List<String>,
+        distanceStyle: TravelMapDistanceStyle,
         darkTheme: Boolean,
     )
 
@@ -68,6 +79,15 @@ internal actual fun PlatformTravelMap(
         Res.getUri("font/pretendard_medium.ttf"),
         Res.getUri("font/pretendard_semi_bold.ttf"),
     )
+    val distanceStyle = TravelMapDistanceStyle(
+        textArgb = OguriTheme.colors.textTertiary.toArgb(),
+        outlineArgb = travelMapBackground().toArgb(),
+        connectionArgb = travelConnectionColor.toArgb(),
+        fontSize = OguriTheme.typography.caption.fontSize.value * LocalDensity.current.fontScale,
+        fontUri = Res.getUri("font/pretendard_regular.ttf"),
+        outlineWidth = TRAVEL_MAP_DISTANCE_OUTLINE_WIDTH,
+    )
+    val distanceLabels = scene.lines.map { travelDistanceLabel(it) }
     val hostFactory = factory
     if (hostFactory == null) {
         LaunchedEffect(Unit) { onUnavailable() }
@@ -84,8 +104,8 @@ internal actual fun PlatformTravelMap(
         onDispose { host.dispose() }
     }
     val darkTheme = OguriTheme.isDarkTheme
-    LaunchedEffect(host, scene, viewportRequest, focusedVisitId, pinStyle, darkTheme) {
-        host.render(scene, viewportRequest, focusedVisitId, pinStyle, darkTheme)
+    LaunchedEffect(host, scene, viewportRequest, focusedVisitId, pinStyle, distanceLabels, distanceStyle, darkTheme) {
+        host.render(scene, viewportRequest, focusedVisitId, pinStyle, distanceLabels, distanceStyle, darkTheme)
     }
     UIKitView(factory = { container }, modifier = modifier)
 }

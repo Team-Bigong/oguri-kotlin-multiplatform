@@ -47,6 +47,7 @@ import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.TabHeaderTopPadding
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
 import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.core.util.extension.floatingNavigationBarsPadding
@@ -177,7 +178,7 @@ fun CalendarScreen(
                 ),
         ) {
             item {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(TabHeaderTopPadding))
                 Text(
                     text = stringResource(Res.string.calendar_header_title),
                     style = OguriTheme.typography.sectionTitle,

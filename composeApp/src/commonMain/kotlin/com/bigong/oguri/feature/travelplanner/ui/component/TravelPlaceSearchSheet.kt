@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +23,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -55,8 +56,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
+import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
 import com.bigong.oguri.domain.model.TravelPlan
@@ -92,6 +96,8 @@ internal fun TravelPlaceSearchSheet(
     val search = state.placeSearch ?: return
     val colors = OguriTheme.colors
     val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val keyboardVisible by rememberUpdatedState(WindowInsets.ime.getBottom(LocalDensity.current) > 0)
     val day = state.selectedDay
     val draft = state.visitDraft
     var manual by rememberSaveable { mutableStateOf(draft != null) }
@@ -113,18 +119,23 @@ internal fun TravelPlaceSearchSheet(
     }
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = {
         if (it != SheetValue.Hidden) true
-        else if (!canDismiss) false
+        else if (keyboardVisible) {
+            focus.clearFocus(force = true)
+            keyboard?.hide()
+            false
+        } else if (!canDismiss) false
         else if (hasDraft) {
             confirmDiscard = true
             false
         } else true
     })
+    val dismissSheet = rememberTravelSheetDismiss(sheet, close)
     val targetDay = if (manual) draft?.dayNumber ?: day else day
 
     ModalBottomSheet(scrimColor = TravelSheetScrim,
         containerColor = colors.backgroundSecondary,
-        contentColor = colors.textPrimary,
-        onDismissRequest = close,
+        contentColor = Neutral100,
+        onDismissRequest = { if (!sheet.isVisible) close() },
         sheetState = sheet,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         dragHandle = {
@@ -132,23 +143,23 @@ internal fun TravelPlaceSearchSheet(
                 .background(colors.borderStrong, CircleShape))
         },
     ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).imePadding()) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).dismissKeyboardOnOutsideTouch()) {
             Row(
                 Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp, top = 0.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(stringResource(Res.string.travel_add_visit), style = travelTextStyle(18, 21, FontWeight.SemiBold), color = OguriTheme.colors.textPrimary)
+                Text(stringResource(Res.string.travel_add_visit), style = travelTextStyle(18, 21, FontWeight.SemiBold), color = Neutral100)
                 Text(
                     travelDayLabel(plan.summary.details.dates, targetDay),
                     Modifier.weight(1f),
                     style = travelTextStyle(12, 14, FontWeight.Medium),
                     color = colors.textTertiary,
                 )
-                TravelIconButton(onClick = close, enabled = canDismiss) {
+                TravelIconButton(onClick = dismissSheet, enabled = canDismiss) {
                     Icon(
                         painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close),
-                        modifier = Modifier.size(22.dp), tint = colors.textPrimary,
+                        modifier = Modifier.size(22.dp), tint = Neutral100,
                     )
                 }
             }
@@ -167,7 +178,8 @@ internal fun TravelPlaceSearchSheet(
                 }, Modifier.weight(1f), segmented = true)
             }
             LazyColumn(
-                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp),
+                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp)
+                    .consumeVerticalDragForBottomSheetContent(),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 if (state.isSaving) {
@@ -205,7 +217,7 @@ internal fun TravelPlaceSearchSheet(
                         androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             plan.summary.details.cities.forEach { city ->
                                 TravelChoiceChip(
-                                    plan.summary.details.catalogCities[city]?.contextualName ?: city,
+                                    plan.summary.details.catalogCities[city]?.name ?: city,
                                     (state.searchCity ?: plan.summary.details.city) == city,
                                     canEdit,
                                     { onSearchCity(city) },
@@ -216,7 +228,8 @@ internal fun TravelPlaceSearchSheet(
                     item(key = "place-search-input") {
                         TravelPlaceInput(
                             value = search.query,
-                            onChange = { if (it.length <= 120) onQuery(it) },
+                            onChange = onQuery,
+                            limit = TRAVEL_SEARCH_QUERY_LIMIT,
                             label = stringResource(Res.string.travel_search_places),
                             placeholder = stringResource(Res.string.travel_search_places),
                             enabled = canEdit,
@@ -252,7 +265,7 @@ internal fun TravelPlaceSearchSheet(
                                 ) {
                                     Text(
                                         (state.searchCity ?: plan.summary.details.city).let { city ->
-                                            stringResource(Res.string.travel_search_city, plan.summary.details.catalogCities[city]?.contextualName ?: city)
+                                            stringResource(Res.string.travel_search_city, plan.summary.details.catalogCities[city]?.name ?: city)
                                         },
                                         modifier = Modifier.weight(1f),
                                         style = travelTextStyle(11, 13),
@@ -307,6 +320,7 @@ internal fun TravelPlaceSearchSheet(
                 }
             }
             if (manual || search.results.isNotEmpty()) TravelBottomAction(
+                bottomPadding = if (keyboardVisible) 0.dp else 20.dp,
                 enabled = canEdit && if (manual) draft?.name?.isNotBlank() == true
                     else selected != null,
                 onClick = {
@@ -368,7 +382,8 @@ internal fun TravelPlaceField(
         Text(fieldLabel, style = travelTextStyle(12, 14, FontWeight.Medium), color = OguriTheme.colors.textTertiary)
         TravelPlaceInput(
             value = value,
-            onChange = { if (it.length <= limit) onChange(it) },
+            onChange = onChange,
+            limit = limit,
             label = fieldLabel,
             placeholder = stringResource(placeholder),
             enabled = enabled,
@@ -389,6 +404,7 @@ internal fun TravelPlaceField(
 private fun TravelPlaceInput(
     value: String,
     onChange: (String) -> Unit,
+    limit: Int,
     label: String,
     placeholder: String,
     enabled: Boolean,
@@ -399,15 +415,16 @@ private fun TravelPlaceInput(
     val style = travelTextStyle(15, if (multiline) 21 else 18)
     val focusSource = remember { MutableInteractionSource() }
     val focused by focusSource.collectIsFocusedAsState()
-    BasicTextField(
+    TravelTextField(
         value = value,
         onValueChange = onChange,
+        limit = limit,
         modifier = Modifier.fillMaxWidth().semantics { contentDescription = label },
         enabled = enabled,
         singleLine = !multiline,
         maxLines = if (multiline) 5 else 1,
-        textStyle = style.copy(color = OguriTheme.colors.textPrimary),
-        cursorBrush = SolidColor(OguriTheme.colors.textPrimary),
+        textStyle = style.copy(color = Neutral100),
+        cursorBrush = SolidColor(Neutral100),
         interactionSource = focusSource,
         decorationBox = { innerField ->
             Row(
@@ -419,7 +436,7 @@ private fun TravelPlaceInput(
             ) {
                 leadingIcon?.invoke()
                 Box(Modifier.weight(1f)) {
-                    if (value.isEmpty()) Text(placeholder, style = style, color = OguriTheme.colors.textTertiary)
+                    if (value.isEmpty()) Text(placeholder, style = style, color = Neutral40)
                     innerField()
                 }
             }
@@ -459,7 +476,7 @@ private fun TravelPlaceSearchResults(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(place.name, style = nameStyle, color = OguriTheme.colors.textPrimary)
+                        Text(place.name, style = nameStyle, color = Neutral100)
                         place.address?.let {
                             Text(it, style = addressStyle, color = colors.textTertiary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }

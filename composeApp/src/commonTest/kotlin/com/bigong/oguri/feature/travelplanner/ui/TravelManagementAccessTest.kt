@@ -19,6 +19,19 @@ class TravelManagementAccessTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     @Test
+    fun existingMembershipOpensThePlanWithoutJoiningOrShowingAPreview() = runTest {
+        val repository = ManagementCollaboration().apply { existingPlanId = "shared-trip" }
+        val viewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+
+        viewModel.preview("invite")
+        advanceUntilIdle()
+
+        assertEquals("shared-trip", viewModel.state.value.joinedPlanId)
+        assertNull(viewModel.state.value.preview)
+        assertTrue(repository.joinedTokens.isEmpty())
+    }
+
+    @Test
     fun terminalInvitationsKeepTheirOwnReasonAndCannotBeJoined() = runTest {
         for (reason in listOf(TravelPlanFailure.INVITE_EXPIRED, TravelPlanFailure.INVITE_REVOKED, TravelPlanFailure.INVITE_TRIP_DELETED)) {
             val repository = ManagementCollaboration()
@@ -272,12 +285,13 @@ private class ManagementCollaboration : TravelCollaborationRepository {
 
     override suspend fun acceptOwnership(planId: String): Unit = error("Unused")
 
+    var existingPlanId: String? = null
     val joinedTokens = mutableListOf<String>()
     var joinInvite: suspend (String) -> String = { error("Unused") }
 
     override suspend fun preview(token: String): TravelInvitePreview {
         checkAccess()
-        return TravelInvitePreview(token, LocalDate(2027, 4, 1), LocalDate(2027, 4, 3), null)
+        return TravelInvitePreview(token, LocalDate(2027, 4, 1), LocalDate(2027, 4, 3), null, existingPlanId = existingPlanId)
     }
 
     override suspend fun join(token: String): String {

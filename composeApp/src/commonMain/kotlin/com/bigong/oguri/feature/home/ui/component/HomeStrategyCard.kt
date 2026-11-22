@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral50
-import com.bigong.oguri.core.designsystem.Neutral90
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.ui.component.SaveToggleButton
@@ -62,7 +62,7 @@ fun HomeStrategyCard(
             .year
     val isOutOfCurrentYear = currentPeriod.startDate.year != currentYear || currentPeriod.endDate.year != currentYear
     val periodTextColor = if (isOutOfCurrentYear) Orange50 else Mint70
-    val holidayHighlightColor = if (isOutOfCurrentYear) Orange50 else Mint70
+    val holidayHighlightColor = if (isOutOfCurrentYear) Orange50 else Neutral100
     val holidayNamesText = currentPeriod.holiday.joinToString(separator = " · ")
     val holidayHighlightText =
         if (isOutOfCurrentYear) {
@@ -142,7 +142,7 @@ fun HomeStrategyCard(
                                     holidayHighlightText,
                                 ),
                             style = OguriTheme.typography.cardSubtitle,
-                            color = Neutral90,
+                            color = Neutral100,
                             textAlign = TextAlign.Start,
                         )
                         Spacer(modifier = Modifier.height(12.dp))

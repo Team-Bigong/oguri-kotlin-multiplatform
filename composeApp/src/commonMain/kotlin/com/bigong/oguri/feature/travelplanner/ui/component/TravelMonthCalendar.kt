@@ -13,6 +13,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
@@ -40,7 +41,7 @@ internal fun TravelMonthCalendar(
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             TravelIconButton(onClick = { onMonth(month.minus(1, DateTimeUnit.MONTH)) }) { Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_previous_month), Modifier.size(24.dp)) }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text(stringResource(Res.string.calendar_month_year, month.year, month.month.ordinal + 1), style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+                Text(stringResource(Res.string.calendar_month_year, month.year, month.month.ordinal + 1), style = OguriTheme.typography.cardSubtitle, color = Neutral100)
             }
             TravelIconButton(onClick = { onMonth(nextMonth) }) { Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_next_month), Modifier.size(24.dp).rotate(180f)) }
         }
@@ -67,7 +68,15 @@ internal fun TravelMonthCalendar(
                                 Box(Modifier.fillMaxWidth(fill).height(36.dp).align(align).background(colors.mintContainer))
                             }
                             Box(Modifier.size(36.dp).then(if (endpoint) Modifier.background(colors.mint, CircleShape) else Modifier), contentAlignment = Alignment.Center) {
-                                Text(day.toString(), style = OguriTheme.typography.bodyMedium, color = if (endpoint) travelAccentForeground else colors.textPrimary)
+                                Text(
+                                    text = day.toString(),
+                                    style = if (endpoint) OguriTheme.typography.labelLarge else OguriTheme.typography.bodyMedium,
+                                    color = when {
+                                        endpoint -> travelAccentForeground
+                                        inside -> Neutral100
+                                        else -> colors.textSecondary
+                                    },
+                                )
                             }
                             if (recommended && !endpoint && !inside) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 3.dp).size(4.dp).background(colors.mint, CircleShape))
                         }

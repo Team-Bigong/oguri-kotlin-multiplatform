@@ -28,6 +28,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemKey
 import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Mint60
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral50
@@ -54,7 +55,6 @@ import oguri.composeapp.generated.resources.calendar_d_day_before
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.calendar_period_range
 import oguri.composeapp.generated.resources.home_guide_match_places
-import oguri.composeapp.generated.resources.home_guide_match_places_highlight
 import oguri.composeapp.generated.resources.home_strategy_day_off_hint
 import oguri.composeapp.generated.resources.home_strategy_holiday_with
 import oguri.composeapp.generated.resources.home_strategy_holiday_with_next_year
@@ -147,7 +147,7 @@ fun PeriodDetailScreen(
                     } else {
                         holidayText
                     }
-                val holidayHighlightColor = if (isNextYearPeriod) Orange50 else Mint70
+                val holidayHighlightColor = if (isNextYearPeriod) Orange50 else Neutral100
                 val holidayDescriptionText = stringResource(Res.string.home_strategy_holiday_with, holidayHighlightText)
                 val leaveDayHintText =
                     stringResource(Res.string.home_strategy_day_off_hint, periodDetail.dayOffCount, periodDetail.totalTripCount)
@@ -220,7 +220,7 @@ fun PeriodDetailScreen(
                         GuideHeader(
                             iconResource = Res.drawable.ic_plane,
                             titleText = stringResource(Res.string.home_guide_match_places),
-                            highlightedText = stringResource(Res.string.home_guide_match_places_highlight),
+                            iconTint = Mint60,
                             subtitleText = null,
                         )
                         Spacer(modifier = Modifier.height(18.dp))
@@ -273,7 +273,7 @@ fun PeriodDetailScreen(
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(
                                             painterResource(Res.drawable.ic_travel_plus), null,
-                                            Modifier.padding(end = 8.dp), tint = OguriTheme.colors.mint,
+                                            Modifier.padding(end = 8.dp),
                                         )
                                         Text(stringResource(Res.string.travel_create_from_period), style = travelTextStyle(18, 22, FontWeight.SemiBold))
                                     }

@@ -19,7 +19,7 @@ import java.util.UUID
 @Component
 class TravelReminderDelivery(
     private val objectMapper: ObjectMapper,
-    @param:Value("\${TRAVEL_REMINDERS_ENABLED:true}") private val remindersEnabled: Boolean,
+    @param:Value("\${TRAVEL_REMINDERS_ENABLED:false}") private val remindersEnabled: Boolean,
     @param:Value("\${TRAVEL_REMINDER_FIREBASE_PROJECT_ID:}") private val projectId: String,
 ) {
     private val client: HttpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build()

@@ -11,10 +11,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import com.bigong.oguri.core.designsystem.Mint20
-import com.bigong.oguri.core.designsystem.Orange5
-import com.bigong.oguri.core.designsystem.Orange20
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint50
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange20
+import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelDateSelection
 import com.bigong.oguri.feature.travelplanner.ui.travelDateLabel
 import com.bigong.oguri.feature.travelplanner.ui.travelWeekDate
@@ -42,19 +44,21 @@ internal fun TravelDateRangePicker(
     val first = initial?.start ?: recommendedStart ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
     var monthText by rememberSaveable { mutableStateOf(LocalDate(first.year, first.month, 1).toString()) }
     val colors = OguriTheme.colors
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dismissSheet = rememberTravelSheetDismiss(sheetState, onDismiss)
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         containerColor = colors.backgroundSecondary,
-        contentColor = colors.textPrimary,
+        contentColor = Neutral100,
         scrimColor = TravelSheetScrim,
         dragHandle = { TravelSheetHandle() },
     ) {
         Column(Modifier.fillMaxWidth().height(584.dp)) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(Res.string.travel_choose_range), Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = colors.textPrimary)
-                TravelIconButton(onClick = onDismiss) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(24.dp)) }
+                Text(stringResource(Res.string.travel_choose_range), Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = Neutral100)
+                TravelIconButton(onClick = dismissSheet) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(24.dp)) }
             }
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
                 Spacer(Modifier.height(4.dp))
@@ -70,18 +74,18 @@ internal fun TravelDateRangePicker(
                         Text(
                             stringResource(Res.string.travel_card_date_range, travelDateLabel(start), travelDateLabel(end)),
                             style = OguriTheme.typography.cardSubtitle,
-                            color = colors.textPrimary,
+                            color = Neutral100,
                         )
                         Text(
                             stringResource(Res.string.travel_invalid_dates, TravelDates.MAX_DAYS),
-                            color = colors.error,
+                            color = colors.orange,
                             style = OguriTheme.typography.caption,
                         )
                     }
                 } else {
                     Box(
-                        Modifier.fillMaxWidth().heightIn(min = 44.dp).background(OguriTheme.colors.mintContainer, rangeShape)
-                            .border(1.dp, Mint20, rangeShape).padding(12.dp),
+                        Modifier.fillMaxWidth().heightIn(min = 44.dp).background(Mint5, rangeShape)
+                            .border(1.dp, Mint50, rangeShape).padding(12.dp),
                         contentAlignment = Alignment.CenterStart,
                     ) {
                         val label = if (selected == null) {
@@ -94,7 +98,7 @@ internal fun TravelDateRangePicker(
                                 selected.dayCount,
                             )
                         }
-                        Text(label, style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+                        Text(label, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                     }
                 }
                 Spacer(Modifier.height(12.dp))
@@ -110,47 +114,4 @@ internal fun TravelDateRangePicker(
             TravelBottomAction(enabled = selected != null, onClick = { selected?.let(onSelected) }) { Text(stringResource(Res.string.travel_confirm_dates)) }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun TravelTimePicker(onDismiss: () -> Unit, initialTime: LocalTime? = null, onSelected: (String) -> Unit) {
-    val state = rememberTimePickerState(initialHour = initialTime?.hour ?: 20, initialMinute = initialTime?.minute ?: 0, is24Hour = false)
-    TravelFormSheet(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.travel_reminder_time)) },
-        text = { TimePicker(state = state, colors = TimePickerDefaults.colors(
-            clockDialColor = OguriTheme.colors.backgroundSecondary,
-            clockDialSelectedContentColor = travelAccentForeground,
-            clockDialUnselectedContentColor = OguriTheme.colors.textPrimary,
-            selectorColor = OguriTheme.colors.mint, containerColor = OguriTheme.colors.backgroundSecondary,
-            periodSelectorBorderColor = OguriTheme.colors.mint,
-            periodSelectorSelectedContainerColor = OguriTheme.colors.mint,
-            periodSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
-            periodSelectorSelectedContentColor = travelAccentForeground,
-            periodSelectorUnselectedContentColor = OguriTheme.colors.textSecondary,
-            timeSelectorSelectedContainerColor = OguriTheme.colors.mintContainer,
-            timeSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
-            timeSelectorSelectedContentColor = OguriTheme.colors.textPrimary,
-            timeSelectorUnselectedContentColor = OguriTheme.colors.textSecondary,
-        )) },
-        confirmButton = { TravelPrimaryButton(onClick = { onSelected(state.hour.toString().padStart(2, '0') + ":" + state.minute.toString().padStart(2, '0')) }) { Text(stringResource(Res.string.travel_apply)) } },
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun TravelSingleDatePicker(onDismiss: () -> Unit, initialDate: LocalDate? = null, onSelected: (LocalDate) -> Unit) {
-    var selected by remember { mutableStateOf(initialDate) }
-    var month by remember { mutableStateOf((initialDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date).let { LocalDate(it.year, it.month, 1) }) }
-    TravelFullScreenForm(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.travel_reminder_date)) },
-        text = { TravelMonthCalendar(month, selected, selected, null, null, onMonth = { month = it }, onDate = { selected = it }) },
-        confirmButton = {
-            TravelPrimaryButton(enabled = selected != null, onClick = { selected?.let(onSelected) }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(Res.string.travel_apply))
-            }
-        },
-    )
 }
