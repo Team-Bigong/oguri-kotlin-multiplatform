@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint80
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.TabHeaderTopPadding
 import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
 import com.bigong.oguri.core.util.extension.noRippleClickable
@@ -166,13 +167,14 @@ internal fun TravelPlansScreen(
 }
 
 @Composable
-private fun TravelPlansHeading(
+internal fun TravelPlansHeading(
     showPageTitle: Boolean,
     bottomPadding: androidx.compose.ui.unit.Dp = 16.dp,
 ) {
     val colors = OguriTheme.colors
+    val topPadding = if (showPageTitle) TabHeaderTopPadding else 24.dp
     Column(
-        Modifier.fillMaxWidth().padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = bottomPadding),
+        Modifier.fillMaxWidth().padding(start = 20.dp, top = topPadding, end = 20.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (showPageTitle) {
