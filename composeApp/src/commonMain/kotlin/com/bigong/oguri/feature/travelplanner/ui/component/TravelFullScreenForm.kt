@@ -24,6 +24,7 @@ internal fun TravelFullScreenForm(
     onDismissRequest: () -> Unit,
     title: @Composable () -> Unit,
     text: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
     confirmButton: @Composable () -> Unit = {},
     dismissButton: @Composable () -> Unit = {},
     shape: Shape = RoundedCornerShape(0.dp),
@@ -34,7 +35,7 @@ internal fun TravelFullScreenForm(
     actions: @Composable () -> Unit = { Spacer(Modifier.size(48.dp)) },
 ) {
     val form: @Composable () -> Unit = {
-        TravelPlannerPage(title = "", onBack = null) {
+        TravelPlannerPage(title = "", onBack = null, modifier = modifier) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 TravelIconButton(onClick = onDismissRequest) { Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_back)) }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { ProvideTextStyle(OguriTheme.typography.cardTitle, title) }

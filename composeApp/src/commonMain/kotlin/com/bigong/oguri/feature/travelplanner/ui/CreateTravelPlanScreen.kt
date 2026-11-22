@@ -8,13 +8,13 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.draw.clip
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextField
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelBottomAction
+import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import oguri.composeapp.generated.resources.calendar_month_day
 import oguri.composeapp.generated.resources.travel_card_date_range
 import oguri.composeapp.generated.resources.travel_create_heading
@@ -217,7 +217,7 @@ internal fun CreateTravelPlanScreen(
         onBack = onBack,
         isSaving = state.isSaving,
         showTopDivider = false,
-        modifier = Modifier.imePadding(),
+        modifier = Modifier.dismissKeyboardOnOutsideTouch(),
     ) {
         Column(
             modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),

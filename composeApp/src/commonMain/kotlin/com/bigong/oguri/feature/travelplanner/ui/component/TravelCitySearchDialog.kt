@@ -40,6 +40,7 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCitySearchState
+import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.ic_travel_close
 import oguri.composeapp.generated.resources.ic_travel_location
@@ -110,7 +111,13 @@ internal fun TravelCitySearchDialog(
         containerColor = colors.backgroundSecondary,
         contentColor = colors.textPrimary,
     ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(.92f).imePadding()) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.92f)
+                .imePadding()
+                .dismissKeyboardOnOutsideTouch(),
+        ) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TravelSheetHandle() }
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(Res.string.travel_search_cities), Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = colors.textPrimary)

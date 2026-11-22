@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitField
+import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import oguri.composeapp.generated.resources.*
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
@@ -129,7 +130,12 @@ internal fun TravelVisitEditor(
         sheetState = sheetState,
     ) {
         Column(
-            modifier = Modifier.fillMaxHeight(0.92f).imePadding(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.92f)
+                    .imePadding()
+                    .dismissKeyboardOnOutsideTouch(),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {

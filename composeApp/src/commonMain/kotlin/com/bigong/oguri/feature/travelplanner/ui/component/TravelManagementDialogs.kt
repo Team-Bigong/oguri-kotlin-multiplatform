@@ -47,6 +47,7 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelRecentChanges
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
+import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import oguri.composeapp.generated.resources.*
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.travel_apply
@@ -153,6 +154,7 @@ internal fun TravelDetailsDialog(
             timeZone != null
     TravelFullScreenForm(
         embedded = true,
+        modifier = if (showEditor) Modifier.dismissKeyboardOnOutsideTouch() else Modifier,
         shape = RoundedCornerShape(8.dp),
         containerColor = OguriTheme.colors.surfaceCard,
         onDismissRequest = { if (!busy) onDismiss() },
