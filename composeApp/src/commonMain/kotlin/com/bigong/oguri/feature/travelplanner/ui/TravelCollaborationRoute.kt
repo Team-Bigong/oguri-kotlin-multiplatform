@@ -356,9 +356,7 @@ internal fun TravelMembersRoute(
         contentKey = { it::class },
         modifier = Modifier.fillMaxSize(),
         transitionSpec = {
-            val forward = targetState != TravelManagementPage.More
-            navigationEnter(fromRight = forward, parallax = !forward) togetherWith
-                navigationExit(toRight = !forward, parallax = forward)
+            (navigationEnter() togetherWith navigationExit()) using null
         },
         label = "travel management page",
     ) { page ->

@@ -119,22 +119,8 @@ fun MainNavHost(
             Modifier
                 .fillMaxSize()
                 .padding(contentPaddingValues),
-        enterTransition = {
-            val initialTab = bottomNavigationTabIndex(routeText = initialState.destination.route)
-            val targetTab = bottomNavigationTabIndex(routeText = targetState.destination.route)
-            navigationEnter(fromRight = initialTab == null || targetTab == null || targetTab > initialTab)
-        },
-        exitTransition = {
-            val initialTab = bottomNavigationTabIndex(routeText = initialState.destination.route)
-            val targetTab = bottomNavigationTabIndex(routeText = targetState.destination.route)
-            if (initialTab != null && targetTab != null) {
-                navigationExit(toRight = targetTab <= initialTab)
-            } else {
-                navigationExit(toRight = false, parallax = true)
-            }
-        },
-        popEnterTransition = { navigationEnter(fromRight = false, parallax = true) },
-        popExitTransition = { navigationExit(toRight = true) },
+        enterTransition = { navigationEnter() },
+        exitTransition = { navigationExit() },
     ) {
         composable<RouteModel.Splash> {
             SplashRoute(
@@ -483,15 +469,4 @@ fun MainNavHost(
             )
         }
     }
-}
-
-private fun bottomNavigationTabIndex(routeText: String?): Int? {
-    if (routeText.isNullOrBlank()) {
-        return null
-    }
-    val index =
-        bottomNavigationDestinations.indexOfFirst { destination ->
-            routeText == destination.routeSerialName || routeText.startsWith(destination.routeSerialName)
-        }
-    return if (index >= 0) index else null
 }
