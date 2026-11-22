@@ -176,7 +176,8 @@ internal fun TravelPlaceSearchSheet(
                 }, Modifier.weight(1f), segmented = true)
             }
             LazyColumn(
-                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp),
+                Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.dp)
+                    .consumeVerticalDragForBottomSheetContent(),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 if (state.isSaving) {
