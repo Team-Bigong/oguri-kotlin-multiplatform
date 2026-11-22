@@ -11,6 +11,7 @@ import jakarta.persistence.MapKeyColumn
 import jakarta.persistence.OneToMany
 import jakarta.persistence.OrderBy
 import jakarta.persistence.Table
+import org.hibernate.annotations.BatchSize
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.temporal.ChronoUnit
@@ -36,6 +37,7 @@ class TravelPlan(
     val sourceEndDate: LocalDate? = null,
     val creatorId: String? = ownerId,
     cities: List<String> = listOf(city),
+    cityReferences: Map<String, TravelCatalogCity> = emptyMap(),
 ) {
     @Column(nullable = false, length = 100)
     var ownerId: String = ownerId
@@ -48,10 +50,19 @@ class TravelPlan(
     @ElementCollection
     @CollectionTable(name = "travel_plan_cities", joinColumns = [JoinColumn(name = "travel_plan_id")])
     @jakarta.persistence.OrderColumn(name = "city_order")
-    @Column(name = "city", nullable = false, length = 100)
-    private var cities: MutableList<String> = cities.toMutableList()
+    @BatchSize(size = 32)
+    private var cities: MutableList<TravelPlanCity> = cities.map { TravelPlanCity(it, cityReferences[it]) }.toMutableList()
 
-    fun cityNames(): List<String> = cities.ifEmpty { listOf(city) }.toList()
+    fun cityNames(): List<String> = cities.map(TravelPlanCity::label).ifEmpty { listOf(city) }
+
+    fun catalogCities(): Map<String, TravelCatalogCity> =
+        cities.mapNotNull { entry -> entry.catalogCity?.let { entry.label to it } }.toMap()
+
+    fun cityForPlaces(selectedCity: String?): TravelPlanCity {
+        val label = selectedCity ?: city
+        return cities.firstOrNull { it.label == label }
+            ?: TravelPlanCity(label).also { require(label == city) }
+    }
 
     @Column(nullable = false, length = 100)
     var title: String = title
@@ -103,7 +114,7 @@ class TravelPlan(
                 !sourceStartDate.isAfter(sourceEndDate),
         )
         validateDetails(city, title, timeZone, startDate, endDate)
-        validateCities(cities, city)
+        validateCities(cities, city, cityReferences)
     }
 
     fun updateDetails(
@@ -115,16 +126,17 @@ class TravelPlan(
         expectedRevision: Long,
         confirmedUnassignedCount: Int,
         cities: List<String> = listOf(city),
+        cityReferences: Map<String, TravelCatalogCity> = catalogCities().filterKeys { it in cities },
     ) {
         if (revision != expectedRevision) throw TravelPlanConflict("TRIP_STRUCTURE_CHANGED")
         validateDetails(city, title, timeZone, startDate, endDate)
-        validateCities(cities, city)
+        validateCities(cities, city, cityReferences)
         val dayCount = ChronoUnit.DAYS.between(startDate, endDate) + 1
         val unassigned = orderedVisits().filter { it.dayNumber > dayCount }
         if (unassigned.size != confirmedUnassignedCount) throw TravelPlanConflict("TRIP_STRUCTURE_CHANGED")
         this.city = city
         this.cities.clear()
-        this.cities.addAll(cities)
+        this.cities.addAll(cities.map { TravelPlanCity(it, cityReferences[it]) })
         this.title = title
         this.timeZone = timeZone
         this.startDate = startDate
@@ -139,9 +151,14 @@ class TravelPlan(
         if (unassigned.isNotEmpty()) dayRevisions[dayCount.toInt()] = revision
     }
 
-    private fun validateCities(cities: List<String>, primary: String) {
+    private fun validateCities(
+        cities: List<String>,
+        primary: String,
+        cityReferences: Map<String, TravelCatalogCity>,
+    ) {
         require(cities.size in 1..10 && cities.first() == primary && cities.distinct().size == cities.size)
         require(cities.all { it.isNotBlank() && it.length <= MAX_TRIP_TEXT_LENGTH })
+        require(cities.containsAll(cityReferences.keys) && cityReferences.values.map(TravelCatalogCity::id).toSet().size == cityReferences.size)
     }
 
     fun transferTo(memberId: String) {

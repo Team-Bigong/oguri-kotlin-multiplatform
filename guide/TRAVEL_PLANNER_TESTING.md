@@ -118,3 +118,19 @@ bash scripts/verify_ios_simulator.sh
 Android API 36 에뮬레이터에서 360dp 폭, 한국어, 기본 글자 크기의 내 여행, 지난 여행 펼침, 빈 일정의 실제 Google 지도, 지도 접기, 장소 검색·직접 추가 시트를 임시 데이터로 렌더링해 대조했다. 검증용 Activity와 manifest는 최종 소스에 포함하지 않는다. 검색 결과의 Google Maps 출처와 직접 추가 장소의 실제 지도 표시 제약 안내는 유지한다. 다크 모드의 주요 버튼은 기존 대비 조합을 유지한다.
 
 최종 검증은 `:composeApp:assembleDebug`, `:composeApp:testDebugUnitTest`, `git diff --check`로 수행한다. 더보기·홈·기간/도시 상세는 레이어 사양과 소스 대조이며, 이번 에뮬레이터 확인은 실제 로그인·초대·저장 요청, iOS 실행, 큰 글자와 다크 모드 전체 화면 검증을 포함하지 않는다.
+
+## GeoNames 도시 데이터 적재
+
+Flyway V52가 적용된 PostgreSQL에 연결한 뒤 실행한다. 연결 정보는 표준 PostgreSQL 환경 변수(`PGHOST`, `PGDATABASE`, `PGUSER` 등)로 전달한다.
+
+```sh
+mkdir -p /tmp/oguri-geonames
+for file in allCountries.zip alternateNamesV2.zip admin1CodesASCII.txt countryInfo.txt; do
+    curl -fL --retry 2 "https://download.geonames.org/export/dump/$file" -o "/tmp/oguri-geonames/$file" || exit 1
+done
+python3 scripts/import_geonames.py /tmp/oguri-geonames
+```
+
+출처는 [GeoNames](https://www.geonames.org/export/)이며 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)을 따른다. 현재 거주지 데이터에 국가·지역을 붙이고, 한국어 대표 이름과 한글·영문 별칭을 골라 적재한다. 기존 도시 ID는 유지하고 중복 별칭은 건너뛴다.
+
+저장 공간이 제한된 DB에는 같은 배포본의 `cities500.zip`도 내려받고 `--compact`를 붙인다. 인구 기준 도시 목록과 한국어 대표 이름이 있는 추가 거주지를 함께 적재한다.

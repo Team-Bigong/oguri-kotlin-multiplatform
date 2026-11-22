@@ -1,6 +1,5 @@
 package com.bigong.oguri.service
 
-import com.bigong.oguri.dto.response.TravelCitySuggestion
 import com.bigong.oguri.dto.response.TravelPlaceAttribution
 import com.bigong.oguri.dto.response.TravelPlaceResponse
 import com.fasterxml.jackson.databind.JsonNode
@@ -29,13 +28,30 @@ class GoogleTravelPlacesClient(
     private val client: HttpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(3)).build()
     private val concurrentRequests: Semaphore = Semaphore(32)
 
-    fun search(
+    internal fun search(
         query: String,
         language: String,
+        center: TravelPlaceSearchCenter? = null,
     ): List<TravelPlaceResponse> {
         val body =
             objectMapper.writeValueAsString(
-                mapOf("textQuery" to query, "languageCode" to language, "pageSize" to SEARCH_PAGE_SIZE),
+                buildMap {
+                    put("textQuery", query)
+                    put("languageCode", language)
+                    put("pageSize", SEARCH_PAGE_SIZE)
+                    if (center != null) {
+                        put(
+                            "locationBias",
+                            mapOf(
+                                "circle" to
+                                    mapOf(
+                                        "center" to mapOf("latitude" to center.latitude, "longitude" to center.longitude),
+                                        "radius" to CITY_SEARCH_RADIUS_METERS,
+                                    ),
+                            ),
+                        )
+                    }
+                },
             )
         return request(
             TravelPlacesOperation.SEARCH,
@@ -45,38 +61,6 @@ class GoogleTravelPlacesClient(
                 .build(),
         ).join()?.path("places")?.mapNotNull(::toPlace).orEmpty()
     }
-
-    fun cities(
-        query: String,
-        language: String,
-    ): List<TravelCitySuggestion> {
-        val body =
-            objectMapper.writeValueAsString(
-                mapOf("input" to query, "languageCode" to language, "includedPrimaryTypes" to listOf("(cities)")),
-            )
-        return request(
-            TravelPlacesOperation.CITY_SEARCH,
-            requestBuilder("/places:autocomplete", CITY_FIELDS)
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build(),
-        ).join()
-            ?.path("suggestions")
-            ?.mapNotNull { suggestion ->
-                val prediction = suggestion.path("placePrediction")
-                val id = prediction.path("placeId").asText()
-                val label = prediction.path("text").path("text").asText()
-                if (id.isBlank() || label.isBlank()) null else TravelCitySuggestion(id, label)
-            }.orEmpty()
-    }
-
-    fun cityTimeZone(placeId: String): String? =
-        request(TravelPlacesOperation.CITY_TIME_ZONE, requestBuilder("/places/$placeId", "timeZone").GET().build())
-            .join()
-            ?.path("timeZone")
-            ?.path("id")
-            ?.asText()
-            ?.takeIf { it in java.time.ZoneId.getAvailableZoneIds() }
 
     fun details(
         placeId: String,
@@ -164,15 +148,13 @@ class GoogleTravelPlacesClient(
     private companion object {
         const val BASE_URL: String = "https://places.googleapis.com/v1"
         const val SEARCH_PAGE_SIZE: Int = 12
-        const val CITY_FIELDS: String = "suggestions.placePrediction.placeId,suggestions.placePrediction.text.text"
+        const val CITY_SEARCH_RADIUS_METERS: Double = 25_000.0
         const val PLACE_FIELDS: String = "id,displayName,formattedAddress,location,attributions"
         val SEARCH_FIELDS: String = PLACE_FIELDS.split(',').joinToString(",") { "places.$it" }
     }
 }
 
-internal enum class TravelPlacesOperation(val tag: String, val cityLookup: Boolean = false) {
+internal enum class TravelPlacesOperation(val tag: String) {
     SEARCH("search"),
     DETAILS("details"),
-    CITY_SEARCH("city_search", cityLookup = true),
-    CITY_TIME_ZONE("city_time_zone", cityLookup = true),
 }

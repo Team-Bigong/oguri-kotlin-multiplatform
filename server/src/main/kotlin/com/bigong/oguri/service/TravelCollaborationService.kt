@@ -2,6 +2,7 @@ package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.TravelPlan
 import com.bigong.oguri.repository.MemberRepository
+import com.bigong.oguri.repository.TravelCatalogCityRepository
 import com.bigong.oguri.repository.TravelChangeRow
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelMemberRow
@@ -10,6 +11,7 @@ import com.bigong.oguri.repository.TravelReminderRepository
 import com.bigong.oguri.repository.TravelUsageEdit
 import com.bigong.oguri.repository.TravelUsageEntry
 import com.bigong.oguri.repository.TravelUsageRepository
+import com.bigong.oguri.repository.resolveCityReferences
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -34,6 +36,7 @@ class TravelCollaborationService(
     private val collaboration: TravelCollaborationRepository,
     private val reminders: TravelReminderRepository,
     private val usage: TravelUsageRepository,
+    private val cityCatalog: TravelCatalogCityRepository,
     @param:Value("\${TRAVEL_INVITE_TTL_DAYS:7}") private val inviteTtlDays: Long,
     @param:Value("\${TRAVEL_INVITE_TOKEN_SECRET:\${JWT_SECRET:}}") inviteTokenSecret: String = "",
 ) {
@@ -171,6 +174,8 @@ class TravelCollaborationService(
     ) {
         val plan = owner(memberId, planId)
         val reminderTimeChanged = plan.startDate != change.startDate || plan.endDate != change.endDate || plan.timeZone != change.timeZone
+        val cities = change.cities.map(String::trim)
+        val existingReferences = plan.catalogCities().filterKeys { it in cities }
         plan.updateDetails(
             change.city.trim(),
             change.title.trim(),
@@ -179,7 +184,8 @@ class TravelCollaborationService(
             change.endDate,
             requireNotNull(change.expectedRevision),
             requireNotNull(change.confirmedUnassignedCount),
-            change.cities.map(String::trim),
+            cities,
+            existingReferences + cityCatalog.resolveCityReferences(change.cityIds.orEmpty(), existingReferences),
         )
         if (reminderTimeChanged) reminders.cancelForPlan(planId)
         collaboration.recordChange(planId, memberId, plan.revision, null, "TRIP_UPDATED")
@@ -371,4 +377,5 @@ data class TravelDetailsChange(
     val expectedRevision: Long?,
     val confirmedUnassignedCount: Int?,
     val cities: List<String> = listOf(city),
+    val cityIds: Map<String, Long>? = null,
 )
