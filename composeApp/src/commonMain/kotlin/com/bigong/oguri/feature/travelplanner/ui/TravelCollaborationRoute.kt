@@ -59,7 +59,6 @@ import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanSource
-import com.bigong.oguri.domain.model.TravelReminderStatus
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelDetailsDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInviteConfirmation
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelInlineFailure
@@ -70,7 +69,6 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOutlineButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPrimaryButton
-import com.bigong.oguri.feature.travelplanner.ui.component.TravelReminderDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import oguri.composeapp.generated.resources.*
@@ -97,14 +95,10 @@ import oguri.composeapp.generated.resources.travel_manage
 import oguri.composeapp.generated.resources.travel_manage_title
 import oguri.composeapp.generated.resources.travel_member
 import oguri.composeapp.generated.resources.travel_members
-import oguri.composeapp.generated.resources.travel_my_reminder
 import oguri.composeapp.generated.resources.travel_offer_ownership
 import oguri.composeapp.generated.resources.travel_owner_role
 import oguri.composeapp.generated.resources.travel_ownership_pending
-import oguri.composeapp.generated.resources.travel_private_settings
 import oguri.composeapp.generated.resources.travel_recent_changes
-import oguri.composeapp.generated.resources.travel_reminder_off
-import oguri.composeapp.generated.resources.travel_reminder_status_on
 import oguri.composeapp.generated.resources.travel_remove_member
 import oguri.composeapp.generated.resources.travel_revoke_invite
 import oguri.composeapp.generated.resources.travel_sign_in
@@ -115,7 +109,6 @@ import org.jetbrains.compose.resources.stringResource
 private sealed interface TravelManagementPage {
     data object More : TravelManagementPage
     data object Members : TravelManagementPage
-    data object Reminder : TravelManagementPage
     data class Details(val plan: TravelPlan) : TravelManagementPage
 }
 
@@ -124,7 +117,6 @@ internal fun TravelMembersRoute(
     cityViewModel: TravelPlannerViewModel,
     planId: String,
     viewModel: TravelCollaborationViewModel,
-    reminderViewModel: TravelReminderViewModel,
     onBack: () -> Unit,
     onClosed: () -> Unit,
     onDetailsChanged: () -> Unit,
@@ -133,11 +125,9 @@ internal fun TravelMembersRoute(
     onOpenSource: (TravelPlanSource) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val reminderState by reminderViewModel.state.collectAsStateWithLifecycle()
     val cityState by cityViewModel.state.collectAsStateWithLifecycle()
     val language = androidx.compose.ui.text.intl.Locale.current.toLanguageTag()
     var showMembers by remember(planId) { mutableStateOf(false) }
-    var showReminder by remember(planId) { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val lifecycleState by lifecycle.currentStateFlow.collectAsStateWithLifecycle()
     val inviteTitle = stringResource(Res.string.travel_invite_heading)
@@ -161,17 +151,10 @@ internal fun TravelMembersRoute(
     }
     var confirmationKind by remember { mutableStateOf("delete") }
     var confirmation by remember { mutableStateOf<(() -> Unit)?>(null) }
-    LaunchedEffect(viewModel, reminderViewModel, planId) {
-        viewModel.members(planId)
-        reminderViewModel.load(planId)
-    }
+    LaunchedEffect(viewModel, planId) { viewModel.members(planId) }
     LaunchedEffect(state.closed) { if (state.closed) onClosed() }
-    LaunchedEffect(reminderState.failure) {
-        reminderState.failure?.let(viewModel::applyAccessFailure)
-    }
     val destination = when {
         showMembers -> TravelManagementPage.Members
-        showReminder -> TravelManagementPage.Reminder
         else -> state.detailsPlan?.let { TravelManagementPage.Details(it) } ?: TravelManagementPage.More
     }
     val closeDetails = {
@@ -186,7 +169,6 @@ internal fun TravelMembersRoute(
             when (destination) {
                 TravelManagementPage.More -> Unit
                 TravelManagementPage.Members -> if (!state.busy) showMembers = false
-                TravelManagementPage.Reminder -> if (!reminderState.busy) showReminder = false
                 is TravelManagementPage.Details -> closeDetails()
             }
         },
@@ -323,28 +305,14 @@ internal fun TravelMembersRoute(
                     HorizontalDivider(color = colors.borderSubtle)
                     TravelManagementRow(stringResource(Res.string.travel_trip_info), !state.busy) { viewModel.loadDetails(planId) }
                     HorizontalDivider(color = colors.borderSubtle)
-                    Spacer(Modifier.height(26.dp))
-                    TravelManagementSection(stringResource(Res.string.travel_private_settings), Res.drawable.ic_travel_bell)
-                    Spacer(Modifier.height(8.dp))
-                    HorizontalDivider(color = colors.borderSubtle)
-                    val reminderLabel = reminderState.settings?.let {
-                        val active = it.reminder?.status == TravelReminderStatus.PENDING
-                        stringResource(if (active) Res.string.travel_reminder_status_on else Res.string.travel_reminder_off)
-                    }
-                    TravelManagementRow(stringResource(Res.string.travel_my_reminder), !state.busy, trailing = reminderLabel) {
-                        showReminder = true
-                    }
+                    Spacer(Modifier.height(24.dp))
                     HorizontalDivider(color = colors.borderSubtle)
                     if (members.isOwner) {
-                        Spacer(Modifier.height(40.dp))
-                        HorizontalDivider(color = colors.borderSubtle)
                         TravelManagementRow(stringResource(Res.string.travel_delete_trip), !state.busy, destructive = true) {
                             confirmationKind = "delete"; confirmation = { viewModel.delete(planId) }
                         }
                         HorizontalDivider(color = colors.borderSubtle)
                     } else {
-                        Spacer(Modifier.height(32.dp))
-                        HorizontalDivider(color = colors.borderSubtle)
                         TravelManagementRow(stringResource(Res.string.travel_leave_trip), !state.busy, destructive = true) {
                             confirmationKind = "leave"; confirmation = { viewModel.leave(planId) }
                         }
@@ -368,16 +336,6 @@ internal fun TravelMembersRoute(
         when (page) {
             TravelManagementPage.More -> managementScreen(false)
             TravelManagementPage.Members -> managementScreen(true)
-            TravelManagementPage.Reminder -> {
-                TravelReminderDialog(
-                    state = reminderState,
-                    onSchedule = { reminderViewModel.schedule(planId, it) },
-                    onCancel = { reminderViewModel.cancel(planId) },
-                    onReload = { reminderViewModel.load(planId) },
-                    onDismiss = { showReminder = false },
-                    onRefreshPermission = reminderViewModel::refreshPermission,
-                )
-            }
             is TravelManagementPage.Details -> {
                 TravelDetailsDialog(
                     page.plan,
@@ -436,7 +394,6 @@ private fun TravelManagementSection(label: String, icon: org.jetbrains.compose.r
 private fun TravelManagementRow(
     label: String,
     enabled: Boolean,
-    trailing: String? = null,
     destructive: Boolean = false,
     onClick: () -> Unit,
 ) {
@@ -451,7 +408,6 @@ private fun TravelManagementRow(
             label, Modifier.weight(1f), style = travelTextStyle(15, 18, FontWeight.Medium),
             color = if (destructive) colors.orange else Neutral100,
         )
-        trailing?.let { Text(it, style = OguriTheme.typography.bodySmall, color = colors.textTertiary) }
         if (!destructive) Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(24.dp), tint = Neutral100)
     }
 }

@@ -284,10 +284,6 @@ fun MainNavHost(
                 dates = TravelDates(LocalDate.parse(route.startDate), LocalDate.parse(route.endDate)),
                 onSelectDay = navigator::showTravelDay,
                 viewModel = viewModel(key = "travel-members-${route.planId}-${travelSession.version}") { appGraph.travelCollaborationViewModelProvider() },
-                reminderViewModel =
-                    viewModel(
-                        key = "travel-reminder-${travelSession.version}",
-                    ) { appGraph.travelReminderViewModelProvider() },
                 onBack = { navigator.popBackStack() },
                 onClosed = {
                     homeTravelViewModel?.invalidateResume(removedPlanId = route.planId)

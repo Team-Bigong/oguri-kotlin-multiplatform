@@ -11,11 +11,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange20
 import com.bigong.oguri.core.designsystem.Orange5
@@ -116,47 +114,4 @@ internal fun TravelDateRangePicker(
             TravelBottomAction(enabled = selected != null, onClick = { selected?.let(onSelected) }) { Text(stringResource(Res.string.travel_confirm_dates)) }
         }
     }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun TravelTimePicker(onDismiss: () -> Unit, initialTime: LocalTime? = null, onSelected: (String) -> Unit) {
-    val state = rememberTimePickerState(initialHour = initialTime?.hour ?: 20, initialMinute = initialTime?.minute ?: 0, is24Hour = false)
-    TravelFormSheet(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.travel_reminder_time)) },
-        text = { TimePicker(state = state, colors = TimePickerDefaults.colors(
-            clockDialColor = OguriTheme.colors.backgroundSecondary,
-            clockDialSelectedContentColor = travelAccentForeground,
-            clockDialUnselectedContentColor = OguriTheme.colors.textSecondary,
-            selectorColor = OguriTheme.colors.mint, containerColor = OguriTheme.colors.backgroundSecondary,
-            periodSelectorBorderColor = OguriTheme.colors.borderSubtle,
-            periodSelectorSelectedContainerColor = Mint40,
-            periodSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
-            periodSelectorSelectedContentColor = Neutral100,
-            periodSelectorUnselectedContentColor = OguriTheme.colors.textTertiary,
-            timeSelectorSelectedContainerColor = OguriTheme.colors.mintContainer,
-            timeSelectorUnselectedContainerColor = OguriTheme.colors.surfaceCard,
-            timeSelectorSelectedContentColor = Neutral100,
-            timeSelectorUnselectedContentColor = Neutral40,
-        )) },
-        confirmButton = { TravelPrimaryButton(onClick = { onSelected(state.hour.toString().padStart(2, '0') + ":" + state.minute.toString().padStart(2, '0')) }) { Text(stringResource(Res.string.travel_apply)) } },
-    )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-internal fun TravelSingleDatePicker(onDismiss: () -> Unit, initialDate: LocalDate? = null, onSelected: (LocalDate) -> Unit) {
-    var selected by remember { mutableStateOf(initialDate) }
-    var month by remember { mutableStateOf((initialDate ?: Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date).let { LocalDate(it.year, it.month, 1) }) }
-    TravelFullScreenForm(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(Res.string.travel_reminder_date)) },
-        text = { TravelMonthCalendar(month, selected, selected, null, null, onMonth = { month = it }, onDate = { selected = it }) },
-        confirmButton = {
-            TravelPrimaryButton(enabled = selected != null, onClick = { selected?.let(onSelected) }, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(Res.string.travel_apply))
-            }
-        },
-    )
 }
