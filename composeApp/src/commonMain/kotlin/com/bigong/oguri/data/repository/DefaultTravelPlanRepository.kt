@@ -269,7 +269,10 @@ class DefaultTravelPlanRepository internal constructor(
     override suspend fun preview(token: String): TravelInvitePreview =
         request {
             val response = remote.previewInvite(token)
-            TravelInvitePreview(response.title, LocalDate.parse(response.startDate), LocalDate.parse(response.endDate), response.invitedBy, response.city, response.memberCount)
+            TravelInvitePreview(
+                response.title, LocalDate.parse(response.startDate), LocalDate.parse(response.endDate),
+                response.invitedBy, response.city, response.memberCount, response.existingPlanId,
+            )
         }
 
     override suspend fun join(token: String): String = request { remote.joinInvite(token).planId }

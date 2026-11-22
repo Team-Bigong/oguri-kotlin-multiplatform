@@ -48,7 +48,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https"
-                    android:host="oguri-kotlin-multiplatform-19hx.onrender.com"
+                    android:host="www.oguri.kr"
                     android:path="/trip-invite" />
                 <data android:path="/trip-invite/" />
             </intent-filter>

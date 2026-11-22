@@ -72,6 +72,10 @@ private val NEUTRAL_80_DARK: Color = Color(0xFFC8D8E7)
 private val NEUTRAL_90_DARK: Color = Color(0xFFE0EAF2)
 private val NEUTRAL_95_DARK: Color = Color(0xFFEDF3F8)
 private val NEUTRAL_100_DARK: Color = NEUTRAL_0_LIGHT
+private val HOME_RANK_LABEL_LIGHT: Color = Color.Black
+private val PLACE_DETAIL_IMAGE_BACKGROUND_LIGHT: Color = Color(0xFFCFEAE3)
+private val DIALOG_SECONDARY_ACTION_LIGHT: Color = Color(0xFFF0F0F0)
+private val TRAVEL_MAP_BACKGROUND_LIGHT: Color = Color(0xFFEEF4F1)
 private val SURFACE_RAISED_LIGHT: Color = Color(0xFFFBFDFE)
 private val MINT_CONTAINER_DARK: Color = MINT_20_DARK
 private val ORANGE_CONTAINER_DARK: Color = ORANGE_20_DARK
@@ -284,6 +288,18 @@ val DarkOguriColorPalette =
         error = ERROR_DARK,
         info = INFO_DARK,
     )
+
+internal fun homeRankLabelColor(isDarkTheme: Boolean): Color =
+    if (isDarkTheme) NEUTRAL_100_DARK else HOME_RANK_LABEL_LIGHT
+
+internal fun placeDetailImageBackgroundColor(isDarkTheme: Boolean): Color =
+    if (isDarkTheme) SURFACE_CARD_DARK else PLACE_DETAIL_IMAGE_BACKGROUND_LIGHT
+
+internal fun dialogSecondaryActionColor(isDarkTheme: Boolean): Color =
+    if (isDarkTheme) NEUTRAL_10_DARK else DIALOG_SECONDARY_ACTION_LIGHT
+
+internal fun travelMapBackgroundColor(isDarkTheme: Boolean): Color =
+    if (isDarkTheme) SURFACE_CARD_DARK else TRAVEL_MAP_BACKGROUND_LIGHT
 
 private var isDarkTokenModeApplied: Boolean = false
 

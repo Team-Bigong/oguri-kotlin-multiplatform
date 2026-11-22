@@ -269,6 +269,36 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun homeReentryReusesTheResumeResultUntilInvalidated() =
+        runTest {
+            var requests = 0
+            val plans =
+                ResumePlans(plan).apply {
+                    action = {
+                        requests++
+                        plan.summary
+                    }
+                }
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+
+            viewModel.refreshResumeIfNeeded()
+            viewModel.refreshResumeIfNeeded()
+            assertEquals(1, requests)
+            assertEquals(plan.summary, viewModel.state.value.resumePlan)
+
+            viewModel.invalidateResume(removedPlanId = plan.summary.id)
+            assertNull(viewModel.state.value.resumePlan)
+            plans.action = {
+                requests++
+                null
+            }
+            viewModel.refreshResumeIfNeeded()
+            viewModel.refreshResumeIfNeeded()
+            assertEquals(2, requests)
+            assertNull(viewModel.state.value.resumePlan)
+        }
+
+    @Test
     fun aLateResumeResponseCannotReplaceTheLatestHomeCard() =
         runTest {
             val barrier = CompletableDeferred<Unit>()

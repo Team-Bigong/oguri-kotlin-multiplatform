@@ -65,15 +65,15 @@ private object AndroidAdMobManager {
         )
     }
 
-    fun showAppOpenAdIfAvailable(): Boolean {
+    fun showAppOpenAdIfAvailable(onImpression: () -> Unit) {
         if (isShowingAppOpenAd) {
-            return false
+            return
         }
-        val activity: Activity = currentActivity ?: return false
+        val activity = currentActivity ?: return
         val cachedAd = appOpenAd
         if (cachedAd == null) {
             preloadAppOpenAd()
-            return false
+            return
         }
 
         cachedAd.fullScreenContentCallback =
@@ -90,13 +90,13 @@ private object AndroidAdMobManager {
                     preloadAppOpenAd()
                 }
 
-                override fun onAdShowedFullScreenContent() {
-                    isShowingAppOpenAd = true
+                override fun onAdImpression() {
+                    onImpression()
                 }
             }
 
+        isShowingAppOpenAd = true
         cachedAd.show(activity)
-        return true
     }
 
     fun setCurrentActivity(activity: Activity?) {
@@ -116,7 +116,9 @@ actual fun preloadAppOpenAd() {
     AndroidAdMobManager.preloadAppOpenAd()
 }
 
-actual fun showAppOpenAdIfAvailable(): Boolean = AndroidAdMobManager.showAppOpenAdIfAvailable()
+actual fun showAppOpenAdIfAvailable(onImpression: () -> Unit) {
+    AndroidAdMobManager.showAppOpenAdIfAvailable(onImpression)
+}
 
 private fun getAndroidBannerAdUnitId(): String =
     if (isDebuggableApplication()) {

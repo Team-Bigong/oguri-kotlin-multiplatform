@@ -7,6 +7,7 @@ import com.bigong.oguri.domain.model.TravelPendingSave
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanDetails
+import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlanException
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
@@ -70,6 +71,7 @@ class TravelPlannerViewModel(
     private val recoveryWriteMutex: Mutex = Mutex()
     private var draftWrite: Job? = null
     private var resumeRequest: Long = 0
+    private var resumeFetchedAt: kotlin.time.TimeMark? = null
     private var overviewRequest: Long = 0
     private var dayPlacesRequest: Long = 0
     private var addedPlaceForSave: TravelPlace? = null
@@ -101,17 +103,40 @@ class TravelPlannerViewModel(
         }
     }
 
+    internal suspend fun refreshResumeIfNeeded() {
+        if (resumeFetchedAt?.elapsedNow()?.let { it < RESUME_TTL } == true) return
+        loadResume()
+    }
+
+    internal fun invalidateResume(removedPlanId: String? = null) {
+        resumeFetchedAt = null
+        resumeRequest++
+        if (removedPlanId != null) {
+            mutableState.update { state ->
+                state.copy(resumePlan = state.resumePlan?.takeUnless { it.id == removedPlanId })
+            }
+        }
+    }
+
     internal suspend fun loadResume() {
         val request = ++resumeRequest
         val generation = mutationGeneration
         val plan =
             try {
                 repository.resume()
-            } catch (_: TravelPlanException) {
-                null
+            } catch (exception: TravelPlanException) {
+                currentCoroutineContext().ensureActive()
+                if (request == resumeRequest && generation == mutationGeneration) {
+                    mutableState.update {
+                        val retainPlan = exception.failure == TravelPlanFailure.CONNECTION
+                        it.copy(resumePlan = it.resumePlan.takeIf { retainPlan }, resumeLoaded = true)
+                    }
+                }
+                return
             }
         currentCoroutineContext().ensureActive()
         if (request == resumeRequest && generation == mutationGeneration) {
+            resumeFetchedAt = kotlin.time.TimeSource.Monotonic.markNow()
             mutableState.update { it.copy(resumePlan = plan, resumeLoaded = true) }
         }
     }
@@ -482,6 +507,20 @@ class TravelPlannerViewModel(
             }
         }
     }
+
+    internal suspend fun loadReferenceCoordinates(
+        planId: String,
+        dayNumber: Int,
+        language: String,
+        placeIds: Set<String>,
+    ): List<TravelCoordinates> =
+        try {
+            val places = placeRepository.forDay(planId, dayNumber, language).places
+            currentCoroutineContext().ensureActive()
+            placeIds.mapNotNull { places[it]?.coordinates }
+        } catch (_: TravelPlanException) {
+            emptyList()
+        }
 
     internal suspend fun loadOverviewPlaces(
         planId: String,
@@ -1108,6 +1147,7 @@ class TravelPlannerViewModel(
         const val SEARCH_DEBOUNCE_MILLIS: Long = 350
         const val MIN_SEARCH_LENGTH: Int = 2
         val OFFLINE_PLAN_TTL = 15.minutes
+        val RESUME_TTL = 1.minutes
     }
 
     @OptIn(ExperimentalUuidApi::class)

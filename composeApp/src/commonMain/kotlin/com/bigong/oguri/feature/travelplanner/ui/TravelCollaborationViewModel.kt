@@ -50,7 +50,10 @@ class TravelCollaborationViewModel(
             mutableState.update { it.copy(members = members) }
         }
 
-    internal fun issue(planId: String) =
+    internal fun issue(
+        planId: String,
+        onIssued: (String) -> Unit = {},
+    ) =
         perform {
             val invite = checkedResult { repository.issue(planId) }
             mutableState.update { state ->
@@ -62,6 +65,7 @@ class TravelCollaborationViewModel(
                     ),
                 )
             }
+            onIssued(invite.token)
         }
 
     internal fun revoke(planId: String) =
@@ -117,9 +121,11 @@ class TravelCollaborationViewModel(
         plan: TravelPlan,
         details: TravelPlanDetails,
         affected: Int,
+        onUpdated: () -> Unit,
     ) = perform {
         checkedResult { repository.updateDetails(plan.summary.id, details, plan.revision, affected) }
         mutableState.update { it.copy(detailsPlan = null) }
+        onUpdated()
     }
 
     internal fun dismissDetails() {
@@ -159,7 +165,11 @@ class TravelCollaborationViewModel(
             viewModelScope.launch {
                 try {
                     val preview = checkedResult { repository.preview(token) }
-                    if (generation == operationGeneration) mutableState.update { it.copy(preview = preview, busy = false) }
+                    if (generation == operationGeneration) mutableState.update {
+                        val existingPlanId = preview.existingPlanId
+                        if (existingPlanId == null) it.copy(preview = preview, busy = false)
+                        else it.copy(joinedPlanId = existingPlanId, busy = false)
+                    }
                 } catch (exception: TravelPlanException) {
                     if (generation == operationGeneration) mutableState.update { it.copy(failure = exception.failure, busy = false) }
                 }

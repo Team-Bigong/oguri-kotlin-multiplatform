@@ -1,6 +1,7 @@
 package com.bigong.oguri.feature.travelplanner.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -12,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelUsageActivity
@@ -32,10 +34,11 @@ internal fun TravelPlansRoute(
     onCreate: () -> Unit,
     onOpen: (String) -> Unit,
     onFindNextHoliday: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     LaunchedEffect(viewModel, signedIn) { if (signedIn) viewModel.loadList() }
-    TravelPlansScreen(state, signedIn, onSignIn, onBack, onCreate, onOpen, onFindNextHoliday, viewModel::loadList)
+    TravelPlansScreen(state, signedIn, onSignIn, onBack, onCreate, onOpen, onFindNextHoliday, viewModel::loadList, modifier)
 }
 
 @Composable
@@ -102,6 +105,7 @@ internal fun TravelPlanRoute(
     requestedDay: StateFlow<Int?>,
     onDayConsumed: () -> Unit,
     onMembers: (String, String) -> Unit,
+    onPlanViewed: () -> Unit,
     onFindNextHoliday: () -> Unit,
     onSignIn: () -> Unit,
     onBack: () -> Unit,
@@ -136,7 +140,8 @@ internal fun TravelPlanRoute(
             .toSet()
     LaunchedEffect(viewModel, planId, lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            viewModel.loadPlan(planId)
+            val activePlan = viewModel.state.value.plan?.summary?.id == planId
+            if (activePlan) viewModel.refreshPlan(planId) else viewModel.loadPlan(planId)
             while (isActive) {
                 delay(5_000)
                 viewModel.refreshPlan(planId)
@@ -155,10 +160,27 @@ internal fun TravelPlanRoute(
         if (plan != null && !state.isOffline) {
             delay(250)
             viewModel.recordView(planId, state.selectedDay)
+            onPlanViewed()
         }
     }
     LaunchedEffect(viewModel, planId, state.selectedDay, language, placeIds, detailsRetry, state.isOffline) {
         viewModel.loadDayPlaces(planId, state.selectedDay, language, hasPlaces = placeIds.isNotEmpty())
+    }
+    val referenceDay = plan?.visits.orEmpty()
+        .takeUnless { visits -> visits.any { it.dayNumber == state.selectedDay } }
+        ?.filter { it.dayNumber in 1 until state.selectedDay && it.details.googlePlaceId != null }
+        ?.maxOfOrNull { it.dayNumber }
+    val referencePlaceIds = plan?.visits.orEmpty()
+        .filter { it.dayNumber == referenceDay }
+        .mapNotNull { it.details.googlePlaceId }
+        .toSet()
+    var referenceCoordinates by remember(planId, state.selectedDay, referenceDay) {
+        mutableStateOf<List<TravelCoordinates>>(emptyList())
+    }
+    LaunchedEffect(viewModel, planId, referenceDay, state.selectedDay, language, referencePlaceIds, state.isOffline) {
+        if (referenceDay != null && !state.isOffline) {
+            referenceCoordinates = viewModel.loadReferenceCoordinates(planId, referenceDay, language, referencePlaceIds)
+        }
     }
     val overviewPlaceIds =
         plan
@@ -171,6 +193,7 @@ internal fun TravelPlanRoute(
     }
     TravelPlanScreen(
         state = state,
+        referenceCoordinates = referenceCoordinates,
         onBack = onBack,
         onOpenPlans = onOpenPlans,
         onReload = { viewModel.loadPlan(planId, rebaseDraft = true) },

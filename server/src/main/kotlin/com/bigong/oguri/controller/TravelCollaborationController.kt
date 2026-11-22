@@ -2,6 +2,7 @@ package com.bigong.oguri.controller
 
 import com.bigong.oguri.config.RequiresTravelOperation
 import com.bigong.oguri.config.TravelOperation
+import com.bigong.oguri.config.AuthContext
 import com.bigong.oguri.config.resolveMemberId
 import com.bigong.oguri.config.resolveTravelUsageSession
 import com.bigong.oguri.domain.TravelPlanConflict
@@ -137,8 +138,10 @@ class TravelCollaborationController(
 
     @PostMapping("/trip-invites/preview")
     fun preview(
+        request: HttpServletRequest,
         @RequestBody body: TravelInviteRequest,
-    ): ResponseEntity<TravelInvitePreview> = noStore(service.preview(body.token))
+    ): ResponseEntity<TravelInvitePreview> =
+        noStore(service.preview(body.token, request.resolveMemberId().takeUnless { it == AuthContext.GUEST_MEMBER_ID }))
 
     @PostMapping("/trip-invites/join")
     @RequiresTravelOperation(TravelOperation.INVITE)
