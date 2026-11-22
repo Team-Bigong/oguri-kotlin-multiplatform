@@ -139,25 +139,6 @@ private fun isDebuggableApplication(): Boolean {
     return (applicationContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 }
 
-private fun getAndroidBannerAdUnitId(): String =
-    if (isDebuggableApplication()) {
-        ANDROID_BANNER_AD_UNIT_ID_DEBUG
-    } else {
-        ANDROID_BANNER_AD_UNIT_ID_RELEASE
-    }
-
-private fun getAndroidAppOpenAdUnitId(): String =
-    if (isDebuggableApplication()) {
-        ANDROID_APP_OPEN_AD_UNIT_ID_DEBUG
-    } else {
-        ANDROID_APP_OPEN_AD_UNIT_ID_RELEASE
-    }
-
-private fun isDebuggableApplication(): Boolean {
-    val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return false
-    return (applicationContext.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-}
-
 @Composable
 actual fun AdMobBanner(
     placement: AdMobBannerPlacement,
