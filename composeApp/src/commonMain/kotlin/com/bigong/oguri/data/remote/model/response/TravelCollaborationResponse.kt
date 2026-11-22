@@ -38,6 +38,7 @@ internal data class TravelInvitePreviewResponse(
     val invitedBy: String?,
     val city: String? = null,
     val memberCount: Int? = null,
+    val existingPlanId: String? = null,
 )
 
 @Serializable

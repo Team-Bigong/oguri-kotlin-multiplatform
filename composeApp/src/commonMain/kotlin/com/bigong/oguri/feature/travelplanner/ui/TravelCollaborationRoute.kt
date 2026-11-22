@@ -428,6 +428,7 @@ internal fun TravelInviteRoute(
     LaunchedEffect(viewModel, token, state.joinedPlanId) {
         if (viewModel.matchesInvite(token)) state.joinedPlanId?.let(onJoined)
     }
+    if (state.joinedPlanId != null) return
     val preview = state.preview
     val terminal = state.failure == TravelPlanFailure.INVITE_EXPIRED ||
         state.failure == TravelPlanFailure.INVITE_REVOKED ||

@@ -165,7 +165,11 @@ class TravelCollaborationViewModel(
             viewModelScope.launch {
                 try {
                     val preview = checkedResult { repository.preview(token) }
-                    if (generation == operationGeneration) mutableState.update { it.copy(preview = preview, busy = false) }
+                    if (generation == operationGeneration) mutableState.update {
+                        val existingPlanId = preview.existingPlanId
+                        if (existingPlanId == null) it.copy(preview = preview, busy = false)
+                        else it.copy(joinedPlanId = existingPlanId, busy = false)
+                    }
                 } catch (exception: TravelPlanException) {
                     if (generation == operationGeneration) mutableState.update { it.copy(failure = exception.failure, busy = false) }
                 }

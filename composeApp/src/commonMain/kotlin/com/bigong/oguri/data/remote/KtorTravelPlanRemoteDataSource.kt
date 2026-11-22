@@ -295,13 +295,23 @@ internal class KtorTravelPlanRemoteDataSource(
         }
     }
 
-    suspend fun previewInvite(token: String): TravelInvitePreviewResponse =
-        httpClient
-            .post("$BASE_URL$INVITES_PATH/preview") {
-                attributes.put(com.bigong.oguri.core.network.OmitAuthentication, true)
+    suspend fun previewInvite(token: String): TravelInvitePreviewResponse {
+        suspend fun requestPreview(accessToken: String?): TravelInvitePreviewResponse =
+            httpClient.post("$BASE_URL$INVITES_PATH/preview") {
+                if (accessToken == null) {
+                    attributes.put(com.bigong.oguri.core.network.OmitAuthentication, true)
+                } else {
+                    attributes.put(RequestAccessToken, accessToken)
+                }
                 contentType(ContentType.Application.Json)
                 setBody(TravelInviteRequest(token))
             }.body()
+
+        val session = AuthTokenStore.currentSession()
+        if (session.version != sessionVersion) throw AuthSessionChangedException()
+        return if (session.tokens == null) requestPreview(null)
+        else authRequestExecutor.executeForSession(sessionVersion) { requestPreview(it) }
+    }
 
     suspend fun joinInvite(inviteToken: String): JoinedTravelPlanResponse =
         usageRequest { token, usageSession ->

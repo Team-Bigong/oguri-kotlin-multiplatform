@@ -122,14 +122,23 @@ class TravelCollaborationService(
     }
 
     @Transactional
-    fun preview(token: String): TravelInvitePreview {
+    fun preview(token: String, memberId: String?): TravelInvitePreview {
         val hash = hash(token)
         val planId = lookupPlanId(hash)
         val plan = plans.findForRead(planId) ?: throw TravelInviteException(HttpStatus.GONE, "INVITE_TRIP_DELETED")
         val invite = collaboration.invite(hash) ?: throw TravelInviteException(HttpStatus.NOT_FOUND, "INVITE_UNKNOWN")
-        requireActive(invite.expiresAt, invite.revokedAt)
+        val alreadyJoined = memberId != null && (plan.ownerId == memberId || collaboration.isMember(planId, memberId))
+        if (!alreadyJoined) requireActive(invite.expiresAt, invite.revokedAt)
         val inviter = invite.issuedBy?.let { members.findById(it).orElse(null)?.nickname }
-        return TravelInvitePreview(plan.title, plan.startDate, plan.endDate, inviter, plan.city, collaboration.memberCounts(listOf(plan.id))[plan.id] ?: 1)
+        return TravelInvitePreview(
+            title = plan.title,
+            startDate = plan.startDate,
+            endDate = plan.endDate,
+            invitedBy = inviter,
+            city = plan.city,
+            memberCount = collaboration.memberCounts(listOf(plan.id))[plan.id] ?: 1,
+            existingPlanId = planId.takeIf { alreadyJoined },
+        )
     }
 
     @Transactional
@@ -330,6 +339,7 @@ data class TravelInvitePreview(
     val invitedBy: String?,
     val city: String? = null,
     val memberCount: Int? = null,
+    val existingPlanId: UUID? = null,
 )
 
 data class JoinedTravelPlan(
