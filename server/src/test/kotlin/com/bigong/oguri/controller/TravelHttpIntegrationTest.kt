@@ -57,6 +57,19 @@ class TravelHttpIntegrationTest {
     }
 
     @Test
+    fun `도시 목록이 비어 있으면 외부 검색 없이 빈 결과를 반환한다`() {
+        val result =
+            request(
+                "POST",
+                "/travel-places/cities/search",
+                200,
+                memberToken(),
+                mapOf("query" to "시드니", "language" to "ko"),
+            )
+        assertTrue(result.isArray && result.isEmpty)
+    }
+
+    @Test
     fun `초대 참여부터 편집 충돌과 멤버 제외까지 실제 HTTP로 검증한다`() {
         val owner = memberToken()
         val member = memberToken()
@@ -67,7 +80,7 @@ class TravelHttpIntegrationTest {
                 .query(Int::class.javaObjectType)
                 .single()
         val source = TravelPlanSourceRequest(destinationId, day, day)
-        val creation = CreateTravelPlanRequest(UUID.randomUUID(), "Fukuoka", "Asia/Tokyo", "Trip", day, day, source)
+        val creation = CreateTravelPlanRequest(UUID.randomUUID(), "Fukuoka", "Asia/Tokyo", "Trip", day, day, source, cities = listOf("Fukuoka", "Osaka"))
         val created = request("POST", "/trips", 200, owner, creation)
         val tripId = created.get("id").asText()
         assertEquals(destinationId, created.get("source").get("destinationId").asInt())
@@ -86,11 +99,17 @@ class TravelHttpIntegrationTest {
         val preview = request("POST", "/trip-invites/preview", 200, body = invite)
         assertEquals("Trip", preview.get("title").asText())
         assertEquals("Fukuoka", preview.get("city").asText())
+        assertEquals(listOf("Fukuoka", "Osaka"), preview.path("cities").map { it.asText() })
         assertEquals(1, preview.get("memberCount").asInt())
+        assertTrue(preview.path("existingPlanId").isNull || preview.path("existingPlanId").isMissingNode)
+        assertEquals(tripId, request("POST", "/trip-invites/preview", 200, owner, invite).path("existingPlanId").asText())
+        val nonMemberPreview = request("POST", "/trip-invites/preview", 200, member, invite)
+        assertTrue(nonMemberPreview.path("existingPlanId").isNull || nonMemberPreview.path("existingPlanId").isMissingNode)
         request("POST", "/trip-invites/join", 401, body = invite)
         request("GET", trip, 404, member)
         assertEquals(tripId, request("POST", "/trip-invites/join", 200, member, invite).get("planId").asText())
 
+        assertEquals(tripId, request("POST", "/trip-invites/preview", 200, member, invite).path("existingPlanId").asText())
         assertEquals(2, request("GET", "/trips", 200, member).single().get("memberCount").asInt())
         val memberView = request("GET", "$trip/members", 200, member)
         assertTrue(memberView.get("inviteExpiresAt").isNull)

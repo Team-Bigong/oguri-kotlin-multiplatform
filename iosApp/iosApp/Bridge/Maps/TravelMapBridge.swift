@@ -19,7 +19,7 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
     private let onMarkerClick: (String) -> Void
     private var tileTimeout: DispatchWorkItem?
     private var previousViewport: Int32?
-    private var fittedMarkers = false
+    private var fittedCoordinates = false
     private var pendingCamera: (() -> Void)?
     private var routeLines: [(GMSPolyline, Double)] = []
     private var pinFonts: [String: CGFont] = [:]
@@ -46,41 +46,53 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: timeout)
     }
 
-    func render(scene: TravelMapScene, viewportRequest: Int32, focusedVisitId: String?, pinStyle: TravelMapPinStyle) {
+    func render(
+        scene: TravelMapScene,
+        viewportRequest: Int32,
+        focusedVisitId: String?,
+        pinStyle: TravelMapPinStyle,
+        distanceLabels: [String],
+        distanceStyle: TravelMapDistanceStyle,
+        darkTheme: Bool
+    ) {
+        map.overrideUserInterfaceStyle = darkTheme ? .dark : .light
         map.clear()
         routeLines.removeAll()
-        for line in scene.lines {
+        for (line, label) in zip(scene.lines, distanceLabels) {
+            let start = line.start.coordinate
+            let end = line.end.coordinate
             let path = GMSMutablePath()
-            var length = 0.0
-            var previous: CLLocationCoordinate2D?
-            line.points.forEach { point in
-                let coordinate = point.coordinate
-                path.add(coordinate)
-                if let previous { length += GMSGeometryDistance(previous, coordinate) }
-                previous = coordinate
-            }
+            path.add(start)
+            path.add(end)
             let polyline = GMSPolyline(path: path)
             polyline.geodesic = true
-            polyline.strokeColor = UIColor(argb: line.colorArgb)
+            polyline.strokeColor = UIColor(argb: distanceStyle.connectionArgb)
             polyline.strokeWidth = 2
             polyline.map = map
-            routeLines.append((polyline, length))
+            routeLines.append((polyline, GMSGeometryDistance(start, end)))
+
+            let marker = GMSMarker(position: line.midpoint.coordinate)
+            marker.icon = makeDistanceIcon(label: label, style: distanceStyle)
+            marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
+            marker.zIndex = -1
+            marker.isTappable = false
+            marker.map = map
         }
         updateLinePattern()
         for pin in scene.markers {
             let marker = GMSMarker(position: pin.coordinates.coordinate)
             marker.title = pin.title ?? pin.label
-            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, selected: pin.selected, style: pinStyle)
+            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, labelColorArgb: pin.labelColorArgb, highlightColorArgb: pin.highlightColorArgb, selected: pin.selected, style: pinStyle)
             marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
             marker.zIndex = pin.selected ? 1 : 0
             marker.userData = pin.id
             marker.map = map
         }
 
-        let hasMarkers = !scene.markers.isEmpty
-        guard previousViewport != viewportRequest || (!fittedMarkers && hasMarkers) else { return }
+        let hasCoordinates = !scene.viewportCoordinates.isEmpty
+        guard previousViewport != viewportRequest || (!fittedCoordinates && hasCoordinates) else { return }
         previousViewport = viewportRequest
-        fittedMarkers = hasMarkers
+        fittedCoordinates = hasCoordinates
         pendingCamera = { [weak self] in self?.positionCamera(for: scene, focusedVisitId: focusedVisitId) }
         applyPendingCamera()
     }
@@ -94,16 +106,16 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
     private func positionCamera(for scene: TravelMapScene, focusedVisitId: String?) {
         if let focused = scene.markers.first(where: { $0.id == focusedVisitId }) {
             map.camera = GMSCameraPosition(target: focused.coordinates.coordinate, zoom: 15)
-        } else if let first = scene.markers.first {
-            let origin = first.coordinates.coordinate
-            let otherPoints = scene.markers.dropFirst().filter {
-                $0.coordinates.latitude != origin.latitude || $0.coordinates.longitude != origin.longitude
+        } else if let first = scene.viewportCoordinates.first {
+            let origin = first.coordinate
+            let otherPoints = scene.viewportCoordinates.dropFirst().filter {
+                $0.latitude != origin.latitude || $0.longitude != origin.longitude
             }
             if otherPoints.isEmpty {
                 map.camera = GMSCameraPosition(target: origin, zoom: 14)
             } else {
                 let bounds = otherPoints.reduce(GMSCoordinateBounds(coordinate: origin, coordinate: origin)) {
-                    $0.includingCoordinate($1.coordinates.coordinate)
+                    $0.includingCoordinate($1.coordinate)
                 }
                 map.moveCamera(GMSCameraUpdate.fit(bounds, withPadding: 28))
             }
@@ -158,25 +170,46 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         return UIFont.systemFont(ofSize: size)
     }
 
-    private func makeIcon(label: String?, colorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
+    private func makeDistanceIcon(label: String, style: TravelMapDistanceStyle) -> UIImage {
+        let font = pinFont(uri: style.fontUri, size: CGFloat(style.fontSize))
+        let text = NSAttributedString(string: label, attributes: [
+            .font: font,
+            .foregroundColor: UIColor(argb: style.textArgb)
+        ])
+        let outlineWidth = CGFloat(style.outlineWidth)
+        let outline = NSAttributedString(string: label, attributes: [
+            .font: font,
+            .strokeColor: UIColor(argb: style.outlineArgb),
+            .strokeWidth: 200 * outlineWidth / font.pointSize
+        ])
+        let bounds = text.size()
+        let size = CGSize(width: ceil(bounds.width + 2 * outlineWidth), height: ceil(bounds.height + 2 * outlineWidth))
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            let origin = CGPoint(x: outlineWidth, y: outlineWidth)
+            outline.draw(at: origin)
+            text.draw(at: origin)
+        }
+    }
+
+    private func makeIcon(label: String?, colorArgb: Int32, labelColorArgb: Int32, highlightColorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
         let side: CGFloat = selected ? 44 : 26
         let size = CGSize(width: side, height: side)
         return UIGraphicsImageRenderer(size: size).image { _ in
             let color = UIColor(argb: colorArgb)
             if selected {
-                color.withAlphaComponent(0.28).setFill()
+                UIColor(argb: highlightColorArgb).setFill()
                 UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
             }
             let diameter: CGFloat = selected ? 32 : 26
             let frame = CGRect(x: (side - diameter) / 2, y: (side - diameter) / 2, width: diameter, height: diameter)
-            UIColor(argb: style.foregroundArgb).setFill()
+            UIColor(argb: style.outlineArgb).setFill()
             UIBezierPath(ovalIn: frame).fill()
             color.setFill()
             UIBezierPath(ovalIn: frame.insetBy(dx: 2, dy: 2)).fill()
             guard let label else { return }
             let text = NSAttributedString(string: label, attributes: [
                 .font: pinFont(uri: selected ? style.selectedLabelFontUri : style.labelFontUri, size: CGFloat(selected ? style.selectedLabelSize : style.labelSize)),
-                .foregroundColor: UIColor(argb: style.foregroundArgb)
+                .foregroundColor: UIColor(argb: labelColorArgb)
             ])
             let bounds = text.size()
             text.draw(at: CGPoint(x: (side - bounds.width) / 2, y: (side - bounds.height) / 2))

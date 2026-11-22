@@ -7,6 +7,7 @@ import com.bigong.oguri.domain.model.TravelPendingSave
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanDetails
+import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlanException
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSummary
@@ -70,6 +71,7 @@ class TravelPlannerViewModel(
     private val recoveryWriteMutex: Mutex = Mutex()
     private var draftWrite: Job? = null
     private var resumeRequest: Long = 0
+    private var resumeFetchedAt: kotlin.time.TimeMark? = null
     private var overviewRequest: Long = 0
     private var dayPlacesRequest: Long = 0
     private var addedPlaceForSave: TravelPlace? = null
@@ -101,17 +103,40 @@ class TravelPlannerViewModel(
         }
     }
 
+    internal suspend fun refreshResumeIfNeeded() {
+        if (resumeFetchedAt?.elapsedNow()?.let { it < RESUME_TTL } == true) return
+        loadResume()
+    }
+
+    internal fun invalidateResume(removedPlanId: String? = null) {
+        resumeFetchedAt = null
+        resumeRequest++
+        if (removedPlanId != null) {
+            mutableState.update { state ->
+                state.copy(resumePlan = state.resumePlan?.takeUnless { it.id == removedPlanId })
+            }
+        }
+    }
+
     internal suspend fun loadResume() {
         val request = ++resumeRequest
         val generation = mutationGeneration
         val plan =
             try {
                 repository.resume()
-            } catch (_: TravelPlanException) {
-                null
+            } catch (exception: TravelPlanException) {
+                currentCoroutineContext().ensureActive()
+                if (request == resumeRequest && generation == mutationGeneration) {
+                    mutableState.update {
+                        val retainPlan = exception.failure == TravelPlanFailure.CONNECTION
+                        it.copy(resumePlan = it.resumePlan.takeIf { retainPlan }, resumeLoaded = true)
+                    }
+                }
+                return
             }
         currentCoroutineContext().ensureActive()
         if (request == resumeRequest && generation == mutationGeneration) {
+            resumeFetchedAt = kotlin.time.TimeSource.Monotonic.markNow()
             mutableState.update { it.copy(resumePlan = plan, resumeLoaded = true) }
         }
     }
@@ -185,7 +210,7 @@ class TravelPlannerViewModel(
             viewModelScope.launch {
                 val zone =
                     try {
-                        placeRepository.cityTimeZone(suggestion.id)
+                        suggestion.timeZone ?: placeRepository.cityTimeZone(suggestion.id)
                     } catch (_: TravelPlanException) {
                         null
                     }
@@ -197,8 +222,12 @@ class TravelPlannerViewModel(
     internal suspend fun resolveCityTimeZone(city: String, language: String): String? {
         com.bigong.oguri.feature.travelplanner.ui.model.suggestedTimeZone(city)?.let { return it }
         return try {
-            val match = placeRepository.cities(city, language).firstOrNull { it.label.equals(city, ignoreCase = true) } ?: return null
-            placeRepository.cityTimeZone(match.id)?.takeIf { it in kotlinx.datetime.TimeZone.availableZoneIds }
+            val matches = placeRepository.cities(city, language)
+            val match =
+                matches.singleOrNull { it.label.equals(city, ignoreCase = true) }
+                    ?: matches.singleOrNull { it.name.equals(city, ignoreCase = true) }
+                    ?: return null
+            (match.timeZone ?: placeRepository.cityTimeZone(match.id))?.takeIf { it in kotlinx.datetime.TimeZone.availableZoneIds }
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: TravelPlanException) {
@@ -414,6 +443,7 @@ class TravelPlannerViewModel(
                     selectedVisitId = null,
                     mapFocusedVisitId = null,
                     dayPlaces = emptyMap(),
+                    attemptedDayPlaceIds = emptySet(),
                     dayPlacesLanguage = null,
                     dayPlacesIncomplete = false,
                     isLoadingDayPlaces = false,
@@ -431,11 +461,16 @@ class TravelPlannerViewModel(
     ) {
         val current = state.value
         if (current.plan?.summary?.id != planId || current.selectedDay != dayNumber) return
+        val placeIds = current.plan.visits
+            .filter { it.dayNumber == dayNumber }
+            .mapNotNull { it.details.googlePlaceId }
+            .toSet()
         val request = ++dayPlacesRequest
         if (!hasPlaces || current.isOffline) {
             mutableState.update {
                 it.copy(
                     dayPlaces = it.dayPlaces.takeIf { _ -> hasPlaces && it.dayPlacesLanguage == language }.orEmpty(),
+                    attemptedDayPlaceIds = emptySet(),
                     dayPlacesLanguage = language,
                     isLoadingDayPlaces = false,
                     dayPlacesIncomplete = hasPlaces,
@@ -463,6 +498,7 @@ class TravelPlannerViewModel(
             mutableState.update {
                 it.copy(
                     dayPlaces = result.places,
+                    attemptedDayPlaceIds = placeIds,
                     dayPlacesLanguage = language,
                     isLoadingDayPlaces = false,
                     dayPlacesIncomplete = result.incomplete,
@@ -474,10 +510,24 @@ class TravelPlannerViewModel(
             when (exception.failure) {
                 TravelPlanFailure.UNAVAILABLE -> forgetUnavailablePlan(planId)
                 TravelPlanFailure.SIGN_IN_REQUIRED -> applyFailure(exception.failure)
-                else -> mutableState.update { it.copy(isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
+                else -> mutableState.update { it.copy(attemptedDayPlaceIds = placeIds, isLoadingDayPlaces = false, dayPlacesIncomplete = true) }
             }
         }
     }
+
+    internal suspend fun loadReferenceCoordinates(
+        planId: String,
+        dayNumber: Int,
+        language: String,
+        placeIds: Set<String>,
+    ): List<TravelCoordinates> =
+        try {
+            val places = placeRepository.forDay(planId, dayNumber, language).places
+            currentCoroutineContext().ensureActive()
+            placeIds.mapNotNull { places[it]?.coordinates }
+        } catch (_: TravelPlanException) {
+            emptyList()
+        }
 
     internal suspend fun loadOverviewPlaces(
         planId: String,
@@ -876,6 +926,10 @@ class TravelPlannerViewModel(
         val change = request.change
         val selectedDayAfterSave = request.selectedDay.takeIf { it in 1..updated.summary.details.dates.dayCount } ?: updated.summary.details.dates.dayCount
         mutableState.update { current ->
+            val visiblePlaceIds = updated.visits
+                .filter { it.dayNumber == selectedDayAfterSave }
+                .mapNotNull { it.details.googlePlaceId }
+                .toSet()
             val addedToVisibleDay = addedPlace != null && (change as? TravelVisitChange.Add)?.dayNumber == current.selectedDay
             val undo =
                 when (change) {
@@ -910,14 +964,12 @@ class TravelPlannerViewModel(
                     if (selectedDayAfterSave != current.selectedDay) {
                         emptyMap()
                     } else {
-                        val ids =
-                            updated.visits
-                                .filter { it.dayNumber == current.selectedDay }
-                                .mapNotNull { it.details.googlePlaceId }
-                                .toSet()
-                        val retained = current.dayPlaces.filterKeys { it in ids }
+                        val retained = current.dayPlaces.filterKeys { it in visiblePlaceIds }
                         if (addedToVisibleDay) retained + (addedPlace.id to addedPlace) else retained
                     },
+                attemptedDayPlaceIds =
+                    if (selectedDayAfterSave == current.selectedDay) current.attemptedDayPlaceIds intersect visiblePlaceIds
+                    else emptySet(),
                 dayPlacesIncomplete =
                     current.dayPlacesIncomplete &&
                         updated.visits.any {
@@ -1104,6 +1156,7 @@ class TravelPlannerViewModel(
         const val SEARCH_DEBOUNCE_MILLIS: Long = 350
         const val MIN_SEARCH_LENGTH: Int = 2
         val OFFLINE_PLAN_TTL = 15.minutes
+        val RESUME_TTL = 1.minutes
     }
 
     @OptIn(ExperimentalUuidApi::class)

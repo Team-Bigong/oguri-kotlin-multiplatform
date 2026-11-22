@@ -48,7 +48,6 @@ import com.bigong.oguri.feature.search.ui.SearchViewModel
 import com.bigong.oguri.feature.splash.ui.SplashViewModel
 import com.bigong.oguri.feature.travelplanner.ui.TravelCollaborationViewModel
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlannerViewModel
-import com.bigong.oguri.feature.travelplanner.ui.TravelReminderViewModel
 import dev.zacsweers.metro.DependencyGraph
 import dev.zacsweers.metro.Provider
 import dev.zacsweers.metro.Provides
@@ -68,7 +67,6 @@ interface AppGraph {
     val searchViewModelProvider: Provider<SearchViewModel>
     val splashViewModelProvider: Provider<SplashViewModel>
     val travelCollaborationViewModelProvider: Provider<TravelCollaborationViewModel>
-    val travelReminderViewModelProvider: Provider<TravelReminderViewModel>
     val travelPlannerViewModelProvider: Provider<TravelPlannerViewModel>
     val travelRecommendationUsage: TravelRecommendationUsageRepository
 

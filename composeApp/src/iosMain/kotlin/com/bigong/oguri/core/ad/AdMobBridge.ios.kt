@@ -23,9 +23,17 @@ actual fun preloadAppOpenAd() {
     NSNotificationCenter.defaultCenter.postNotificationName(IOS_NOTIFICATION_PRELOAD_APP_OPEN, `object` = null)
 }
 
-actual fun showAppOpenAdIfAvailable(): Boolean {
-    NSNotificationCenter.defaultCenter.postNotificationName(IOS_NOTIFICATION_SHOW_APP_OPEN, `object` = null)
-    return true
+actual fun showAppOpenAdIfAvailable(onImpression: () -> Unit) {
+    NSNotificationCenter.defaultCenter.postNotificationName(
+        IOS_NOTIFICATION_SHOW_APP_OPEN,
+        `object` = AppOpenAdRequest(onImpression),
+    )
+}
+
+class AppOpenAdRequest internal constructor(private val onImpression: () -> Unit) {
+    fun reportImpression() {
+        onImpression()
+    }
 }
 
 @OptIn(ExperimentalForeignApi::class)

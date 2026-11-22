@@ -16,8 +16,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.ad.AdMobBanner
 import com.bigong.oguri.core.ad.AdMobBannerPlacement
+import com.bigong.oguri.core.ad.BottomTabBanner
+import com.bigong.oguri.core.ad.BottomTabBannerContentSpacing
+import com.bigong.oguri.core.ad.BottomTabBannerHeight
 import com.bigong.oguri.core.designsystem.Mint10
 import com.bigong.oguri.core.designsystem.Neutral20
 import com.bigong.oguri.core.designsystem.Neutral5
@@ -55,9 +57,7 @@ import oguri.composeapp.generated.resources.mypage_menu_withdraw
 import oguri.composeapp.generated.resources.mypage_withdraw_dialog_phrase
 import org.jetbrains.compose.resources.stringResource
 
-private val MYPAGE_BOTTOM_BANNER_HEIGHT = 60.dp
-private val MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT = 24.dp
-private val MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING = MYPAGE_BOTTOM_BANNER_HEIGHT + MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT
+private val MYPAGE_FLOATING_NAVIGATION_BASE_BOTTOM_PADDING = BottomTabBannerHeight + BottomTabBannerContentSpacing
 
 @Composable
 fun MyPageScreen(
@@ -169,11 +169,11 @@ fun MyPageScreen(
                             ),
                     )
                     Spacer(
-                        modifier = Modifier.height(MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT),
+                        modifier = Modifier.height(BottomTabBannerContentSpacing),
                     )
                 }
             }
-            MyPageBottomBanner()
+            BottomTabBanner(AdMobBannerPlacement.MYPAGE_BOTTOM)
         }
         return
     }
@@ -258,11 +258,11 @@ fun MyPageScreen(
                         ),
                 )
                 Spacer(
-                    modifier = Modifier.height(MYPAGE_BOTTOM_CONTENT_SPACER_HEIGHT),
+                    modifier = Modifier.height(BottomTabBannerContentSpacing),
                 )
             }
         }
-        MyPageBottomBanner()
+        BottomTabBanner(AdMobBannerPlacement.MYPAGE_BOTTOM)
     }
 
     if (myPageUiState.isEditLeaveDaysBottomSheetVisible) {
@@ -329,15 +329,4 @@ fun MyPageScreen(
     if (myPageUiState.isWithdrawSubmitting) {
         CenteredLoadingIndicator()
     }
-}
-
-@Composable
-private fun MyPageBottomBanner() {
-    AdMobBanner(
-        placement = AdMobBannerPlacement.MYPAGE_BOTTOM,
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .height(MYPAGE_BOTTOM_BANNER_HEIGHT),
-    )
 }

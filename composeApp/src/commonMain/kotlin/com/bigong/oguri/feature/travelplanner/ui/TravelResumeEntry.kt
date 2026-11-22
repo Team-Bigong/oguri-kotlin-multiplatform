@@ -5,26 +5,28 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.repeatOnLifecycle
+import com.bigong.oguri.core.designsystem.Mint80
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
@@ -34,6 +36,7 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
 import kotlin.time.Clock
+import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.*
 import org.jetbrains.compose.resources.painterResource
@@ -45,17 +48,69 @@ internal fun TravelResumeEntry(
     onOpen: (String) -> Unit,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(viewModel, lifecycle) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { viewModel.loadResume() }
-    }
     val plan = state.resumePlan ?: return
-    TravelEntryCard(
-        label = stringResource(Res.string.travel_resume),
-        plan = plan,
-        onClick = { onOpen(plan.id) },
-        modifier = Modifier.padding(horizontal = 20.dp).padding(top = 12.dp),
-    )
+    TravelResumeCard(plan = plan, onClick = { onOpen(plan.id) })
+}
+
+@Composable
+private fun TravelResumeCard(plan: TravelPlanSummary, onClick: () -> Unit) {
+    val details = plan.details
+    val today = Clock.System.now().toLocalDateTime(details.timeZone).date
+    val daysUntilDeparture = today.daysUntil(details.dates.start)
+    val badge = when {
+        daysUntilDeparture > 0 -> stringResource(Res.string.travel_list_countdown, daysUntilDeparture)
+        today <= details.dates.endInclusive -> stringResource(Res.string.travel_list_in_progress)
+        else -> null
+    }
+    val colors = OguriTheme.colors
+    val typography = OguriTheme.typography
+    val labelStyle = typography.labelSmall.copy(lineHeight = 13.sp)
+
+    Row(
+        modifier = Modifier.padding(start = 20.dp, top = 12.dp, end = 20.dp).travelEntrySurface(
+            onClick = onClick,
+            minHeight = 84.dp,
+            contentPadding = PaddingValues(start = 17.dp, top = 13.dp, end = 14.dp, bottom = 13.dp),
+        ),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(Res.string.travel_resume),
+                    modifier = Modifier.weight(1f, fill = false),
+                    style = labelStyle,
+                    color = colors.textTertiary,
+                )
+                if (badge != null) {
+                    Text(
+                        text = badge,
+                        modifier = Modifier.background(colors.mintContainer, CircleShape)
+                            .padding(horizontal = 7.dp, vertical = 2.dp),
+                        style = labelStyle,
+                        color = Mint80,
+                    )
+                }
+            }
+            Text(
+                text = details.title,
+                style = typography.cardSubtitle.copy(lineHeight = 18.sp),
+                color = Neutral100,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = travelCardDates(details.dates, includeYear = false),
+                style = typography.caption.copy(lineHeight = 14.sp),
+                color = colors.textTertiary,
+            )
+        }
+        Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = colors.textTertiary)
+    }
 }
 
 @Composable
@@ -105,7 +160,7 @@ internal fun TravelDestinationEntry(
     } else {
         TravelOutlineButton(onClick = onCreate, modifier = modifier.fillMaxWidth()) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(16.dp), tint = colors.mint)
+                Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(16.dp))
                 Text(stringResource(Res.string.travel_create_from_city), style = travelTextStyle(18, 22, FontWeight.SemiBold))
             }
         }
@@ -143,15 +198,19 @@ private fun TravelEntryCard(
                 )
             }
         }
-        if (action != null) Text(action, style = OguriTheme.typography.labelLarge, color = colors.textPrimary)
+        if (action != null) Text(action, style = OguriTheme.typography.labelLarge, color = Neutral100)
         Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp), tint = colors.textTertiary)
     }
 }
 
 @Composable
-private fun Modifier.travelEntrySurface(onClick: () -> Unit): Modifier {
+private fun Modifier.travelEntrySurface(
+    onClick: () -> Unit,
+    minHeight: Dp = 48.dp,
+    contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+): Modifier {
     val colors = OguriTheme.colors
     val shape = RoundedCornerShape(8.dp)
-    return fillMaxWidth().heightIn(min = 48.dp).clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderSubtle, shape)
-        .noRippleClickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp)
+    return fillMaxWidth().heightIn(min = minHeight).clip(shape).background(colors.surfaceCard).border(1.dp, colors.borderSubtle, shape)
+        .noRippleClickable(onClick = onClick).padding(contentPadding)
 }

@@ -198,18 +198,20 @@ internal class KtorTravelPlanRemoteDataSource(
         query: String,
         language: String,
     ): List<TravelCitySuggestionResponse> =
-        authRequestExecutor.execute {
+        authRequestExecutor.executeForSession(sessionVersion) { token ->
             httpClient
                 .post("$BASE_URL$CITIES_PATH/search") {
+                    attributes.put(RequestAccessToken, token)
                     contentType(ContentType.Application.Json)
                     setBody(TravelPlaceSearchRequest(query, language))
                 }.body()
         }
 
     suspend fun cityTimeZone(placeId: String): TravelCityTimeZoneResponse =
-        authRequestExecutor.execute {
+        authRequestExecutor.executeForSession(sessionVersion) { token ->
             httpClient
                 .post("$BASE_URL$CITIES_PATH/time-zone") {
+                    attributes.put(RequestAccessToken, token)
                     contentType(ContentType.Application.Json)
                     setBody(TravelCityTimeZoneRequest(placeId))
                 }.body()
@@ -293,13 +295,23 @@ internal class KtorTravelPlanRemoteDataSource(
         }
     }
 
-    suspend fun previewInvite(token: String): TravelInvitePreviewResponse =
-        httpClient
-            .post("$BASE_URL$INVITES_PATH/preview") {
-                attributes.put(com.bigong.oguri.core.network.OmitAuthentication, true)
+    suspend fun previewInvite(token: String): TravelInvitePreviewResponse {
+        suspend fun requestPreview(accessToken: String?): TravelInvitePreviewResponse =
+            httpClient.post("$BASE_URL$INVITES_PATH/preview") {
+                if (accessToken == null) {
+                    attributes.put(com.bigong.oguri.core.network.OmitAuthentication, true)
+                } else {
+                    attributes.put(RequestAccessToken, accessToken)
+                }
                 contentType(ContentType.Application.Json)
                 setBody(TravelInviteRequest(token))
             }.body()
+
+        val session = AuthTokenStore.currentSession()
+        if (session.version != sessionVersion) throw AuthSessionChangedException()
+        return if (session.tokens == null) requestPreview(null)
+        else authRequestExecutor.executeForSession(sessionVersion) { requestPreview(it) }
+    }
 
     suspend fun joinInvite(inviteToken: String): JoinedTravelPlanResponse =
         usageRequest { token, usageSession ->

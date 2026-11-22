@@ -23,7 +23,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Neutral10
+import com.bigong.oguri.core.designsystem.dialogSecondaryActionColor
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
@@ -34,7 +34,7 @@ import org.jetbrains.compose.resources.painterResource
 
 internal val dialogSecondaryButtonColor: Color
     @Composable
-    get() = if (OguriTheme.isDarkTheme) Neutral10 else Color(0xFFF0F0F0)
+    get() = dialogSecondaryActionColor(OguriTheme.isDarkTheme)
 
 @Composable
 fun ConfirmAlertDialog(

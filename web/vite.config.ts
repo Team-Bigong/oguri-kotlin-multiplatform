@@ -4,13 +4,13 @@ import react from "@vitejs/plugin-react"
 
 export default defineConfig(({ mode }) => {
   const settings = { ...loadEnv(mode, path.resolve(__dirname, ".."), ""), ...process.env }
-  const androidFingerprint = settings.TRAVEL_ANDROID_SIGNING_SHA256?.trim().toUpperCase()
-  const appleAppId = settings.TRAVEL_IOS_APP_ID?.trim()
+  const androidFingerprint = (settings.ANDROID_APP_LINKS_SHA256?.trim() || settings.TRAVEL_ANDROID_SIGNING_SHA256?.trim()).toUpperCase()
+  const appleAppId = (settings.IOS_UNIVERSAL_LINKS_APP_ID?.trim() || settings.TRAVEL_IOS_APP_ID?.trim())
   if (androidFingerprint && !/^([A-F0-9]{2}:){31}[A-F0-9]{2}$/.test(androidFingerprint)) {
-    throw new Error("TRAVEL_ANDROID_SIGNING_SHA256 must be a colon-separated SHA-256 fingerprint")
+    throw new Error("ANDROID_APP_LINKS_SHA256 must be a colon-separated SHA-256 fingerprint")
   }
   if (appleAppId && !/^[A-Z0-9]{10}\.[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$/.test(appleAppId)) {
-    throw new Error("TRAVEL_IOS_APP_ID must contain the application identifier prefix and bundle ID")
+    throw new Error("IOS_UNIVERSAL_LINKS_APP_ID must contain the application identifier prefix and bundle ID")
   }
   return {
     envDir: "..",
