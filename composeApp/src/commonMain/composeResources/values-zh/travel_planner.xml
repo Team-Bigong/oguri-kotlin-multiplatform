@@ -254,6 +254,9 @@
     <string name="travel_empty_description">根据假期安排第一次旅行吧。</string>
     <string name="travel_login_title">此功能需要登录</string>
     <string name="travel_login_action">前往登录</string>
+    <string name="travel_invite_confirm_heading">要加入这趟旅行吗？</string>
+    <string name="travel_invite_join_action">加入旅行</string>
+    <string name="travel_invite_later">稍后</string>
     <string name="travel_invite_heading">一起计划旅行吧？</string>
     <string name="travel_invite_description">加入后可以共同查看和修改日程</string>
     <string name="travel_invite_expired_title">邀请已过期</string>

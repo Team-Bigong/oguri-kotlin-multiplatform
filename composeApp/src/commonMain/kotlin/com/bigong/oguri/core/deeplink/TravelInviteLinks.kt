@@ -14,10 +14,15 @@ internal fun travelInviteLink(token: String): String {
     return "https://$TRAVEL_INVITE_HOST/trip-invite/#$token"
 }
 
-internal fun parseTravelInvite(urlText: String): String? {
+internal data class TravelInviteLink(val token: String?)
+
+internal fun parseTravelInvite(urlText: String): String? = readTravelInviteLink(urlText)?.token
+
+internal fun readTravelInviteLink(urlText: String): TravelInviteLink? {
     val incomingUrl = runCatching { Url(urlText) }.getOrNull() ?: return null
+    val wrapped = incomingUrl.protocol.name.startsWith("kakao") && incomingUrl.host == "kakaolink"
     val url =
-        if (incomingUrl.protocol.name.startsWith("kakao") && incomingUrl.host == "kakaolink") {
+        if (wrapped) {
             val nestedUrl = incomingUrl.parameters["deeplink"] ?: return null
             runCatching { Url(nestedUrl) }.getOrNull() ?: return null
         } else {
@@ -26,14 +31,16 @@ internal fun parseTravelInvite(urlText: String): String? {
     val path = url.segments.filter(String::isNotEmpty)
     val isWeb = url.protocol.name == "https" && url.host in travelInviteHosts && url.port == 443 && path == listOf("trip-invite")
     val isApp = url.protocol.name == "oguri" && url.host == "open" && path == listOf("trip-invite")
-    return url.fragment.takeIf { (isWeb || isApp) && inviteTokenPattern.matches(it) }
+    if (!isWeb && !isApp) return null
+    val fragment = url.fragment.ifEmpty { if (wrapped) incomingUrl.fragment else "" }
+    return TravelInviteLink(fragment.takeIf(inviteTokenPattern::matches))
 }
 
 internal object TravelInviteIntent {
     private val mutableToken: MutableStateFlow<String?> = MutableStateFlow(null)
     val token: StateFlow<String?> = mutableToken.asStateFlow()
 
-    fun receive(token: String) {
+    fun receive(token: String?) {
         mutableToken.value = token
     }
 

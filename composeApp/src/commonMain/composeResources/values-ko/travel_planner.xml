@@ -254,6 +254,9 @@
     <string name="travel_empty_description">쉬는 날에 맞춰 첫 여행을 계획해볼까요?</string>
     <string name="travel_login_title">로그인이 필요한 기능이에요</string>
     <string name="travel_login_action">로그인 하러가기</string>
+    <string name="travel_invite_confirm_heading">이 여행에 참여할까요?</string>
+    <string name="travel_invite_join_action">참여하기</string>
+    <string name="travel_invite_later">다음에</string>
     <string name="travel_invite_heading">함께 여행을 계획해볼까요?</string>
     <string name="travel_invite_description">참여하면 일정을 함께 보고 수정할 수 있어요</string>
     <string name="travel_invite_expired_title">초대 기간이 지났어요</string>

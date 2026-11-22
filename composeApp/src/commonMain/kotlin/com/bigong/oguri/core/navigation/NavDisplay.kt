@@ -32,7 +32,7 @@ import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
 import com.bigong.oguri.core.analytics.initializeOguriAnalytics
 import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
-import com.bigong.oguri.core.deeplink.parseTravelInvite
+import com.bigong.oguri.core.deeplink.readTravelInviteLink
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
@@ -223,7 +223,7 @@ fun NavDisplay(
             ) {
                 return@LaunchedEffect
             }
-            val invite = parseTravelInvite(deepLinkUrl)
+            val invite = readTravelInviteLink(deepLinkUrl)
             if (invite != null &&
                 (currentDestination.hasRoute<RouteModel.TravelLogin>() ||
                     currentDestination.hasRoute<RouteModel.TravelOnboarding>() ||
@@ -233,7 +233,7 @@ fun NavDisplay(
             }
             appGraph.deepLinkStore.clearConsumed(urlText = deepLinkUrl)
             if (invite != null) {
-                TravelInviteIntent.receive(invite)
+                TravelInviteIntent.receive(invite.token)
                 navigator.navigateToTravelInvite()
                 return@LaunchedEffect
             }

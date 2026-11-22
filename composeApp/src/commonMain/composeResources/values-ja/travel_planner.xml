@@ -254,6 +254,9 @@
     <string name="travel_empty_description">休みに合わせて初めての旅行を計画しましょう。</string>
     <string name="travel_login_title">ログインが必要な機能です</string>
     <string name="travel_login_action">ログインする</string>
+    <string name="travel_invite_confirm_heading">この旅行に参加しますか？</string>
+    <string name="travel_invite_join_action">参加する</string>
+    <string name="travel_invite_later">あとで</string>
     <string name="travel_invite_heading">一緒に旅行を計画しませんか？</string>
     <string name="travel_invite_description">参加すると日程を一緒に見て編集できます</string>
     <string name="travel_invite_expired_title">招待の期限が切れました</string>

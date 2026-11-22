@@ -254,6 +254,9 @@
     <string name="travel_empty_description">Plan your first trip around your days off.</string>
     <string name="travel_login_title">Sign in to use this feature</string>
     <string name="travel_login_action">Sign in</string>
+    <string name="travel_invite_confirm_heading">Join this trip?</string>
+    <string name="travel_invite_join_action">Join trip</string>
+    <string name="travel_invite_later">Maybe later</string>
     <string name="travel_invite_heading">Plan a trip together?</string>
     <string name="travel_invite_description">Join to view and edit the itinerary together.</string>
     <string name="travel_invite_expired_title">This invitation has expired</string>
