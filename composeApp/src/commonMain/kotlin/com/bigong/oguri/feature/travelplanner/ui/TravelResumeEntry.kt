@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bigong.oguri.core.designsystem.Mint80
+import com.bigong.oguri.core.designsystem.Mint90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
@@ -91,7 +91,7 @@ private fun TravelResumeCard(plan: TravelPlanSummary, onClick: () -> Unit) {
                         modifier = Modifier.background(colors.mintContainer, CircleShape)
                             .padding(horizontal = 7.dp, vertical = 2.dp),
                         style = labelStyle,
-                        color = Mint80,
+                        color = Mint90,
                     )
                 }
             }
@@ -159,7 +159,7 @@ internal fun TravelDestinationEntry(
     } else {
         TravelOutlineButton(onClick = onCreate, modifier = modifier.fillMaxWidth()) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(16.dp), tint = colors.mint)
+                Icon(painterResource(Res.drawable.ic_travel_plus), null, Modifier.size(16.dp))
                 Text(stringResource(Res.string.travel_create_from_city), style = travelTextStyle(18, 22, FontWeight.SemiBold))
             }
         }

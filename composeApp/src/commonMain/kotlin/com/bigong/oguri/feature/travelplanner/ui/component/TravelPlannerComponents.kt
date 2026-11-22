@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.LightOguriColorPalette
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
@@ -183,10 +185,15 @@ internal fun TravelOutlineButton(
     enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
+    val colors = OguriTheme.colors
     TravelButton(
-        onClick, modifier, enabled, OguriTheme.colors.mintContainer, borderColor = OguriTheme.colors.mint,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        backgroundColor = if (enabled) Mint5 else colors.backgroundTertiary,
+        borderColor = if (enabled) colors.mint else colors.borderStrong,
         textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
-        contentColor = OguriTheme.colors.textPrimary,
+        contentColor = Mint90,
         minHeight = 45.dp,
         content = content,
     )
