@@ -25,6 +25,21 @@ class TravelPlacesOverviewTest {
     private val trip = UUID.randomUUID()
 
     @Test
+    fun `장소 검색은 선택한 도시의 좌표를 사용하고 기존 여행은 도시 이름으로 검색한다`() {
+        val center = TravelPlaceSearchCenter(46.14, -60.19)
+        `when`(plans.cityForPlaces("member", trip, "시드니 · 캐나다")).thenReturn(TravelPlaceSearchCity("시드니 · 캐나다", center))
+        `when`(plans.cityForPlaces("member", trip, null)).thenReturn(TravelPlaceSearchCity("오사카", null))
+        `when`(google.search("박물관", "ko", center)).thenReturn(emptyList())
+        `when`(google.search("박물관 오사카", "ko", null)).thenReturn(emptyList())
+
+        service.search("member", trip, "박물관", "ko", "시드니 · 캐나다")
+        service.search("member", trip, "박물관", "ko")
+
+        verify(google).search("박물관", "ko", center)
+        verify(google).search("박물관 오사카", "ko", null)
+    }
+
+    @Test
     fun `접근이 종료되면 외부 장소를 조회하지 않는다`() {
         doThrow(ResponseStatusException(HttpStatus.NOT_FOUND)).`when`(plans).placeIdsForPlan("removed", trip)
         assertThrows(ResponseStatusException::class.java) { service.planPlaces("removed", trip, "ko") }
@@ -78,11 +93,9 @@ class TravelPlacesOverviewTest {
         val limited = TravelPlacesService(plans, google, metrics, 0)
         val failure = assertThrows(ResponseStatusException::class.java) { limited.planPlaceBatch("member", trip, places, "ko") }
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, failure.statusCode)
-        assertThrows(ResponseStatusException::class.java) { limited.cityTimeZone("member", "city") }
         fun rejected(operation: String): Double =
             metrics.get("oguri.travel.places.rejected").tags("reason", "budget", "operation", operation).counter().count()
         assertEquals(2.0, rejected("details"))
-        assertEquals(1.0, rejected("city_time_zone"))
         verifyNoInteractions(google)
     }
 

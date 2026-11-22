@@ -78,6 +78,12 @@ bash scripts/verify_ios_simulator.sh
 서버 설정은 기본적으로 켜져 있으며 환경 변수 변경은 다음 서버 시작 시 적용된다.
 
 
+## 운영 서버의 여행 알림 설정
+
+- Render 백엔드의 `TRAVEL_REMINDER_FIREBASE_PROJECT_ID`에 배포 앱에 연결된 Firebase 프로젝트 ID를 설정한다. 프로젝트 ID가 비어 있거나 `TRAVEL_REMINDERS_ENABLED=false`이면 출발 전 여행도 알림을 예약할 수 없다.
+- Firebase Cloud Messaging API를 활성화하고 발송 권한이 있는 서비스 계정을 사용한다. Render Secret File을 사용하는 경우 `GOOGLE_APPLICATION_CREDENTIALS`에 `/etc/secrets/<파일명>`을 설정한다. [FCM 인증](https://firebase.google.com/docs/cloud-messaging/send/v1-api) · [Render Secret Files](https://render.com/docs/configure-environment-variables#secret-files)
+- 설정을 적용한 뒤 Android에서 출발 전 여행의 알림을 예약하고 수신을 확인한다. 예약이 저장되어도 발송 권한이나 실제 수신까지 검증된 것은 아니다.
+
 ## CI의 여행 지도와 Firebase 설정
 
 - Android CI와 배포 지도에는 같은 `GOOGLE_MAPS_ANDROID_API_KEY` GitHub Actions 시크릿을 전달한다. Android 앱 제한을 적용한 키에는 디버그와 배포 패키지명 및 각각의 서명 인증서 SHA-1을 등록한다. Play 앱 서명 사용 시 배포 인증서는 Play Console에서 확인한다.
@@ -112,3 +118,19 @@ bash scripts/verify_ios_simulator.sh
 Android API 36 에뮬레이터에서 360dp 폭, 한국어, 기본 글자 크기의 내 여행, 지난 여행 펼침, 빈 일정의 실제 Google 지도, 지도 접기, 장소 검색·직접 추가 시트를 임시 데이터로 렌더링해 대조했다. 검증용 Activity와 manifest는 최종 소스에 포함하지 않는다. 검색 결과의 Google Maps 출처와 직접 추가 장소의 실제 지도 표시 제약 안내는 유지한다. 다크 모드의 주요 버튼은 기존 대비 조합을 유지한다.
 
 최종 검증은 `:composeApp:assembleDebug`, `:composeApp:testDebugUnitTest`, `git diff --check`로 수행한다. 더보기·홈·기간/도시 상세는 레이어 사양과 소스 대조이며, 이번 에뮬레이터 확인은 실제 로그인·초대·저장 요청, iOS 실행, 큰 글자와 다크 모드 전체 화면 검증을 포함하지 않는다.
+
+## GeoNames 도시 데이터 적재
+
+Flyway V52가 적용된 PostgreSQL에 연결한 뒤 실행한다. 연결 정보는 표준 PostgreSQL 환경 변수(`PGHOST`, `PGDATABASE`, `PGUSER` 등)로 전달한다.
+
+```sh
+mkdir -p /tmp/oguri-geonames
+for file in allCountries.zip alternateNamesV2.zip admin1CodesASCII.txt countryInfo.txt; do
+    curl -fL --retry 2 "https://download.geonames.org/export/dump/$file" -o "/tmp/oguri-geonames/$file" || exit 1
+done
+python3 scripts/import_geonames.py /tmp/oguri-geonames
+```
+
+출처는 [GeoNames](https://www.geonames.org/export/)이며 [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)을 따른다. 현재 거주지 데이터에 국가·지역을 붙이고, 한국어 대표 이름과 한글·영문 별칭을 골라 적재한다. 기존 도시 ID는 유지하고 중복 별칭은 건너뛴다.
+
+저장 공간이 제한된 DB에는 같은 배포본의 `cities500.zip`도 내려받고 `--compact`를 붙인다. 인구 기준 도시 목록과 한국어 대표 이름이 있는 추가 거주지를 함께 적재한다.

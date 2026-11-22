@@ -37,6 +37,7 @@ data class TravelPlanDetails(
     val dates: TravelDates,
     val source: TravelPlanSource? = null,
     val cities: List<String> = listOf(city),
+    val catalogCities: Map<String, TravelCitySuggestion> = emptyMap(),
 ) {
     init {
         require(cities.size in 1..10 && cities.distinct().size == cities.size && cities.first() == city)

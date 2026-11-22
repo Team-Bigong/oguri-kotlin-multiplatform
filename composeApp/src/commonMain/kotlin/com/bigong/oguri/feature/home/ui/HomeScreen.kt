@@ -16,7 +16,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint60
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
 import com.bigong.oguri.core.ui.component.NetworkErrorRetryContent
@@ -36,7 +38,6 @@ import oguri.composeapp.generated.resources.home_cta_more_recommend
 import oguri.composeapp.generated.resources.home_greeting_name
 import oguri.composeapp.generated.resources.home_greeting_question
 import oguri.composeapp.generated.resources.home_guide_match_places
-import oguri.composeapp.generated.resources.home_guide_match_places_highlight
 import oguri.composeapp.generated.resources.home_guide_monthly_top_periods
 import oguri.composeapp.generated.resources.home_guide_monthly_top_periods_highlight
 import oguri.composeapp.generated.resources.home_guide_trip_products
@@ -161,7 +162,8 @@ fun HomeScreen(
                 GuideHeader(
                     iconResource = Res.drawable.ic_plane,
                     titleText = stringResource(Res.string.home_guide_match_places),
-                    highlightedText = stringResource(Res.string.home_guide_match_places_highlight),
+                    iconTint = Mint60,
+                    subtitleColor = Neutral50,
                     subtitleText = stringResource(Res.string.home_hint_place_cards),
                     modifier = Modifier.padding(horizontal = 20.dp),
                 )

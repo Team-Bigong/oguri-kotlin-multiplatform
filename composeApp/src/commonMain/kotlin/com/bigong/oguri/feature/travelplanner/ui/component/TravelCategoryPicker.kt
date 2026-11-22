@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelVisitCategory
 import oguri.composeapp.generated.resources.*
@@ -88,7 +89,7 @@ internal fun TravelChoiceChip(
             .heightIn(min = chipHeight)
             .widthIn(min = if (categoryChip) 52.dp else Dp.Unspecified)
             .background(if (selected) Mint40 else if (segmented) Color.Transparent else colors.surfaceCard, CircleShape)
-            .then(if (selected || segmented) Modifier else Modifier.border(1.dp, colors.borderSubtle, CircleShape))
+            .then(if (segmented) Modifier else Modifier.border(1.dp, if (selected) Mint40 else colors.borderSubtle, CircleShape))
             .padding(horizontal = 13.dp, vertical = 4.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -96,10 +97,9 @@ internal fun TravelChoiceChip(
             label,
             style = travelTextStyle(textSize, lineHeight, if (categoryChip && selected) FontWeight.SemiBold else if (categoryChip) FontWeight.Normal else FontWeight.Medium),
             color = when {
-                !enabled -> colors.textSecondary
+                !enabled -> Neutral40
                 !selected -> colors.textTertiary
-                categoryChip || segmented -> Neutral100
-                else -> colors.textPrimary
+                else -> if (categoryChip || segmented) Neutral100 else colors.textPrimary
             },
         )
     }

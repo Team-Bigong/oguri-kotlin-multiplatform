@@ -8,6 +8,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
+import com.bigong.oguri.core.designsystem.LightOguriColorPalette
 import com.bigong.oguri.core.designsystem.OguriTheme
 import oguri.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -17,11 +18,20 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import platform.UIKit.UIView
 
 data class TravelMapPinStyle(
-    val foregroundArgb: Int,
+    val outlineArgb: Int,
     val labelSize: Float,
     val selectedLabelSize: Float,
     val labelFontUri: String,
     val selectedLabelFontUri: String,
+)
+
+data class TravelMapDistanceStyle(
+    val textArgb: Int,
+    val outlineArgb: Int,
+    val connectionArgb: Int,
+    val fontSize: Float,
+    val fontUri: String,
+    val outlineWidth: Float,
 )
 
 interface TravelMapHost {
@@ -30,6 +40,9 @@ interface TravelMapHost {
         viewportRequest: Int,
         focusedVisitId: String?,
         pinStyle: TravelMapPinStyle,
+        distanceLabels: List<String>,
+        distanceStyle: TravelMapDistanceStyle,
+        darkTheme: Boolean,
     )
 
     fun dispose()
@@ -60,12 +73,21 @@ internal actual fun PlatformTravelMap(
     modifier: Modifier,
 ) {
     val pinStyle = TravelMapPinStyle(
-        OguriTheme.colors.textOnMint.toArgb(),
+        LightOguriColorPalette.surfaceCard.toArgb(),
         OguriTheme.typography.labelMedium.fontSize.value * LocalDensity.current.fontScale,
         OguriTheme.typography.labelLarge.fontSize.value * LocalDensity.current.fontScale,
         Res.getUri("font/pretendard_medium.ttf"),
         Res.getUri("font/pretendard_semi_bold.ttf"),
     )
+    val distanceStyle = TravelMapDistanceStyle(
+        textArgb = OguriTheme.colors.textTertiary.toArgb(),
+        outlineArgb = travelMapBackground().toArgb(),
+        connectionArgb = travelConnectionColor.toArgb(),
+        fontSize = OguriTheme.typography.caption.fontSize.value * LocalDensity.current.fontScale,
+        fontUri = Res.getUri("font/pretendard_regular.ttf"),
+        outlineWidth = TRAVEL_MAP_DISTANCE_OUTLINE_WIDTH,
+    )
+    val distanceLabels = scene.lines.map { travelDistanceLabel(it) }
     val hostFactory = factory
     if (hostFactory == null) {
         LaunchedEffect(Unit) { onUnavailable() }
@@ -81,8 +103,9 @@ internal actual fun PlatformTravelMap(
     DisposableEffect(host) {
         onDispose { host.dispose() }
     }
-    LaunchedEffect(host, scene, viewportRequest, focusedVisitId, pinStyle) {
-        host.render(scene, viewportRequest, focusedVisitId, pinStyle)
+    val darkTheme = OguriTheme.isDarkTheme
+    LaunchedEffect(host, scene, viewportRequest, focusedVisitId, pinStyle, distanceLabels, distanceStyle, darkTheme) {
+        host.render(scene, viewportRequest, focusedVisitId, pinStyle, distanceLabels, distanceStyle, darkTheme)
     }
     UIKitView(factory = { container }, modifier = modifier)
 }

@@ -1,6 +1,5 @@
 package com.bigong.oguri.service
 
-import com.bigong.oguri.dto.response.TravelCitySuggestion
 import com.bigong.oguri.dto.response.TravelDayPlacesResponse
 import com.bigong.oguri.dto.response.TravelPlaceResponse
 import io.micrometer.core.instrument.MeterRegistry
@@ -21,7 +20,6 @@ class TravelPlacesService(
 ) {
     private var currentMinute: Long = Long.MIN_VALUE
     private var totalRequests: Int = 0
-    private var cityRequests: Int = 0
     private val memberRequests: MutableMap<String, Int> = mutableMapOf()
 
     fun search(
@@ -35,27 +33,8 @@ class TravelPlacesService(
         require(trimmed.length in 2..120)
         val city = plans.cityForPlaces(memberId, tripId, selectedCity)
         reserve(memberId, 1, TravelPlacesOperation.SEARCH)
-        return googleCall { google.search("$trimmed $city", supportedLanguage(language)) }
-    }
-
-    fun cities(
-        clientKey: String,
-        query: String,
-        language: String,
-    ): List<TravelCitySuggestion> {
-        val trimmed = query.trim()
-        require(trimmed.length in 2..120)
-        reserve(clientKey, 1, TravelPlacesOperation.CITY_SEARCH)
-        return googleCall { google.cities(trimmed, supportedLanguage(language)) }
-    }
-
-    fun cityTimeZone(
-        clientKey: String,
-        placeId: String,
-    ): String? {
-        require(CITY_PLACE_ID.matches(placeId))
-        reserve(clientKey, 1, TravelPlacesOperation.CITY_TIME_ZONE)
-        return googleCall { google.cityTimeZone(placeId) }
+        val textQuery = if (city.center == null) "$trimmed ${city.label}" else trimmed
+        return googleCall { google.search(textQuery, supportedLanguage(language), city.center) }
     }
 
     private fun <Result> googleCall(block: () -> Result): Result =
@@ -114,20 +93,14 @@ class TravelPlacesService(
         if (minute != currentMinute) {
             currentMinute = minute
             totalRequests = 0
-            cityRequests = 0
             memberRequests.clear()
         }
         val memberTotal = memberRequests[memberId] ?: 0
-        val memberLimit = if (operation.cityLookup) CITY_REQUESTS_PER_CLIENT else MEMBER_REQUESTS_PER_MINUTE
-        if (totalRequests + count > requestsPerMinute ||
-            memberTotal + count > memberLimit ||
-            (operation.cityLookup && cityRequests + count > CITY_REQUESTS_PER_MINUTE)
-        ) {
+        if (totalRequests + count > requestsPerMinute || memberTotal + count > MEMBER_REQUESTS_PER_MINUTE) {
             metrics.counter("oguri.travel.places.rejected", "operation", operation.tag, "reason", "budget").increment(count.toDouble())
             throw ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS)
         }
         totalRequests += count
-        if (operation.cityLookup) cityRequests += count
         memberRequests[memberId] = memberTotal + count
     }
 
@@ -141,10 +114,17 @@ class TravelPlacesService(
 
     private companion object {
         const val MAX_DETAILS_BATCH: Int = 30
-        val CITY_PLACE_ID: Regex = Regex("[A-Za-z0-9_-]{1,512}")
-        const val CITY_REQUESTS_PER_CLIENT: Int = 20
-        const val CITY_REQUESTS_PER_MINUTE: Int = 90
         const val SECONDS_PER_MINUTE: Long = 60
         const val MEMBER_REQUESTS_PER_MINUTE: Int = 90
     }
 }
+
+internal data class TravelPlaceSearchCity(
+    val label: String,
+    val center: TravelPlaceSearchCenter?,
+)
+
+internal data class TravelPlaceSearchCenter(
+    val latitude: Double,
+    val longitude: Double,
+)

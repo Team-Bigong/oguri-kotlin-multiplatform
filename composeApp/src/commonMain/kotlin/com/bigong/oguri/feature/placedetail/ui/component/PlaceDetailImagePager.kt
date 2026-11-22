@@ -16,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.placeDetailImageBackgroundColor
 import com.bigong.oguri.core.ui.component.NetworkImage
 import com.bigong.oguri.core.util.extension.noRippleClickable
 
@@ -28,7 +30,10 @@ fun PlaceDetailImagePager(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { imageUrls.size })
     val heroHeight = 270.dp
 
-    Box(modifier = modifier.fillMaxWidth().height(heroHeight)) {
+    Box(
+        modifier = modifier.fillMaxWidth().height(heroHeight)
+            .background(placeDetailImageBackgroundColor(OguriTheme.isDarkTheme)),
+    ) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxWidth().height(heroHeight),
