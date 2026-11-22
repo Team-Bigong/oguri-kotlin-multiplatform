@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -57,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
+import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
 import com.bigong.oguri.domain.model.TravelPlan
@@ -92,6 +94,8 @@ internal fun TravelPlaceSearchSheet(
     val search = state.placeSearch ?: return
     val colors = OguriTheme.colors
     val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val keyboardVisible by rememberUpdatedState(WindowInsets.ime.getBottom(LocalDensity.current) > 0)
     val day = state.selectedDay
     val draft = state.visitDraft
     var manual by rememberSaveable { mutableStateOf(draft != null) }
@@ -113,7 +117,11 @@ internal fun TravelPlaceSearchSheet(
     }
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = {
         if (it != SheetValue.Hidden) true
-        else if (!canDismiss) false
+        else if (keyboardVisible) {
+            focus.clearFocus(force = true)
+            keyboard?.hide()
+            false
+        } else if (!canDismiss) false
         else if (hasDraft) {
             confirmDiscard = true
             false
@@ -121,12 +129,11 @@ internal fun TravelPlaceSearchSheet(
     })
     val dismissSheet = rememberTravelSheetDismiss(sheet, close)
     val targetDay = if (manual) draft?.dayNumber ?: day else day
-    val keyboardVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     ModalBottomSheet(scrimColor = TravelSheetScrim,
         containerColor = colors.backgroundSecondary,
         contentColor = colors.textPrimary,
-        onDismissRequest = close,
+        onDismissRequest = { if (!sheet.isVisible) close() },
         sheetState = sheet,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         dragHandle = {
@@ -134,7 +141,7 @@ internal fun TravelPlaceSearchSheet(
                 .background(colors.borderStrong, CircleShape))
         },
     ) {
-        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
+        Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).dismissKeyboardOnOutsideTouch()) {
             Row(
                 Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp, top = 0.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
