@@ -282,7 +282,6 @@ internal fun TravelPlanScreen(
         TravelPlanPane(
             scene = scene,
             hideMap = unappliedOrder != null || showPartialFailure || state.needsLatestPlan,
-            emptyDay = visits.isEmpty(),
             viewportRequest = state.viewportRequest,
             focusedVisitId = state.mapFocusedVisitId,
             onMarkerClick = onMarkerClick,

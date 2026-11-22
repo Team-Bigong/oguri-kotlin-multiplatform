@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapLine
@@ -10,6 +11,9 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapScene
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.travel_distance_kilometers
 import org.jetbrains.compose.resources.stringResource
+
+internal const val TRAVEL_MAP_ASPECT_RATIO: Float = 320f / 200f
+internal val TravelMapHorizontalPadding = 20.dp
 
 internal val travelConnectionColor: Color get() = Neutral40
 

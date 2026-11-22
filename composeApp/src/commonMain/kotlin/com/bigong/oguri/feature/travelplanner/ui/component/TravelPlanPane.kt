@@ -68,7 +68,6 @@ internal fun TravelPlanPane(
     onMarkerClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     hideMap: Boolean = false,
-    emptyDay: Boolean = false,
     status: @Composable () -> Unit,
     content: @Composable ColumnScope.(Boolean) -> Unit,
 ) {
@@ -85,7 +84,8 @@ internal fun TravelPlanPane(
         val maxMapHeight = (maxHeight - chromeHeight - (112 * density.fontScale).dp).coerceAtLeast(0.dp)
         val canShowMap = !hideMap && maxMapHeight >= 120.dp
         val showMap = canShowMap && mapExpanded
-        val mapHeight = (if (emptyDay) 200.dp else 182.dp).coerceAtMost(maxMapHeight)
+        val mapHeight = ((maxWidth - TravelMapHorizontalPadding * 2).coerceAtLeast(0.dp) / TRAVEL_MAP_ASPECT_RATIO)
+            .coerceAtMost(maxMapHeight)
         Column(Modifier.fillMaxSize()) {
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
             Spacer(Modifier.height(16.dp))
@@ -103,7 +103,7 @@ internal fun TravelPlanPane(
                 ) {
                     Column {
                         if (mapUnavailable) {
-                            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(mapHeight)
+                            Column(Modifier.fillMaxWidth().padding(horizontal = TravelMapHorizontalPadding).height(mapHeight)
                                 .background(OguriTheme.colors.backgroundTertiary, RoundedCornerShape(8.dp))
                                 .border(1.dp, OguriTheme.colors.borderSubtle, RoundedCornerShape(8.dp)),
                                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
@@ -120,7 +120,7 @@ internal fun TravelPlanPane(
                             }
                         } else {
                             val shape = RoundedCornerShape(8.dp)
-                            Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(mapHeight)
+                            Box(Modifier.fillMaxWidth().padding(horizontal = TravelMapHorizontalPadding).height(mapHeight)
                                 .clip(shape).border(1.dp, OguriTheme.colors.borderSubtle, shape)
                             ) {
                                 key(mapAttempt) {
