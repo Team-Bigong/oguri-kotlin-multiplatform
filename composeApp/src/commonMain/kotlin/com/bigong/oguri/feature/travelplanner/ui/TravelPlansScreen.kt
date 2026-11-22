@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -88,10 +92,12 @@ internal fun TravelPlansScreen(
         baseBottomPadding = if (showBanner) BottomTabBannerHeight + BottomTabBannerContentSpacing else 0.dp,
     )
     val contentBottomPadding = if (showBanner) navigationPadding + BottomTabBannerContentSpacing else navigationPadding
+    val safeDrawing = WindowInsets.safeDrawing
     TravelPlannerPage(
         title = if (onBack != null) stringResource(Res.string.travel_list) else "",
         onBack = onBack,
         modifier = modifier,
+        contentInsets = if (showBanner) safeDrawing.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal) else safeDrawing,
     ) {
         val failure = state.failure
         val plans = state.plans
