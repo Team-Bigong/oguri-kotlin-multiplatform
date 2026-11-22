@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +32,8 @@ fun GuideHeader(
     highlightedText: String? = null,
     subtitleText: String? = null,
     modifier: Modifier = Modifier,
+    iconTint: Color = Mint70,
+    subtitleColor: Color = Neutral60,
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(space = 8.dp),
@@ -40,7 +43,7 @@ fun GuideHeader(
         Image(
             painter = painterResource(resource = iconResource),
             contentDescription = null,
-            colorFilter = ColorFilter.tint(Mint70),
+            colorFilter = ColorFilter.tint(iconTint),
             modifier = Modifier.size(size = 24.dp),
         )
         Column {
@@ -68,7 +71,7 @@ fun GuideHeader(
                 Text(
                     text = subtitleText,
                     style = OguriTheme.typography.labelMedium,
-                    color = Neutral60,
+                    color = subtitleColor,
                 )
             }
         }

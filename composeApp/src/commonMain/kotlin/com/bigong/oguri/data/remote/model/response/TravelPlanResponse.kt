@@ -14,6 +14,7 @@ internal data class TravelPlanSummaryResponse(
     val source: TravelPlanSourceResponse? = null,
     val memberCount: Int? = null,
     val cities: List<String> = listOf(city),
+    val catalogCities: List<TravelCitySuggestionResponse> = emptyList(),
 )
 
 @Serializable

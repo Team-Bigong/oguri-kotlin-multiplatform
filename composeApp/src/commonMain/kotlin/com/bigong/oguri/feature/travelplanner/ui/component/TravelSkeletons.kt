@@ -2,6 +2,7 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -53,7 +54,7 @@ internal fun TravelPlanSkeleton(modifier: Modifier = Modifier) {
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),
         ) {
-            SkeletonBox(Modifier.fillMaxWidth().height(230.dp))
+            SkeletonBox(Modifier.fillMaxWidth().aspectRatio(TRAVEL_MAP_ASPECT_RATIO))
             Spacer(Modifier.height(20.dp))
             SkeletonBox(Modifier.size(width = 128.dp, height = 16.dp), skeletonLineShape)
             Spacer(Modifier.height(16.dp))

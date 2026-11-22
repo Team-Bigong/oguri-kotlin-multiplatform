@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import oguri.composeapp.generated.resources.*
@@ -26,7 +27,7 @@ internal fun TravelFormSheet(
     shape: Shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     containerColor: Color = OguriTheme.colors.backgroundSecondary,
 ) {
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f), onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor, dragHandle = { TravelSheetHandle() }) {
+    ModalBottomSheet(scrimColor = TravelSheetScrim, onDismissRequest = onDismissRequest, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), shape = shape, containerColor = containerColor, contentColor = Neutral100, dragHandle = { TravelSheetHandle() }) {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             ProvideTextStyle(OguriTheme.typography.cardTitle, title)
             ProvideTextStyle(OguriTheme.typography.bodyMedium, text)

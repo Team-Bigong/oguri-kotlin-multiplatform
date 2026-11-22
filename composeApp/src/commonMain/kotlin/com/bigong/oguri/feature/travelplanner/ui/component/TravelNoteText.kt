@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint90
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import io.ktor.http.Url
@@ -74,7 +75,7 @@ internal fun TravelNoteText(
             if (!linksOnly) append(note.substring(previousEnd))
         }
     }
-    Text(annotated, modifier, style = style, color = OguriTheme.colors.textPrimary)
+    Text(annotated, modifier, style = style, color = Neutral100)
 }
 
 internal data class TravelNoteLink(val range: IntRange, val url: String)

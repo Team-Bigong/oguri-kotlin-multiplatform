@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import oguri.composeapp.generated.resources.ic_travel_drag
 import oguri.composeapp.generated.resources.ic_travel_note
 import oguri.composeapp.generated.resources.ic_travel_undo
@@ -10,8 +11,19 @@ import oguri.composeapp.generated.resources.travel_removed_visit
 import oguri.composeapp.generated.resources.travel_save_failed_label
 import oguri.composeapp.generated.resources.travel_delete
 import androidx.compose.foundation.border
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,33 +41,56 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Mint10
-import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange20
+import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
+import com.bigong.oguri.feature.travelplanner.ui.component.travelAccentForeground
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanSkeleton
+import com.bigong.oguri.core.util.extension.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
+import com.bigong.oguri.core.util.extension.perform
+import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelPlanFailure
@@ -74,6 +109,8 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitDetailsShe
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
 import com.bigong.oguri.feature.travelplanner.ui.component.label
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
+import com.bigong.oguri.feature.travelplanner.ui.component.travelConnectionColor
+import com.bigong.oguri.feature.travelplanner.ui.component.travelDistanceLabel
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
@@ -98,6 +135,7 @@ import oguri.composeapp.generated.resources.travel_apply
 import oguri.composeapp.generated.resources.travel_cancel
 import oguri.composeapp.generated.resources.travel_day
 import oguri.composeapp.generated.resources.travel_day_outside_trip
+import oguri.composeapp.generated.resources.travel_distance_to_next_place
 import oguri.composeapp.generated.resources.travel_discard_draft
 import oguri.composeapp.generated.resources.travel_empty_day
 import oguri.composeapp.generated.resources.travel_completed_trip
@@ -107,7 +145,6 @@ import oguri.composeapp.generated.resources.travel_has_note
 import oguri.composeapp.generated.resources.travel_manage
 import oguri.composeapp.generated.resources.travel_move_down
 import oguri.composeapp.generated.resources.travel_move_up
-import oguri.composeapp.generated.resources.travel_move_visit
 import oguri.composeapp.generated.resources.ic_travel_offline
 import oguri.composeapp.generated.resources.travel_offline_snapshot
 import oguri.composeapp.generated.resources.travel_order_cannot_reapply
@@ -134,6 +171,7 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun TravelPlanScreen(
     state: TravelPlannerUiState,
+    referenceCoordinates: List<TravelCoordinates>,
     onBack: () -> Unit,
     onOpenPlans: () -> Unit,
     onReload: () -> Unit,
@@ -227,8 +265,8 @@ internal fun TravelPlanScreen(
             } ?: savedVisits
         val canEdit = !state.isSaving && !state.isLoading && !state.canRetrySave && !state.needsLatestPlan && !state.isOffline
         if (state.isOffline) {
-            Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral10).heightIn(min = 42.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(oguri.composeapp.generated.resources.Res.drawable.ic_travel_offline), null, Modifier.size(18.dp), tint = OguriTheme.colors.textSecondary)
+            Row(Modifier.fillMaxWidth().background(OguriTheme.colors.backgroundTertiary).heightIn(min = 42.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(painterResource(oguri.composeapp.generated.resources.Res.drawable.ic_travel_offline), null, Modifier.size(18.dp), tint = OguriTheme.colors.textTertiary)
                 Text(offlineMessage, style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textSecondary)
             }
         }
@@ -242,15 +280,18 @@ internal fun TravelPlanScreen(
 
         val showPartialFailure = state.dayPlacesIncomplete && !state.isOffline
         val unappliedOrder = state.unappliedOrder?.takeIf { it.dayNumber == state.selectedDay || it.isOutsideTrip(plan) }
-        val cityCenter = TravelCity.centerOf(plan.summary.details.city)
+        val details = plan.summary.details
+        val cityCenter = details.catalogCities[details.city]?.coordinates ?: TravelCity.centerOf(details.city)
         val scene =
-            remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter) {
+            remember(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter, referenceCoordinates) {
                 travelMapScene(state.selectedDay, visits, state.dayPlaces, state.selectedVisitId, cityCenter)
+                    .copy(referenceCoordinates = referenceCoordinates)
             }
+        val connectionsFrom = remember(scene.lines) { scene.lines.associateBy { it.fromVisitId } }
+        val connectedTo = remember(scene.lines) { scene.lines.mapTo(mutableSetOf()) { it.toVisitId } }
         TravelPlanPane(
             scene = scene,
             hideMap = unappliedOrder != null || showPartialFailure || state.needsLatestPlan,
-            emptyDay = visits.isEmpty(),
             viewportRequest = state.viewportRequest,
             focusedVisitId = state.mapFocusedVisitId,
             onMarkerClick = onMarkerClick,
@@ -291,13 +332,13 @@ internal fun TravelPlanScreen(
                     val shape = RoundedCornerShape(8.dp)
                     Column(
                         Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
-                            .background(com.bigong.oguri.core.designsystem.Orange5, shape)
-                            .border(1.dp, com.bigong.oguri.core.designsystem.Orange20, shape).padding(16.dp),
+                            .background(Orange5, shape)
+                            .border(1.dp, Orange20, shape).padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Text(stringResource(Res.string.travel_order_save_failed), style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                         Text(stringResource(Res.string.travel_order_conflict_description), style = OguriTheme.typography.caption, color = OguriTheme.colors.textSecondary)
-                        Column(Modifier.fillMaxWidth().background(Neutral0, shape).padding(12.dp)) {
+                        Column(Modifier.fillMaxWidth().background(OguriTheme.colors.surfaceCard, shape).padding(12.dp)) {
                             unappliedOrder.visitIds.forEachIndexed { index, id ->
                                 val details = latestById[id]?.details
                                 val name = details?.name ?: state.dayPlaces[details?.googlePlaceId]?.name
@@ -322,7 +363,7 @@ internal fun TravelPlanScreen(
                                 TravelTextButton(onClick = onReload, enabled = !state.isLoading) { Text(stringResource(Res.string.travel_reload)) }
                             } else if (!sameOrder && rebasedVisitIds != null) {
                                 TravelTextButton(onClick = onApplyUnappliedOrder, enabled = canEdit) {
-                                    Text(stringResource(Res.string.travel_apply_order), style = OguriTheme.typography.labelLarge, color = OguriTheme.colors.textPrimary)
+                                    Text(stringResource(Res.string.travel_apply_order), style = OguriTheme.typography.labelLarge, color = Neutral100)
                                 }
                             }
                         }
@@ -342,7 +383,7 @@ internal fun TravelPlanScreen(
                     style = travelTextStyle(15, 18, FontWeight.Medium),
                 )
                 if (state.canRetrySave) {
-                    Text(stringResource(Res.string.travel_save_failed_label), color = com.bigong.oguri.core.designsystem.Orange50, style = OguriTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.travel_save_failed_label), color = OguriTheme.colors.orange, style = OguriTheme.typography.bodySmall)
                     TravelTextButton(onClick = onRetrySave, enabled = !state.isSaving) { Text(stringResource(Res.string.travel_retry)) }
                 }
                 if (!state.isOffline && !state.isSaving && (failure == null || (unappliedOrder != null && !state.needsLatestPlan))) {
@@ -356,6 +397,9 @@ internal fun TravelPlanScreen(
             val visitListState = rememberLazyListState()
             var draggedId by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf<String?>(null) }
             var dragPosition by remember(state.selectedDay, plan.structureRevision, orderRevision) { mutableStateOf(0f) }
+            var releasedDrag by remember(state.selectedDay, plan.structureRevision, orderRevision) {
+                mutableStateOf<Pair<String, Float>?>(null)
+            }
             LaunchedEffect(state.listFocusRequest) {
                 val index = visits.indexOfFirst { it.id == state.selectedVisitId }
                 if (state.listFocusRequest > 0 && index >= 0) {
@@ -364,7 +408,7 @@ internal fun TravelPlanScreen(
             }
             LazyColumn(
                 state = visitListState,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).clipToBounds(),
                 contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 8.dp),
             ) {
                 val undo = state.visitUndo?.takeIf { it.dayNumber == state.selectedDay }
@@ -381,55 +425,101 @@ internal fun TravelPlanScreen(
                 }
                 itemsIndexed(visits, key = { _, visit -> visit.id }) { index, visit ->
                     if (undo?.position == index) TravelRemovedVisitRow(undo.title, canEdit, onUndoVisit)
-                    TravelVisitRow(
-                        visit = visit,
-                        title =
-                            visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
-                                ?: stringResource(Res.string.travel_visit_fallback, index + 1),
-                        number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
-                        selected = state.selectedVisitId == visit.id,
-                        canEdit = canEdit && unappliedOrder == null,
-                        addedAfterConflict = unappliedOrder != null && visit.id !in unappliedOrder.visitIds,
-                        canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
-                        canMoveUp = index > 0,
-                        canMoveDown = index < visits.lastIndex,
-                        onRemove = { onRemoveFromList(visit) },
-                        onOpen = { if (canEdit) onOpenVisit(visit) else onInspectVisit(visit.id) },
-                        onMove = { offset -> onMoveVisit(visit, offset) },
-                        onDragStart = {
-                            val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
-                            if (row != null) {
-                                draggedId = visit.id
-                                dragPosition = row.offset + row.size / 2f
-                                dragOrder = savedVisits.map(TravelVisit::id)
-                            }
-                        },
-                        onDrag = { delta ->
-                            val order = dragOrder
-                            if (order != null && draggedId == visit.id) {
-                                dragPosition += delta
-                                val target =
-                                    visitListState.layoutInfo.visibleItemsInfo.firstOrNull { row ->
+                    val isDragging = draggedId == visit.id
+                    val release = releasedDrag?.takeIf { it.first == visit.id }
+                    val settleOffset = remember(release) { Animatable(release?.second ?: 0f) }
+                    LaunchedEffect(release) {
+                        if (release != null) {
+                            settleOffset.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow))
+                            if (releasedDrag == release) releasedDrag = null
+                        }
+                    }
+                    val nextConnection = connectionsFrom[visit.id]
+                    Column(
+                        modifier = Modifier
+                            .animateItem(
+                                fadeInSpec = null,
+                                fadeOutSpec = null,
+                                placementSpec = if (isDragging || release != null) null
+                                else spring(stiffness = Spring.StiffnessMediumLow),
+                            )
+                            .zIndex(if (isDragging || release != null) 1f else 0f)
+                            .graphicsLayer {
+                                translationY = if (isDragging) {
+                                    val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
+                                    if (row == null) 0f else dragPosition - (row.offset + row.size / 2f)
+                                } else {
+                                    settleOffset.value
+                                }
+                            },
+                    ) {
+                        TravelVisitRow(
+                            isConnectedFromPrevious = visit.id in connectedTo,
+                            isConnectedToNext = nextConnection != null,
+                            isDragging = isDragging,
+                            visit = visit,
+                            title =
+                                visit.details.name ?: state.dayPlaces[visit.details.googlePlaceId]?.name
+                                    ?: stringResource(Res.string.travel_visit_fallback, index + 1),
+                            number = (index + 1).takeIf { state.selectedDay != TravelPlan.UNASSIGNED_DAY },
+                            selected = state.selectedVisitId == visit.id,
+                            canEdit = canEdit && unappliedOrder == null,
+                            addedAfterConflict = unappliedOrder != null && visit.id !in unappliedOrder.visitIds,
+                            canOpen = !state.isSaving && !state.isLoading && !state.canRetrySave && state.visitDraft == null,
+                            canMoveUp = index > 0,
+                            canMoveDown = index < visits.lastIndex,
+                            onRemove = { onRemoveFromList(visit) },
+                            onOpen = { if (canEdit) onOpenVisit(visit) else onInspectVisit(visit.id) },
+                            onMove = { offset -> onMoveVisit(visit, offset) },
+                            onDragStart = {
+                                val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
+                                if (row != null && draggedId == null) {
+                                    HapticType.ImpactMedium.perform()
+                                    releasedDrag = null
+                                    draggedId = visit.id
+                                    dragPosition = row.offset + row.size / 2f
+                                    dragOrder = savedVisits.map(TravelVisit::id)
+                                }
+                            },
+                            onDrag = { delta ->
+                                val order = dragOrder
+                                if (order != null && draggedId == visit.id) {
+                                    dragPosition += delta
+                                    val from = order.indexOf(visit.id)
+                                    val visibleRows = visitListState.layoutInfo.visibleItemsInfo
+                                    // Wait for the list to lay out the last reorder before crossing another row.
+                                    if (visibleRows.firstOrNull { it.key == visit.id }?.index != from) return@TravelVisitRow
+                                    val target = visibleRows.firstOrNull { row ->
                                         dragPosition >= row.offset && dragPosition < row.offset + row.size
                                     }
-                                val from = order.indexOf(visit.id)
-                                val to = order.indexOf(target?.key).takeIf { it >= 0 } ?: from
-                                if (from >= 0 && to in order.indices && from != to) {
-                                    dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
+                                    val to = order.indexOf(target?.key)
+                                    val crossedCenter = target != null && when {
+                                        to < from -> dragPosition <= target.offset + target.size / 2f
+                                        to > from -> dragPosition >= target.offset + target.size / 2f
+                                        else -> false
+                                    }
+                                    if (to in order.indices && crossedCenter) {
+                                        dragOrder = order.toMutableList().apply { add(to, removeAt(from)) }
+                                    }
                                 }
-                            }
-                        },
-                        onDragFinished = { apply ->
-                            if (draggedId == visit.id) {
-                                val order = dragOrder
-                                val accepted =
-                                    apply && order != null &&
-                                        onReorderVisits(state.selectedDay, orderRevision, plan.structureRevision, order)
-                                if (!accepted) dragOrder = null
-                                draggedId = null
-                            }
-                        },
-                    )
+                            },
+                            onDragFinished = { apply ->
+                                if (draggedId == visit.id) {
+                                    val order = dragOrder
+                                    val accepted =
+                                        apply && order != null &&
+                                            onReorderVisits(state.selectedDay, orderRevision, plan.structureRevision, order)
+                                    val row = visitListState.layoutInfo.visibleItemsInfo.firstOrNull { it.key == visit.id }
+                                    if (accepted && row != null && row.index == order.indexOf(visit.id)) {
+                                        releasedDrag = visit.id to (dragPosition - (row.offset + row.size / 2f))
+                                    }
+                                    if (!accepted) dragOrder = null
+                                    draggedId = null
+                                }
+                            },
+                        )
+                        nextConnection?.let { TravelDistanceConnector(travelDistanceLabel(it)) }
+                    }
                 }
                 if (undo != null && undo.position >= visits.size) item(key = "removed-visit") { TravelRemovedVisitRow(undo.title, canEdit, onUndoVisit) }
                 val attributions = state.dayPlaces.values.flatMap { it.attributions }
@@ -443,19 +533,20 @@ internal fun TravelPlanScreen(
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
             val shape = RoundedCornerShape(8.dp)
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp)
-                .background(com.bigong.oguri.core.designsystem.Mint5, shape)
-                .border(1.dp, com.bigong.oguri.core.designsystem.Mint40, shape)
+                .background(Mint5, shape)
+                .border(1.dp, Mint50, shape)
                 .noRippleClickable(onClick = onFindNextHoliday).heightIn(min = 50.dp).padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(stringResource(Res.string.travel_completed_trip), Modifier.weight(1f), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textSecondary)
-                Text(stringResource(Res.string.travel_find_next_holiday), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+                Text(stringResource(Res.string.travel_find_next_holiday), style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                 Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(18.dp), tint = OguriTheme.colors.textTertiary)
             }
         }
         TravelBottomAction(enabled = canEdit, onClick = onSearchPlaces, showDivider = !completed, topPadding = if (completed) 10.dp else 12.dp) {
+            val foreground = if (state.isOffline) OguriTheme.colors.textTertiary else LocalContentColor.current
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(Res.drawable.ic_travel_plus), contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(Res.string.travel_add_visit))
+                Icon(painterResource(Res.drawable.ic_travel_plus), contentDescription = null, modifier = Modifier.size(18.dp), tint = foreground)
+                Text(stringResource(Res.string.travel_add_visit), color = foreground)
             }
         }
         state.inspectedVisitId?.let { id ->
@@ -498,8 +589,14 @@ internal fun TravelPlanScreen(
     }
 }
 
+private const val REORDER_HOLD_MILLIS = 250L
+private const val DELETE_REVEAL_SETTLE_MILLIS = 200
+
 @Composable
 private fun TravelVisitRow(
+    isConnectedFromPrevious: Boolean,
+    isConnectedToNext: Boolean,
+    isDragging: Boolean,
     visit: TravelVisit,
     title: String,
     number: Int?,
@@ -517,39 +614,119 @@ private fun TravelVisitRow(
     onDragFinished: (Boolean) -> Unit,
 ) {
     val dragStart by rememberUpdatedState(onDragStart)
-    val drag by rememberUpdatedState(onDrag)
+    val dragBy by rememberUpdatedState(onDrag)
     val dragFinished by rememberUpdatedState(onDragFinished)
-    var showMenu by remember { mutableStateOf(false) }
-    var swiped by remember(visit.id) { mutableStateOf(false) }
+    var deleteRevealed by remember(visit.id) { mutableStateOf(false) }
+    var swiping by remember(visit.id) { mutableStateOf(false) }
+    var swipeDistance by remember(visit.id) { mutableFloatStateOf(0f) }
     val shape = RoundedCornerShape(8.dp)
-    val deleteVisible = swiped && canEdit
     val deleteWidth = 72.dp
-    Box(Modifier.fillMaxWidth().clip(shape)) {
+    val deleteWidthPixels = with(LocalDensity.current) { deleteWidth.toPx() }
+    val revealDirection = if (LocalLayoutDirection.current == LayoutDirection.Ltr) -1f else 1f
+    val canDeleteFromSwipe = canEdit && deleteRevealed && !swiping
+    val revealOffset by animateFloatAsState(
+        targetValue = when {
+            !canEdit -> 0f
+            swiping -> swipeDistance
+            deleteRevealed -> deleteWidthPixels
+            else -> 0f
+        },
+        animationSpec = if (swiping) snap() else tween(DELETE_REVEAL_SETTLE_MILLIS, easing = FastOutSlowInEasing),
+        label = "Visit delete reveal",
+    )
+    val deleteLabel = stringResource(Res.string.travel_delete)
+    val moveUpLabel = stringResource(Res.string.travel_move_up)
+    val moveDownLabel = stringResource(Res.string.travel_move_down)
+    val colors = OguriTheme.colors
+    val rowColor by animateColorAsState(
+        targetValue = when {
+            isDragging || selected -> colors.mintContainer
+            else -> colors.backgroundSecondary
+        },
+        label = "Travel visit background",
+    )
+    Box(
+        Modifier.fillMaxWidth().clip(shape)
+            .pointerInput(visit.id, canEdit, deleteWidthPixels, revealDirection) {
+                if (canEdit) {
+                    detectHorizontalDragGestures(
+                        onDragStart = {
+                            swipeDistance = revealOffset
+                            swiping = true
+                        },
+                        onDragEnd = {
+                            deleteRevealed = swipeDistance >= deleteWidthPixels / 2f
+                            swiping = false
+                        },
+                        onDragCancel = { swiping = false },
+                        onHorizontalDrag = { change, amount ->
+                            change.consume()
+                            swipeDistance = (swipeDistance + amount * revealDirection).coerceIn(0f, deleteWidthPixels)
+                        },
+                    )
+                }
+            },
+    ) {
+        Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
+            Box(
+                modifier = Modifier.width(deleteWidth).fillMaxHeight()
+                    .background(colors.orange)
+                    .then(
+                        if (canDeleteFromSwipe) Modifier.noRippleClickable(onClick = onRemove)
+                        else Modifier.clearAndSetSemantics {},
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(deleteLabel, color = colors.textOnOrange, style = OguriTheme.typography.labelLarge)
+            }
+        }
         Row(
-            Modifier.fillMaxWidth().padding(end = if (deleteVisible) deleteWidth else 0.dp)
-                .background(if (selected) Mint10 else Neutral5)
-                .pointerInput(visit.id, canEdit) {
-                    if (canEdit) {
-                        var distance = 0f
-                        detectHorizontalDragGestures(
-                            onDragStart = { distance = 0f },
-                            onHorizontalDrag = { change, amount ->
-                                change.consume()
-                                distance += amount
-                                if (distance < -32.dp.toPx()) swiped = true
-                                else if (distance > 32.dp.toPx()) swiped = false
-                            },
+            Modifier.fillMaxWidth()
+                .graphicsLayer { translationX = revealOffset * revealDirection }
+                .background(rowColor)
+                .drawBehind {
+                    if (isConnectedFromPrevious || isConnectedToNext) {
+                        drawVisitConnection(
+                            startY = if (isConnectedFromPrevious) 0f else center.y,
+                            endY = if (isConnectedToNext) size.height else center.y,
                         )
                     }
-                }.semantics { this.selected = selected },
+                }
+                .semantics { this.selected = selected },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                Modifier.weight(1f).heightIn(min = 60.dp).noRippleClickable(enabled = canOpen, onClick = onOpen).padding(horizontal = 12.dp),
+                Modifier.weight(1f).heightIn(min = 60.dp)
+                    .noRippleClickable(enabled = canOpen, onClick = onOpen)
+                    .semantics {
+                        if (canEdit) {
+                            customActions = buildList {
+                                if (canMoveUp) {
+                                    add(CustomAccessibilityAction(moveUpLabel) {
+                                        onMove(-1)
+                                        true
+                                    })
+                                }
+                                if (canMoveDown) {
+                                    add(CustomAccessibilityAction(moveDownLabel) {
+                                        onMove(1)
+                                        true
+                                    })
+                                }
+                                if (!canDeleteFromSwipe) {
+                                    add(CustomAccessibilityAction(deleteLabel) {
+                                        onRemove()
+                                        true
+                                    })
+                                }
+                            }
+                        }
+                    }
+                    .padding(horizontal = VisitRowHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(Modifier.size(24.dp).background(Mint70, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
-                    Text(number?.toString().orEmpty(), style = OguriTheme.typography.labelMedium, color = com.bigong.oguri.core.designsystem.Neutral0)
+                Box(Modifier.size(VisitPinSize).background(OguriTheme.colors.mint, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
+                    Text(number?.toString().orEmpty(), style = OguriTheme.typography.labelMedium, color = travelAccentForeground)
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
@@ -559,36 +736,78 @@ private fun TravelVisitRow(
                     }
                 }
             }
-            if (canEdit && (canMoveUp || canMoveDown)) Box {
-                TravelIconButton(onClick = { showMenu = true }, enabled = canEdit,
-                    modifier = Modifier.pointerInput(visit.id, canEdit) {
-                        detectDragGesturesAfterLongPress(onDragStart = { dragStart() }, onDragEnd = { dragFinished(true) }, onDragCancel = { dragFinished(false) }) { change, delta -> change.consume(); drag(delta.y) }
-                    },
-                ) { Icon(painterResource(Res.drawable.ic_travel_drag), stringResource(Res.string.travel_move_visit, title), Modifier.size(20.dp), tint = OguriTheme.colors.textTertiary) }
-                if (showMenu) androidx.compose.ui.window.Popup(alignment = Alignment.TopEnd, onDismissRequest = { showMenu = false }, properties = androidx.compose.ui.window.PopupProperties(focusable = true)) {
-                    androidx.compose.material3.Surface(shape = shape, color = Neutral0, shadowElevation = 4.dp) {
-                        Column {
-                            TravelTextButton(enabled = canMoveUp, onClick = { showMenu = false; onMove(-1) }) { Text(stringResource(Res.string.travel_move_up)) }
-                            TravelTextButton(enabled = canMoveDown, onClick = { showMenu = false; onMove(1) }) { Text(stringResource(Res.string.travel_move_down)) }
-                            TravelTextButton(onClick = { showMenu = false; onRemove() }) { Text(stringResource(Res.string.travel_delete), color = com.bigong.oguri.core.designsystem.Orange50) }
-                        }
-                    }
-                }
-            }
-        }
-        if (deleteVisible) {
-            Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
+            if (canEdit && (canMoveUp || canMoveDown)) {
                 Box(
-                    modifier = Modifier.width(deleteWidth).fillMaxHeight()
-                        .background(com.bigong.oguri.core.designsystem.Orange50)
-                        .noRippleClickable(onClick = onRemove),
+                    modifier = Modifier.size(48.dp).pointerInput(visit.id) {
+                        awaitEachGesture {
+                            val down = awaitFirstDown()
+                            val endedBeforeHold = withTimeoutOrNull(REORDER_HOLD_MILLIS) {
+                                waitForUpOrCancellation()
+                                true
+                            }
+                            if (endedBeforeHold == true) return@awaitEachGesture
+
+                            dragStart()
+                            var completed = false
+                            try {
+                                completed = drag(down.id) { change ->
+                                    val delta = change.positionChange().y
+                                    change.consume()
+                                    dragBy(delta)
+                                }
+                            } finally {
+                                dragFinished(completed)
+                            }
+                        }
+                    },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(stringResource(Res.string.travel_delete), color = Neutral0, style = OguriTheme.typography.labelLarge)
+                    Icon(painterResource(Res.drawable.ic_travel_drag), null, Modifier.size(20.dp), tint = Neutral40)
                 }
             }
         }
     }
+}
+
+@Composable
+private fun TravelDistanceConnector(label: String) {
+    val description = stringResource(Res.string.travel_distance_to_next_place, label)
+    Box(
+        modifier = Modifier.width(VisitPinCenter * 2).drawBehind {
+            drawVisitConnection(0f, DistanceConnectorPadding.toPx())
+            drawVisitConnection(size.height - DistanceConnectorPadding.toPx(), size.height)
+        },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier
+                .wrapContentWidth(unbounded = true)
+                .padding(vertical = DistanceConnectorPadding)
+                .clearAndSetSemantics { contentDescription = description },
+            color = OguriTheme.colors.textTertiary,
+            style = OguriTheme.typography.caption,
+            maxLines = 1,
+        )
+    }
+}
+
+private val VisitRowHorizontalPadding = 12.dp
+private val VisitPinSize = 24.dp
+private val VisitPinCenter = VisitRowHorizontalPadding + VisitPinSize / 2
+private val DistanceConnectorPadding = 4.dp
+
+private fun DrawScope.drawVisitConnection(startY: Float, endY: Float) {
+    val pinCenter = VisitPinCenter.toPx()
+    val x = if (layoutDirection == LayoutDirection.Ltr) pinCenter else size.width - pinCenter
+    drawLine(
+        color = travelConnectionColor,
+        start = Offset(x, startY),
+        end = Offset(x, endY),
+        strokeWidth = 2.dp.toPx(),
+        cap = StrokeCap.Round,
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.dp.toPx(), 5.dp.toPx())),
+    )
 }
 
 @Composable
@@ -607,7 +826,7 @@ internal fun travelDayLabel(
 
 @Composable
 private fun TravelRemovedVisitRow(title: String?, enabled: Boolean, onUndo: () -> Unit) {
-    Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral10, RoundedCornerShape(8.dp)).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().background(OguriTheme.colors.backgroundTertiary, RoundedCornerShape(8.dp)).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title?.let { stringResource(Res.string.travel_removed_visit, it) } ?: stringResource(Res.string.travel_undo_visit), Modifier.weight(1f), style = OguriTheme.typography.bodySmall)
         TravelIconButton(onClick = onUndo, enabled = enabled) { Icon(painterResource(Res.drawable.ic_travel_undo), stringResource(Res.string.travel_undo_visit), Modifier.size(22.dp), tint = Neutral100) }
     }

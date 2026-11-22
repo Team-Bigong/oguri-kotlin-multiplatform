@@ -78,6 +78,12 @@ bash scripts/verify_ios_simulator.sh
 서버 설정은 기본적으로 켜져 있으며 환경 변수 변경은 다음 서버 시작 시 적용된다.
 
 
+## 운영 서버의 여행 알림 설정
+
+- Render 백엔드의 `TRAVEL_REMINDER_FIREBASE_PROJECT_ID`에 배포 앱에 연결된 Firebase 프로젝트 ID를 설정한다. 프로젝트 ID가 비어 있거나 `TRAVEL_REMINDERS_ENABLED=false`이면 출발 전 여행도 알림을 예약할 수 없다.
+- Firebase Cloud Messaging API를 활성화하고 발송 권한이 있는 서비스 계정을 사용한다. Render Secret File을 사용하는 경우 `GOOGLE_APPLICATION_CREDENTIALS`에 `/etc/secrets/<파일명>`을 설정한다. [FCM 인증](https://firebase.google.com/docs/cloud-messaging/send/v1-api) · [Render Secret Files](https://render.com/docs/configure-environment-variables#secret-files)
+- 설정을 적용한 뒤 Android에서 출발 전 여행의 알림을 예약하고 수신을 확인한다. 예약이 저장되어도 발송 권한이나 실제 수신까지 검증된 것은 아니다.
+
 ## CI의 여행 지도와 Firebase 설정
 
 - Android CI와 배포 지도에는 같은 `GOOGLE_MAPS_ANDROID_API_KEY` GitHub Actions 시크릿을 전달한다. Android 앱 제한을 적용한 키에는 디버그와 배포 패키지명 및 각각의 서명 인증서 SHA-1을 등록한다. Play 앱 서명 사용 시 배포 인증서는 Play Console에서 확인한다.

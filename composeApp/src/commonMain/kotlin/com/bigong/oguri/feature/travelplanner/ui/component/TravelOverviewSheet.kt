@@ -14,9 +14,11 @@ import oguri.composeapp.generated.resources.travel_total_place_count
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -43,13 +45,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelOverviewState
 import com.bigong.oguri.feature.travelplanner.ui.model.travelDayColor
+import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapMarkerForeground
 import com.bigong.oguri.feature.travelplanner.ui.model.travelOverviewScene
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import oguri.composeapp.generated.resources.Res
@@ -82,8 +85,9 @@ internal fun TravelOverviewSheet(
 ) {
     val dates = plan.summary.details.dates
     val scene =
-        remember(plan.visits, state.places, plan.summary.details.city) {
-            travelOverviewScene(plan.visits, state.places, TravelCity.centerOf(plan.summary.details.city))
+        remember(plan.visits, state.places, plan.summary.details) {
+            val details = plan.summary.details
+            travelOverviewScene(plan.visits, state.places, details.catalogCities[details.city]?.coordinates ?: TravelCity.centerOf(details.city))
         }
     val startWithMap = LocalDensity.current.fontScale <= 1.3f
     var showMap by remember { mutableStateOf(startWithMap) }
@@ -103,100 +107,111 @@ internal fun TravelOverviewSheet(
         state.places[visit.details.googlePlaceId]?.name ?: visit.details.name
             ?: stringResource(Res.string.travel_visit_fallback, plan.visits.indexOf(visit) + 1)
     }
-    ModalBottomSheet(scrimColor = com.bigong.oguri.core.designsystem.Neutral90.copy(alpha = .45f),
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val dismissSheet = rememberTravelSheetDismiss(sheetState, onDismiss)
+    ModalBottomSheet(scrimColor = TravelSheetScrim,
         dragHandle = { TravelSheetHandle() },
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = com.bigong.oguri.core.designsystem.Neutral5,
+        sheetState = sheetState,
+        containerColor = OguriTheme.colors.backgroundSecondary,
+        contentColor = Neutral100,
         shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     ) {
-        Column(Modifier.fillMaxHeight(0.92f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(Res.string.travel_overview), style = OguriTheme.typography.cardTitle)
-                Spacer(Modifier.size(8.dp))
-                Text(stringResource(Res.string.travel_total_place_count, plan.visits.size), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary)
-                Spacer(Modifier.weight(1f))
-                TravelIconButton(onClick = onDismiss) { androidx.compose.material3.Icon(org.jetbrains.compose.resources.painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
-            }
-            if (showMap) {
-                if (mapUnavailable) {
-                    Text(stringResource(Res.string.travel_map_unavailable))
-                    TravelTextButton(onClick = { mapUnavailable = false }) { Text(stringResource(Res.string.travel_retry)) }
-                } else {
-                    PlatformTravelMap(
-                        scene = scene,
-                        viewportRequest = viewportRequest,
-                        focusedVisitId = null,
-                        onMarkerClick = { id ->
-                            val coordinates = scene.markers.firstOrNull { it.id == id }?.coordinates
-                            val ids = scene.markers.filter { it.coordinates == coordinates }.map { it.id }
-                            onSelectVisit(id)
-                        },
-                        onUnavailable = { mapUnavailable = true },
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(170.dp).clip(RoundedCornerShape(8.dp)).border(1.dp, OguriTheme.colors.borderSubtle, RoundedCornerShape(8.dp)),
-                    )
-                    if (scene.markers.isNotEmpty()) {
-                        androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().heightIn(min = 22.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            plan.visits.map { it.dayNumber }.distinct().sorted().forEach { day ->
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    Box(Modifier.size(10.dp).background(Color(travelDayColor(day)), CircleShape))
-                                    Text(stringResource(Res.string.travel_day_number, day), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                                }
-                            }
-                        }
-                    }
+        BoxWithConstraints(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
+            val listReserve = (160 * LocalDensity.current.fontScale).dp
+            val mapHeight = ((maxWidth - TravelMapHorizontalPadding * 2).coerceAtLeast(0.dp) / TRAVEL_MAP_ASPECT_RATIO)
+                .coerceAtMost((maxHeight - listReserve).coerceAtLeast(0.dp))
+            val mapFits = mapHeight >= 120.dp
+            Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(Res.string.travel_overview), style = OguriTheme.typography.cardTitle)
+                    Spacer(Modifier.size(8.dp))
+                    Text(stringResource(Res.string.travel_total_place_count, plan.visits.size), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary)
+                    Spacer(Modifier.weight(1f))
+                    TravelIconButton(onClick = dismissSheet) { androidx.compose.material3.Icon(org.jetbrains.compose.resources.painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(22.dp)) }
                 }
-            }
-            if (state.loading) TravelLoading(Modifier.fillMaxWidth())
-            if (state.incomplete) {
-                Row {
-                    Text(stringResource(Res.string.travel_place_details_unavailable), Modifier.weight(1f))
-                    TravelTextButton(onClick = onRetry) { Text(stringResource(Res.string.travel_retry)) }
-                }
-            }
-            LazyColumn(Modifier.weight(1f)) {
-                val groups = plan.visits.groupBy { it.dayNumber }
-                if (groups.isEmpty()) {
-                    item {
-                        Text(
-                            text = stringResource(Res.string.travel_empty_day),
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
-                            color = OguriTheme.colors.textTertiary,
-                            style = travelTextStyle(14, 21),
-                            textAlign = TextAlign.Center,
+                if (showMap && mapFits) {
+                    if (mapUnavailable) {
+                        Text(stringResource(Res.string.travel_map_unavailable))
+                        TravelTextButton(onClick = { mapUnavailable = false }) { Text(stringResource(Res.string.travel_retry)) }
+                    } else {
+                        PlatformTravelMap(
+                            scene = scene,
+                            viewportRequest = viewportRequest,
+                            focusedVisitId = null,
+                            onMarkerClick = { id ->
+                                val coordinates = scene.markers.firstOrNull { it.id == id }?.coordinates
+                                val ids = scene.markers.filter { it.coordinates == coordinates }.map { it.id }
+                                onSelectVisit(id)
+                            },
+                            onUnavailable = { mapUnavailable = true },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = TravelMapHorizontalPadding).height(mapHeight).clip(RoundedCornerShape(8.dp)).border(1.dp, OguriTheme.colors.borderSubtle, RoundedCornerShape(8.dp)),
                         )
+                        if (scene.markers.isNotEmpty()) {
+                            androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().heightIn(min = 22.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                plan.visits.map { it.dayNumber }.distinct().sorted().forEach { day ->
+                                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Box(Modifier.size(10.dp).background(Color(travelDayColor(day)), CircleShape))
+                                        Text(stringResource(Res.string.travel_day_number, day), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-                groups.entries
-                    .sortedBy {
-                        if (it.key ==
-                            TravelPlan.UNASSIGNED_DAY
-                        ) {
-                            dates.dayCount + 1
-                        } else {
-                            it.key
-                        }
-                    }.forEach { (day, visits) ->
-                        item(key = "day-$day") {
-                            HorizontalDivider(color = OguriTheme.colors.borderSubtle)
-                            Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(travelDayLabel(dates, day), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
-                                Text(stringResource(Res.string.travel_place_count, visits.size), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-                            }
-                        }
-                        items(visits, key = { it.id }) { visit ->
-                            Row(Modifier.fillMaxWidth().noRippleClickable(onClick = { onSelectVisit(visit.id) }).height(50.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                Box(Modifier.size(24.dp).background(Color(travelDayColor(day)), CircleShape), contentAlignment = Alignment.Center) {
-                                    Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = Neutral0)
-                                }
-                                Text(title(visit), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
-                            }
+                if (state.loading) TravelLoading(Modifier.fillMaxWidth())
+                if (state.incomplete) {
+                    Row {
+                        Text(stringResource(Res.string.travel_place_details_unavailable), Modifier.weight(1f))
+                        TravelTextButton(onClick = onRetry) { Text(stringResource(Res.string.travel_retry)) }
+                    }
+                }
+                LazyColumn(Modifier.weight(1f)) {
+                    val groups = plan.visits.groupBy { it.dayNumber }
+                    if (groups.isEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(Res.string.travel_empty_day),
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 24.dp),
+                                color = OguriTheme.colors.textTertiary,
+                                style = travelTextStyle(14, 21),
+                                textAlign = TextAlign.Center,
+                            )
                         }
                     }
-                val attributions = state.places.values.flatMap { it.attributions }
-                if (attributions.isNotEmpty() || ((!showMap || mapUnavailable) && state.places.isNotEmpty())) item {
-                    Box(Modifier.padding(horizontal = 20.dp)) { GooglePlacesAttribution(attributions, includeGoogleBranding = !showMap || mapUnavailable) }
+                    groups.entries
+                        .sortedBy {
+                            if (it.key ==
+                                TravelPlan.UNASSIGNED_DAY
+                            ) {
+                                dates.dayCount + 1
+                            } else {
+                                it.key
+                            }
+                        }.forEach { (day, visits) ->
+                            item(key = "day-$day") {
+                                HorizontalDivider(color = OguriTheme.colors.borderSubtle)
+                                Row(Modifier.fillMaxWidth().height(40.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(travelDayLabel(dates, day), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
+                                    Text(stringResource(Res.string.travel_place_count, visits.size), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
+                                }
+                            }
+                            items(visits, key = { it.id }) { visit ->
+                                Row(Modifier.fillMaxWidth().noRippleClickable(onClick = { onSelectVisit(visit.id) }).height(50.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    val dayColor = travelDayColor(day)
+                                    Box(Modifier.size(24.dp).background(Color(dayColor), CircleShape), contentAlignment = Alignment.Center) {
+                                        Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = TravelMapMarkerForeground)
+                                    }
+                                    Text(title(visit), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                    visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
+                                }
+                            }
+                        }
+                    val attributions = state.places.values.flatMap { it.attributions }
+                    val mapVisible = showMap && mapFits && !mapUnavailable
+                    if (attributions.isNotEmpty() || (!mapVisible && state.places.isNotEmpty())) item {
+                        Box(Modifier.padding(horizontal = 20.dp)) { GooglePlacesAttribution(attributions, includeGoogleBranding = !mapVisible) }
+                    }
                 }
             }
         }

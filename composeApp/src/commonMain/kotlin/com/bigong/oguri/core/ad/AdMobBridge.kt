@@ -7,13 +7,14 @@ enum class AdMobBannerPlacement {
     CALENDAR_INLINE,
     PHOTO_DETAIL_BOTTOM,
     MYPAGE_BOTTOM,
+    TRAVEL_BOTTOM,
 }
 
 expect fun initializeAdMob()
 
 expect fun preloadAppOpenAd()
 
-expect fun showAppOpenAdIfAvailable(): Boolean
+expect fun showAppOpenAdIfAvailable(onImpression: () -> Unit)
 
 @Composable
 expect fun AdMobBanner(

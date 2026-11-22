@@ -9,21 +9,23 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -43,20 +45,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.LightOguriColorPalette
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Mint90
-import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Neutral10
 import com.bigong.oguri.core.designsystem.Neutral100
-import com.bigong.oguri.core.designsystem.Neutral20
-import com.bigong.oguri.core.designsystem.Neutral5
-import com.bigong.oguri.core.designsystem.Neutral50
-import com.bigong.oguri.core.designsystem.Neutral90
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
-import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.core.designsystem.Orange20
+import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
@@ -84,6 +81,14 @@ import oguri.composeapp.generated.resources.travel_visit_removed
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
+internal val travelAccentForeground: Color
+    @Composable get() = if (OguriTheme.isDarkTheme) LightOguriColorPalette.textPrimary else OguriTheme.colors.textOnMint
+
+internal val travelOutlineForeground: Color
+    @Composable get() = if (OguriTheme.isDarkTheme) Mint90 else Mint70
+
+internal val TravelSheetScrim: Color = LightOguriColorPalette.textPrimary.copy(alpha = 0.45f)
+
 @Composable
 internal fun TravelPlannerPage(
     title: String,
@@ -93,12 +98,17 @@ internal fun TravelPlannerPage(
     showTopDivider: Boolean = true,
     modifier: Modifier = Modifier,
     loadingTitle: Boolean = false,
+    contentInsets: WindowInsets = WindowInsets.safeDrawing,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     PlatformBackHandler(enabled = isSaving) {}
     PlatformBackGestureContainer(enabled = !isSaving && onBack != null, onBack = { onBack?.invoke() }) {
-        Box(modifier.fillMaxSize().background(Neutral5)) {
-            Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
+        Surface(
+            modifier = modifier.fillMaxSize(),
+            color = OguriTheme.colors.backgroundSecondary,
+            contentColor = Neutral100,
+        ) {
+            Column(Modifier.fillMaxSize().windowInsetsPadding(contentInsets).imePadding()) {
                 if (onBack == null && title.isNotEmpty()) {
                     Row(
                         modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 12.dp),
@@ -127,7 +137,7 @@ internal fun TravelPlannerPage(
                         Row(Modifier.align(Alignment.CenterEnd), content = actions)
                     }
                 }
-                if (showTopDivider && (onBack != null || title.isNotEmpty())) HorizontalDivider(color = Neutral20)
+                if (showTopDivider && (onBack != null || title.isNotEmpty())) HorizontalDivider(color = OguriTheme.colors.borderSubtle)
                 content()
             }
             if (isSaving) CenteredLoadingIndicator()
@@ -160,8 +170,8 @@ internal fun TravelPrimaryButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        backgroundColor = if (!enabled) Neutral10 else Mint70,
-        contentColor = OguriTheme.colors.textOnMint,
+        backgroundColor = if (!enabled) OguriTheme.colors.backgroundTertiary else OguriTheme.colors.mint,
+        contentColor = travelAccentForeground,
         minHeight = 45.dp,
         textStyle = textStyle,
         content = content,
@@ -183,12 +193,18 @@ internal fun TravelOutlineButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    backgroundColor: Color = Mint5,
     content: @Composable () -> Unit,
 ) {
+    val colors = OguriTheme.colors
     TravelButton(
-        onClick, modifier, enabled, Mint5, borderColor = Mint70,
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        backgroundColor = if (enabled) backgroundColor else colors.backgroundTertiary,
+        borderColor = if (enabled) colors.mint else colors.borderStrong,
         textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
-        contentColor = Mint70,
+        contentColor = travelOutlineForeground,
         minHeight = 45.dp,
         content = content,
     )
@@ -236,24 +252,11 @@ private fun TravelButton(
             ).padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else Neutral50) {
+        CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else Neutral40) {
             ProvideTextStyle(textStyle, content)
         }
     }
 }
-
-@Composable
-internal fun TravelFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedTextColor = Neutral90,
-    unfocusedTextColor = Neutral90,
-    focusedBorderColor = Neutral90,
-    unfocusedBorderColor = Neutral20,
-    focusedLabelColor = Neutral90,
-    unfocusedLabelColor = Neutral50,
-    cursorColor = Neutral90,
-    focusedContainerColor = Neutral0,
-    unfocusedContainerColor = Neutral0,
-)
 
 @Composable
 internal fun TravelLoading(modifier: Modifier = Modifier) {
@@ -327,7 +330,7 @@ internal fun TravelIssueCard(
             Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(title, style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+            Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
             if (description != null) {
                 Text(description, style = OguriTheme.typography.caption, color = colors.textSecondary)
             }
@@ -338,7 +341,7 @@ internal fun TravelIssueCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             ) {
                 secondaryAction?.invoke()
-                TravelTextButton(onClick = onRetry) { Text(retryLabel, color = colors.textPrimary) }
+                TravelTextButton(onClick = onRetry) { Text(retryLabel, color = Neutral100) }
             }
         }
     }
@@ -350,6 +353,7 @@ internal fun TravelBottomAction(
     onClick: () -> Unit,
     showDivider: Boolean = true,
     topPadding: Dp = 12.dp,
+    bottomPadding: Dp = 20.dp,
     content: @Composable () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
@@ -357,7 +361,7 @@ internal fun TravelBottomAction(
         TravelPrimaryButton(
             onClick = onClick,
             enabled = enabled,
-            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = 20.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = topPadding, bottom = bottomPadding),
             textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
             content = content,
         )

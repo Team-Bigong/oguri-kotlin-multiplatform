@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
@@ -53,13 +54,13 @@ internal fun TravelConflictComparison(
                     TravelVisitField.NOTE -> latest.details.note
                     TravelVisitField.CATEGORY -> latest.details.category?.let { stringResource(it.label()) }
                 }?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.travel_value_not_set)
-            Row(Modifier.fillMaxWidth().background(com.bigong.oguri.core.designsystem.Neutral0, RoundedCornerShape(8.dp)).padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.fillMaxWidth().background(OguriTheme.colors.surfaceCard, RoundedCornerShape(8.dp)).padding(12.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(label), Modifier.weight(1f), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                 val valueStyle = OguriTheme.typography.bodyMedium.copy(textAlign = androidx.compose.ui.text.style.TextAlign.End)
                 if (field == TravelVisitField.NOTE) {
                     TravelNoteText(value, Modifier.weight(2f), style = valueStyle)
                 } else {
-                    Text(value, Modifier.weight(2f), style = valueStyle, color = OguriTheme.colors.textPrimary)
+                    Text(value, Modifier.weight(2f), style = valueStyle, color = Neutral100)
                 }
             }
         }

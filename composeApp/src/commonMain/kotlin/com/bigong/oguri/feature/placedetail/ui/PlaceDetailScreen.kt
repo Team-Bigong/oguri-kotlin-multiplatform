@@ -30,9 +30,11 @@ import androidx.compose.ui.layout.onVisibilityChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint60
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.Neutral5
+import com.bigong.oguri.core.designsystem.Neutral50
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.AdvertisementCard
 import com.bigong.oguri.core.ui.component.GuideHeader
@@ -63,7 +65,6 @@ import oguri.composeapp.generated.resources.place_detail_flight_title_highlight
 import oguri.composeapp.generated.resources.place_detail_relevant_places
 import oguri.composeapp.generated.resources.place_detail_relevant_places_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience
-import oguri.composeapp.generated.resources.place_detail_section_experience_highlight
 import oguri.composeapp.generated.resources.place_detail_section_experience_subtitle
 import oguri.composeapp.generated.resources.travel_create_from_city
 import org.jetbrains.compose.resources.stringResource
@@ -200,7 +201,8 @@ fun PlaceDetailScreen(
                         GuideHeader(
                             iconResource = Res.drawable.ic_binoculars,
                             titleText = stringResource(Res.string.place_detail_section_experience, placeDetail.city),
-                            highlightedText = stringResource(Res.string.place_detail_section_experience_highlight),
+                            iconTint = Mint60,
+                            subtitleColor = Neutral50,
                             subtitleText = stringResource(Res.string.place_detail_section_experience_subtitle),
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
