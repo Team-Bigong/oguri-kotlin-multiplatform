@@ -39,7 +39,7 @@
 
 ## 3. 코드 위치와 역할
 
-모바일의 의존성은 `data → domain ← feature/ui`다. `domain`은 UI·data·플랫폼 레이어를 가져오지 않고, `data`는 UI를 가져오지 않는다. `AppGraph`가 구현체를 주입한다. [모바일 구조](./MOBILE_PROJECT_STRUCTURE.md)·[규칙](./MOBILE_CONVENTIONS.md)·[코드 스타일](./MOBILE_CODE_STYLE.md)을 따른다.
+모바일의 의존성은 `data → domain ← feature/ui`다. `domain`은 UI·data·플랫폼 레이어를 가져오지 않고, `data`는 UI를 가져오지 않는다. `AppGraph`가 구현체를 주입한다. [모바일 구조](../guide/MOBILE_PROJECT_STRUCTURE.md)·[규칙](../guide/MOBILE_CONVENTIONS.md)·[코드 스타일](../guide/MOBILE_CODE_STYLE.md)을 따른다.
 
 | 위치 | 추가하거나 수정할 내용 |
 | --- | --- |
@@ -53,7 +53,7 @@
 | `server/src/main/kotlin/com/bigong/oguri/{controller,service,domain,repository,dto}` | `TravelPlanController`, `TravelPlanService`, 여행·방문·멤버십 Entity와 조회, 명령 DTO. 공동 편집에서 초대·알림 책임이 생기면 해당 서비스만 추가한다. Controller는 매핑과 인증 주체 전달, Service는 권한·트랜잭션, Repository는 조회·저장을 맡는다. |
 | [Flyway](../server/src/main/resources/db/migration), [웹 진입](../web/src/App.tsx) | 새 migration만 추가한다. 웹은 초대 안내와 설치·다시 열기, 연결 도메인의 검증 파일만 지원한다. 웹 편집기는 후속 범위다. |
 
-서버에서는 [서버 가이드](./GEMINI.md)의 layered 구조와 JPA Entity를 유지한다. 날짜 유효성·기간 이동·방문 배정·소유권 같은 규칙은 값을 읽어 Service가 다시 판단하기보다 해당 객체의 행동으로 표현한다. Service는 권한 확인, 잠금, 여러 객체의 변경과 커밋을 조율한다. Entity를 그대로 API에서 반환하지 않는다. 이후 영속성과 독립된 규칙을 별도로 공유할 필요가 확인되면 해당 값과 규칙만 분리하는 안을 검토한다.
+서버에서는 [서버 가이드](../guide/GEMINI.md)의 layered 구조와 JPA Entity를 유지한다. 날짜 유효성·기간 이동·방문 배정·소유권 같은 규칙은 값을 읽어 Service가 다시 판단하기보다 해당 객체의 행동으로 표현한다. Service는 권한 확인, 잠금, 여러 객체의 변경과 커밋을 조율한다. Entity를 그대로 API에서 반환하지 않는다. 이후 영속성과 독립된 규칙을 별도로 공유할 필요가 확인되면 해당 값과 규칙만 분리하는 안을 검토한다.
 
 [Android 공식 도메인 가이드](https://developer.android.com/topic/architecture/domain-layer)는 선택적 domain이 data의 repository에 의존하는 구성을 설명한다. 이 프로젝트는 **repository 인터페이스를 domain에 두고 data가 구현하는 방식**을 채택한다. 공식 권장의 단방향 상태 흐름·생명주기 기반 수집은 적용한다. [UI 상태 권장 사항](https://developer.android.com/topic/architecture/recommendations)에 맞춰 저장 결과·충돌·인증 복귀를 유실 가능한 이벤트에만 두지 않는다. 기존 `SideEffect` 관례는 순간적인 햅틱이나 외부 화면 열기처럼 누락 시 계획 데이터가 바뀌지 않는 효과에 한정한다.
 
@@ -165,7 +165,7 @@
 
 ## 9. 작업을 시작할 때와 끝낼 때
 
-- [ ] `guide`의 제품·디자인 명세와 대상 AC를 읽고 이번 변경에서 검증할 한 가지 사용자 흐름을 고른다.
+- [ ] `plan`의 제품·디자인 명세와 대상 AC를 읽고 이번 변경에서 검증할 한 가지 사용자 흐름을 고른다.
 - [ ] 현재 빌드·테스트 기준선을 확인한다. 외부 설정이 없는 검증은 미확인으로 남기고 재현 가능한 테스트 환경을 적는다.
 - [ ] 서버 계약과 저장 규칙을 확정한 뒤 모바일까지 연결한다. Kotlin 공개 타입을 명시하고 문자열은 네 언어 리소스에 둔다.
 - [ ] 권한·중복·취소·입력 보존의 실패 사례와 기존 오구리의 흐름을 확인한다. 정상 사용자에게 새 단계가 늘어났다면 명세의 가벼운 사용감 기준으로 바로 수정한다.

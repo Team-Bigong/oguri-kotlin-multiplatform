@@ -14,7 +14,7 @@
 
 | 범위 | 주요 근거 |
 | --- | --- |
-| 제품·화면 | [MVP_WIREFRAME.md](./MVP_WIREFRAME.md), [TRAVEL_PLANNER_SPEC.md](./TRAVEL_PLANNER_SPEC.md) |
+| 제품·화면 | [MVP_WIREFRAME.md](./MVP_WIREFRAME.md), [TRAVEL_PLANNER_SPEC.md](../plan/TRAVEL_PLANNER_SPEC.md) |
 | 모바일 색·테마·서체 | [Color.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Color.kt), [Theme.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Theme.kt), [Typography.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Typography.kt) |
 | 모바일 구현 계약 | [MOBILE_CONVENTIONS.md](./MOBILE_CONVENTIONS.md), [MOBILE_CODE_STYLE.md](./MOBILE_CODE_STYLE.md), [MOBILE_PROJECT_STRUCTURE.md](./MOBILE_PROJECT_STRUCTURE.md) |
 | 웹·서버 범위 | [WEB_OFFICIAL_SITE.md](./WEB_OFFICIAL_SITE.md), [WEB_ADMIN_SETUP.md](./WEB_ADMIN_SETUP.md), [GEMINI.md](./GEMINI.md) |

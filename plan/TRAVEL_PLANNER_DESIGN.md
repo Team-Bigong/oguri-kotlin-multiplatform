@@ -2,7 +2,7 @@
 
 버전: 1.0 · 작성일: 2026. 11. 13. · 대상: Android·iOS 모바일
 
-이 문서는 [오구리 디자인 시스템](./DESIGN.md)을 상속해 [여행 계획 통합 명세 v0.3](./TRAVEL_PLANNER_SPEC.md)를 화면으로 구체화한다. 여행 플래너의 정보 위계, 화면 구성, 컴포넌트, 상태와 조작을 정의한다. 기능·권한·저장 정책의 원문은 통합 명세다.
+이 문서는 [오구리 디자인 시스템](../guide/DESIGN.md)을 상속해 [여행 계획 통합 명세 v0.3](./TRAVEL_PLANNER_SPEC.md)를 화면으로 구체화한다. 여행 플래너의 정보 위계, 화면 구성, 컴포넌트, 상태와 조작을 정의한다. 기능·권한·저장 정책의 원문은 통합 명세다.
 
 OmD의 `omd:apply`로 기존 디자인 계약을 적용하고, `omd:designer-review`의 검토 항목으로 문서의 일관성을 점검한다. 별도 브랜드나 디자인 시스템을 만들지 않는다. 아래 화면·컴포넌트는 **신규 디자인 제안**이며 구현 완료나 실제 화면 검증을 뜻하지 않는다.
 
@@ -454,8 +454,8 @@ Google 지도 로고·출처는 지도 시트에 가리지 않고 공급자 SDK�
 
 ### 7.6 근거 자료
 
-- [상위 디자인 시스템](./DESIGN.md): 경험 원칙·토큰·타이포그래피·공용 컴포넌트·플랫폼 기준.
+- [상위 디자인 시스템](../guide/DESIGN.md): 경험 원칙·토큰·타이포그래피·공용 컴포넌트·플랫폼 기준.
 - [통합 기능 명세](./TRAVEL_PLANNER_SPEC.md): T01–T07, 진입·권한·날짜·저장·협업·알림·검증의 제품 정책.
-- [기존 화면 구성](./MVP_WIREFRAME.md), [모바일 규칙](./MOBILE_CONVENTIONS.md), [프로젝트 구조](./MOBILE_PROJECT_STRUCTURE.md): 기존 오구리 흐름과 구현 경계.
+- [기존 화면 구성](../guide/MVP_WIREFRAME.md), [모바일 규칙](../guide/MOBILE_CONVENTIONS.md), [프로젝트 구조](../guide/MOBILE_PROJECT_STRUCTURE.md): 기존 오구리 흐름과 구현 경계.
 - [Compose 접근성 기본값](https://developer.android.com/develop/ui/compose/accessibility/api-defaults), [Apple 접근성](https://developer.apple.com/design/human-interface-guidelines/accessibility): 플랫폼별 조작 영역·큰 글자·접근성 기준.
 - [WCAG 텍스트 대비](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [Google Maps SDK 정책](https://developers.google.com/maps/documentation/android-sdk/policies): 대비 계산과 지도 출처 검토. 외부 자료 확인일: 2026. 11. 13.

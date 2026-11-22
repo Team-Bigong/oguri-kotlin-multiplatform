@@ -44,7 +44,7 @@
 
 ### 2.2 디자인과 표현
 
-민트·주황과 중립색, Pretendard, 기존 카드·바텀시트·스낵바 체계를 따른다. 제품 문구는 짧은 해요체와 제안형을 사용한다. 디자인 기준은 [DESIGN.md](./DESIGN.md)와 모바일 가이드를 따른다.
+민트·주황과 중립색, Pretendard, 기존 카드·바텀시트·스낵바 체계를 따른다. 제품 문구는 짧은 해요체와 제안형을 사용한다. 디자인 기준은 [DESIGN.md](../guide/DESIGN.md)와 모바일 가이드를 따른다.
 
 공식 웹에 포함된 화면 이미지는 시각적 참고 자료다. 이미지의 날짜·연차 수치와 모든 배치를 최신 실행 화면의 증거로 사용하지 않는다. 타 여행 서비스의 변화와 이용자 이동 규모도 이 문서에서 확인한 사실로 취급하지 않는다.
 
@@ -573,8 +573,8 @@ Places의 출처 표기·저장 제한을 적용한다. 장소 ID와 사용자 �
 
 ### 내부 문서·소스
 
-- [MVP_WIREFRAME.md](./MVP_WIREFRAME.md), [DESIGN.md](./DESIGN.md): 현재 서비스와 디자인 기준.
-- [MOBILE_PROJECT_STRUCTURE.md](./MOBILE_PROJECT_STRUCTURE.md), [MOBILE_CONVENTIONS.md](./MOBILE_CONVENTIONS.md), [MOBILE_CODE_STYLE.md](./MOBILE_CODE_STYLE.md), [GEMINI.md](./GEMINI.md): 모바일·서버의 책임과 품질 기준.
+- [MVP_WIREFRAME.md](../guide/MVP_WIREFRAME.md), [DESIGN.md](../guide/DESIGN.md): 현재 서비스와 디자인 기준.
+- [MOBILE_PROJECT_STRUCTURE.md](../guide/MOBILE_PROJECT_STRUCTURE.md), [MOBILE_CONVENTIONS.md](../guide/MOBILE_CONVENTIONS.md), [MOBILE_CODE_STYLE.md](../guide/MOBILE_CODE_STYLE.md), [GEMINI.md](../guide/GEMINI.md): 모바일·서버의 책임과 품질 기준.
 - [RouteModels.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/navigation/RouteModels.kt), [MainNavigator.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/navigation/MainNavigator.kt), [MainNavHost.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/navigation/MainNavHost.kt), [NavDisplay.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/navigation/NavDisplay.kt): 라우트·로그인 도착점·탭 이동·공통 광고.
 - [HomeScreen.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/feature/home/ui/HomeScreen.kt), [CalendarScreen.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/feature/calendar/ui/CalendarScreen.kt), [PeriodDetailScreen.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/feature/perioddetail/ui/PeriodDetailScreen.kt), [PlaceDetailScreen.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/feature/placedetail/ui/PlaceDetailScreen.kt), [SearchScreen.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/feature/search/ui/SearchScreen.kt), [MyPageScreen.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/feature/mypage/ui/MyPageScreen.kt): 기존 화면 동작.
 - [Color.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Color.kt), [Theme.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Theme.kt), [Typography.kt](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/designsystem/Typography.kt): 팔레트·테마·서체.
