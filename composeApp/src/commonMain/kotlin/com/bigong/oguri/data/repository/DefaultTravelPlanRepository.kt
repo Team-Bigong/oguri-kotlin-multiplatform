@@ -15,6 +15,7 @@ import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelDayPlaces
 import com.bigong.oguri.domain.model.TravelInvitePreview
+import com.bigong.oguri.domain.model.TravelIssuedInvite
 import com.bigong.oguri.domain.model.TravelMember
 import com.bigong.oguri.domain.model.TravelMembers
 import com.bigong.oguri.domain.model.TravelPlace
@@ -71,6 +72,8 @@ class DefaultTravelPlanRepository internal constructor(
                     CreateTravelPlanRequest(
                         requestId = requestId,
                         city = details.city,
+                        cities = details.cities,
+                        cityIds = details.catalogCityIds(),
                         timeZone = details.timeZone.id,
                         title = details.title,
                         startDate = details.dates.start.toString(),
@@ -140,9 +143,12 @@ class DefaultTravelPlanRepository internal constructor(
     override suspend fun cities(
         query: String,
         language: String,
-    ): List<TravelCitySuggestion> = request { remote.cities(query, language).map { TravelCitySuggestion(it.id, it.label) } }
+    ): List<TravelCitySuggestion> = request { remote.cities(query, language).map { it.toDomain() } }
 
     override suspend fun cityTimeZone(placeId: String): String? = request { remote.cityTimeZone(placeId).timeZone }
+
+    override suspend fun searchInCity(planId: String, query: String, language: String, city: String): List<TravelPlace> =
+        request { remote.searchPlaces(planId, query, language, city).map { it.toDomain() } }
 
     override suspend fun search(
         planId: String,
@@ -177,10 +183,17 @@ class DefaultTravelPlanRepository internal constructor(
                 response.currentMemberId,
                 response.members.map { TravelMember(it.id, it.nickname, it.owner) },
                 response.ownershipTarget,
+                response.hasActiveInvite,
+                response.inviteExpiresAt?.let(kotlin.time.Instant::parse),
+                response.inviteToken,
             )
         }
 
-    override suspend fun issue(planId: String): String = request { remote.issueInvite(planId).token }
+    override suspend fun issue(planId: String): TravelIssuedInvite =
+        request {
+            val response = remote.issueInvite(planId)
+            TravelIssuedInvite(response.token, response.expiresAt?.let(kotlin.time.Instant::parse))
+        }
 
     override suspend fun revoke(planId: String): Unit = request { remote.revokeInvite(planId) }
 
@@ -210,6 +223,8 @@ class DefaultTravelPlanRepository internal constructor(
                     details.dates.endInclusive.toString(),
                     revision,
                     unassignedCount,
+                    details.cities,
+                    details.catalogCityIds(),
                 ),
             )
         }
@@ -254,7 +269,10 @@ class DefaultTravelPlanRepository internal constructor(
     override suspend fun preview(token: String): TravelInvitePreview =
         request {
             val response = remote.previewInvite(token)
-            TravelInvitePreview(response.title, LocalDate.parse(response.startDate), LocalDate.parse(response.endDate), response.invitedBy)
+            TravelInvitePreview(
+                response.title, LocalDate.parse(response.startDate), LocalDate.parse(response.endDate),
+                response.invitedBy, response.city, response.memberCount, response.existingPlanId, response.cities,
+            )
         }
 
     override suspend fun join(token: String): String = request { remote.joinInvite(token).planId }
@@ -306,6 +324,7 @@ class DefaultTravelPlanRepository internal constructor(
     private fun TravelPlanSummaryResponse.toDomain(): TravelPlanSummary =
         TravelPlanSummary(
             id = id,
+            memberCount = memberCount,
             details =
                 TravelPlanDetails(
                     city,
@@ -315,8 +334,13 @@ class DefaultTravelPlanRepository internal constructor(
                     source?.let {
                         TravelPlanSource(it.destinationId, it.startDate?.let(LocalDate::parse), it.endDate?.let(LocalDate::parse))
                     },
+                    cities,
+                    catalogCities.associate { it.label to it.toDomain() },
                 ),
         )
+
+    private fun TravelPlanDetails.catalogCityIds(): Map<String, Long> =
+        catalogCities.mapNotNull { (label, city) -> city.id.toLongOrNull()?.let { label to it } }.toMap()
 
     private fun TravelPlanResponse.toDomain(): TravelPlan =
         TravelPlan(
@@ -338,6 +362,7 @@ class DefaultTravelPlanRepository internal constructor(
                                 localTime = visit.localTime?.let(LocalTime::parse),
                                 note = visit.note,
                                 googlePlaceId = visit.googlePlaceId,
+                                category = visit.category,
                             ),
                         revision = visit.revision,
                     )
@@ -345,5 +370,5 @@ class DefaultTravelPlanRepository internal constructor(
         )
 
     private fun TravelVisitDetails.toRequest(): TravelVisitRequest =
-        TravelVisitRequest(name, location, localTime?.toString(), note, googlePlaceId)
+        TravelVisitRequest(name, location, localTime?.toString(), note, googlePlaceId, category)
 }

@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui.component
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Typeface
 import android.graphics.Paint
 import android.os.Bundle
 import androidx.compose.runtime.Composable
@@ -15,6 +16,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFontFamilyResolver
+import com.bigong.oguri.core.designsystem.LightOguriColorPalette
+import com.bigong.oguri.core.designsystem.OguriTheme
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.viewinterop.AndroidView
@@ -28,12 +36,17 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.GoogleApiAvailability
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMapOptions
+import com.google.android.gms.maps.model.MapColorScheme
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Dot
+import com.google.android.gms.maps.model.Gap
 import com.google.android.gms.maps.model.PolylineOptions
+import kotlin.math.ceil
 import kotlinx.coroutines.delay
 
 @Composable
@@ -66,11 +79,31 @@ internal actual fun PlatformTravelMap(
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val currentClick by rememberUpdatedState(onMarkerClick)
     val unavailable by rememberUpdatedState(onUnavailable)
-    val mapView = remember(context, lifecycle) { MapView(context) }
+    val mapColorScheme = if (OguriTheme.isDarkTheme) MapColorScheme.DARK else MapColorScheme.LIGHT
+    val backgroundArgb = travelMapBackground().toArgb()
+    val mapView = remember(context, lifecycle) {
+        MapView(context, GoogleMapOptions().mapColorScheme(mapColorScheme).backgroundColor(backgroundArgb))
+    }
     var map by remember(mapView) { mutableStateOf<GoogleMap?>(null) }
     var tilesLoaded by remember(mapView) { mutableStateOf(false) }
     var mapSize by remember(mapView) { mutableStateOf(IntSize.Zero) }
     val density = context.resources.displayMetrics.density
+    val labelStyle = OguriTheme.typography.labelMedium
+    val selectedLabelStyle = OguriTheme.typography.labelLarge
+    val labelSize = with(LocalDensity.current) { labelStyle.fontSize.toPx() }
+    val selectedLabelSize = with(LocalDensity.current) { selectedLabelStyle.fontSize.toPx() }
+    val outline = LightOguriColorPalette.surfaceCard.toArgb()
+    val distanceStyle = OguriTheme.typography.caption
+    val distanceSize = with(LocalDensity.current) { distanceStyle.fontSize.toPx() }
+    val distanceColor = OguriTheme.colors.textTertiary.toArgb()
+    val distanceOutline = travelMapBackground().toArgb()
+    val distanceLabels = scene.lines.map { travelDistanceLabel(it) }
+    val connectionColor = travelConnectionColor.toArgb()
+    val fontResolver = LocalFontFamilyResolver.current
+    val labelTypeface = fontResolver.resolve(labelStyle.fontFamily, labelStyle.fontWeight ?: FontWeight.Normal, labelStyle.fontStyle ?: FontStyle.Normal).value as Typeface
+    val selectedLabelTypeface = fontResolver.resolve(selectedLabelStyle.fontFamily, selectedLabelStyle.fontWeight ?: FontWeight.Normal, selectedLabelStyle.fontStyle ?: FontStyle.Normal).value as Typeface
+
+    val distanceTypeface = fontResolver.resolve(distanceStyle.fontFamily, FontWeight.Normal).value as Typeface
 
     DisposableEffect(mapView) {
         mapView.onCreate(Bundle())
@@ -111,15 +144,36 @@ internal actual fun PlatformTravelMap(
     }
     val renderedMap = map
     if (renderedMap != null) {
-        LaunchedEffect(renderedMap, scene) {
+        LaunchedEffect(renderedMap, mapColorScheme) {
+            renderedMap.setMapColorScheme(mapColorScheme)
+        }
+        LaunchedEffect(
+            renderedMap, scene, mapColorScheme, labelSize, selectedLabelSize, labelTypeface, selectedLabelTypeface,
+            distanceLabels, distanceSize, distanceColor, distanceOutline, distanceTypeface, connectionColor,
+        ) {
             renderedMap.clear()
-            scene.lines.forEach { line ->
+            scene.lines.zip(distanceLabels).forEach { (line, distanceLabel) ->
                 renderedMap.addPolyline(
                     PolylineOptions()
-                        .addAll(line.points.map { it.toLatLng() })
-                        .color(MAP_LINE_COLOR)
-                        .width(3 * density)
+                        .add(line.start.toLatLng(), line.end.toLatLng())
+                        .color(connectionColor)
+                        .width(2 * density)
+                        .pattern(listOf(Dot(), Gap(6 * density)))
                         .geodesic(true),
+                )
+                renderedMap.addMarker(
+                    MarkerOptions()
+                        .position(line.midpoint.toLatLng())
+                        .anchor(0.5f, 0.5f)
+                        .zIndex(-1f)
+                        .icon(
+                            BitmapDescriptorFactory.fromBitmap(
+                                distanceLabelBitmap(
+                                    distanceLabel, distanceSize, distanceColor, distanceOutline,
+                                    TRAVEL_MAP_DISTANCE_OUTLINE_WIDTH * density, distanceTypeface,
+                                ),
+                            ),
+                        ),
                 )
             }
             scene.markers.forEach { marker ->
@@ -127,26 +181,27 @@ internal actual fun PlatformTravelMap(
                     .addMarker(
                         MarkerOptions()
                             .position(marker.coordinates.toLatLng())
+                            .title(marker.title ?: marker.label)
                             .anchor(0.5f, 0.5f)
                             .zIndex(if (marker.selected) 1f else 0f)
-                            .icon(BitmapDescriptorFactory.fromBitmap(marker.bitmap(density))),
+                            .icon(BitmapDescriptorFactory.fromBitmap(marker.bitmap(density, outline, labelSize, selectedLabelSize, labelTypeface, selectedLabelTypeface))),
                     )?.tag = marker.id
             }
         }
 
         var appliedViewport by remember(renderedMap) { mutableStateOf<Int?>(null) }
-        var fittedMarkers by remember(renderedMap, viewportRequest) { mutableStateOf(false) }
-        LaunchedEffect(renderedMap, viewportRequest, scene.markers.isNotEmpty(), mapSize) {
+        var fittedCoordinates by remember(renderedMap, viewportRequest) { mutableStateOf(false) }
+        LaunchedEffect(renderedMap, viewportRequest, scene.viewportCoordinates.isNotEmpty(), mapSize) {
             if (mapSize.width == 0 || mapSize.height == 0) return@LaunchedEffect
-            val hasMarkers = scene.markers.isNotEmpty()
-            if (appliedViewport == viewportRequest && (fittedMarkers || !hasMarkers)) return@LaunchedEffect
+            val hasCoordinates = scene.viewportCoordinates.isNotEmpty()
+            if (appliedViewport == viewportRequest && (fittedCoordinates || !hasCoordinates)) return@LaunchedEffect
             appliedViewport = viewportRequest
-            fittedMarkers = hasMarkers
+            fittedCoordinates = hasCoordinates
             val focus = scene.markers.firstOrNull { it.id == focusedVisitId }
             if (focus != null) {
                 renderedMap.moveCamera(CameraUpdateFactory.newLatLngZoom(focus.coordinates.toLatLng(), 15f))
             } else {
-                val coordinates = scene.markers.map { it.coordinates.toLatLng() }.distinct()
+                val coordinates = scene.viewportCoordinates.map { it.toLatLng() }.distinct()
                 when (coordinates.size) {
                     0 ->
                         renderedMap.moveCamera(
@@ -176,23 +231,63 @@ internal actual fun PlatformTravelMap(
 
 private fun TravelCoordinates.toLatLng(): LatLng = LatLng(latitude, longitude)
 
-private fun TravelMapMarker.bitmap(density: Float): Bitmap {
-    val size = (34 * density).toInt().coerceAtLeast(1)
+private fun TravelMapMarker.bitmap(
+    density: Float,
+    outline: Int,
+    labelSize: Float,
+    selectedLabelSize: Float,
+    labelTypeface: Typeface,
+    selectedLabelTypeface: Typeface,
+): Bitmap {
+    val size = ((if (selected) 44 else 26) * density).toInt().coerceAtLeast(1)
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     val middle = size / 2f
-    paint.color = android.graphics.Color.WHITE
-    canvas.drawCircle(middle, middle, middle, paint)
+    if (selected) {
+        paint.color = highlightColorArgb
+        canvas.drawCircle(middle, middle, middle, paint)
+    }
+    val radius = (if (selected) 16 else 13) * density
+    paint.color = outline
+    canvas.drawCircle(middle, middle, radius, paint)
     paint.color = colorArgb
-    canvas.drawCircle(middle, middle, middle * 0.86f, paint)
+    canvas.drawCircle(middle, middle, radius - 2 * density, paint)
     label?.let {
-        paint.color = android.graphics.Color.WHITE
+        paint.color = labelColorArgb
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = middle * 0.84f
+        paint.textSize = if (selected) selectedLabelSize else labelSize
+        paint.typeface = if (selected) selectedLabelTypeface else labelTypeface
         canvas.drawText(it, middle, middle - (paint.ascent() + paint.descent()) / 2, paint)
     }
     return bitmap
 }
 
-private const val MAP_LINE_COLOR: Int = 0xff007d69.toInt()
+private fun distanceLabelBitmap(
+    label: String,
+    textSize: Float,
+    textColor: Int,
+    outlineColor: Int,
+    outlineWidth: Float,
+    typeface: Typeface,
+): Bitmap {
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        this.textSize = textSize
+        this.typeface = typeface
+        textAlign = Paint.Align.CENTER
+    }
+    val width = ceil(paint.measureText(label) + 2 * outlineWidth).toInt().coerceAtLeast(1)
+    val height = ceil(paint.descent() - paint.ascent() + 2 * outlineWidth).toInt().coerceAtLeast(1)
+    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val baseline = (height - paint.ascent() - paint.descent()) / 2
+    paint.color = outlineColor
+    paint.style = Paint.Style.STROKE
+    paint.strokeWidth = 2 * outlineWidth
+    paint.strokeJoin = Paint.Join.ROUND
+    canvas.drawText(label, width / 2f, baseline, paint)
+    paint.color = textColor
+    paint.style = Paint.Style.FILL
+    canvas.drawText(label, width / 2f, baseline, paint)
+    return bitmap
+}

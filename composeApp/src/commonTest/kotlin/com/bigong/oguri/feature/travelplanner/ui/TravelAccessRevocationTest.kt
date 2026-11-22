@@ -62,6 +62,29 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun addingASearchedPlaceSavesItsNoteAndKeepsItWhenRetrying() =
+        runTest {
+            val plans = AccessPlans(plan)
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            val place = TravelPlace("market", "Market", null, TravelCoordinates(1.0, 2.0), emptyList())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+
+            plans.saveFailure = TravelPlanFailure.CONNECTION
+            viewModel.addPlace(place, dayNumber = 2, category = TravelVisitCategory.SHOPPING, note = "  Meet at the entrance  ")
+            advanceUntilIdle()
+            val first = assertIs<TravelVisitChange.Add>(plans.saveAttempts.single())
+            assertEquals("Meet at the entrance", first.details.note)
+            assertEquals(place.id, first.details.googlePlaceId)
+            assertEquals(2, first.dayNumber)
+
+            plans.saveFailure = null
+            viewModel.retrySave()
+            advanceUntilIdle()
+            assertEquals(listOf<TravelVisitChange>(first, first), plans.saveAttempts)
+        }
+
+    @Test
     fun visitSaveConflictIsRecordedBeforeALaterConfirmedSave() =
         runTest {
             val plans = AccessPlans(plan)
@@ -155,7 +178,7 @@ class TravelAccessRevocationTest {
         }
 
     @Test
-    fun orderConflictPreservesTheAttemptAndRequiresAnExplicitSaveAgainstTheLatestOrder() =
+    fun orderConflictRequiresAnExplicitSaveThatPreservesNewVisits() =
         runTest {
             val visits = listOf(
                 TravelVisit("first", 1, TravelVisitDetails("First", null, null, null, null), 1),
@@ -178,7 +201,8 @@ class TravelAccessRevocationTest {
             assertEquals(listOf<TravelVisitChange>(attempted), plans.saveAttempts)
 
             plans.saveFailure = null
-            plans.currentPlan = plans.currentPlan.copy(revision = 2, dayOrderRevisions = mapOf(1 to 2L))
+            val addedVisit = TravelVisit("added", 1, TravelVisitDetails("Added", null, null, null, null), 1)
+            plans.currentPlan = plans.currentPlan.copy(revision = 2, dayOrderRevisions = mapOf(1 to 2L), visits = visits + addedVisit)
             val reopened = createTravelPlannerTestViewModel(plans, recovery)
             reopened.loadPlan("plan")
             advanceUntilIdle()
@@ -188,7 +212,11 @@ class TravelAccessRevocationTest {
             assertEquals(1, plans.saveAttempts.size)
             reopened.applyUnappliedOrder()
             advanceUntilIdle()
-            assertEquals(listOf<TravelVisitChange>(attempted, attempted.copy(expectedOrderRevision = 2)), plans.saveAttempts)
+            assertEquals(
+                listOf<TravelVisitChange>(attempted, attempted.copy(expectedOrderRevision = 2, visitIds = desired + addedVisit.id)),
+                plans.saveAttempts,
+            )
+            assertEquals(2, plans.saveRequestIds.distinct().size)
             assertNull(reopened.state.value.unappliedOrder)
             assertNull(recovery.load("plan").unappliedOrder)
         }
@@ -238,6 +266,36 @@ class TravelAccessRevocationTest {
             assertNull(viewModel.state.value.plan)
             assertNull(recovery.confirmed)
             assertEquals(TravelPlanFailure.UNAVAILABLE, viewModel.state.value.failure)
+        }
+
+    @Test
+    fun homeReentryReusesTheResumeResultUntilInvalidated() =
+        runTest {
+            var requests = 0
+            val plans =
+                ResumePlans(plan).apply {
+                    action = {
+                        requests++
+                        plan.summary
+                    }
+                }
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+
+            viewModel.refreshResumeIfNeeded()
+            viewModel.refreshResumeIfNeeded()
+            assertEquals(1, requests)
+            assertEquals(plan.summary, viewModel.state.value.resumePlan)
+
+            viewModel.invalidateResume(removedPlanId = plan.summary.id)
+            assertNull(viewModel.state.value.resumePlan)
+            plans.action = {
+                requests++
+                null
+            }
+            viewModel.refreshResumeIfNeeded()
+            viewModel.refreshResumeIfNeeded()
+            assertEquals(2, requests)
+            assertNull(viewModel.state.value.resumePlan)
         }
 
     @Test
@@ -341,13 +399,13 @@ class TravelAccessRevocationTest {
             )
             viewModel.loadPlan("plan")
             advanceUntilIdle()
-            assertEquals(TravelPlan.UNASSIGNED_DAY, viewModel.state.value.selectedDay)
+            assertEquals(1, viewModel.state.value.selectedDay)
             assertEquals(draft, viewModel.state.value.visitDraft)
             assertTrue(viewModel.state.value.needsLatestPlan)
 
             viewModel.loadPlan("plan", rebaseDraft = true)
             advanceUntilIdle()
-            assertEquals(TravelPlan.UNASSIGNED_DAY, viewModel.state.value.visitDraft?.dayNumber)
+            assertEquals(1, viewModel.state.value.visitDraft?.dayNumber)
             assertEquals("Museum", viewModel.state.value.visitDraft?.name)
             assertTrue(plans.saveAttempts.isEmpty())
         }
@@ -720,6 +778,54 @@ class TravelAccessRevocationTest {
             assertTrue(requireNotNull(viewModel.state.value.overview).incomplete)
             assertFalse(requireNotNull(viewModel.state.value.overview).loading)
         }
+    @Test
+    fun presetCityKeepsItsZoneWithoutAPlaceLookup() = runTest {
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), DeniedPlaces())
+        assertEquals("Asia/Seoul", viewModel.resolveCityTimeZone("서울", "ko"))
+    }
+
+    @Test
+    fun promotedSavedCityResolvesItsOwnZone() = runTest {
+        val places = object : TravelPlaceRepository by DeniedPlaces() {
+            override suspend fun cities(query: String, language: String): List<TravelCitySuggestion> {
+                assertEquals("싱가포르", query)
+                assertEquals("ko", language)
+                return listOf(TravelCitySuggestion("singapore-id", query))
+            }
+            override suspend fun cityTimeZone(placeId: String): String {
+                assertEquals("singapore-id", placeId)
+                return "Asia/Singapore"
+            }
+        }
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), places)
+        assertEquals("Asia/Singapore", viewModel.resolveCityTimeZone("싱가포르", "ko"))
+    }
+
+    @Test
+    fun anotherCitySearchResultCannotSupplyThePromotedCityZone() = runTest {
+        val places = object : TravelPlaceRepository by DeniedPlaces() {
+            override suspend fun cities(query: String, language: String) = listOf(TravelCitySuggestion("other-id", "다른 도시"))
+        }
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), places)
+        assertNull(viewModel.resolveCityTimeZone("싱가포르", "ko"))
+    }
+
+    @Test
+    fun failedCityLookupCanBeRetriedWithoutKeepingAnInvalidZone() = runTest {
+        var fail = true
+        val places = object : TravelPlaceRepository by DeniedPlaces() {
+            override suspend fun cities(query: String, language: String): List<TravelCitySuggestion> {
+                if (fail) throw TravelPlanException(TravelPlanFailure.CONNECTION)
+                return listOf(TravelCitySuggestion("singapore-id", query))
+            }
+            override suspend fun cityTimeZone(placeId: String) = "Asia/Singapore"
+        }
+        val viewModel = createTravelPlannerTestViewModel(AccessPlans(plan), AccessRecovery(), places)
+        assertNull(viewModel.resolveCityTimeZone("싱가포르", "ko"))
+        fail = false
+        assertEquals("Asia/Singapore", viewModel.resolveCityTimeZone("싱가포르", "ko"))
+    }
+
 }
 
 private class AccessPlans(

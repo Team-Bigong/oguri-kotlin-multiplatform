@@ -2,6 +2,7 @@ package com.bigong.oguri.service
 
 import com.bigong.oguri.domain.TravelPlan
 import com.bigong.oguri.repository.MemberRepository
+import com.bigong.oguri.repository.TravelCatalogCityRepository
 import com.bigong.oguri.repository.TravelChangeRow
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelMemberRow
@@ -10,6 +11,7 @@ import com.bigong.oguri.repository.TravelReminderRepository
 import com.bigong.oguri.repository.TravelUsageEdit
 import com.bigong.oguri.repository.TravelUsageEntry
 import com.bigong.oguri.repository.TravelUsageRepository
+import com.bigong.oguri.repository.resolveCityReferences
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -23,6 +25,8 @@ import java.time.ZoneOffset
 import java.util.Base64
 import java.util.HexFormat
 import java.util.UUID
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 @Service
 class TravelCollaborationService(
@@ -32,9 +36,15 @@ class TravelCollaborationService(
     private val collaboration: TravelCollaborationRepository,
     private val reminders: TravelReminderRepository,
     private val usage: TravelUsageRepository,
+    private val cityCatalog: TravelCatalogCityRepository,
     @param:Value("\${TRAVEL_INVITE_TTL_DAYS:7}") private val inviteTtlDays: Long,
+    @param:Value("\${TRAVEL_INVITE_TOKEN_SECRET:\${JWT_SECRET:}}") inviteTokenSecret: String = "",
 ) {
-    private val random: SecureRandom = SecureRandom()
+    private val inviteTokenKey: SecretKeySpec =
+        SecretKeySpec(
+            inviteTokenSecret.takeIf(String::isNotBlank)?.toByteArray() ?: ByteArray(HMAC_KEY_BYTES).also(SecureRandom()::nextBytes),
+            "HmacSHA256",
+        )
 
     @Transactional
     fun members(
@@ -43,7 +53,19 @@ class TravelCollaborationService(
     ): TravelMembersResponse {
         planService.requireMember(memberId)
         val plan = planService.accessiblePlan(memberId, planId)
-        return TravelMembersResponse(memberId, collaboration.members(planId, plan.ownerId), collaboration.ownershipTarget(planId))
+        val activeInvite = if (plan.ownerId == memberId) collaboration.activeInviteForOwner(planId, memberId, now()) else null
+        val inviteToken =
+            activeInvite?.let { invite ->
+                invite.nonce?.let { nonce -> inviteToken(planId, nonce) }?.takeIf { hash(it) == invite.hash }
+            }
+        return TravelMembersResponse(
+            currentMemberId = memberId,
+            members = collaboration.members(planId, plan.ownerId),
+            ownershipTarget = collaboration.ownershipTarget(planId),
+            hasActiveInvite = activeInvite != null,
+            inviteExpiresAt = activeInvite?.expiresAt,
+            inviteToken = inviteToken,
+        )
     }
 
     @Transactional
@@ -52,11 +74,12 @@ class TravelCollaborationService(
         planId: UUID,
     ): IssuedTravelInvite {
         owner(memberId, planId)
-        val token = Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(32).also(random::nextBytes))
+        val nonce = UUID.randomUUID()
+        val token = inviteToken(planId, nonce)
         val expires = now().plusDays(inviteTtlDays.coerceIn(1, 30))
         collaboration.revokeInvites(planId)
-        collaboration.issue(planId, memberId, hash(token), expires)
-        return IssuedTravelInvite(token, expires)
+        val storedExpiresAt = collaboration.issue(planId, memberId, hash(token), expires, nonce)
+        return IssuedTravelInvite(token, storedExpiresAt)
     }
 
     @Transactional
@@ -102,14 +125,24 @@ class TravelCollaborationService(
     }
 
     @Transactional
-    fun preview(token: String): TravelInvitePreview {
+    fun preview(token: String, memberId: String?): TravelInvitePreview {
         val hash = hash(token)
         val planId = lookupPlanId(hash)
         val plan = plans.findForRead(planId) ?: throw TravelInviteException(HttpStatus.GONE, "INVITE_TRIP_DELETED")
         val invite = collaboration.invite(hash) ?: throw TravelInviteException(HttpStatus.NOT_FOUND, "INVITE_UNKNOWN")
-        requireActive(invite.expiresAt, invite.revokedAt)
+        val alreadyJoined = memberId != null && (plan.ownerId == memberId || collaboration.isMember(planId, memberId))
+        if (!alreadyJoined) requireActive(invite.expiresAt, invite.revokedAt)
         val inviter = invite.issuedBy?.let { members.findById(it).orElse(null)?.nickname }
-        return TravelInvitePreview(plan.title, plan.startDate, plan.endDate, inviter)
+        return TravelInvitePreview(
+            title = plan.title,
+            startDate = plan.startDate,
+            endDate = plan.endDate,
+            invitedBy = inviter,
+            city = plan.city,
+            memberCount = collaboration.memberCounts(listOf(plan.id))[plan.id] ?: 1,
+            existingPlanId = planId.takeIf { alreadyJoined },
+            cities = plan.cityNames(),
+        )
     }
 
     @Transactional
@@ -141,6 +174,8 @@ class TravelCollaborationService(
     ) {
         val plan = owner(memberId, planId)
         val reminderTimeChanged = plan.startDate != change.startDate || plan.endDate != change.endDate || plan.timeZone != change.timeZone
+        val cities = change.cities.map(String::trim)
+        val existingReferences = plan.catalogCities().filterKeys { it in cities }
         plan.updateDetails(
             change.city.trim(),
             change.title.trim(),
@@ -149,6 +184,8 @@ class TravelCollaborationService(
             change.endDate,
             requireNotNull(change.expectedRevision),
             requireNotNull(change.confirmedUnassignedCount),
+            cities,
+            existingReferences + cityCatalog.resolveCityReferences(change.cityIds.orEmpty(), existingReferences),
         )
         if (reminderTimeChanged) reminders.cancelForPlan(planId)
         collaboration.recordChange(planId, memberId, plan.revision, null, "TRIP_UPDATED")
@@ -268,6 +305,13 @@ class TravelCollaborationService(
         if (!expiresAt.isAfter(now())) throw TravelInviteException(HttpStatus.GONE, "INVITE_EXPIRED")
     }
 
+    private fun inviteToken(planId: UUID, nonce: UUID): String {
+        val mac = Mac.getInstance(inviteTokenKey.algorithm)
+        mac.init(inviteTokenKey)
+        val token = mac.doFinal("oguri:travel-invite:v1:$planId:$nonce".toByteArray())
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(token)
+    }
+
     private fun hash(token: String): String {
         if (!TOKEN.matches(token)) throw TravelInviteException(HttpStatus.NOT_FOUND, "INVITE_UNKNOWN")
         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(token.toByteArray()))
@@ -276,6 +320,7 @@ class TravelCollaborationService(
     private fun now(): OffsetDateTime = OffsetDateTime.now(ZoneOffset.UTC)
 
     private companion object {
+        const val HMAC_KEY_BYTES = 32
         val TOKEN: Regex = Regex("[A-Za-z0-9_-]{43}")
     }
 }
@@ -284,6 +329,9 @@ data class TravelMembersResponse(
     val currentMemberId: String,
     val members: List<TravelMemberRow>,
     val ownershipTarget: String?,
+    val hasActiveInvite: Boolean = false,
+    val inviteExpiresAt: OffsetDateTime? = null,
+    val inviteToken: String? = null,
 )
 
 data class IssuedTravelInvite(
@@ -296,6 +344,10 @@ data class TravelInvitePreview(
     val startDate: LocalDate,
     val endDate: LocalDate,
     val invitedBy: String?,
+    val city: String? = null,
+    val memberCount: Int? = null,
+    val existingPlanId: UUID? = null,
+    val cities: List<String> = emptyList(),
 )
 
 data class JoinedTravelPlan(
@@ -324,4 +376,6 @@ data class TravelDetailsChange(
     val endDate: LocalDate,
     val expectedRevision: Long?,
     val confirmedUnassignedCount: Int?,
+    val cities: List<String> = listOf(city),
+    val cityIds: Map<String, Long>? = null,
 )

@@ -19,6 +19,39 @@ class TravelManagementAccessTest {
     @AfterTest fun reset() = Dispatchers.resetMain()
 
     @Test
+    fun existingMembershipOpensThePlanWithoutJoiningOrShowingAPreview() = runTest {
+        val repository = ManagementCollaboration().apply { existingPlanId = "shared-trip" }
+        val viewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+
+        viewModel.preview("invite")
+        advanceUntilIdle()
+
+        assertEquals("shared-trip", viewModel.state.value.joinedPlanId)
+        assertNull(viewModel.state.value.preview)
+        assertTrue(repository.joinedTokens.isEmpty())
+    }
+
+    @Test
+    fun terminalInvitationsKeepTheirOwnReasonAndCannotBeJoined() = runTest {
+        for (reason in listOf(TravelPlanFailure.INVITE_EXPIRED, TravelPlanFailure.INVITE_REVOKED, TravelPlanFailure.INVITE_TRIP_DELETED)) {
+            val repository = ManagementCollaboration()
+            val viewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+            viewModel.preview("valid")
+            advanceUntilIdle()
+            assertNotNull(viewModel.state.value.preview)
+            repository.failure = reason
+            viewModel.preview("closed")
+            advanceUntilIdle()
+            assertEquals(reason, viewModel.state.value.failure)
+            assertNull(viewModel.state.value.preview)
+            assertFalse(viewModel.state.value.busy)
+            viewModel.join("closed")
+            advanceUntilIdle()
+            assertTrue(repository.joinedTokens.isEmpty())
+        }
+    }
+
+    @Test
     fun replacingAnInvitationBlocksAStaleJoinAndDiscardsItsLateFailure() =
         runTest {
             val repository = ManagementCollaboration()
@@ -60,15 +93,42 @@ class TravelManagementAccessTest {
             viewModel.recentChanges("plan")
             advanceUntilIdle()
             assertNotNull(viewModel.state.value.members)
-            assertNotNull(viewModel.state.value.invite)
+            assertNotNull(viewModel.state.value.members?.inviteToken)
             assertNotNull(viewModel.state.value.recentChanges)
             repository.failure = TravelPlanFailure.UNAVAILABLE
             viewModel.members("plan")
             advanceUntilIdle()
             assertNull(viewModel.state.value.members)
-            assertNull(viewModel.state.value.invite)
+            assertNull(viewModel.state.value.members?.inviteToken)
             assertNull(viewModel.state.value.recentChanges)
             assertEquals(TravelPlanFailure.UNAVAILABLE, viewModel.state.value.failure)
+        }
+
+    @Test
+    fun reopeningManagementRestoresTheSameInviteUntilRevoked() =
+        runTest {
+            val repository = ManagementCollaboration()
+            val firstViewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+            firstViewModel.members("plan")
+            advanceUntilIdle()
+            assertFalse(assertNotNull(firstViewModel.state.value.members).hasActiveInvite)
+
+            firstViewModel.issue("plan")
+            advanceUntilIdle()
+            val issued = assertNotNull(firstViewModel.state.value.members)
+            assertTrue(issued.hasActiveInvite)
+            assertNotNull(issued.inviteToken)
+
+            val reopenedViewModel = TravelCollaborationViewModel(repository, ManagementPlans())
+            reopenedViewModel.members("plan")
+            advanceUntilIdle()
+            assertEquals(issued.inviteToken, reopenedViewModel.state.value.members?.inviteToken)
+
+            reopenedViewModel.revoke("plan")
+            advanceUntilIdle()
+            val revoked = assertNotNull(reopenedViewModel.state.value.members)
+            assertFalse(revoked.hasActiveInvite)
+            assertNull(revoked.inviteToken)
         }
 
     @Test
@@ -150,10 +210,11 @@ class TravelManagementAccessTest {
     fun unavailableReminderSettingsDoNotKeepThePreviousReservationVisible() =
         runTest {
             val repository = ManagementReminders()
-            val viewModel = TravelReminderViewModel(repository)
+            val viewModel = TravelReminderViewModel(repository, isPermissionDenied = { true })
             viewModel.load("plan")
             advanceUntilIdle()
             assertNotNull(viewModel.state.value.settings)
+            assertTrue(viewModel.state.value.permissionDenied)
             repository.failure = TravelPlanFailure.CONNECTION
             viewModel.load("plan")
             advanceUntilIdle()
@@ -173,12 +234,21 @@ private class ManagementCollaboration : TravelCollaborationRepository {
         failure?.let { throw TravelPlanException(it) }
     }
 
+    private var activeInvite: TravelIssuedInvite? = null
+
     override suspend fun members(planId: String): TravelMembers {
         checkAccess()
-        return TravelMembers("owner", listOf(TravelMember("owner", "Nickname", true)), null)
+        return TravelMembers(
+            "owner",
+            listOf(TravelMember("owner", "Nickname", true)),
+            null,
+            hasActiveInvite = activeInvite != null,
+            inviteToken = activeInvite?.token,
+        )
     }
 
-    override suspend fun issue(planId: String): String = "secret-invite"
+    override suspend fun issue(planId: String): TravelIssuedInvite =
+        TravelIssuedInvite("secret-invite", null).also { activeInvite = it }
 
     override suspend fun recentChanges(planId: String): TravelRecentChanges =
         TravelRecentChanges(1, listOf(TravelChange(1, 1, "VISIT_ADDED")))
@@ -188,7 +258,9 @@ private class ManagementCollaboration : TravelCollaborationRepository {
         revision: Long,
     ) = checkAccess()
 
-    override suspend fun revoke(planId: String): Unit = error("Unused")
+    override suspend fun revoke(planId: String) {
+        activeInvite = null
+    }
 
     override suspend fun remove(
         planId: String,
@@ -213,11 +285,14 @@ private class ManagementCollaboration : TravelCollaborationRepository {
 
     override suspend fun acceptOwnership(planId: String): Unit = error("Unused")
 
+    var existingPlanId: String? = null
     val joinedTokens = mutableListOf<String>()
     var joinInvite: suspend (String) -> String = { error("Unused") }
 
-    override suspend fun preview(token: String): TravelInvitePreview =
-        TravelInvitePreview(token, LocalDate(2027, 4, 1), LocalDate(2027, 4, 3), null)
+    override suspend fun preview(token: String): TravelInvitePreview {
+        checkAccess()
+        return TravelInvitePreview(token, LocalDate(2027, 4, 1), LocalDate(2027, 4, 3), null, existingPlanId = existingPlanId)
+    }
 
     override suspend fun join(token: String): String {
         joinedTokens.add(token)

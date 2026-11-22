@@ -16,6 +16,19 @@ fun installTravelReminderPushBridge(bridge: TravelReminderPushBridge) {
     pushBridge = bridge
 }
 
+internal actual suspend fun travelReminderPermissionDenied(): Boolean =
+    suspendCancellableCoroutine { continuation ->
+        platform.UserNotifications.UNUserNotificationCenter.currentNotificationCenter().getNotificationSettingsWithCompletionHandler { settings ->
+            if (continuation.isActive) continuation.resume(settings?.authorizationStatus == platform.UserNotifications.UNAuthorizationStatusDenied)
+        }
+    }
+
+internal actual fun openTravelReminderSettings() {
+    platform.Foundation.NSURL.URLWithString(platform.UIKit.UIApplicationOpenSettingsURLString)?.let { url ->
+        platform.UIKit.UIApplication.sharedApplication.openURL(url, emptyMap<Any?, Any>(), null)
+    }
+}
+
 internal actual suspend fun requestTravelReminderPermission(): Boolean =
     suspendCancellableCoroutine { continuation ->
         val bridge = pushBridge

@@ -1,6 +1,7 @@
 package com.bigong.oguri.domain.repository
 
 import com.bigong.oguri.domain.model.TravelInvitePreview
+import com.bigong.oguri.domain.model.TravelIssuedInvite
 import com.bigong.oguri.domain.model.TravelMembers
 import com.bigong.oguri.domain.model.TravelPlanDetails
 import com.bigong.oguri.domain.model.TravelRecentChanges
@@ -8,7 +9,7 @@ import com.bigong.oguri.domain.model.TravelRecentChanges
 interface TravelCollaborationRepository {
     suspend fun members(planId: String): TravelMembers
 
-    suspend fun issue(planId: String): String
+    suspend fun issue(planId: String): TravelIssuedInvite
 
     suspend fun revoke(planId: String)
 

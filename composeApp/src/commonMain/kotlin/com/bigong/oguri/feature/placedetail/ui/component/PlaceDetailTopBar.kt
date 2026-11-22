@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +33,7 @@ import com.bigong.oguri.core.ui.component.AnchoredPopupMenu
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.btn_back
+import oguri.composeapp.generated.resources.travel_back
 import oguri.composeapp.generated.resources.btn_menu
 import oguri.composeapp.generated.resources.place_detail_menu_save
 import oguri.composeapp.generated.resources.place_detail_menu_share
@@ -59,18 +61,20 @@ fun PlaceDetailTopBar(
                 modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .padding(horizontal = 4.dp),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.background(color = Neutral100.copy(alpha = 0.3f), shape = CircleShape),
+                modifier = Modifier.size(44.dp).noRippleClickable(onClick = onBackClick),
             ) {
-                Image(
-                    painter = painterResource(Res.drawable.btn_back),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(tintColor),
-                    modifier = Modifier.noRippleClickable(onClick = onBackClick),
-                )
+                Box(Modifier.size(24.dp).background(Neutral0, CircleShape), contentAlignment = Alignment.Center) {
+                    Image(
+                        painter = painterResource(Res.drawable.btn_back),
+                        contentDescription = stringResource(Res.string.travel_back),
+                        colorFilter = ColorFilter.tint(Neutral100),
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
             }
         }
     } else {

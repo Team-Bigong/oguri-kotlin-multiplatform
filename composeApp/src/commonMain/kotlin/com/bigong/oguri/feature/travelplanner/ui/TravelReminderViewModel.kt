@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigong.oguri.core.notification.requestTravelReminderPermission
+import com.bigong.oguri.core.notification.travelReminderPermissionDenied
 import com.bigong.oguri.domain.model.TravelPlanException
 import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelReminderTime
@@ -17,10 +18,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@Inject
-class TravelReminderViewModel(
+class TravelReminderViewModel internal constructor(
     private val repository: TravelReminderRepository,
+    private val isPermissionDenied: suspend () -> Boolean,
 ) : ViewModel() {
+    @Inject
+    constructor(repository: TravelReminderRepository) : this(repository, ::travelReminderPermissionDenied)
+
     private val mutableState: MutableStateFlow<TravelReminderUiState> = MutableStateFlow(TravelReminderUiState())
     private var openingJob: Job? = null
     internal val state: StateFlow<TravelReminderUiState> = mutableState.asStateFlow()
@@ -28,7 +32,8 @@ class TravelReminderViewModel(
     internal fun load(planId: String) =
         perform {
             val settings = repository.settings(planId)
-            mutableState.update { it.copy(settings = settings) }
+            val permissionDenied = isPermissionDenied()
+            mutableState.update { it.copy(settings = settings, permissionDenied = permissionDenied) }
         }
 
     internal fun schedule(
@@ -45,6 +50,11 @@ class TravelReminderViewModel(
             repository.schedule(planId, settings, time)
             mutableState.update { it.copy(settings = repository.settings(planId)) }
         }
+    }
+
+    internal suspend fun refreshPermission() {
+        val denied = isPermissionDenied()
+        mutableState.update { it.copy(permissionDenied = denied) }
     }
 
     internal fun cancel(planId: String) {

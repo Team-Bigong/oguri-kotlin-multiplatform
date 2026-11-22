@@ -14,6 +14,7 @@ import com.bigong.oguri.dto.response.TravelPlanSummaryResponse
 import com.bigong.oguri.dto.response.TravelVisitResponse
 import com.bigong.oguri.repository.DestinationRepository
 import com.bigong.oguri.repository.MemberRepository
+import com.bigong.oguri.repository.TravelCatalogCityRepository
 import com.bigong.oguri.repository.TravelCollaborationRepository
 import com.bigong.oguri.repository.TravelPlanRepository
 import com.bigong.oguri.repository.TravelPlanViewRepository
@@ -21,6 +22,7 @@ import com.bigong.oguri.repository.TravelUsageActivity
 import com.bigong.oguri.repository.TravelUsageEdit
 import com.bigong.oguri.repository.TravelUsageEntry
 import com.bigong.oguri.repository.TravelUsageRepository
+import com.bigong.oguri.repository.resolveCityReferences
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -41,6 +43,7 @@ class TravelPlanService(
     private val views: TravelPlanViewRepository,
     private val collaboration: TravelCollaborationRepository,
     private val usage: TravelUsageRepository,
+    private val cityCatalog: TravelCatalogCityRepository,
 ) {
     @Transactional
     fun create(
@@ -71,6 +74,8 @@ class TravelPlanService(
                         creationRequestId = request.requestId,
                         creationFingerprint = fingerprint,
                         city = request.city.trim(),
+                        cities = request.cities.map(String::trim),
+                        cityReferences = cityCatalog.resolveCityReferences(request.cityIds.orEmpty()),
                         timeZone = request.timeZone.trim(),
                         title = request.title.trim(),
                         startDate = request.startDate,
@@ -87,7 +92,9 @@ class TravelPlanService(
     @Transactional(readOnly = true)
     fun list(memberId: String): List<TravelPlanSummaryResponse> {
         requireMember(memberId)
-        return plans.findAccessible(memberId).map { it.toSummary() }
+        val accessible = plans.findAccessible(memberId)
+        val memberCounts = collaboration.memberCounts(accessible.map(TravelPlan::id))
+        return accessible.map { it.toSummary(memberCounts[it.id]) }
     }
 
     @Transactional
@@ -144,12 +151,14 @@ class TravelPlanService(
     }
 
     @Transactional
-    fun cityForPlaces(
+    internal fun cityForPlaces(
         memberId: String,
         planId: UUID,
-    ): String {
+        selectedCity: String? = null,
+    ): TravelPlaceSearchCity {
         requireMember(memberId)
-        return accessiblePlan(memberId, planId).city
+        val city = accessiblePlan(memberId, planId).cityForPlaces(selectedCity)
+        return TravelPlaceSearchCity(city.label, city.catalogCity?.let { TravelPlaceSearchCenter(it.latitude, it.longitude) })
     }
 
     @Transactional
@@ -325,7 +334,11 @@ class TravelPlanService(
 
     private fun fingerprint(request: Any): String =
         HexFormat.of().formatHex(
-            MessageDigest.getInstance("SHA-256").digest(objectMapper.writeValueAsBytes(request)),
+            MessageDigest.getInstance("SHA-256").digest(objectMapper.writeValueAsBytes(
+                if (request is CreateTravelPlanRequest && request.cities == listOf(request.city)) {
+                    objectMapper.valueToTree<com.fasterxml.jackson.databind.node.ObjectNode>(request).also { it.remove("cities") }
+                } else request,
+            )),
         )
 
     private fun TravelVisitRequest.toDomain(): TravelVisitDetails =
@@ -335,9 +348,10 @@ class TravelPlanService(
             localTime = localTime,
             note = note?.trim()?.takeIf(String::isNotEmpty),
             googlePlaceId = googlePlaceId,
+            category = if (category == com.bigong.oguri.domain.TravelVisitCategory.FLIGHT) com.bigong.oguri.domain.TravelVisitCategory.TRANSPORT else category,
         )
 
-    private fun TravelPlan.toSummary(): TravelPlanSummaryResponse =
+    private fun TravelPlan.toSummary(memberCount: Int? = null): TravelPlanSummaryResponse =
         TravelPlanSummaryResponse(
             id,
             city,
@@ -350,6 +364,9 @@ class TravelPlanService(
             } else {
                 TravelPlanSourceResponse(sourceDestinationId, sourceStartDate, sourceEndDate)
             },
+            memberCount,
+            cityNames(),
+            catalogCities().map { (label, catalogCity) -> catalogCity.toSuggestion(label) },
         )
 
     private fun TravelPlan.toResponseFor(memberId: String): TravelPlanResponse =
@@ -373,6 +390,7 @@ class TravelPlanService(
                         localTime = visit.localTime?.toString(),
                         note = visit.note,
                         googlePlaceId = visit.googlePlaceId,
+                        category = visit.category,
                         revision = visit.revision,
                     )
                 },
@@ -395,7 +413,7 @@ data class StoredVisitUndo(
             position,
             structureRevision,
             targetDay,
-            deletedDetails?.let { TravelVisitDetails(it.name, it.location, it.localTime, it.note, it.googlePlaceId) },
+            deletedDetails?.let { TravelVisitDetails(it.name, it.location, it.localTime, it.note, it.googlePlaceId, it.category) },
         )
 
     companion object {
@@ -406,7 +424,7 @@ data class StoredVisitUndo(
                 undo.position,
                 undo.structureRevision,
                 undo.targetDay,
-                undo.deletedDetails?.let { TravelVisitRequest(it.name, it.location, it.localTime, it.note, it.googlePlaceId) },
+                undo.deletedDetails?.let { TravelVisitRequest(it.name, it.location, it.localTime, it.note, it.googlePlaceId, it.category) },
             )
     }
 }

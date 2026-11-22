@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F80282945AE44223A3406DB1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = F80282945AE44223A3406DB2 /* FirebaseMessaging */; };
 		86565C8F2F6E7FA800AC6E1C /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 86565C8E2F6E7FA800AC6E1C /* FirebaseAnalytics */; };
 		86565C912F6E7FA800AC6E1C /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 86565C902F6E7FA800AC6E1C /* FirebaseCrashlytics */; };
 		86840E242F66EC09007C5D22 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 86840E232F66EC09007C5D22 /* KakaoSDKAuth */; };
@@ -18,6 +17,7 @@
 		86FBCAE12F6D402F00D24773 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 86FBCAE02F6D402F00D24773 /* GoogleMobileAds */; };
 		9DB5265D2F81010000AABB01 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 9DB5265D2F81010000AABB02 /* GoogleMaps */; };
 		A1B2C3D42F70000100AAA111 /* AmplitudeUnified in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D52F70000100AAA111 /* AmplitudeUnified */; };
+		F80282945AE44223A3406DB1 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = F80282945AE44223A3406DB2 /* FirebaseMessaging */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -272,6 +272,7 @@
 				COPY_PHASE_STRIP = YES;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = XF8RTA3858;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -302,8 +303,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIconDebug;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
-				OGURI_APS_ENVIRONMENT = development;
-				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"iosApp/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
@@ -323,6 +322,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OGURI_APS_ENVIRONMENT = development;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -341,8 +341,6 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = iosApp/iosApp.entitlements;
-				OGURI_APS_ENVIRONMENT = production;
-				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = YES;
 				DEAD_CODE_STRIPPING = YES;
@@ -364,6 +362,8 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				OGURI_APS_ENVIRONMENT = production;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -412,6 +412,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = XF8RTA3858;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
@@ -478,7 +479,7 @@
 			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 2.27.2;
+				minimumVersion = 2.30.0;
 			};
 		};
 		86FBCADF2F6D402F00D24773 /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
@@ -494,7 +495,7 @@
 			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
 			requirement = {
 				kind = exactVersion;
-				version = 11.2.0;
+				version = 11.4.0;
 			};
 		};
 		A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */ = {
@@ -508,11 +509,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		F80282945AE44223A3406DB2 /* FirebaseMessaging */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseMessaging;
-		};
 		86565C8E2F6E7FA800AC6E1C /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
@@ -562,6 +558,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A1B2C3D62F70000100AAA111 /* XCRemoteSwiftPackageReference "AmplitudeUnified-Swift" */;
 			productName = AmplitudeUnified;
+		};
+		F80282945AE44223A3406DB2 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86565C8D2F6E7FA800AC6E1C /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

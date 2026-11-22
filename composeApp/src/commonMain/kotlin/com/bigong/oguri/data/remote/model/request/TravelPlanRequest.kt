@@ -1,5 +1,6 @@
 package com.bigong.oguri.data.remote.model.request
 
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,6 +13,8 @@ internal data class CreateTravelPlanRequest(
     val startDate: String,
     val endDate: String,
     val source: TravelPlanSourceRequest? = null,
+    val cities: List<String>,
+    val cityIds: Map<String, Long> = emptyMap(),
 )
 
 @Serializable
@@ -33,6 +36,7 @@ internal data class TravelVisitRequest(
     val localTime: String?,
     val note: String?,
     val googlePlaceId: String? = null,
+    val category: TravelVisitCategory? = null,
 )
 
 @Serializable
@@ -90,6 +94,7 @@ internal sealed interface TravelPlanCommandRequest {
 internal data class TravelPlaceSearchRequest(
     val query: String,
     val language: String,
+    val city: String? = null,
 )
 
 @Serializable
@@ -111,6 +116,8 @@ internal data class TravelDetailsRequest(
     val endDate: String,
     val expectedRevision: Long,
     val confirmedUnassignedCount: Int,
+    val cities: List<String> = listOf(city),
+    val cityIds: Map<String, Long> = emptyMap(),
 )
 
 @Serializable

@@ -24,7 +24,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import com.bigong.oguri.core.ad.initializeAdMob
 import com.bigong.oguri.core.ad.preloadAppOpenAd
@@ -32,7 +31,7 @@ import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
 import com.bigong.oguri.core.analytics.initializeOguriAnalytics
 import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
-import com.bigong.oguri.core.deeplink.parseTravelInvite
+import com.bigong.oguri.core.deeplink.readTravelInviteLink
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral5
 import com.bigong.oguri.core.designsystem.Neutral90
@@ -52,13 +51,12 @@ import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.data.local.provideDisplayThemeModeLocalDataSource
 import com.bigong.oguri.data.local.provideTokenLocalDataSource
 import com.bigong.oguri.domain.model.DisplayThemeMode
-import com.bigong.oguri.feature.travelplanner.ui.TravelReminderEntry
 import dev.zacsweers.metro.createGraphFactory
-import kotlinx.coroutines.launch
 import oguri.composeapp.generated.resources.Res
 import oguri.composeapp.generated.resources.bottom_navigation_calendar
 import oguri.composeapp.generated.resources.bottom_navigation_home
 import oguri.composeapp.generated.resources.bottom_navigation_my
+import oguri.composeapp.generated.resources.bottom_navigation_travel
 import oguri.composeapp.generated.resources.navigation_back_press_exit_message
 import oguri.composeapp.generated.resources.snackbar_login_success
 import oguri.composeapp.generated.resources.snackbar_logout_completed
@@ -67,6 +65,7 @@ import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeMark
 import kotlin.time.TimeSource
+import kotlinx.coroutines.launch
 
 private val EXIT_BACK_PRESS_WINDOW = 2.seconds
 
@@ -104,35 +103,6 @@ fun NavDisplay(
                     httpClient = httpClient,
                 )
             }
-        val reminderSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
-        val routeName = currentDestination?.route?.substringBefore('/')?.substringBefore('?')
-        val reminderReady =
-            routeName != null &&
-                routeName !in
-                setOf(
-                    RouteModel.Splash
-                        .serializer()
-                        .descriptor.serialName,
-                    RouteModel.Login
-                        .serializer()
-                        .descriptor.serialName,
-                    RouteModel.Onboarding
-                        .serializer()
-                        .descriptor.serialName,
-                    RouteModel.TravelLogin
-                        .serializer()
-                        .descriptor.serialName,
-                    RouteModel.TravelOnboarding
-                        .serializer()
-                        .descriptor.serialName,
-                )
-        TravelReminderEntry(
-            viewModel = viewModel(key = "travel-reminder-entry-${reminderSession.version}") { appGraph.travelReminderViewModelProvider() },
-            ready = reminderReady,
-            signedIn = reminderSession.tokens != null,
-            onSignIn = navigator::navigateToTravelLogin,
-            onOpen = { navigator.navigateToTravelPlan(it) },
-        )
         val homeViewModelLazy =
             remember(authSessionVersion) {
                 lazy(LazyThreadSafetyMode.NONE) {
@@ -158,6 +128,7 @@ fun NavDisplay(
         val withdrawCompletedMessage = stringResource(Res.string.snackbar_withdraw_completed)
         val homeTabLabel = stringResource(Res.string.bottom_navigation_home)
         val calendarTabLabel = stringResource(Res.string.bottom_navigation_calendar)
+        val travelTabLabel = stringResource(Res.string.bottom_navigation_travel)
         val myPageTabLabel = stringResource(Res.string.bottom_navigation_my)
         val incomingDeepLinkUrl =
             appGraph.deepLinkStore.incomingUrl
@@ -168,6 +139,7 @@ fun NavDisplay(
         var hasHandledFirstForegroundStart by remember { mutableStateOf(false) }
         var hasCompletedInitialMainTabEntry by remember { mutableStateOf(false) }
         var hasShownAppOpenAdInCurrentForegroundSession by remember { mutableStateOf(false) }
+        var appOpenAdSession by remember { mutableIntStateOf(0) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
@@ -221,7 +193,7 @@ fun NavDisplay(
             ) {
                 return@LaunchedEffect
             }
-            val invite = parseTravelInvite(deepLinkUrl)
+            val invite = readTravelInviteLink(deepLinkUrl)
             if (invite != null &&
                 (currentDestination.hasRoute<RouteModel.TravelLogin>() ||
                     currentDestination.hasRoute<RouteModel.TravelOnboarding>() ||
@@ -231,7 +203,7 @@ fun NavDisplay(
             }
             appGraph.deepLinkStore.clearConsumed(urlText = deepLinkUrl)
             if (invite != null) {
-                TravelInviteIntent.receive(invite)
+                TravelInviteIntent.receive(invite.token)
                 navigator.navigateToTravelInvite()
                 return@LaunchedEffect
             }
@@ -262,6 +234,7 @@ fun NavDisplay(
                         return@LifecycleEventObserver
                     }
 
+                    appOpenAdSession++
                     hasShownAppOpenAdInCurrentForegroundSession = false
                 }
             lifecycleOwner.lifecycle.addObserver(observer)
@@ -272,30 +245,24 @@ fun NavDisplay(
         LaunchedEffect(currentDestination?.route) {
             val currentRouteText = currentDestination?.route
             val previousRoute = previousRouteText
+            val isMainTab = bottomNavigationDestinations.any { it.routeSerialName == routeName(currentRouteText) }
 
-            fun isMainTabRoute(routeText: String): Boolean =
-                isHomeRoute(routeText) || isCalendarRoute(routeText) || isMyPageRoute(routeText)
-
-            fun tryShowAppOpenAdAfterScreenMove() {
-                if (hasShownAppOpenAdInCurrentForegroundSession) {
-                    return
-                }
-
-                val hasShownAppOpenAd = showAppOpenAdIfAvailable()
-                if (hasShownAppOpenAd) {
-                    hasShownAppOpenAdInCurrentForegroundSession = true
-                }
-            }
             if (currentRouteText != null && previousRoute != null) {
-                if (!hasCompletedInitialMainTabEntry && isMainTabRoute(currentRouteText)) {
+                if (!hasCompletedInitialMainTabEntry && isMainTab) {
                     hasCompletedInitialMainTabEntry = true
                 } else if (
                     hasCompletedInitialMainTabEntry &&
+                    !hasShownAppOpenAdInCurrentForegroundSession &&
                     previousRoute != currentRouteText &&
-                    !isTravelPlannerRoute(previousRoute) &&
-                    !isTravelPlannerRoute(currentRouteText)
+                    routeName(previousRoute) !in appOpenAdExcludedRoutes &&
+                    routeName(currentRouteText) !in appOpenAdExcludedRoutes
                 ) {
-                    tryShowAppOpenAdAfterScreenMove()
+                    val requestedSession = appOpenAdSession
+                    showAppOpenAdIfAvailable {
+                        if (requestedSession == appOpenAdSession) {
+                            hasShownAppOpenAdInCurrentForegroundSession = true
+                        }
+                    }
                 }
 
                 if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
@@ -317,7 +284,7 @@ fun NavDisplay(
                     }
                 }
             }
-            if (currentRouteText != null && previousRoute == null && isMainTabRoute(currentRouteText)) {
+            if (currentRouteText != null && previousRoute == null && isMainTab) {
                 hasCompletedInitialMainTabEntry = true
             }
             previousRouteText = currentRouteText
@@ -331,6 +298,7 @@ fun NavDisplay(
             homeTabLabel,
             calendarTabLabel,
             myPageTabLabel,
+            travelTabLabel,
         ) {
             if (!floatingBottomNavigationEnabled) {
                 return@LaunchedEffect
@@ -344,6 +312,7 @@ fun NavDisplay(
                 homeTabLabel = homeTabLabel,
                 calendarTabLabel = calendarTabLabel,
                 myPageTabLabel = myPageTabLabel,
+                travelTabLabel = travelTabLabel,
             )
         }
         LaunchedEffect(floatingBottomNavigationEnabled, currentDestination?.route) {
@@ -498,4 +467,17 @@ private val travelRouteNames: Set<String> =
             .descriptor.serialName,
     )
 
-private fun isTravelPlannerRoute(routeText: String?): Boolean = routeText?.substringBefore('/')?.substringBefore('?') in travelRouteNames
+private val appOpenAdExcludedRoutes: Set<String> =
+    setOf(
+        RouteModel.Splash.serializer().descriptor.serialName,
+        RouteModel.Login.serializer().descriptor.serialName,
+        RouteModel.Onboarding.serializer().descriptor.serialName,
+        RouteModel.Search.serializer().descriptor.serialName,
+        RouteModel.WebDocument.serializer().descriptor.serialName,
+        RouteModel.TravelLogin.serializer().descriptor.serialName,
+        RouteModel.TravelOnboarding.serializer().descriptor.serialName,
+    )
+
+private fun routeName(routeText: String?): String? = routeText?.substringBefore('/')?.substringBefore('?')
+
+private fun isTravelPlannerRoute(routeText: String?): Boolean = routeName(routeText) in travelRouteNames

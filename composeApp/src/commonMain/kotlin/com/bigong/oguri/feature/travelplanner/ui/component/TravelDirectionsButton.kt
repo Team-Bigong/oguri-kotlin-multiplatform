@@ -1,8 +1,10 @@
 package com.bigong.oguri.feature.travelplanner.ui.component
 
-import androidx.compose.material3.MaterialTheme
+import com.bigong.oguri.core.designsystem.OguriTheme
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +18,7 @@ import androidx.compose.ui.semantics.semantics
 import io.ktor.http.URLBuilder
 import io.ktor.http.takeFrom
 import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.travel_directions_compact
 import oguri.composeapp.generated.resources.travel_directions
 import oguri.composeapp.generated.resources.travel_directions_unavailable
 import org.jetbrains.compose.resources.stringResource
@@ -25,13 +28,17 @@ internal fun TravelDirectionsButton(
     placeId: String?,
     destination: String?,
     enabled: Boolean = true,
+    compact: Boolean = false,
+    outlined: Boolean = false,
+    modifier: Modifier = Modifier,
     onOpened: () -> Unit,
+    buttonContainer: @Composable (@Composable () -> Unit) -> Unit = { it() },
 ) {
     val target = destination?.takeIf { it.isNotBlank() }
     if (target == null && placeId == null) return
     val uriHandler = LocalUriHandler.current
     var failed by remember(placeId, target) { mutableStateOf(false) }
-    TextButton(enabled = enabled, onClick = {
+    val openDirections = {
         val url =
             URLBuilder()
                 .apply {
@@ -42,12 +49,23 @@ internal fun TravelDirectionsButton(
                 }.buildString()
         failed = runCatching { uriHandler.openUri(url) }.isFailure
         if (!failed) onOpened()
-    }) { Text(stringResource(Res.string.travel_directions)) }
-    if (failed) {
-        Text(
-            stringResource(Res.string.travel_directions_unavailable),
-            color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-        )
+    }
+    val content: @Composable () -> Unit = { Text(stringResource(if (compact) Res.string.travel_directions_compact else Res.string.travel_directions), style = if (outlined) OguriTheme.typography.cardTitle else if (compact) OguriTheme.typography.labelLarge else OguriTheme.typography.labelMedium) }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        buttonContainer {
+            if (outlined) {
+                TravelOutlineButton(onClick = openDirections, enabled = enabled, modifier = modifier, content = content)
+            } else {
+                TravelTextButton(onClick = openDirections, enabled = enabled, modifier = modifier, content = content)
+            }
+        }
+        if (failed) {
+            Text(
+                stringResource(Res.string.travel_directions_unavailable),
+                style = OguriTheme.typography.caption,
+                color = OguriTheme.colors.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
     }
 }

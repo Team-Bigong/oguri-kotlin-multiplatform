@@ -26,7 +26,6 @@ internal data class TravelCollaborationState(
     val detailsPlan: TravelPlan? = null,
     val recentChanges: TravelRecentChanges? = null,
     val preview: TravelInvitePreview? = null,
-    val invite: String? = null,
     val joinedPlanId: String? = null,
     val closed: Boolean = false,
     val busy: Boolean = false,
@@ -51,16 +50,28 @@ class TravelCollaborationViewModel(
             mutableState.update { it.copy(members = members) }
         }
 
-    internal fun issue(planId: String) =
+    internal fun issue(
+        planId: String,
+        onIssued: (String) -> Unit = {},
+    ) =
         perform {
-            val token = checkedResult { repository.issue(planId) }
-            mutableState.update { it.copy(invite = token) }
+            val invite = checkedResult { repository.issue(planId) }
+            mutableState.update { state ->
+                state.copy(
+                    members = state.members?.copy(
+                        hasActiveInvite = true,
+                        inviteExpiresAt = invite.expiresAt,
+                        inviteToken = invite.token,
+                    ),
+                )
+            }
+            onIssued(invite.token)
         }
 
     internal fun revoke(planId: String) =
         perform {
             checkedResult { repository.revoke(planId) }
-            mutableState.update { it.copy(invite = null) }
+            mutableState.update { it.copy(members = it.members?.copy(hasActiveInvite = false, inviteExpiresAt = null, inviteToken = null)) }
         }
 
     internal fun remove(
@@ -69,7 +80,7 @@ class TravelCollaborationViewModel(
     ) = perform {
         checkedResult { repository.remove(planId, memberId) }
         val members = checkedResult { repository.members(planId) }
-        mutableState.update { it.copy(invite = null, members = members) }
+        mutableState.update { it.copy(members = members) }
     }
 
     internal fun leave(planId: String) =
@@ -110,9 +121,11 @@ class TravelCollaborationViewModel(
         plan: TravelPlan,
         details: TravelPlanDetails,
         affected: Int,
+        onUpdated: () -> Unit,
     ) = perform {
         checkedResult { repository.updateDetails(plan.summary.id, details, plan.revision, affected) }
         mutableState.update { it.copy(detailsPlan = null) }
+        onUpdated()
     }
 
     internal fun dismissDetails() {
@@ -152,7 +165,11 @@ class TravelCollaborationViewModel(
             viewModelScope.launch {
                 try {
                     val preview = checkedResult { repository.preview(token) }
-                    if (generation == operationGeneration) mutableState.update { it.copy(preview = preview, busy = false) }
+                    if (generation == operationGeneration) mutableState.update {
+                        val existingPlanId = preview.existingPlanId
+                        if (existingPlanId == null) it.copy(preview = preview, busy = false)
+                        else it.copy(joinedPlanId = existingPlanId, busy = false)
+                    }
                 } catch (exception: TravelPlanException) {
                     if (generation == operationGeneration) mutableState.update { it.copy(failure = exception.failure, busy = false) }
                 }

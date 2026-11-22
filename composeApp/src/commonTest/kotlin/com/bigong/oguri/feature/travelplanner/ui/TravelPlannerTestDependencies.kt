@@ -3,6 +3,7 @@ package com.bigong.oguri.feature.travelplanner.ui
 import com.bigong.oguri.domain.model.*
 import com.bigong.oguri.domain.repository.*
 import com.bigong.oguri.domain.usecase.GetPlaceDetailUseCase
+import com.bigong.oguri.domain.usecase.GetSearchAutocompleteListUseCase
 
 internal fun createTravelPlannerTestViewModel(
     plans: TravelPlanRepository,
@@ -52,4 +53,12 @@ internal fun createTravelPlannerTestViewModel(
             },
         ),
         recovery,
+        GetSearchAutocompleteListUseCase(
+            object : SearchRepository {
+                override suspend fun getSearchAutocompletes(query: String): List<SearchAutocomplete> = error("Unused")
+                override fun getRecentSearchKeywords(): List<String> = error("Unused")
+                override fun addRecentSearchKeyword(keyword: String): List<String> = error("Unused")
+                override fun deleteRecentSearchKeyword(keyword: String): List<String> = error("Unused")
+            },
+        ),
     )

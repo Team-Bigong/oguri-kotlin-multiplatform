@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -73,12 +75,15 @@ jobs:
 
       - name: Build signed Android App Bundle
         env:
-          TRAVEL_PLANNER_ENABLED_IN_RELEASE: ${{ vars.TRAVEL_PLANNER_ENABLED_IN_RELEASE || 'false' }}
           GOOGLE_MAPS_ANDROID_API_KEY: ${{ secrets.GOOGLE_MAPS_ANDROID_API_KEY }}
           ANDROID_SIGNING_STORE_PASSWORD: ${{ secrets.ANDROID_SIGNING_STORE_PASSWORD }}
           ANDROID_SIGNING_KEY_ALIAS: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           ANDROID_SIGNING_KEY_PASSWORD: ${{ secrets.ANDROID_SIGNING_KEY_PASSWORD }}
         run: |
+          if [ -z "${GOOGLE_MAPS_ANDROID_API_KEY}" ]; then
+            echo "GOOGLE_MAPS_ANDROID_API_KEY is not set"
+            exit 1
+          fi
           if [ -z "${ANDROID_SIGNING_STORE_PASSWORD}" ] || [ -z "${ANDROID_SIGNING_KEY_ALIAS}" ] || [ -z "${ANDROID_SIGNING_KEY_PASSWORD}" ]; then
             echo "Android signing secrets are not fully set"
             exit 1

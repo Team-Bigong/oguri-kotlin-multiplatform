@@ -14,15 +14,27 @@ data class TravelMembers(
     val currentMemberId: String,
     val members: List<TravelMember>,
     val ownershipTarget: String?,
+    val hasActiveInvite: Boolean = false,
+    val inviteExpiresAt: Instant? = null,
+    val inviteToken: String? = null,
 ) {
     val isOwner: Boolean get() = members.any { it.id == currentMemberId && it.owner }
 }
+
+data class TravelIssuedInvite(
+    val token: String,
+    val expiresAt: Instant?,
+)
 
 data class TravelInvitePreview(
     val title: String,
     val startDate: LocalDate,
     val endDate: LocalDate,
     val invitedBy: String?,
+    val city: String? = null,
+    val memberCount: Int? = null,
+    val existingPlanId: String? = null,
+    val cities: List<String> = emptyList(),
 )
 
 data class TravelChange(

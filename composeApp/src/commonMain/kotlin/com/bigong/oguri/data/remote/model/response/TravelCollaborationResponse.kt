@@ -14,11 +14,15 @@ internal data class TravelMembersResponse(
     val currentMemberId: String,
     val members: List<TravelMemberResponse>,
     val ownershipTarget: String? = null,
+    val hasActiveInvite: Boolean = false,
+    val inviteExpiresAt: String? = null,
+    val inviteToken: String? = null,
 )
 
 @Serializable
 internal data class IssuedTravelInviteResponse(
     val token: String,
+    val expiresAt: String? = null,
 )
 
 @Serializable
@@ -32,6 +36,10 @@ internal data class TravelInvitePreviewResponse(
     val startDate: String,
     val endDate: String,
     val invitedBy: String?,
+    val city: String? = null,
+    val memberCount: Int? = null,
+    val existingPlanId: String? = null,
+    val cities: List<String> = emptyList(),
 )
 
 @Serializable

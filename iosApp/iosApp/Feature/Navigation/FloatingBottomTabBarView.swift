@@ -24,6 +24,7 @@ struct FloatingBottomTabBarView: UIViewRepresentable {
     let homeTabLabel: String
     let calendarTabLabel: String
     let myPageTabLabel: String
+    let travelTabLabel: String?
     let onTabSelected: (Int) -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -103,8 +104,16 @@ struct FloatingBottomTabBarView: UIViewRepresentable {
             image: UIImage(systemName: "person", withConfiguration: symbolConfiguration)?.withRenderingMode(.alwaysTemplate),
             selectedImage: UIImage(systemName: "person", withConfiguration: symbolConfiguration)?.withRenderingMode(.alwaysTemplate)
         )
-        myPageItem.tag = 2
-        tabBar.items = [homeItem, calendarItem, myPageItem]
+        if let travelTabLabel {
+            let travelIcon = UIImage(systemName: "airplane", withConfiguration: symbolConfiguration)?.withRenderingMode(.alwaysTemplate)
+            let travelItem = UITabBarItem(title: travelTabLabel, image: travelIcon, selectedImage: travelIcon)
+            travelItem.tag = 2
+            myPageItem.tag = 3
+            tabBar.items = [homeItem, calendarItem, travelItem, myPageItem]
+        } else {
+            myPageItem.tag = 2
+            tabBar.items = [homeItem, calendarItem, myPageItem]
+        }
         tabBar.selectedItem = tabBar.items?[safe: selectedTabIndex]
         applyTabBarAppearance(tabBar: tabBar)
         tabBar.layer.cornerRadius = 24
@@ -117,7 +126,8 @@ struct FloatingBottomTabBarView: UIViewRepresentable {
         if let items = uiView.items, items.count >= 3 {
             items[0].title = homeTabLabel
             items[1].title = calendarTabLabel
-            items[2].title = myPageTabLabel
+            if items.count == 4 { items[2].title = travelTabLabel }
+            items.last?.title = myPageTabLabel
         }
         applyTabBarAppearance(tabBar: uiView)
         uiView.selectedItem = uiView.items?[safe: selectedTabIndex]
