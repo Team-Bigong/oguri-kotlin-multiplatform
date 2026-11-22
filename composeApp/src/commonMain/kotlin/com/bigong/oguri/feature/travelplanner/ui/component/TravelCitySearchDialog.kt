@@ -35,6 +35,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint40
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelCitySuggestion
@@ -109,7 +112,7 @@ internal fun TravelCitySearchDialog(
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         containerColor = colors.backgroundSecondary,
-        contentColor = colors.textPrimary,
+        contentColor = Neutral100,
     ) {
         Column(
             Modifier
@@ -120,13 +123,13 @@ internal fun TravelCitySearchDialog(
         ) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { TravelSheetHandle() }
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, top = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(Res.string.travel_search_cities), Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = colors.textPrimary)
+                Text(stringResource(Res.string.travel_search_cities), Modifier.weight(1f), style = OguriTheme.typography.cardTitle, color = Neutral100)
                 TravelIconButton(onClick = dismissSheet) { Icon(painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close), Modifier.size(24.dp)) }
             }
             Column(Modifier.weight(1f).padding(start = 20.dp, end = 20.dp, top = 8.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 TravelTextField(
                     value = state.query, onValueChange = onQuery, limit = TRAVEL_SEARCH_QUERY_LIMIT,
-                    textStyle = travelTextStyle(15, 18).copy(color = colors.textPrimary), cursorBrush = SolidColor(colors.textPrimary),
+                    textStyle = travelTextStyle(15, 18).copy(color = Neutral100), cursorBrush = SolidColor(Neutral100),
                     modifier = Modifier.fillMaxWidth().semantics { contentDescription = searchLabel },
                     decorationBox = { field ->
                         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).background(colors.surfaceCard, RoundedCornerShape(8.dp))
@@ -134,7 +137,7 @@ internal fun TravelCitySearchDialog(
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Icon(painterResource(Res.drawable.ic_travel_search), null, Modifier.size(20.dp), tint = colors.textTertiary)
                             Box(Modifier.weight(1f)) {
-                                if (state.query.isEmpty()) Text(stringResource(Res.string.travel_city_search_placeholder), style = travelTextStyle(15, 18), color = colors.textTertiary)
+                                if (state.query.isEmpty()) Text(stringResource(Res.string.travel_city_search_placeholder), style = travelTextStyle(15, 18), color = Neutral40)
                                 field()
                             }
                         }
@@ -171,13 +174,13 @@ internal fun TravelCitySearchDialog(
                             (if (nearby) nearbyCities else recommendedCities).forEach { city ->
                                 val selected = city in selectedCities || city == state.selected?.label
                                 Box(Modifier.selectable(selected, enabled = !state.loading, role = Role.Checkbox, onClick = { onChooseRecommendedCity(city) })
-                                    .background(if (selected) OguriTheme.colors.mintContainer else colors.surfaceCard, CircleShape)
-                                    .then(if (selected) Modifier else Modifier.border(1.dp, colors.borderSubtle, CircleShape))
+                                    .background(if (selected) Mint40 else colors.surfaceCard, CircleShape)
+                                    .border(1.dp, if (selected) Mint40 else colors.borderSubtle, CircleShape)
                                     .padding(horizontal = 14.dp, vertical = 8.dp), contentAlignment = Alignment.Center) {
                                     Text(
                                         if (nearby) city else recommendedCityName(city),
                                         style = OguriTheme.typography.bodyMedium,
-                                        color = if (selected) colors.textPrimary else colors.textSecondary,
+                                        color = if (selected) Neutral100 else colors.textSecondary,
                                     )
                                 }
                             }
@@ -200,9 +203,9 @@ internal fun TravelCitySearchDialog(
                             ) {
                                 Icon(painterResource(Res.drawable.ic_travel_location), null, Modifier.size(20.dp), tint = colors.textTertiary)
                                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    Text(suggestion.name, style = resultStyle, color = colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                    Text(suggestion.name, style = resultStyle, color = Neutral100, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                     suggestion.regionLabel?.let { region ->
-                                        Text(region, style = OguriTheme.typography.caption, color = colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                        Text(region, style = OguriTheme.typography.caption, color = colors.textTertiary, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                     }
                                 }
                             }

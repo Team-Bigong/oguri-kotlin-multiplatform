@@ -82,7 +82,7 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         for pin in scene.markers {
             let marker = GMSMarker(position: pin.coordinates.coordinate)
             marker.title = pin.title ?? pin.label
-            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, labelColorArgb: pin.labelColorArgb, selected: pin.selected, style: pinStyle)
+            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, labelColorArgb: pin.labelColorArgb, highlightColorArgb: pin.highlightColorArgb, selected: pin.selected, style: pinStyle)
             marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
             marker.zIndex = pin.selected ? 1 : 0
             marker.userData = pin.id
@@ -191,13 +191,13 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         }
     }
 
-    private func makeIcon(label: String?, colorArgb: Int32, labelColorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
+    private func makeIcon(label: String?, colorArgb: Int32, labelColorArgb: Int32, highlightColorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
         let side: CGFloat = selected ? 44 : 26
         let size = CGSize(width: side, height: side)
         return UIGraphicsImageRenderer(size: size).image { _ in
             let color = UIColor(argb: colorArgb)
             if selected {
-                color.withAlphaComponent(0.28).setFill()
+                UIColor(argb: highlightColorArgb).setFill()
                 UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
             }
             let diameter: CGFloat = selected ? 32 : 26

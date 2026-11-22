@@ -35,7 +35,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.Neutral0
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelReminderStatus
 import com.bigong.oguri.domain.model.TravelReminderTime
@@ -81,7 +81,7 @@ internal fun TravelReminderDialog(
         text = {
             Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
                 Column(Modifier.padding(horizontal = 24.dp, vertical = 24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(Res.string.travel_reminder_heading), style = OguriTheme.typography.sectionTitle, color = OguriTheme.colors.textPrimary)
+                    Text(stringResource(Res.string.travel_reminder_heading), style = OguriTheme.typography.sectionTitle, color = Neutral100)
                     Text(stringResource(Res.string.travel_reminder_explanation), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textTertiary)
                 }
                 if (settings != null) {
@@ -92,7 +92,7 @@ internal fun TravelReminderDialog(
                         Box(Modifier.size(48.dp).semantics { contentDescription = toggleLabel }
                             .toggleable(value = enabled && !state.permissionDenied, role = Role.Switch, enabled = !state.busy && !state.permissionDenied && (settings.canSchedule || reminder != null), onValueChange = { enabled = it }), contentAlignment = Alignment.Center) {
                             Box(Modifier.size(40.dp, 24.dp).background(if (enabled && !state.permissionDenied) OguriTheme.colors.mint else OguriTheme.colors.borderStrong, CircleShape)) {
-                                Box(Modifier.align(if (enabled && !state.permissionDenied) Alignment.CenterEnd else Alignment.CenterStart).padding(2.dp).size(20.dp).background(Neutral0, CircleShape))
+                                Box(Modifier.align(if (enabled && !state.permissionDenied) Alignment.CenterEnd else Alignment.CenterStart).padding(2.dp).size(20.dp).background(OguriTheme.colors.textOnMint, CircleShape))
                             }
                         }
                     }
@@ -176,6 +176,6 @@ private fun TravelReminderSettingRow(label: String, value: String, enabled: Bool
     Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).noRippleClickable(enabled = enabled, onClick = onClick).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(label, Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle)
         Text(value, style = travelTextStyle(15, 18), color = OguriTheme.colors.textSecondary)
-        Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = OguriTheme.colors.textPrimary)
+        Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(20.dp), tint = Neutral100)
     }
 }

@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint60
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapScene
@@ -154,7 +155,7 @@ internal fun TravelPlanPane(
                                     stringResource(Res.string.travel_map_sequence),
                                     modifier = Modifier.fillMaxWidth().onSizeChanged { legendHeight = it.height }
                                         .padding(horizontal = 24.dp, vertical = 4.dp),
-                                    color = OguriTheme.colors.textSecondary,
+                                    color = OguriTheme.colors.textTertiary,
                                     style = OguriTheme.typography.labelSmall,
                                 )
                             }
@@ -181,10 +182,10 @@ internal fun TravelPlanPane(
                         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(painterResource(Res.drawable.ic_travel_map), null, Modifier.size(18.dp), tint = OguriTheme.colors.mint)
+                        Icon(painterResource(Res.drawable.ic_travel_map), null, Modifier.size(18.dp), tint = Mint60)
                         Text(
                             stringResource(Res.string.travel_map_show),
-                            style = travelTextStyle(13, 16), color = OguriTheme.colors.textSecondary,
+                            style = travelTextStyle(13, 16), color = OguriTheme.colors.textTertiary,
                         )
                         Icon(painterResource(Res.drawable.ic_travel_chevron_down), null, Modifier.size(16.dp), tint = OguriTheme.colors.textSecondary)
                     }

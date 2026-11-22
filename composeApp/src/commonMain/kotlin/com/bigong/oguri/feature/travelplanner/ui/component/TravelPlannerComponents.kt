@@ -22,7 +22,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -46,8 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bigong.oguri.core.designsystem.LightOguriColorPalette
 import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Mint90
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange20
+import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
 import com.bigong.oguri.core.ui.component.CenteredLoadingIndicator
@@ -75,10 +79,13 @@ import oguri.composeapp.generated.resources.travel_visit_removed
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 
-// The filled mint accent uses the same dark foreground in both palettes.
-internal val travelAccentForeground: Color = LightOguriColorPalette.textPrimary
+internal val travelAccentForeground: Color
+    @Composable get() = if (OguriTheme.isDarkTheme) LightOguriColorPalette.textPrimary else OguriTheme.colors.textOnMint
 
-internal val TravelSheetScrim: Color = Color.Black.copy(alpha = 0.45f)
+internal val travelOutlineForeground: Color
+    @Composable get() = if (OguriTheme.isDarkTheme) Mint90 else Mint70
+
+internal val TravelSheetScrim: Color = LightOguriColorPalette.textPrimary.copy(alpha = 0.45f)
 
 @Composable
 internal fun TravelPlannerPage(
@@ -96,7 +103,7 @@ internal fun TravelPlannerPage(
         Surface(
             modifier = modifier.fillMaxSize(),
             color = OguriTheme.colors.backgroundSecondary,
-            contentColor = OguriTheme.colors.textPrimary,
+            contentColor = Neutral100,
         ) {
             Column(Modifier.fillMaxSize().safeDrawingPadding().imePadding()) {
                 if (onBack == null && title.isNotEmpty()) {
@@ -122,7 +129,7 @@ internal fun TravelPlannerPage(
                             modifier = Modifier.align(Alignment.CenterStart),
                             enabled = !isSaving,
                         ) {
-                            Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_back), tint = OguriTheme.colors.textPrimary)
+                            Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_back), tint = Neutral100)
                         }
                         Row(Modifier.align(Alignment.CenterEnd), content = actions)
                     }
@@ -142,7 +149,7 @@ private fun TravelPageTitle(title: String, modifier: Modifier, textAlign: TextAl
         modifier = modifier,
         textAlign = textAlign,
         style = travelTextStyle(18, 21, FontWeight.SemiBold),
-        color = OguriTheme.colors.textPrimary,
+        color = Neutral100,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
     )
@@ -183,6 +190,7 @@ internal fun TravelOutlineButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    backgroundColor: Color = Mint5,
     content: @Composable () -> Unit,
 ) {
     val colors = OguriTheme.colors
@@ -190,10 +198,10 @@ internal fun TravelOutlineButton(
         onClick = onClick,
         modifier = modifier,
         enabled = enabled,
-        backgroundColor = if (enabled) Mint5 else colors.backgroundTertiary,
+        backgroundColor = if (enabled) backgroundColor else colors.backgroundTertiary,
         borderColor = if (enabled) colors.mint else colors.borderStrong,
         textStyle = travelTextStyle(18, 22, FontWeight.SemiBold),
-        contentColor = Mint90,
+        contentColor = travelOutlineForeground,
         minHeight = 45.dp,
         content = content,
     )
@@ -225,7 +233,7 @@ private fun TravelButton(
     backgroundColor: Color,
     borderColor: Color? = null,
     textStyle: TextStyle = OguriTheme.typography.labelLarge,
-    contentColor: Color = OguriTheme.colors.textPrimary,
+    contentColor: Color = Neutral100,
     minHeight: Dp = 48.dp,
     content: @Composable () -> Unit,
 ) {
@@ -241,26 +249,11 @@ private fun TravelButton(
             ).padding(horizontal = 12.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center,
     ) {
-        CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else OguriTheme.colors.textTertiary) {
+        CompositionLocalProvider(LocalContentColor provides if (enabled) contentColor else Neutral40) {
             ProvideTextStyle(textStyle, content)
         }
     }
 }
-
-@Composable
-internal fun TravelFieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedPlaceholderColor = OguriTheme.colors.textTertiary,
-    unfocusedPlaceholderColor = OguriTheme.colors.textTertiary,
-    focusedTextColor = OguriTheme.colors.textPrimary,
-    unfocusedTextColor = OguriTheme.colors.textPrimary,
-    focusedBorderColor = OguriTheme.colors.textPrimary,
-    unfocusedBorderColor = OguriTheme.colors.borderSubtle,
-    focusedLabelColor = OguriTheme.colors.textPrimary,
-    unfocusedLabelColor = OguriTheme.colors.textTertiary,
-    cursorColor = OguriTheme.colors.textPrimary,
-    focusedContainerColor = OguriTheme.colors.surfaceCard,
-    unfocusedContainerColor = OguriTheme.colors.surfaceCard,
-)
 
 @Composable
 internal fun TravelLoading(modifier: Modifier = Modifier) {
@@ -325,8 +318,8 @@ internal fun TravelIssueCard(
     val colors = OguriTheme.colors
     Column(
         modifier = modifier.fillMaxWidth()
-            .background(OguriTheme.colors.orangeContainer, shape)
-            .border(1.dp, OguriTheme.colors.borderSubtle, shape)
+            .background(Orange5, shape)
+            .border(1.dp, Orange20, shape)
             .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = if (onRetry == null) 14.dp else 4.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -334,7 +327,7 @@ internal fun TravelIssueCard(
             Modifier.semantics { liveRegion = LiveRegionMode.Polite },
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(title, style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+            Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
             if (description != null) {
                 Text(description, style = OguriTheme.typography.caption, color = colors.textSecondary)
             }
@@ -345,7 +338,7 @@ internal fun TravelIssueCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
             ) {
                 secondaryAction?.invoke()
-                TravelTextButton(onClick = onRetry) { Text(retryLabel, color = colors.textPrimary) }
+                TravelTextButton(onClick = onRetry) { Text(retryLabel, color = Neutral100) }
             }
         }
     }

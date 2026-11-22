@@ -10,6 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import org.jetbrains.compose.resources.painterResource
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.designsystem.*
+import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.feature.travelplanner.ui.TravelDateButton
 import com.bigong.oguri.feature.travelplanner.ui.travelMonthDay
 import com.bigong.oguri.feature.travelplanner.ui.travelCardDates
@@ -37,7 +38,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
-import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelCitySuggestion
@@ -175,7 +175,7 @@ internal fun TravelDetailsDialog(
                             .border(1.dp, if (cityLookupFailed) Orange20 else OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
                             .noRippleClickable(enabled = !busy && cities.size < 10, onClick = onOpenCitySearch).padding(horizontal = 12.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = OguriTheme.colors.textSecondary)
+                            Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(20.dp), tint = Mint60)
                             Text(cities.joinToString(" · ") { catalogCities[it]?.name ?: it }, Modifier.weight(1f), style = travelTextStyle(15, 18))
                             Text(stringResource(Res.string.travel_search_cities), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                         }
@@ -192,7 +192,7 @@ internal fun TravelDetailsDialog(
                     }
                     if (resolvingCity) TravelLoading(Modifier.fillMaxWidth())
                     if (cityLookupFailed) {
-                        Text(stringResource(Res.string.travel_city_lookup_failed), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.error)
+                        Text(stringResource(Res.string.travel_city_lookup_failed), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.orange)
                         TravelTextButton(onClick = { cityLookupAttempt++ }, enabled = !busy) { Text(stringResource(Res.string.travel_retry)) }
                     }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -218,7 +218,7 @@ internal fun TravelDetailsDialog(
                     Column(Modifier.fillMaxWidth().clip(shape).background(OguriTheme.colors.surfaceCard).border(1.dp, OguriTheme.colors.borderStrong, shape)) {
                         Text(current.title, Modifier.fillMaxWidth().background(OguriTheme.colors.mint).padding(horizontal = 18.dp, vertical = 12.dp), style = OguriTheme.typography.cardTitle, color = travelAccentForeground)
                         Column(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Text(stringResource(Res.string.travel_info_dates, travelCardDates(current.dates, includeYear = true), current.dates.dayCount), style = OguriTheme.typography.cardSubtitle)
+                            Text(stringResource(Res.string.travel_info_dates, travelCardDates(current.dates, includeYear = true), current.dates.dayCount), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Icon(painterResource(Res.drawable.ic_travel_pin), null, Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
                                 Text(current.cities.joinToString(" · ") { current.catalogCities[it]?.name ?: it }, style = OguriTheme.typography.labelSmall, color = OguriTheme.colors.textTertiary)
@@ -228,10 +228,10 @@ internal fun TravelDetailsDialog(
                     current.source?.let { source ->
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Icon(painterResource(Res.drawable.ic_calendar), null, Modifier.size(24.dp), tint = OguriTheme.colors.textSecondary)
+                                Icon(painterResource(Res.drawable.ic_calendar), null, Modifier.size(24.dp), tint = Mint60)
                                 Text(stringResource(Res.string.travel_source), style = OguriTheme.typography.cardSubtitle)
                             }
-                            Column(Modifier.fillMaxWidth().background(OguriTheme.colors.mintContainer, shape).border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Column(Modifier.fillMaxWidth().background(Mint5, shape).border(1.dp, Mint50, shape).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 if (source.startDate != null && source.endDate != null) {
                                     Text(
                                         text = stringResource(
@@ -249,7 +249,7 @@ internal fun TravelDetailsDialog(
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                                     ) {
-                                        Text(stringResource(Res.string.travel_open_source), style = OguriTheme.typography.labelLarge, color = if (busy) OguriTheme.colors.textTertiary else OguriTheme.colors.textPrimary)
+                                        Text(stringResource(Res.string.travel_open_source), style = OguriTheme.typography.labelLarge, color = if (busy) OguriTheme.colors.textTertiary else Neutral100)
                                         Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(16.dp), tint = OguriTheme.colors.textTertiary)
                                     }
                                 }

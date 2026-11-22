@@ -45,13 +45,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelOverviewState
 import com.bigong.oguri.feature.travelplanner.ui.model.travelDayColor
-import com.bigong.oguri.feature.travelplanner.ui.model.travelMapLabelColor
+import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapMarkerForeground
 import com.bigong.oguri.feature.travelplanner.ui.model.travelOverviewScene
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import oguri.composeapp.generated.resources.Res
@@ -113,7 +114,7 @@ internal fun TravelOverviewSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         containerColor = OguriTheme.colors.backgroundSecondary,
-        contentColor = OguriTheme.colors.textPrimary,
+        contentColor = Neutral100,
         shape = androidx.compose.foundation.shape.RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
     ) {
         BoxWithConstraints(Modifier.fillMaxWidth().fillMaxHeight(0.92f)) {
@@ -199,7 +200,7 @@ internal fun TravelOverviewSheet(
                                 Row(Modifier.fillMaxWidth().noRippleClickable(onClick = { onSelectVisit(visit.id) }).height(50.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                     val dayColor = travelDayColor(day)
                                     Box(Modifier.size(24.dp).background(Color(dayColor), CircleShape), contentAlignment = Alignment.Center) {
-                                        Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = travelMapLabelColor(dayColor))
+                                        Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = TravelMapMarkerForeground)
                                     }
                                     Text(title(visit), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }

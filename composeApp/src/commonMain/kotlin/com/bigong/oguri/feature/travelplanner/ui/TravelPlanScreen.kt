@@ -41,6 +41,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,7 +77,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint50
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.Orange20
+import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
 import com.bigong.oguri.feature.travelplanner.ui.component.travelAccentForeground
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanSkeleton
@@ -203,11 +210,11 @@ internal fun TravelPlanScreen(
         actions = {
             if (plan != null) {
                 TravelIconButton(onClick = onMembers, enabled = !state.isSaving && !state.canRetrySave) {
-                    Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), tint = OguriTheme.colors.textPrimary)
+                    Icon(painterResource(Res.drawable.ic_travel_more), stringResource(Res.string.travel_manage), tint = Neutral100)
                 }
             } else if (loadingPlan) {
                 TravelIconButton(onClick = onMembers, enabled = false) {
-                    Icon(painterResource(Res.drawable.ic_travel_more), contentDescription = null, tint = OguriTheme.colors.textPrimary)
+                    Icon(painterResource(Res.drawable.ic_travel_more), contentDescription = null, tint = Neutral100)
                 }
             }
         },
@@ -257,7 +264,7 @@ internal fun TravelPlanScreen(
         val canEdit = !state.isSaving && !state.isLoading && !state.canRetrySave && !state.needsLatestPlan && !state.isOffline
         if (state.isOffline) {
             Row(Modifier.fillMaxWidth().background(OguriTheme.colors.backgroundTertiary).heightIn(min = 42.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(oguri.composeapp.generated.resources.Res.drawable.ic_travel_offline), null, Modifier.size(18.dp), tint = OguriTheme.colors.textSecondary)
+                Icon(painterResource(oguri.composeapp.generated.resources.Res.drawable.ic_travel_offline), null, Modifier.size(18.dp), tint = OguriTheme.colors.textTertiary)
                 Text(offlineMessage, style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textSecondary)
             }
         }
@@ -322,11 +329,11 @@ internal fun TravelPlanScreen(
                     val shape = RoundedCornerShape(8.dp)
                     Column(
                         Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, bottom = 8.dp)
-                            .background(OguriTheme.colors.orangeContainer, shape)
-                            .border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(16.dp),
+                            .background(Orange5, shape)
+                            .border(1.dp, Orange20, shape).padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        Text(stringResource(Res.string.travel_order_save_failed), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+                        Text(stringResource(Res.string.travel_order_save_failed), style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                         Text(stringResource(Res.string.travel_order_conflict_description), style = OguriTheme.typography.caption, color = OguriTheme.colors.textSecondary)
                         Column(Modifier.fillMaxWidth().background(OguriTheme.colors.surfaceCard, shape).padding(12.dp)) {
                             unappliedOrder.visitIds.forEachIndexed { index, id ->
@@ -335,7 +342,7 @@ internal fun TravelPlanScreen(
                                 Text(
                                     if (name == null) stringResource(Res.string.travel_visit_fallback, index + 1)
                                     else stringResource(Res.string.travel_visit_number, index + 1, name),
-                                    style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textPrimary,
+                                    style = OguriTheme.typography.bodyMedium, color = Neutral100,
                                 )
                             }
                         }
@@ -353,7 +360,7 @@ internal fun TravelPlanScreen(
                                 TravelTextButton(onClick = onReload, enabled = !state.isLoading) { Text(stringResource(Res.string.travel_reload)) }
                             } else if (!sameOrder && rebasedVisitIds != null) {
                                 TravelTextButton(onClick = onApplyUnappliedOrder, enabled = canEdit) {
-                                    Text(stringResource(Res.string.travel_apply_order), style = OguriTheme.typography.labelLarge, color = OguriTheme.colors.textPrimary)
+                                    Text(stringResource(Res.string.travel_apply_order), style = OguriTheme.typography.labelLarge, color = Neutral100)
                                 }
                             }
                         }
@@ -369,11 +376,11 @@ internal fun TravelPlanScreen(
                 Text(
                     if (unappliedOrder != null) stringResource(Res.string.travel_saved_day_order, state.selectedDay) else travelDayLabel(dates, state.selectedDay),
                     modifier = Modifier.weight(1f),
-                    color = OguriTheme.colors.textPrimary,
+                    color = Neutral100,
                     style = travelTextStyle(15, 18, FontWeight.Medium),
                 )
                 if (state.canRetrySave) {
-                    Text(stringResource(Res.string.travel_save_failed_label), color = OguriTheme.colors.error, style = OguriTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.travel_save_failed_label), color = OguriTheme.colors.orange, style = OguriTheme.typography.bodySmall)
                     TravelTextButton(onClick = onRetrySave, enabled = !state.isSaving) { Text(stringResource(Res.string.travel_retry)) }
                 }
                 if (!state.isOffline && !state.isSaving && (failure == null || (unappliedOrder != null && !state.needsLatestPlan))) {
@@ -523,19 +530,20 @@ internal fun TravelPlanScreen(
             HorizontalDivider(color = OguriTheme.colors.borderSubtle)
             val shape = RoundedCornerShape(8.dp)
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 12.dp)
-                .background(OguriTheme.colors.mintContainer, shape)
-                .border(1.dp, OguriTheme.colors.borderSubtle, shape)
+                .background(Mint5, shape)
+                .border(1.dp, Mint50, shape)
                 .noRippleClickable(onClick = onFindNextHoliday).heightIn(min = 50.dp).padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(stringResource(Res.string.travel_completed_trip), Modifier.weight(1f), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textSecondary)
-                Text(stringResource(Res.string.travel_find_next_holiday), style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+                Text(stringResource(Res.string.travel_find_next_holiday), style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                 Icon(painterResource(Res.drawable.ic_travel_row_arrow), null, Modifier.size(18.dp), tint = OguriTheme.colors.textTertiary)
             }
         }
         TravelBottomAction(enabled = canEdit, onClick = onSearchPlaces, showDivider = !completed, topPadding = if (completed) 10.dp else 12.dp) {
+            val foreground = if (state.isOffline) OguriTheme.colors.textTertiary else LocalContentColor.current
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painterResource(Res.drawable.ic_travel_plus), contentDescription = null, modifier = Modifier.size(18.dp))
-                Text(stringResource(Res.string.travel_add_visit))
+                Icon(painterResource(Res.drawable.ic_travel_plus), contentDescription = null, modifier = Modifier.size(18.dp), tint = foreground)
+                Text(stringResource(Res.string.travel_add_visit), color = foreground)
             }
         }
         state.inspectedVisitId?.let { id ->
@@ -659,14 +667,14 @@ private fun TravelVisitRow(
         Box(Modifier.matchParentSize(), contentAlignment = Alignment.CenterEnd) {
             Box(
                 modifier = Modifier.width(deleteWidth).fillMaxHeight()
-                    .background(colors.orangeContainer)
+                    .background(colors.orange)
                     .then(
                         if (canDeleteFromSwipe) Modifier.noRippleClickable(onClick = onRemove)
                         else Modifier.clearAndSetSemantics {},
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(deleteLabel, color = colors.textPrimary, style = OguriTheme.typography.labelLarge)
+                Text(deleteLabel, color = colors.textOnOrange, style = OguriTheme.typography.labelLarge)
             }
         }
         Row(
@@ -718,7 +726,7 @@ private fun TravelVisitRow(
                     Text(number?.toString().orEmpty(), style = OguriTheme.typography.labelMedium, color = travelAccentForeground)
                 }
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(title, style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+                    Text(title, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         visit.details.category?.let { Text(stringResource(it.label()) + if (addedAfterConflict) " · " + stringResource(Res.string.travel_just_added) else "", style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
                         if (!visit.details.note.isNullOrBlank()) Icon(painterResource(Res.drawable.ic_travel_note), stringResource(Res.string.travel_has_note), Modifier.size(14.dp), tint = OguriTheme.colors.textTertiary)
@@ -751,7 +759,7 @@ private fun TravelVisitRow(
                     },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(painterResource(Res.drawable.ic_travel_drag), null, Modifier.size(20.dp), tint = colors.textTertiary)
+                    Icon(painterResource(Res.drawable.ic_travel_drag), null, Modifier.size(20.dp), tint = Neutral40)
                 }
             }
         }
@@ -817,6 +825,6 @@ internal fun travelDayLabel(
 private fun TravelRemovedVisitRow(title: String?, enabled: Boolean, onUndo: () -> Unit) {
     Row(Modifier.fillMaxWidth().background(OguriTheme.colors.backgroundTertiary, RoundedCornerShape(8.dp)).padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title?.let { stringResource(Res.string.travel_removed_visit, it) } ?: stringResource(Res.string.travel_undo_visit), Modifier.weight(1f), style = OguriTheme.typography.bodySmall)
-        TravelIconButton(onClick = onUndo, enabled = enabled) { Icon(painterResource(Res.drawable.ic_travel_undo), stringResource(Res.string.travel_undo_visit), Modifier.size(22.dp), tint = OguriTheme.colors.textPrimary) }
+        TravelIconButton(onClick = onUndo, enabled = enabled) { Icon(painterResource(Res.drawable.ic_travel_undo), stringResource(Res.string.travel_undo_visit), Modifier.size(22.dp), tint = Neutral100) }
     }
 }

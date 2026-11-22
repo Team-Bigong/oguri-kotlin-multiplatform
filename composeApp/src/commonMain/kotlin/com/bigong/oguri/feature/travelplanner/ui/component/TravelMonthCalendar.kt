@@ -41,7 +41,7 @@ internal fun TravelMonthCalendar(
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             TravelIconButton(onClick = { onMonth(month.minus(1, DateTimeUnit.MONTH)) }) { Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_previous_month), Modifier.size(24.dp)) }
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text(stringResource(Res.string.calendar_month_year, month.year, month.month.ordinal + 1), style = OguriTheme.typography.cardSubtitle, color = colors.textPrimary)
+                Text(stringResource(Res.string.calendar_month_year, month.year, month.month.ordinal + 1), style = OguriTheme.typography.cardSubtitle, color = Neutral100)
             }
             TravelIconButton(onClick = { onMonth(nextMonth) }) { Icon(painterResource(Res.drawable.ic_travel_back), stringResource(Res.string.travel_next_month), Modifier.size(24.dp).rotate(180f)) }
         }
@@ -74,7 +74,7 @@ internal fun TravelMonthCalendar(
                                     color = when {
                                         endpoint -> travelAccentForeground
                                         inside -> Neutral100
-                                        else -> colors.textPrimary
+                                        else -> colors.textSecondary
                                     },
                                 )
                             }

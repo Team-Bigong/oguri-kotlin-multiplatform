@@ -56,6 +56,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bigong.oguri.core.designsystem.Neutral100
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.consumeVerticalDragForBottomSheetContent
 import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
@@ -132,7 +134,7 @@ internal fun TravelPlaceSearchSheet(
 
     ModalBottomSheet(scrimColor = TravelSheetScrim,
         containerColor = colors.backgroundSecondary,
-        contentColor = colors.textPrimary,
+        contentColor = Neutral100,
         onDismissRequest = { if (!sheet.isVisible) close() },
         sheetState = sheet,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
@@ -147,7 +149,7 @@ internal fun TravelPlaceSearchSheet(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(stringResource(Res.string.travel_add_visit), style = travelTextStyle(18, 21, FontWeight.SemiBold), color = OguriTheme.colors.textPrimary)
+                Text(stringResource(Res.string.travel_add_visit), style = travelTextStyle(18, 21, FontWeight.SemiBold), color = Neutral100)
                 Text(
                     travelDayLabel(plan.summary.details.dates, targetDay),
                     Modifier.weight(1f),
@@ -157,7 +159,7 @@ internal fun TravelPlaceSearchSheet(
                 TravelIconButton(onClick = dismissSheet, enabled = canDismiss) {
                     Icon(
                         painterResource(Res.drawable.ic_travel_close), stringResource(Res.string.travel_search_close),
-                        modifier = Modifier.size(22.dp), tint = colors.textPrimary,
+                        modifier = Modifier.size(22.dp), tint = Neutral100,
                     )
                 }
             }
@@ -421,8 +423,8 @@ private fun TravelPlaceInput(
         enabled = enabled,
         singleLine = !multiline,
         maxLines = if (multiline) 5 else 1,
-        textStyle = style.copy(color = OguriTheme.colors.textPrimary),
-        cursorBrush = SolidColor(OguriTheme.colors.textPrimary),
+        textStyle = style.copy(color = Neutral100),
+        cursorBrush = SolidColor(Neutral100),
         interactionSource = focusSource,
         decorationBox = { innerField ->
             Row(
@@ -434,7 +436,7 @@ private fun TravelPlaceInput(
             ) {
                 leadingIcon?.invoke()
                 Box(Modifier.weight(1f)) {
-                    if (value.isEmpty()) Text(placeholder, style = style, color = OguriTheme.colors.textTertiary)
+                    if (value.isEmpty()) Text(placeholder, style = style, color = Neutral40)
                     innerField()
                 }
             }
@@ -474,7 +476,7 @@ private fun TravelPlaceSearchResults(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Column(Modifier.weight(1f)) {
-                        Text(place.name, style = nameStyle, color = OguriTheme.colors.textPrimary)
+                        Text(place.name, style = nameStyle, color = Neutral100)
                         place.address?.let {
                             Text(it, style = addressStyle, color = colors.textTertiary, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                         }

@@ -81,7 +81,7 @@ internal actual fun PlatformTravelMap(
     )
     val distanceStyle = TravelMapDistanceStyle(
         textArgb = OguriTheme.colors.textTertiary.toArgb(),
-        outlineArgb = travelMapDistanceOutline().toArgb(),
+        outlineArgb = travelMapBackground().toArgb(),
         connectionArgb = travelConnectionColor.toArgb(),
         fontSize = OguriTheme.typography.caption.fontSize.value * LocalDensity.current.fontScale,
         fontUri = Res.getUri("font/pretendard_regular.ttf"),

@@ -1,7 +1,6 @@
 package com.bigong.oguri.feature.travelplanner.ui.model
 
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import com.bigong.oguri.core.designsystem.*
 import com.bigong.oguri.domain.model.TravelCoordinates
@@ -22,7 +21,10 @@ data class TravelMapMarker(
         get() = if (selected) Mint80.toArgb() else travelDayColor(dayNumber)
 
     val labelColorArgb: Int
-        get() = travelMapLabelColor(colorArgb).toArgb()
+        get() = TravelMapMarkerForeground.toArgb()
+
+    val highlightColorArgb: Int
+        get() = Mint70.copy(alpha = 0.28f).toArgb()
 }
 
 internal fun travelDayColor(dayNumber: Int?): Int =
@@ -34,13 +36,7 @@ internal fun travelDayColor(dayNumber: Int?): Int =
         else -> Neutral70
     }.toArgb()
 
-internal fun travelMapLabelColor(fillArgb: Int): Color {
-    val fillLuminance = Color(fillArgb).luminance()
-    val darkInk = LightOguriColorPalette.textPrimary
-    val darkContrast = (fillLuminance + 0.05f) / (darkInk.luminance() + 0.05f)
-    val lightContrast = 1.05f / (fillLuminance + 0.05f)
-    return if (darkContrast >= lightContrast) darkInk else Color.White
-}
+internal val TravelMapMarkerForeground: Color = LightOguriColorPalette.textOnMint
 
 @ConsistentCopyVisibility
 data class TravelMapLine internal constructor(

@@ -80,7 +80,7 @@ internal actual fun PlatformTravelMap(
     val currentClick by rememberUpdatedState(onMarkerClick)
     val unavailable by rememberUpdatedState(onUnavailable)
     val mapColorScheme = if (OguriTheme.isDarkTheme) MapColorScheme.DARK else MapColorScheme.LIGHT
-    val backgroundArgb = OguriTheme.colors.surfaceCard.toArgb()
+    val backgroundArgb = travelMapBackground().toArgb()
     val mapView = remember(context, lifecycle) {
         MapView(context, GoogleMapOptions().mapColorScheme(mapColorScheme).backgroundColor(backgroundArgb))
     }
@@ -96,7 +96,7 @@ internal actual fun PlatformTravelMap(
     val distanceStyle = OguriTheme.typography.caption
     val distanceSize = with(LocalDensity.current) { distanceStyle.fontSize.toPx() }
     val distanceColor = OguriTheme.colors.textTertiary.toArgb()
-    val distanceOutline = travelMapDistanceOutline().toArgb()
+    val distanceOutline = travelMapBackground().toArgb()
     val distanceLabels = scene.lines.map { travelDistanceLabel(it) }
     val connectionColor = travelConnectionColor.toArgb()
     val fontResolver = LocalFontFamilyResolver.current
@@ -245,7 +245,7 @@ private fun TravelMapMarker.bitmap(
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     val middle = size / 2f
     if (selected) {
-        paint.color = (colorArgb and 0x00ffffff) or 0x47000000
+        paint.color = highlightColorArgb
         canvas.drawCircle(middle, middle, middle, paint)
     }
     val radius = (if (selected) 16 else 13) * density

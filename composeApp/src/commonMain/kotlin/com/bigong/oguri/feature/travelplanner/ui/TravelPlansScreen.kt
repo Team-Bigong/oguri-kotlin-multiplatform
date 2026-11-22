@@ -38,6 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint80
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.core.util.extension.calculateFloatingBottomNavigationAdditionalBottomPadding
@@ -133,7 +135,7 @@ internal fun TravelPlansScreen(
                                     .noRippleClickable(onClick = { showPast = !showPast }).padding(horizontal = 24.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(stringResource(Res.string.travel_past), Modifier.weight(1f), style = travelTextStyle(15, 18, FontWeight.Medium), color = OguriTheme.colors.textPrimary)
+                                Text(stringResource(Res.string.travel_past), Modifier.weight(1f), style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
                                 Icon(
                                     painterResource(Res.drawable.ic_right_arrow), null,
                                     Modifier.rotate(if (showPast) -90f else 90f), tint = colors.textTertiary,
@@ -174,7 +176,7 @@ private fun TravelPlansHeading(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (showPageTitle) {
-            Text(stringResource(Res.string.travel_list), style = travelTextStyle(22, 26, FontWeight.Bold), color = OguriTheme.colors.textPrimary)
+            Text(stringResource(Res.string.travel_list), style = travelTextStyle(22, 26, FontWeight.Bold), color = Neutral100)
         }
         Text(
             stringResource(Res.string.travel_list_description),
@@ -204,9 +206,9 @@ internal fun TravelPlansEmpty(
     ) {
         Image(painterResource(illustration), contentDescription = null, modifier = Modifier.size(illustrationSize))
         Spacer(Modifier.height(24.dp))
-        if (title.isNotBlank()) Text(title, style = OguriTheme.typography.cardTitle, color = OguriTheme.colors.textPrimary, textAlign = TextAlign.Center)
+        if (title.isNotBlank()) Text(title, style = OguriTheme.typography.cardTitle, color = Neutral100, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))
-        Text(message, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textSecondary, textAlign = TextAlign.Center)
+        Text(message, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textTertiary, textAlign = TextAlign.Center)
         Spacer(Modifier.height(28.dp))
         if (outlinedAction) {
             TravelOutlineButton(onClick = onAction, modifier = Modifier.fillMaxWidth()) {
@@ -242,7 +244,7 @@ private fun TravelPlanCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = OguriTheme.colors.textPrimary)
+                Text(details.title, style = travelTextStyle(15, 18, FontWeight.Medium), color = Neutral100)
                 TravelPlanCardMetadata(
                     cities = cities,
                     memberLabel = memberLabel,
@@ -273,12 +275,17 @@ private fun TravelPlanCard(
             Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Text(
-                if (dayOffset != null && dayOffset > 0) stringResource(Res.string.travel_list_countdown, dayOffset.toInt())
-                else stringResource(Res.string.travel_list_in_progress),
-                style = travelTextStyle(12, 14, FontWeight.Medium),
-                color = OguriTheme.colors.textPrimary,
-            )
+            val countdownStyle = travelTextStyle(12, 14, FontWeight.Medium)
+            if (dayOffset != null && dayOffset > 0) {
+                Text(stringResource(Res.string.travel_list_countdown, dayOffset.toInt()), style = countdownStyle, color = colors.mint)
+            } else {
+                Text(
+                    stringResource(Res.string.travel_list_in_progress),
+                    modifier = Modifier.background(colors.mintContainer, RoundedCornerShape(4.dp)).padding(horizontal = 8.dp, vertical = 4.dp),
+                    style = countdownStyle,
+                    color = Mint80,
+                )
+            }
             Text(travelCardDates(details.dates, includeYear = true), style = travelTextStyle(15, 18, FontWeight.Medium), color = colors.textPrimary)
             TravelPlanCardMetadata(cities = cities, memberLabel = memberLabel)
         }

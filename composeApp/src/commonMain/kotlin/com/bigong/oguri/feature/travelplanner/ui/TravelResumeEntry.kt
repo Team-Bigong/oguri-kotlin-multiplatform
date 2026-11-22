@@ -26,7 +26,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.bigong.oguri.core.designsystem.Mint90
+import com.bigong.oguri.core.designsystem.Mint80
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.domain.model.TravelPlanSummary
@@ -91,14 +92,14 @@ private fun TravelResumeCard(plan: TravelPlanSummary, onClick: () -> Unit) {
                         modifier = Modifier.background(colors.mintContainer, CircleShape)
                             .padding(horizontal = 7.dp, vertical = 2.dp),
                         style = labelStyle,
-                        color = Mint90,
+                        color = Mint80,
                     )
                 }
             }
             Text(
                 text = details.title,
                 style = typography.cardSubtitle.copy(lineHeight = 18.sp),
-                color = colors.textPrimary,
+                color = Neutral100,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -126,7 +127,7 @@ internal fun TravelHomeGuide(viewModel: TravelPlannerViewModel?, onCreate: () ->
             stringResource(Res.string.travel_home_guide), Modifier.weight(1f),
             style = travelTextStyle(13, 16), color = colors.textTertiary,
         )
-        Text(stringResource(Res.string.travel_home_create_plan), style = OguriTheme.typography.labelLarge, color = OguriTheme.colors.textPrimary)
+        Text(stringResource(Res.string.travel_home_create_plan), style = OguriTheme.typography.labelLarge, color = Neutral100)
         Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp), tint = colors.textTertiary)
     }
 }
@@ -187,7 +188,7 @@ private fun TravelEntryCard(
                     plan.details.title,
                     modifier = Modifier.alignByBaseline(),
                     style = travelTextStyle(15, 18, FontWeight.Medium),
-                    color = OguriTheme.colors.textPrimary,
+                    color = Neutral100,
                 )
                 Text(
                     travelCardDates(plan.details.dates, includeYear = false),
@@ -197,7 +198,7 @@ private fun TravelEntryCard(
                 )
             }
         }
-        if (action != null) Text(action, style = OguriTheme.typography.labelLarge, color = colors.textPrimary)
+        if (action != null) Text(action, style = OguriTheme.typography.labelLarge, color = Neutral100)
         Icon(painterResource(Res.drawable.ic_right_arrow), null, Modifier.size(16.dp), tint = colors.textTertiary)
     }
 }

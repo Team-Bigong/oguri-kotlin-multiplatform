@@ -19,8 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint40
 import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.designsystem.homeRankLabelColor
 import com.bigong.oguri.core.util.extension.HapticType
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import com.bigong.oguri.core.util.extension.perform
@@ -85,7 +85,7 @@ fun RankSegmentedToggle(
                     Text(
                         text = rankLabelText,
                         style = OguriTheme.typography.labelMedium,
-                        color = Neutral100,
+                        color = homeRankLabelColor(OguriTheme.isDarkTheme),
                     )
                 }
             }

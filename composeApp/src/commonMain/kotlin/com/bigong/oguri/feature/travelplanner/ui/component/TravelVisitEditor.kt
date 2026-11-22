@@ -39,6 +39,9 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Mint5
+import com.bigong.oguri.core.designsystem.Mint50
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.ui.component.ConfirmAlertDialog
 import com.bigong.oguri.domain.model.TravelDates
@@ -124,7 +127,7 @@ internal fun TravelVisitEditor(
     ModalBottomSheet(scrimColor = TravelSheetScrim,
         dragHandle = { TravelSheetHandle() },
         containerColor = OguriTheme.colors.backgroundSecondary,
-        contentColor = OguriTheme.colors.textPrimary,
+        contentColor = Neutral100,
         shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
         onDismissRequest = { if (canDismiss) dismissDraft() },
         sheetState = sheetState,
@@ -165,12 +168,12 @@ internal fun TravelVisitEditor(
                     onOpened = onDirectionsOpened,
                 ) { directions ->
                     Row(
-                        Modifier.fillMaxWidth().background(OguriTheme.colors.mintContainer, shape)
-                            .border(1.dp, OguriTheme.colors.borderSubtle, shape).padding(14.dp),
+                        Modifier.fillMaxWidth().background(Mint5, shape)
+                            .border(1.dp, Mint50, shape).padding(14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Text(draft.placeTitle ?: draft.name, style = OguriTheme.typography.cardSubtitle, color = OguriTheme.colors.textPrimary)
+                            Text(draft.placeTitle ?: draft.name, style = OguriTheme.typography.cardSubtitle, color = Neutral100)
                             Text(listOfNotNull(placeAddress, stringResource(Res.string.travel_google_maps_attribution)).joinToString(" · "), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                             if (attributions.isNotEmpty()) GooglePlacesAttribution(attributions, includeGoogleBranding = false)
                         }
@@ -187,7 +190,7 @@ internal fun TravelVisitEditor(
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 48.dp)
                         .background(OguriTheme.colors.surfaceCard, RoundedCornerShape(8.dp))
-                        .border(1.dp, OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
+                        .border(1.dp, if (showDayMenu) OguriTheme.colors.mint else OguriTheme.colors.borderStrong, RoundedCornerShape(8.dp))
                         .noRippleClickable(enabled = canEdit, onClick = { showDayMenu = true }).padding(horizontal = 13.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -237,7 +240,7 @@ internal fun TravelVisitEditor(
                     onDraftChange(draft.useSavedValues())
                 }) { Text(stringResource(Res.string.travel_use_saved), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.textTertiary) }
                 else if (draft.visit != null) TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), enabled = canEdit, onClick = { confirmRemoval = true }) {
-                    Text(stringResource(Res.string.travel_delete_visit_action), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.error)
+                    Text(stringResource(Res.string.travel_delete_visit_action), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.orange)
                 }
                 TravelPrimaryButton(enabled = canEdit && (placeId != null || draft.name.isNotBlank()), onClick = onApply, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), textStyle = OguriTheme.typography.cardTitle) {
                     Text(stringResource(if (comparing) Res.string.travel_apply_mine else Res.string.travel_apply))

@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
@@ -59,7 +60,7 @@ internal fun TravelConflictComparison(
                 if (field == TravelVisitField.NOTE) {
                     TravelNoteText(value, Modifier.weight(2f), style = valueStyle)
                 } else {
-                    Text(value, Modifier.weight(2f), style = valueStyle, color = OguriTheme.colors.textPrimary)
+                    Text(value, Modifier.weight(2f), style = valueStyle, color = Neutral100)
                 }
             }
         }

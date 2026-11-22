@@ -24,6 +24,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.bigong.oguri.core.designsystem.Neutral100
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelPlace
@@ -50,7 +51,7 @@ internal fun TravelVisitDetailsSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val dismissSheet = rememberTravelSheetDismiss(sheetState, onDismiss)
-    ModalBottomSheet(scrimColor = TravelSheetScrim, dragHandle = { TravelSheetHandle() }, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp), containerColor = OguriTheme.colors.backgroundSecondary, contentColor = OguriTheme.colors.textPrimary, onDismissRequest = onDismiss, sheetState = sheetState) {
+    ModalBottomSheet(scrimColor = TravelSheetScrim, dragHandle = { TravelSheetHandle() }, shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp), containerColor = OguriTheme.colors.backgroundSecondary, contentColor = Neutral100, onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(Modifier.fillMaxWidth().height(430.dp)) {
             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(Res.string.travel_visit_details), style = OguriTheme.typography.cardTitle)
@@ -60,7 +61,7 @@ internal fun TravelVisitDetailsSheet(
             SelectionContainer(Modifier.weight(1f)) {
                 Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.padding(horizontal = 4.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(title, style = OguriTheme.typography.sectionTitle, color = OguriTheme.colors.textPrimary)
+                        Text(title, style = OguriTheme.typography.sectionTitle, color = Neutral100)
                         val location = visit.details.location ?: place?.address
                         val attribution = stringResource(Res.string.travel_google_maps_attribution).takeIf { place != null }
                         Text(listOfNotNull(location, attribution).joinToString(" · "), style = OguriTheme.typography.bodySmall, color = OguriTheme.colors.textTertiary)
@@ -93,6 +94,6 @@ private fun TravelVisitInfoRow(label: String, value: String) {
     HorizontalDivider(color = OguriTheme.colors.borderSubtle)
     Row(Modifier.fillMaxWidth().heightIn(min = 32.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(label, Modifier.weight(1f), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
-        Text(value, style = OguriTheme.typography.bodyMedium, color = OguriTheme.colors.textPrimary)
+        Text(value, style = OguriTheme.typography.bodyMedium, color = Neutral100)
     }
 }
