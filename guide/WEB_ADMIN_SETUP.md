@@ -4,7 +4,7 @@
 - Vite + React + React Native Web 기반 Web에서 공식 웹(`/`)과 어드민 웹(`/admin`, `#/admin`)을 함께 운영한다.
 - 어드민 웹은 장소/국가/사용자/공휴일 DB를 CRUD로 관리한다.
 - 어드민은 서버 API와 Firebase Storage를 함께 사용한다.
-- 공식 웹과 어드민은 같은 `web` 앱 안에서 path/hash 기준으로 분기한다.
+- 공식 사이트와 어드민은 한 React 진입점에서 경로에 따라 분기한다. 여행 초대 안내는 별도의 정적 진입점이다.
 
 ## 현재 구조
 
@@ -32,6 +32,7 @@ web/
 │  │  ├─ firebase.ts
 │  │  └─ imageProcessing.ts
 │  └─ types/admin.ts
+├─ trip-invite/index.html
 ├─ package.json
 ├─ tsconfig.json
 └─ vite.config.ts
@@ -40,7 +41,7 @@ web/
 ## 라우팅
 - `web/src/App.tsx`에서 공식 웹과 어드민 웹을 분기한다.
 - `window.location.pathname.startsWith("/admin")` 또는 `window.location.hash.startsWith("#/admin")`이면 `AdminApp`을 표시한다.
-- 그 외 경로는 `OfficialHomePage`를 표시한다.
+- React 진입점의 나머지 경로는 `OfficialHomePage`를 표시한다. `/trip-invite/`는 [앱 초대 안내](../web/README.md#여행-초대-링크-배포) 빌드 결과를 제공한다.
 - Render rewrite 설정 전 직접 접근 fallback으로 `/#/admin`을 사용할 수 있다.
 
 ## 어드민 인증
@@ -89,10 +90,7 @@ web/
 - `PUT /api/admin/v1/countries/{countryId}`
 - `DELETE /api/admin/v1/countries/{countryId}`
 
-국가 요청/응답 필드:
-- `name`
-- `currencyCode`
-- `bigMacIndex`
+국가 요청에는 `name`, `currencyCode`, `bigMacIndex`가 들어간다. 응답은 `id`를 함께 반환한다.
 
 ### 장소
 - `GET /api/admin/v1/destinations`
@@ -126,19 +124,15 @@ web/
 - `link`
 - `sortOrder`
 
+장소 응답에는 `id`와 `countryName`이 있으며, 이미지와 체험 항목에도 각각 `id`가 있다.
+
 ### 사용자
 - `GET /api/admin/v1/members`
 - `POST /api/admin/v1/members`
 - `PUT /api/admin/v1/members/{memberId}`
 - `DELETE /api/admin/v1/members/{memberId}`
 
-사용자 요청/응답 필드:
-- `id`
-- `nickname`
-- `preferredDayOff`
-- `remainingDayOff`
-- `onboardingCompleted`
-- `updatedAt`(응답)
+생성·수정 요청은 `nickname`, `preferredDayOff`, `remainingDayOff`, `onboardingCompleted`를 받는다. 생성에는 본문의 `id`, 수정에는 경로의 `memberId`를 사용한다. 응답은 `id`와 `updatedAt`을 함께 반환한다.
 
 ### 공휴일
 - `GET /api/admin/v1/public-holidays`
@@ -146,15 +140,11 @@ web/
 - `PUT /api/admin/v1/public-holidays/{holidayId}`
 - `DELETE /api/admin/v1/public-holidays/{holidayId}`
 
-공휴일 요청/응답 필드:
-- `holidayDate`
-- `name`
-- `isActualHoliday`
+공휴일 요청에는 `holidayDate`, `name`, `isActualHoliday`가 들어간다. 응답은 `id`를 함께 반환한다.
 
 ## 환경 변수 작성 위치
-- 위치: 프로젝트 루트 `.env` 파일
-- `web/vite.config.ts`에서 `envDir: ".."`를 지정하므로 웹 앱도 루트 `.env`를 사용한다.
-- `web/src/config/env.ts`는 필수 env가 없으면 앱 초기화 시 에러를 던진다.
+- 웹은 Vite의 `envDir: ".."` 설정에 따라 프로젝트 루트 `.env`를 읽는다. `web/src/config/env.ts`는 React 진입점에 필요한 값을 초기화할 때 검사한다.
+- 서버 설정은 실행 환경의 환경 변수 또는 `server/src/main/resources/application-local.yaml`에 둔다. Spring의 설정과 Vite의 `.env` 로딩은 별개다. [application.yaml](../server/src/main/resources/application.yaml)
 
 ### 서버 변수
 - `SPRING_DATASOURCE_URL`
@@ -192,12 +182,13 @@ web/
 - `VITE_FIREBASE_MEASUREMENT_ID` (선택)
 - `VITE_PLAY_STORE_URL` (선택)
 - `VITE_APP_STORE_URL` (선택)
+- `ANDROID_APP_LINKS_SHA256`, `IOS_UNIVERSAL_LINKS_APP_ID`는 초대 링크 연결 파일용 빌드 변수다. [초대 배포 안내](../web/README.md#여행-초대-링크-배포)
 
 ## Render Static Web 배포
 - Root Directory: `web`
 - Build Command: `npm ci && npm run build`
 - Publish Directory: `dist`
-- Rewrite Rule: `/* -> /index.html`
+- Rewrite Rule: `/* -> /index.html`. 여행 초대 경로와 연결 파일의 응답은 [웹 배포 가이드](../web/README.md)를 따른다.
 
 ## 주의 사항
 - 어드민 비밀값은 서버 환경변수에만 둔다.

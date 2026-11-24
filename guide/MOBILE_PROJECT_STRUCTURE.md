@@ -21,6 +21,7 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
 │  ├─ di
 │  ├─ navigation
 │  ├─ network
+│  ├─ notification
 │  ├─ platform
 │  ├─ ui
 │  │  └─ component
@@ -75,15 +76,19 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
    │  └─ ui
    │     ├─ component
    │     └─ model
+   ├─ travelplanner
+   │  └─ ui
+   │     ├─ component
+   │     └─ model
    └─ webdocument
       └─ ui
 ```
 
 ## Source Set 기준
 - `commonMain`: 공통 UI, navigation, domain, data 추상화/공통 구현, Ktor remote data source, Metro graph를 둔다.
-- `androidMain`: Android SDK 의존 구현을 둔다. 예: Kakao/Google 로그인, DataStore/EncryptedSharedPreferences 기반 local data source, AdMob, Amplitude, WebView, preview.
-- `iosMain`: iOS `ComposeUIViewController`, Darwin Ktor engine, NSUserDefaults local data source, Apple/Kakao login, WebKit WebView, AdMob/Amplitude/share notification bridge 등 iOS actual 구현을 둔다.
-- `commonTest`: 공통 테스트를 둔다.
+- `androidMain`에는 Kakao·Google 로그인, Google Maps SDK, AdMob, Amplitude, WebView, 프리뷰 등 Android 구현을 둔다. 여행 복구 파일은 Android Keystore 키로 암호화해 백업 제외 영역에 저장한다.
+- `iosMain`에는 Darwin Ktor 엔진, Apple·Kakao 로그인, WebKit WebView와 Swift 호스트 연결을 둔다. 지도 브리지는 [TravelMapBridge.swift](../iosApp/iosApp/Bridge/Maps/TravelMapBridge.swift)에 있으며, 여행 복구 파일은 파일 보호가 적용된 캐시 영역에 저장한다.
+- `commonTest`의 공통 테스트는 Android 단위 테스트와 iOS 시뮬레이터 테스트에서 실행한다.
 
 ## 레이어 규칙
 - `domain`은 어떤 앱 레이어도 import하지 않는다.
@@ -104,11 +109,12 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
 
 ## 주요 공용 영역
 - `core/navigation`: 타입 세이프 `RouteModel`, `MainNavigator`, `MainNavHost`, `NavDisplay`, bottom navigation을 관리한다.
-- `core/deeplink`: `oguri://open/...` 및 KakaoLink deeplink를 route로 파싱하고, `DeepLinkStore`로 진입 URL을 전달한다.
+- `core/deeplink`는 도시·기간 공유, KakaoLink, 여행 초대 HTTPS 링크와 앱 스킴을 해석한다. `DeepLinkStore`가 수신 URL을 전달하고 초대 토큰은 `TravelInviteIntent`가 관리한다.
 - `core/network`: generated config 기반 `BASE_URL`, Ktor client, 전역 header plugin, token store를 관리한다.
 - `core/di`: Metro `AppGraph`에서 remote data source, repository, ViewModel provider, deep link store를 제공한다.
 - `core/ad`: AdMob app open/banner bridge를 관리한다.
-- `core/analytics`: Amplitude event와 Android 초기화를 관리한다.
+- `core/analytics`는 Amplitude 이벤트와 여행 지표용 세션 식별자를 관리한다.
+- `core/notification`에는 기존 여행 알림의 플랫폼 연결 코드가 남아 있다. 앱에서 사용 가능한 여행 알림 진입점은 제거됐다.
 - `core/platform`: 로그인, 공유, WebView, haptic, back gesture, theme mode, floating bottom navigation 등 플랫폼 bridge를 둔다.
 
 ## 리소스
@@ -120,6 +126,7 @@ composeApp/src/commonMain/kotlin/com/bigong/oguri
 
 ## 빌드 설정 메모
 - `composeApp/build.gradle.kts`의 `GenerateNetworkConfigTask`가 `DebugNetworkConfig.kt`를 생성한다.
-- `local.properties`에서 `debug.base.url`, `release.base.url`, `kakao.key`, `google.web.client.id`, `amplitude.api.key`를 읽는다.
-- Android `versionCode`, `versionName`은 루트 `version.properties`의 `CURRENT_PROJECT_VERSION`, `MARKETING_VERSION`을 사용한다.
+- `local.properties`에서 `debug.base.url`, `release.base.url`, `kakao.key`, `google.web.client.id`, `amplitude.api.key`를 읽는다. Android 지도 키는 `GOOGLE_MAPS_ANDROID_API_KEY` 환경 변수를 우선하고, 값이 없으면 `google.maps.android.api.key`를 읽는다.
+- Android `versionCode`, `versionName`은 루트 [version.properties](../version.properties)의 `CURRENT_PROJECT_VERSION`, `MARKETING_VERSION`을 사용한다. iOS의 버전 설정도 같은 파일을 기준으로 한다.
+- 지도·Firebase 설정, 공통 테스트와 Swift 호스트 빌드 방법은 [여행 검증 가이드](../plan/TRAVEL_PLANNER_TESTING.md)에 있다.
 - `shared` 모듈은 현재 공통 scaffold(`Constants`, `Greeting`, `Platform`) 수준이며, 모바일 domain/data 규칙을 우회하는 용도로 사용하지 않는다.

@@ -216,9 +216,30 @@ class TravelPlan(
     fun addVisit(
         dayNumber: Int,
         details: TravelVisitDetails,
+        additionalLodgingDays: List<Int> = emptyList(),
     ) {
         requireValidDay(dayNumber)
         requirePlaceCapacity(dayNumber, details)
+        val additionalDays = if (additionalLodgingDays.isEmpty()) {
+            emptyList()
+        } else {
+            require(details.category == TravelVisitCategory.LODGING)
+            require(additionalLodgingDays.size < MAX_TRIP_DAYS)
+            require(additionalLodgingDays.distinct().size == additionalLodgingDays.size)
+            require(dayNumber !in additionalLodgingDays && additionalLodgingDays.all(::containsDay))
+            val occupiedDays = visits.filter {
+                it.category == TravelVisitCategory.LODGING ||
+                    (details.googlePlaceId != null && it.googlePlaceId == details.googlePlaceId)
+            }.map(TravelVisit::dayNumber).toSet()
+            additionalLodgingDays.filterNot(occupiedDays::contains)
+                .onEach { requirePlaceCapacity(it, details) }
+        }
+        appendVisit(dayNumber, details)
+        val lodging = details.copy(localTime = null, note = null)
+        additionalDays.forEach { appendVisit(it, lodging) }
+    }
+
+    private fun appendVisit(dayNumber: Int, details: TravelVisitDetails) {
         revision++
         visits.add(TravelVisit(UUID.randomUUID(), this, dayNumber, nextPosition(dayNumber), details, revision))
         dayRevisions[dayNumber] = revision

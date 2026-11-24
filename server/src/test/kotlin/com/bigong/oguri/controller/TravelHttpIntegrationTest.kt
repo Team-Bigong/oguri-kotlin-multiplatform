@@ -70,6 +70,28 @@ class TravelHttpIntegrationTest {
     }
 
     @Test
+    fun `숙소를 한 번에 추가할 때 이미 숙소가 있는 날은 건너뛰고 재시도해도 중복되지 않는다`() {
+        val owner = memberToken()
+        val start = LocalDate.of(2027, 4, 1)
+        val creation = CreateTravelPlanRequest(UUID.randomUUID(), "Fukuoka", "Asia/Tokyo", "Trip", start, start.plusDays(3), null)
+        val tripId = request("POST", "/trips", 200, owner, creation).path("id").asText()
+        val commands = "/trips/$tripId/commands"
+        val lodging = TravelVisitRequest("Hotel", null, null, "Check-in", null, TravelVisitCategory.LODGING)
+        request("POST", commands, 200, owner, TravelPlanCommand.AddVisit(UUID.randomUUID(), 2, lodging.copy(name = "Existing hotel"), 0))
+        val command = TravelPlanCommand.AddVisit(UUID.randomUUID(), 1, lodging, 0, additionalLodgingDays = listOf(2, 4))
+
+        val saved = request("POST", commands, 200, owner, command)
+        val visits = saved.path("visits").associateBy { it.path("dayNumber").asInt() }
+        assertEquals(setOf(1, 2, 4), visits.keys)
+        assertEquals(3, saved.path("visits").size())
+        assertEquals("Check-in", visits.getValue(1).path("note").asText())
+        assertEquals("Existing hotel", visits.getValue(2).path("name").asText())
+        assertEquals("Hotel", visits.getValue(4).path("name").asText())
+        assertTrue(visits.getValue(4).path("note").isNull)
+        assertEquals(saved.path("visits"), request("POST", commands, 200, owner, command).path("visits"))
+    }
+
+    @Test
     fun `초대 참여부터 편집 충돌과 멤버 제외까지 실제 HTTP로 검증한다`() {
         val owner = memberToken()
         val member = memberToken()

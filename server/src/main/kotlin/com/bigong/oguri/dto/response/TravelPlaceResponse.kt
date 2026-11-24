@@ -1,5 +1,8 @@
 package com.bigong.oguri.dto.response
 
+import com.bigong.oguri.domain.TravelVisitCategory
+import com.fasterxml.jackson.annotation.JsonInclude
+
 data class TravelPlaceResponse(
     val id: String,
     val name: String,
@@ -7,6 +10,8 @@ data class TravelPlaceResponse(
     val latitude: Double?,
     val longitude: Double?,
     val attributions: List<TravelPlaceAttribution>,
+    @get:JsonInclude(JsonInclude.Include.NON_NULL)
+    val suggestedCategory: TravelVisitCategory? = null,
 )
 
 data class TravelPlaceAttribution(

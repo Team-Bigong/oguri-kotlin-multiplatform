@@ -107,6 +107,7 @@ class DefaultTravelPlanRepository internal constructor(
                             change.dayNumber,
                             change.details.toRequest(),
                             change.structureRevision,
+                            change.additionalLodgingDays,
                         )
                     is TravelVisitChange.Edit ->
                         TravelPlanCommandRequest.EditVisit(

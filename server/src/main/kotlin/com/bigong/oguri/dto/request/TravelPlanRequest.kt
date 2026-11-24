@@ -66,6 +66,8 @@ sealed interface TravelPlanCommand {
         val details: TravelVisitRequest,
         @get:JsonInclude(JsonInclude.Include.NON_NULL)
         override val expectedStructureRevision: Long?,
+        @get:JsonInclude(JsonInclude.Include.NON_EMPTY)
+        val additionalLodgingDays: List<Int>? = null,
     ) : TravelPlanCommand
 
     @JvmRecord

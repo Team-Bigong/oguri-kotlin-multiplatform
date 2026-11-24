@@ -50,6 +50,7 @@ data class TravelPlace(
     val address: String?,
     val coordinates: TravelCoordinates?,
     val attributions: List<TravelPlaceAttribution>,
+    val suggestedCategory: TravelVisitCategory? = null,
 )
 
 data class TravelPlaceAttribution(

@@ -14,13 +14,13 @@
 - 요청/응답 모델은 `data/remote/model/request`, `data/remote/model/response`에 둔다.
 - UI 모델이 아닌 도메인 모델은 `domain/model`에 둔다.
 - repository 구현체는 remote/local DTO를 domain model로 변환해서 반환한다.
-- 현재 앱은 `auth`, `home`, `calendar`, `destination`, `member`, `search` API를 실제 서버와 연동한다.
+- 앱은 인증, 홈, 캘린더, 여행지, 회원, 검색 API와 여행 API(`/api/v1/trips`, `/api/v1/trip-invites`, `/api/v1/travel-places`)를 사용한다.
 - 인증 토큰은 `AuthTokenStore`에서 access/refresh token 쌍으로 관리하고 플랫폼별 local data source에 영속화한다.
 - 전역 header 정책은 `core.network.OguriRequestHeadersPlugin`에서 관리한다.
 - `/api/v1/auth/**` 요청에는 `Authorization`과 `X-USER-ID`를 제거한다.
 - 토큰이 없으면 일반 API 요청에 `X-USER-ID: GUEST`를 주입한다.
 - 토큰이 있으면 `Authorization: Bearer {accessToken}`을 주입하고 `X-USER-ID`는 제거한다.
-- `401` 또는 `403` 응답은 `AuthRequestExecutor`에서 refresh token으로 재발급한 뒤 원 요청을 1회 재시도한다.
+- 일반 경로의 `AuthRequestExecutor.execute`는 `401` 또는 `403`에서 토큰을 갱신하고 같은 세션에서 요청을 한 번 재시도한다. 여행의 회원 전용 요청은 `executeForSession`에서 시작·갱신·응답 시 계정 세션을 확인하며, `401`에만 갱신을 시도한다.
 - 재발급 동시성은 `AuthTokenStore.refreshTokens`의 `Mutex`로 보호한다.
 - refresh token 인증 실패 시 저장된 토큰을 삭제한다.
 
@@ -33,7 +33,7 @@
 - iOS Apple 로그인은 AuthenticationServices의 Apple ID credential에서 identity token을 추출한다.
 - iOS Kakao 로그인은 KakaoTalk OAuth URL을 우선 열고, 실패 시 `ASWebAuthenticationSession`으로 authorization code를 받은 뒤 Kakao token endpoint에서 access token을 발급받는다.
 - iOS Google 로그인 actual은 현재 미지원 실패를 반환한다.
-- Android Manifest에는 앱 딥링크(`oguri://open`), KakaoLink(`kakao{NATIVE_APP_KEY}://kakaolink`), Kakao OAuth(`kakao{NATIVE_APP_KEY}://oauth`) intent filter를 등록한다.
+- Android Manifest에는 앱 딥링크(`oguri://open`), KakaoLink, Kakao OAuth, `www.oguri.kr/trip-invite`의 App Links를 등록한다. iOS는 `applinks:www.oguri.kr` Associated Domains와 앱 스킴을 사용한다.
 - 서버 로그인 엔드포인트는 `POST /api/v1/auth/login/kakao`, `POST /api/v1/auth/login/google`, `POST /api/v1/auth/login/apple`이다.
 - 서버 로그인 응답의 `onboardingCompleted` 값에 따라 `Home` 또는 `Onboarding`으로 이동한다.
 - "로그인 없이 둘러보기"는 `Home`으로 이동하고, 이후 API는 guest header로 호출한다.
@@ -64,15 +64,16 @@
 
 ## 내비게이션
 - 타입 세이프 라우팅(`@Serializable RouteModel`)을 사용한다.
-- 현재 route는 `Splash`, `Login`, `Onboarding`, `Home`, `Search`, `Calendar`, `MyPage`, `DisplaySettings`, `PlaceDetail`, `PeriodDetail`, `PhotoDetail`, `WebDocument`이다.
-- Bottom navigation은 `Home`, `Calendar`, `MyPage`만 사용한다.
+- [RouteModel](../composeApp/src/commonMain/kotlin/com/bigong/oguri/core/navigation/RouteModels.kt)은 일반 화면과 `TravelPlans`, `CreateTravelPlan`, `TravelPlan`, `TravelMembers`, `TravelInvite`, `TravelLogin`, `TravelOnboarding`을 정의한다.
+- 하단 탭은 `Home`, `Calendar`, `TravelPlans`, `MyPage` 순서다. 여행 생성·상세·멤버 화면에서는 하단 탭을 숨긴다.
 - 메인 탭 이동은 `popUpTo(navGraph.id)`로 백스택을 초기화한다.
-- 메인 탭 재선택은 각 탭의 scroll-to-top trigger를 증가시킨다.
+- 홈·캘린더·마이페이지는 탭 재선택 시 상단으로 스크롤한다.
 - 메인 탭 루트와 루트 Login에서는 2회 뒤로가기로 종료한다.
-- 메인 탭이 아닌 화면에서는 뒤로가기/스와이프 백으로 이전 스택으로 이동한다.
+- 상세 화면은 뒤로 가기로 이전 화면을 연다. 여행 화면에는 공통 스와이프 백을 적용하지 않는다.
 - 외부 공유/딥링크 진입은 `oguri://open/place?placeId=...`, `oguri://open/period?startDate=...&endDate=...`를 지원한다.
 - KakaoLink 진입은 `kakao{key}://kakaolink?deeplink={encodedOguriUrl}` 형태를 파싱한다.
-- 딥링크 진입은 로그인 여부와 무관하게 허용한다. 토큰이 없으면 guest로 API를 호출한다.
+- 공개 도시·기간 공유는 비회원도 열 수 있다. 여행 탭의 비회원에게는 로그인 안내를 표시한다. 링크의 여행 초대는 미리보기를 열고, 새 참여에는 로그인과 명시적 확인이 필요하다. 기존 멤버는 여행 상세로 바로 이동한다.
+- 추천에서 시작한 생성과 초대는 `TravelLogin`·`TravelOnboarding`으로 인증 흐름을 거쳐 원래 목적지로 돌아온다. 초대 토큰은 라우트 인자에 넣지 않는다. [여행 구현 가이드](../plan/TRAVEL_PLANNER_IMPLEMENTATION.md)
 - 외부 문서(건의하기/약관/개인정보)는 `WebDocument` route와 `PlatformWebView`로 표시한다.
 
 ## UI 분리 기준
@@ -98,13 +99,13 @@
 - App Open 광고는 앱 진입 후 메인 탭 진입이 완료된 뒤 화면 전환 시 foreground session당 최대 1회 노출한다.
 - Calendar는 추천 카드 index `3` 뒤에 첫 inline banner를 노출하고 이후 12개 카드 간격으로 노출한다.
 - Photo Detail은 하단 AdMob banner를 노출한다.
-- MyPage는 guest/member 상태 모두 하단 AdMob banner를 노출한다.
-- Splash, Login, Onboarding, Search, WebDocument에는 광고를 노출하지 않는다.
+- 마이페이지와 여행 탭은 하단 AdMob 배너를 사용한다. 여행 탭은 비회원 안내 또는 목록 조회에 성공한 화면에서 배너를 표시한다.
+- Splash, Login, Onboarding, Search, WebDocument, TravelLogin, TravelOnboarding은 App Open 광고의 화면 전환 조건에서 제외한다. 여행 탭·상세·초대는 공통 전환 조건을 적용한다.
 
 ## 분석/공유
 - Analytics는 `core.analytics` expect/actual bridge를 사용하고, `amplitude.api.key`가 비어 있으면 초기화하지 않는다.
-- Android는 Amplitude SDK를 직접 초기화하고 Session Replay plugin을 함께 등록한다.
-- iOS는 native host가 처리할 수 있도록 notification bridge로 initialize/track 요청을 전달한다.
+- Android와 iOS의 Debug 구성은 Amplitude를 초기화하지 않는다. 배포 구성은 자동 수집 없이 명시적으로 기록한 이벤트를 보낸다. Android 초기화 코드는 Session Replay 플러그인을 등록하지 않는다.
+- iOS는 Swift 호스트에 초기화·이벤트 요청을 전달한다. 여행 생성·편집·재사용 지표는 [서버의 별도 집계](../plan/TRAVEL_PLANNER_METRICS.md)를 사용한다.
 - 사용자 행동 event name/property는 `core.analytics.OguriAnalyticsEvent.kt`에 둔다.
 - 공유는 `core.platform.ShareProvider`를 통해 처리한다.
 - Android 공유는 Kakao share intent를 우선 준비하고, 실패하거나 사용할 수 없으면 system share text로 fallback 한다.

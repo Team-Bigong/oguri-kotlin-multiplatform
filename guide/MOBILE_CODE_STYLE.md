@@ -57,7 +57,8 @@
 ## 상태/동시성
 - UI 상태는 `MutableStateFlow` + immutable `UiState`로 관리한다.
 - one-shot event는 `MutableSharedFlow` 기반 `SideEffect`로 분리한다.
-- suspend 호출은 ViewModel의 `viewModelScope.launch` 안에서 실행한다.
+- 사용자 요청에 따른 작업은 `viewModelScope`에서 관리한다. 화면이 활성화된 동안만 필요한 조회는 `repeatOnLifecycle`처럼 화면 생명주기에 묶고 취소를 전파한다.
+- 저장 성공·편집 충돌·접근 종료처럼 화면을 다시 열어도 필요한 결과는 UI 상태로 유지한다. 저장 명령은 최신값으로 덮어쓰는 보기 상태와 분리한다.
 - 중복 클릭 방지는 `isLoading`, `isSubmitting` 같은 상태로 먼저 막는다.
 - Paging 화면은 `LazyPagingItems`의 loading/error 상태를 UI에 명시한다.
 - token refresh처럼 공유 자원을 갱신하는 로직은 `Mutex` 등으로 중복 실행을 방지한다.
@@ -69,7 +70,7 @@
 - 화면 내부 컴포넌트는 `feature/{name}/ui/component`에 둔다.
 - 여러 화면에서 재사용하는 컴포넌트는 `core/ui/component`에 둔다.
 - `data` 레이어 네트워크 모델은 `model/request`, `model/response`로 분리한다.
-- `core/deeplink`, `core/ad`, `core/analytics`, `core/platform`은 cross-cutting concern만 담는다.
+- `core/deeplink`, `core/ad`, `core/analytics`, `core/notification`, `core/platform`에는 여러 화면에서 공통으로 쓰는 기능을 둔다.
 - 광고 모델의 `url`은 목적지 링크로 사용하고, 광고 이미지 선택은 UI 레이어에서 `platform` 기준으로 처리한다.
 
 ## Ktlint
