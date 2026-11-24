@@ -143,6 +143,8 @@ internal fun TravelPlaceSearchSheet(
                 .background(colors.borderStrong, CircleShape))
         },
     ) {
+        val sheetFocus = LocalFocusManager.current
+        val sheetKeyboard = LocalSoftwareKeyboardController.current
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).dismissKeyboardOnOutsideTouch()) {
             Row(
                 Modifier.fillMaxWidth().padding(start = 20.dp, end = 4.dp, top = 0.dp, bottom = 4.dp),
@@ -324,7 +326,8 @@ internal fun TravelPlaceSearchSheet(
                 enabled = canEdit && if (manual) draft?.name?.isNotBlank() == true
                     else selected != null,
                 onClick = {
-                    focus.clearFocus()
+                    sheetFocus.clearFocus(force = true)
+                    sheetKeyboard?.hide()
                     if (manual) onApplyManual()
                     else onAdd(searchNote)
                 },
