@@ -52,6 +52,10 @@
     <string name="travel_search_empty">No search results</string>
     <string name="travel_search_results">Back to results</string>
     <string name="travel_add_to_day">Add to day %1$d</string>
+    <string name="travel_lodging_extra_days_title">Add this stay to other days?</string>
+    <string name="travel_lodging_extra_days_message">Add the same stay in one step.</string>
+    <string name="travel_lodging_add_this_day_only">This day only</string>
+    <string name="travel_lodging_add_other_days">Add</string>
     <string name="travel_add_without_date">Add without a date</string>
     <string name="travel_manual_add">Add manually</string>
     <string name="travel_add_again">Add another visit</string>

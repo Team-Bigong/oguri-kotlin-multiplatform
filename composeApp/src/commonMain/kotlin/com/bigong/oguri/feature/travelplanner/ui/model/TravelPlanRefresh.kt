@@ -7,12 +7,19 @@ internal fun TravelPlannerUiState.withRefreshedPlan(updated: TravelPlan): Travel
     val day = selectedDay.takeIf { it in 1..updated.summary.details.dates.dayCount } ?: updated.summary.details.dates.dayCount
     val dayChanged = day != selectedDay
     val removedDraft = visitDraft?.visit?.let { original -> updated.visits.none { it.id == original.id } } == true
-    val changedStructure = visitDraft?.let { it.structureRevision != updated.structureRevision } == true
+    val changedLodgingStructure = lodgingAddition?.change?.let { it.structureRevision != updated.structureRevision } == true
+    val changedStructure = changedLodgingStructure || visitDraft?.let { it.structureRevision != updated.structureRevision } == true
+    val nextLodgingAddition = lodgingAddition?.takeUnless { changedLodgingStructure }?.let { addition ->
+        val availableDays = updated.additionalLodgingDays(addition.change.dayNumber, addition.change.details.googlePlaceId).toSet()
+        addition.copy(offeredDays = addition.offeredDays.filter(availableDays::contains))
+            .takeIf { it.offeredDays.isNotEmpty() }
+    }
     val needsReload = !canRetrySave && (removedDraft || changedStructure)
 
     fun visible(id: String?): String? = id?.takeIf { candidate -> updated.visits.any { it.id == candidate && it.dayNumber == day } }
     return copy(
         plan = updated,
+        lodgingAddition = nextLodgingAddition,
         selectedDay = day,
         inspectedVisitId = inspectedVisitId?.takeIf { id -> updated.visits.any { it.id == id } },
         selectedVisitId = visible(selectedVisitId),

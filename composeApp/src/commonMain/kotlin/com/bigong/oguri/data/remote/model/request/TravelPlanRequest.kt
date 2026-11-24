@@ -48,6 +48,7 @@ internal sealed interface TravelPlanCommandRequest {
         val dayNumber: Int,
         val details: TravelVisitRequest,
         val expectedStructureRevision: Long,
+        val additionalLodgingDays: List<Int> = emptyList(),
     ) : TravelPlanCommandRequest
 
     @Serializable

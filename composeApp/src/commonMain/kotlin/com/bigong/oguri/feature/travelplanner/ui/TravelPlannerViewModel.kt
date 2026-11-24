@@ -24,6 +24,7 @@ import com.bigong.oguri.domain.usecase.GetSearchAutocompleteListUseCase
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCitySearchState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelOverviewState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlaceSearchState
+import com.bigong.oguri.feature.travelplanner.ui.model.TravelLodgingAddition
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelPlannerUiState
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitUndoAction
@@ -646,7 +647,7 @@ class TravelPlannerViewModel(
     internal fun selectSearchCity(city: String, language: String) {
         if (city !in state.value.plan?.summary?.details?.cities.orEmpty()) return
         val query = state.value.placeSearch?.query.orEmpty()
-        mutableState.update { it.copy(searchCity = city, placeSearch = it.placeSearch?.copy(selected = null, results = emptyList())) }
+        mutableState.update { it.copy(searchCity = city, placeSearch = it.placeSearch?.copy(selection = null, results = emptyList())) }
         searchPlaces(query, language)
     }
 
@@ -664,7 +665,7 @@ class TravelPlannerViewModel(
         searchJob?.cancel()
         val canSearch = query.trim().length >= MIN_SEARCH_LENGTH
         mutableState.update {
-            it.copy(placeSearch = search.copy(query = query, selected = null, results = emptyList(), isLoading = canSearch, failure = null))
+            it.copy(placeSearch = search.copy(query = query, selection = null, results = emptyList(), isLoading = canSearch, failure = null))
         }
         if (!canSearch) return
         searchJob =
@@ -691,33 +692,77 @@ class TravelPlannerViewModel(
             }
     }
 
-    internal fun selectPlace(place: TravelPlace?) {
-        mutableState.update { it.copy(placeSearch = it.placeSearch?.copy(selected = place)) }
+    internal fun selectPlace(placeId: String) {
+        mutableState.update { it.copy(placeSearch = it.placeSearch?.select(placeId)) }
     }
 
-    internal fun addPlace(
-        place: TravelPlace,
-        dayNumber: Int,
-        category: TravelVisitCategory?,
-        note: String,
-    ) {
-        changeVisit(
+    internal fun selectPlaceCategory(category: TravelVisitCategory?) {
+        mutableState.update { it.copy(placeSearch = it.placeSearch?.selectCategory(category)) }
+    }
+
+    internal fun addSelectedPlace(note: String) {
+        val current = state.value
+        val selection = current.placeSearch?.selection ?: return
+        val plan = current.plan ?: return
+        requestVisitAddition(
             change =
                 TravelVisitChange.Add(
-                    dayNumber,
+                    current.selectedDay,
                     TravelVisitDetails(
                         name = null,
                         location = null,
                         localTime = null,
                         note = note.trim().ifEmpty { null },
-                        googlePlaceId = place.id,
-                        category = category,
+                        googlePlaceId = selection.place.id,
+                        category = selection.category,
                     ),
-                    state.value.plan?.structureRevision ?: return,
+                    plan.structureRevision,
                 ),
-            selectedDayAfterSave = dayNumber,
-            addedPlace = place,
+            place = selection.place,
         )
+    }
+
+    private fun requestVisitAddition(change: TravelVisitChange.Add, place: TravelPlace? = null) {
+        val current = state.value
+        val plan = current.plan ?: return
+        if (!canChangeVisit(current) || current.lodgingAddition != null) return
+        val offeredDays = if (change.details.category == TravelVisitCategory.LODGING &&
+            change.structureRevision == plan.structureRevision
+        ) {
+            plan.additionalLodgingDays(change.dayNumber, change.details.googlePlaceId)
+        } else {
+            emptyList()
+        }
+        if (offeredDays.isEmpty()) {
+            changeVisit(change, selectedDayAfterSave = change.dayNumber, addedPlace = place)
+        } else {
+            mutableState.update { it.copy(lodgingAddition = TravelLodgingAddition(change, place, offeredDays)) }
+        }
+    }
+
+    internal fun dismissLodgingAddition() {
+        mutableState.update { it.copy(lodgingAddition = null) }
+    }
+
+    internal fun confirmLodgingAddition(includeOtherDays: Boolean) {
+        val current = state.value
+        val addition = current.lodgingAddition ?: return
+        val plan = current.plan ?: return
+        val change = addition.change
+        if (change.structureRevision != plan.structureRevision) {
+            dismissLodgingAddition()
+            applyFailure(TravelPlanFailure.CONFLICT)
+            return
+        }
+        val additionalDays = if (includeOtherDays) {
+            val availableDays = plan.additionalLodgingDays(change.dayNumber, change.details.googlePlaceId).toSet()
+            addition.offeredDays.filter(availableDays::contains)
+        } else {
+            emptyList()
+        }
+        if (changeVisit(change.copy(additionalLodgingDays = additionalDays), change.dayNumber, addition.place)) {
+            dismissLodgingAddition()
+        }
     }
 
     internal fun reorderVisits(
@@ -857,13 +902,12 @@ class TravelPlannerViewModel(
         if ((draft.visit?.details?.googlePlaceId == null && draft.name.isBlank())) return
         val details = draft.toDetails()
         val structureRevision = draft.structureRevision
-        val change =
-            if (draft.visit == null) {
-                TravelVisitChange.Add(draft.dayNumber, details, structureRevision)
-            } else {
-                TravelVisitChange.Edit(draft.visit, draft.dayNumber, details, structureRevision)
-            }
-        changeVisit(change, selectedDayAfterSave = draft.dayNumber)
+        val visit = draft.visit
+        if (visit == null) {
+            requestVisitAddition(TravelVisitChange.Add(draft.dayNumber, details, structureRevision))
+        } else {
+            changeVisit(TravelVisitChange.Edit(visit, draft.dayNumber, details, structureRevision), selectedDayAfterSave = draft.dayNumber)
+        }
     }
 
     internal fun removeVisit() {
@@ -905,6 +949,9 @@ class TravelPlannerViewModel(
         submit(pendingPlanId, pending, verifyAccess = true)
     }
 
+    private fun canChangeVisit(current: TravelPlannerUiState): Boolean =
+        pendingSave == null && !current.isLoading && !current.isSaving && !current.isOffline && !current.needsLatestPlan
+
     private fun changeVisit(
         change: TravelVisitChange,
         selectedDayAfterSave: Int = state.value.selectedDay,
@@ -912,7 +959,7 @@ class TravelPlannerViewModel(
     ): Boolean {
         val current = state.value
         val plan = current.plan ?: return false
-        if (pendingSave != null || current.isLoading || current.isSaving || current.isOffline || current.needsLatestPlan) return false
+        if (!canChangeVisit(current)) return false
         addedPlaceForSave = addedPlace
         submit(plan.summary.id, TravelPendingSave.Visit(newRequestId(), change, selectedDayAfterSave))
         return true

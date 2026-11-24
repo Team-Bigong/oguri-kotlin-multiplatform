@@ -4,6 +4,7 @@ import com.bigong.oguri.domain.model.TravelCitySuggestion
 import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlaceAttribution
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -14,6 +15,7 @@ internal data class TravelPlaceResponse(
     val latitude: Double?,
     val longitude: Double?,
     val attributions: List<TravelPlaceAttributionResponse>,
+    val suggestedCategory: TravelVisitCategory? = null,
 ) {
     fun toDomain(): TravelPlace =
         TravelPlace(
@@ -22,6 +24,7 @@ internal data class TravelPlaceResponse(
             address = address,
             coordinates = if (latitude != null && longitude != null) TravelCoordinates(latitude, longitude) else null,
             attributions = attributions.map { TravelPlaceAttribution(it.provider, it.providerUri) },
+            suggestedCategory = suggestedCategory,
         )
 }
 
