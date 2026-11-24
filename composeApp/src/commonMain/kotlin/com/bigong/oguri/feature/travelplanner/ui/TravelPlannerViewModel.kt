@@ -646,7 +646,7 @@ class TravelPlannerViewModel(
     internal fun selectSearchCity(city: String, language: String) {
         if (city !in state.value.plan?.summary?.details?.cities.orEmpty()) return
         val query = state.value.placeSearch?.query.orEmpty()
-        mutableState.update { it.copy(searchCity = city, placeSearch = it.placeSearch?.copy(selected = null, results = emptyList())) }
+        mutableState.update { it.copy(searchCity = city, placeSearch = it.placeSearch?.copy(selection = null, results = emptyList())) }
         searchPlaces(query, language)
     }
 
@@ -664,7 +664,7 @@ class TravelPlannerViewModel(
         searchJob?.cancel()
         val canSearch = query.trim().length >= MIN_SEARCH_LENGTH
         mutableState.update {
-            it.copy(placeSearch = search.copy(query = query, selected = null, results = emptyList(), isLoading = canSearch, failure = null))
+            it.copy(placeSearch = search.copy(query = query, selection = null, results = emptyList(), isLoading = canSearch, failure = null))
         }
         if (!canSearch) return
         searchJob =
@@ -691,32 +691,34 @@ class TravelPlannerViewModel(
             }
     }
 
-    internal fun selectPlace(place: TravelPlace?) {
-        mutableState.update { it.copy(placeSearch = it.placeSearch?.copy(selected = place)) }
+    internal fun selectPlace(placeId: String) {
+        mutableState.update { it.copy(placeSearch = it.placeSearch?.select(placeId)) }
     }
 
-    internal fun addPlace(
-        place: TravelPlace,
-        dayNumber: Int,
-        category: TravelVisitCategory?,
-        note: String,
-    ) {
+    internal fun selectPlaceCategory(category: TravelVisitCategory?) {
+        mutableState.update { it.copy(placeSearch = it.placeSearch?.selectCategory(category)) }
+    }
+
+    internal fun addSelectedPlace(note: String) {
+        val current = state.value
+        val selection = current.placeSearch?.selection ?: return
+        val plan = current.plan ?: return
         changeVisit(
             change =
                 TravelVisitChange.Add(
-                    dayNumber,
+                    current.selectedDay,
                     TravelVisitDetails(
                         name = null,
                         location = null,
                         localTime = null,
                         note = note.trim().ifEmpty { null },
-                        googlePlaceId = place.id,
-                        category = category,
+                        googlePlaceId = selection.place.id,
+                        category = selection.category,
                     ),
-                    state.value.plan?.structureRevision ?: return,
+                    plan.structureRevision,
                 ),
-            selectedDayAfterSave = dayNumber,
-            addedPlace = place,
+            selectedDayAfterSave = current.selectedDay,
+            addedPlace = selection.place,
         )
     }
 

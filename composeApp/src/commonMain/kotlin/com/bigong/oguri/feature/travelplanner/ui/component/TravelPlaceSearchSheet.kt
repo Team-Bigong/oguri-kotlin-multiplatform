@@ -82,8 +82,9 @@ internal fun TravelPlaceSearchSheet(
     state: TravelPlannerUiState,
     plan: TravelPlan,
     onQuery: (String) -> Unit,
-    onSelect: (TravelPlace?) -> Unit,
-    onAdd: (TravelPlace, Int, TravelVisitCategory?, String) -> Unit,
+    onSelectPlace: (String) -> Unit,
+    onSelectCategory: (TravelVisitCategory?) -> Unit,
+    onAdd: (String) -> Unit,
     onDismiss: () -> Unit,
     onRetrySave: () -> Unit,
     onLeaveWithPendingSave: () -> Unit,
@@ -102,12 +103,11 @@ internal fun TravelPlaceSearchSheet(
     val draft = state.visitDraft
     var manual by rememberSaveable { mutableStateOf(draft != null) }
     var searchNote by rememberSaveable { mutableStateOf("") }
-    var searchCategory by rememberSaveable { mutableStateOf<TravelVisitCategory?>(null) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
-    val selected = search.selected
+    val selected = search.selection?.place
     val canDismiss by rememberUpdatedState(!state.isSaving && !state.canRetrySave)
     val canEdit = canDismiss && !state.isLoading && !state.needsLatestPlan && !state.isOffline
-    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchCategory, searchNote))
+    val hasDraft by rememberUpdatedState(hasUnsavedPlaceInput(draft, selected, searchNote))
     val close = {
         if (canDismiss) {
             if (hasDraft) confirmDiscard = true
@@ -283,7 +283,7 @@ internal fun TravelPlaceSearchSheet(
                                 key(search.query, state.searchCity) {
                                     TravelPlaceSearchResults(search.results, selected, canEdit) { place ->
                                         focus.clearFocus()
-                                        onSelect(place)
+                                        onSelectPlace(place.id)
                                     }
                                 }
                             }
@@ -311,7 +311,7 @@ internal fun TravelPlaceSearchSheet(
                                 label = Res.string.travel_visit_note,
                                 enabled = canEdit,
                             )
-                            TravelCategoryPicker(searchCategory, canEdit) { searchCategory = it }
+                            TravelCategoryPicker(search.selection?.category, canEdit && selected != null, onSelectCategory)
                         }
                     }
                 }
@@ -326,14 +326,7 @@ internal fun TravelPlaceSearchSheet(
                 onClick = {
                     focus.clearFocus()
                     if (manual) onApplyManual()
-                    else if (selected != null) {
-                        onAdd(
-                            selected,
-                            targetDay,
-                            searchCategory,
-                            searchNote,
-                        )
-                    }
+                    else onAdd(searchNote)
                 },
             ) {
                 Text(
@@ -359,9 +352,8 @@ internal fun TravelPlaceSearchSheet(
 internal fun hasUnsavedPlaceInput(
     draft: TravelVisitDraft?,
     selected: TravelPlace?,
-    category: TravelVisitCategory?,
     searchNote: String,
-): Boolean = draft?.hasPlaceInput() == true || selected != null || category != null || searchNote.isNotBlank()
+): Boolean = draft?.hasPlaceInput() == true || selected != null || searchNote.isNotBlank()
 
 private fun TravelVisitDraft.hasPlaceInput(): Boolean =
     name.isNotBlank() || location.isNotBlank() || note.isNotBlank() || category != null

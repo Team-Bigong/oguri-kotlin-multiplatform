@@ -62,20 +62,34 @@ class TravelAccessRevocationTest {
         }
 
     @Test
-    fun addingASearchedPlaceSavesItsNoteAndKeepsItWhenRetrying() =
+    fun addingASearchedPlaceKeepsItsNoteAndClearedCategoryWhenRetrying() =
         runTest {
             val plans = AccessPlans(plan)
-            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
-            val place = TravelPlace("market", "Market", null, TravelCoordinates(1.0, 2.0), emptyList())
+            val place =
+                TravelPlace("market", "Market", null, TravelCoordinates(1.0, 2.0), emptyList(), suggestedCategory = TravelVisitCategory.SHOPPING)
+            val places =
+                object : TravelPlaceRepository by DeniedPlaces() {
+                    override suspend fun searchInCity(planId: String, query: String, language: String, city: String): List<TravelPlace> =
+                        listOf(place)
+                }
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery(), places)
             viewModel.loadPlan("plan")
             advanceUntilIdle()
+            viewModel.selectDay(2)
+            viewModel.openPlaceSearch()
+            viewModel.searchPlaces("Market", "en")
+            advanceUntilIdle()
+            viewModel.selectPlace(place.id)
+            assertEquals(TravelVisitCategory.SHOPPING, viewModel.state.value.placeSearch?.selection?.category)
+            viewModel.selectPlaceCategory(null)
 
             plans.saveFailure = TravelPlanFailure.CONNECTION
-            viewModel.addPlace(place, dayNumber = 2, category = TravelVisitCategory.SHOPPING, note = "  Meet at the entrance  ")
+            viewModel.addSelectedPlace(note = "  Meet at the entrance  ")
             advanceUntilIdle()
             val first = assertIs<TravelVisitChange.Add>(plans.saveAttempts.single())
             assertEquals("Meet at the entrance", first.details.note)
             assertEquals(place.id, first.details.googlePlaceId)
+            assertNull(first.details.category)
             assertEquals(2, first.dayNumber)
 
             plans.saveFailure = null
