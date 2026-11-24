@@ -18,6 +18,7 @@ import com.bigong.oguri.domain.model.TravelPlanFailure
 import com.bigong.oguri.domain.model.TravelPlanSource
 import com.bigong.oguri.domain.model.TravelUsageActivity
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelOverviewSheet
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelLodgingAdditionDialog
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlaceSearchSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import kotlinx.coroutines.delay
@@ -264,8 +265,9 @@ internal fun TravelPlanRoute(
             state = state,
             plan = plan,
             onQuery = { viewModel.searchPlaces(it, language) },
-            onSelect = viewModel::selectPlace,
-            onAdd = viewModel::addPlace,
+            onSelectPlace = viewModel::selectPlace,
+            onSelectCategory = viewModel::selectPlaceCategory,
+            onAdd = viewModel::addSelectedPlace,
             onDismiss = viewModel::closePlaceSearch,
             onRetrySave = viewModel::retrySave,
             onLeaveWithPendingSave = onBack,
@@ -275,5 +277,12 @@ internal fun TravelPlanRoute(
             onApplyManual = viewModel::applyVisit,
             onSearchCity = { viewModel.selectSearchCity(it, language) },
         )
+        if (state.lodgingAddition != null && !state.isOffline && !state.isSaving && !state.needsLatestPlan) {
+            TravelLodgingAdditionDialog(
+                onDismiss = viewModel::dismissLodgingAddition,
+                onAddOnlyThisDay = { viewModel.confirmLodgingAddition(includeOtherDays = false) },
+                onAddOtherDays = { viewModel.confirmLodgingAddition(includeOtherDays = true) },
+            )
+        }
     }
 }

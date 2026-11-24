@@ -62,26 +62,72 @@ class TravelAccessRevocationTest {
         }
 
     @Test
-    fun addingASearchedPlaceSavesItsNoteAndKeepsItWhenRetrying() =
+    fun addingASearchedPlaceKeepsItsNoteAndClearedCategoryWhenRetrying() =
         runTest {
             val plans = AccessPlans(plan)
-            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
-            val place = TravelPlace("market", "Market", null, TravelCoordinates(1.0, 2.0), emptyList())
+            val place =
+                TravelPlace("market", "Market", null, TravelCoordinates(1.0, 2.0), emptyList(), suggestedCategory = TravelVisitCategory.SHOPPING)
+            val places =
+                object : TravelPlaceRepository by DeniedPlaces() {
+                    override suspend fun searchInCity(planId: String, query: String, language: String, city: String): List<TravelPlace> =
+                        listOf(place)
+                }
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery(), places)
             viewModel.loadPlan("plan")
             advanceUntilIdle()
+            viewModel.selectDay(2)
+            viewModel.openPlaceSearch()
+            viewModel.searchPlaces("Market", "en")
+            advanceUntilIdle()
+            viewModel.selectPlace(place.id)
+            assertEquals(TravelVisitCategory.SHOPPING, viewModel.state.value.placeSearch?.selection?.category)
+            viewModel.selectPlaceCategory(null)
 
             plans.saveFailure = TravelPlanFailure.CONNECTION
-            viewModel.addPlace(place, dayNumber = 2, category = TravelVisitCategory.SHOPPING, note = "  Meet at the entrance  ")
+            viewModel.addSelectedPlace(note = "  Meet at the entrance  ")
             advanceUntilIdle()
             val first = assertIs<TravelVisitChange.Add>(plans.saveAttempts.single())
             assertEquals("Meet at the entrance", first.details.note)
             assertEquals(place.id, first.details.googlePlaceId)
+            assertNull(first.details.category)
             assertEquals(2, first.dayNumber)
 
             plans.saveFailure = null
             viewModel.retrySave()
             advanceUntilIdle()
             assertEquals(listOf<TravelVisitChange>(first, first), plans.saveAttempts)
+        }
+
+    @Test
+    fun lodgingConfirmationCanAddOnlyThisDayOrIncludeTheAvailableDays() =
+        runTest {
+            val existing = TravelVisit(
+                "existing-lodging",
+                2,
+                TravelVisitDetails("Existing hotel", null, null, null, category = TravelVisitCategory.LODGING),
+                1,
+            )
+            val plans = AccessPlans(plan.copy(visits = listOf(existing)))
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+
+            for (includeOtherDays in listOf(false, true)) {
+                viewModel.openVisit(null)
+                val draft = checkNotNull(viewModel.state.value.visitDraft)
+                viewModel.updateVisitDraft(draft.copy(name = "Hotel", category = TravelVisitCategory.LODGING))
+                viewModel.applyVisit()
+                assertEquals(listOf(3), viewModel.state.value.lodgingAddition?.offeredDays)
+                assertEquals(if (includeOtherDays) 1 else 0, plans.saveAttempts.size)
+
+                viewModel.confirmLodgingAddition(includeOtherDays)
+                advanceUntilIdle()
+
+                val change = assertIs<TravelVisitChange.Add>(plans.saveAttempts.last())
+                assertEquals(1, change.dayNumber)
+                assertEquals(if (includeOtherDays) listOf(3) else emptyList(), change.additionalLodgingDays)
+                assertNull(viewModel.state.value.lodgingAddition)
+            }
         }
 
     @Test

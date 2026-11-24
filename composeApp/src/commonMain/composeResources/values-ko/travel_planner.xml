@@ -52,6 +52,10 @@
     <string name="travel_search_empty">검색 결과가 없어요</string>
     <string name="travel_search_results">검색 결과로 돌아가기</string>
     <string name="travel_add_to_day">%1$d일차에 추가</string>
+    <string name="travel_lodging_extra_days_title">이 숙소를 다른 날에도 추가할까요?</string>
+    <string name="travel_lodging_extra_days_message">같은 숙소를 한 번에 담아요.</string>
+    <string name="travel_lodging_add_this_day_only">이날만</string>
+    <string name="travel_lodging_add_other_days">추가</string>
     <string name="travel_add_without_date">날짜 없이 담기</string>
     <string name="travel_manual_add">직접 추가</string>
     <string name="travel_add_again">다시 방문 추가</string>
