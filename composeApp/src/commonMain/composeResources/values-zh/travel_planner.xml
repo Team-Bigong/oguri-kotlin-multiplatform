@@ -52,6 +52,10 @@
     <string name="travel_search_empty">没有搜索结果</string>
     <string name="travel_search_results">返回搜索结果</string>
     <string name="travel_add_to_day">添加到第 %1$d 天</string>
+    <string name="travel_lodging_extra_days_title">要把这个住宿地点也加到其他日期吗？</string>
+    <string name="travel_lodging_extra_days_message">还可以添加到 %1$d 天。已有住宿安排的日期会跳过。</string>
+    <string name="travel_lodging_add_this_day_only">仅添加到第 %1$d 天</string>
+    <string name="travel_lodging_add_other_days">也添加到其他日期</string>
     <string name="travel_add_without_date">添加为日期待定</string>
     <string name="travel_manual_add">手动添加</string>
     <string name="travel_add_again">再次添加到访</string>

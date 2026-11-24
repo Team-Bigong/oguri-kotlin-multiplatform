@@ -99,6 +99,38 @@ class TravelAccessRevocationTest {
         }
 
     @Test
+    fun lodgingConfirmationCanAddOnlyThisDayOrIncludeTheAvailableDays() =
+        runTest {
+            val existing = TravelVisit(
+                "existing-lodging",
+                2,
+                TravelVisitDetails("Existing hotel", null, null, null, category = TravelVisitCategory.LODGING),
+                1,
+            )
+            val plans = AccessPlans(plan.copy(visits = listOf(existing)))
+            val viewModel = createTravelPlannerTestViewModel(plans, AccessRecovery())
+            viewModel.loadPlan("plan")
+            advanceUntilIdle()
+
+            for (includeOtherDays in listOf(false, true)) {
+                viewModel.openVisit(null)
+                val draft = checkNotNull(viewModel.state.value.visitDraft)
+                viewModel.updateVisitDraft(draft.copy(name = "Hotel", category = TravelVisitCategory.LODGING))
+                viewModel.applyVisit()
+                assertEquals(listOf(3), viewModel.state.value.lodgingAddition?.offeredDays)
+                assertEquals(if (includeOtherDays) 1 else 0, plans.saveAttempts.size)
+
+                viewModel.confirmLodgingAddition(includeOtherDays)
+                advanceUntilIdle()
+
+                val change = assertIs<TravelVisitChange.Add>(plans.saveAttempts.last())
+                assertEquals(1, change.dayNumber)
+                assertEquals(if (includeOtherDays) listOf(3) else emptyList(), change.additionalLodgingDays)
+                assertNull(viewModel.state.value.lodgingAddition)
+            }
+        }
+
+    @Test
     fun visitSaveConflictIsRecordedBeforeALaterConfirmedSave() =
         runTest {
             val plans = AccessPlans(plan)

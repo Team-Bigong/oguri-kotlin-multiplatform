@@ -43,6 +43,7 @@ internal data class TravelPlannerUiState(
     val visitDraft: TravelVisitDraft? = null,
     val unappliedOrder: TravelVisitChange.Reorder? = null,
     val placeSearch: TravelPlaceSearchState? = null,
+    val lodgingAddition: TravelLodgingAddition? = null,
     val overview: TravelOverviewState? = null,
     val dayPlaces: Map<String, TravelPlace> = emptyMap(),
     val attemptedDayPlaceIds: Set<String> = emptySet(),
@@ -146,6 +147,12 @@ internal data class TravelVisitDraft(
         val TIME_FORMAT: Regex = Regex("[0-9]{2}:[0-9]{2}")
     }
 }
+
+internal data class TravelLodgingAddition(
+    val change: TravelVisitChange.Add,
+    val place: TravelPlace?,
+    val offeredDays: List<Int>,
+)
 
 internal data class TravelPlaceSearchState(
     val query: String = "",
