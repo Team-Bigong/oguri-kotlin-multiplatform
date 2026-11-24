@@ -41,7 +41,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -51,8 +50,7 @@ import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelCity
 import com.bigong.oguri.feature.travelplanner.ui.model.TravelOverviewState
-import com.bigong.oguri.feature.travelplanner.ui.model.travelDayColor
-import com.bigong.oguri.feature.travelplanner.ui.model.TravelMapMarkerForeground
+import com.bigong.oguri.feature.travelplanner.ui.model.travelDayMarkerColors
 import com.bigong.oguri.feature.travelplanner.ui.model.travelOverviewScene
 import com.bigong.oguri.feature.travelplanner.ui.travelDayLabel
 import oguri.composeapp.generated.resources.Res
@@ -151,7 +149,7 @@ internal fun TravelOverviewSheet(
                             androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth().heightIn(min = 22.dp).padding(horizontal = 20.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                                 plan.visits.map { it.dayNumber }.distinct().sorted().forEach { day ->
                                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        Box(Modifier.size(10.dp).background(Color(travelDayColor(day)), CircleShape))
+                                        Box(Modifier.size(10.dp).background(travelDayMarkerColors(day).fill, CircleShape))
                                         Text(stringResource(Res.string.travel_day_number, day), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary)
                                     }
                                 }
@@ -198,10 +196,7 @@ internal fun TravelOverviewSheet(
                             }
                             items(visits, key = { it.id }) { visit ->
                                 Row(Modifier.fillMaxWidth().noRippleClickable(onClick = { onSelectVisit(visit.id) }).height(50.dp).padding(horizontal = 24.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    val dayColor = travelDayColor(day)
-                                    Box(Modifier.size(24.dp).background(Color(dayColor), CircleShape), contentAlignment = Alignment.Center) {
-                                        Text((visits.indexOf(visit) + 1).toString(), style = OguriTheme.typography.labelMedium, color = TravelMapMarkerForeground)
-                                    }
+                                    TravelVisitNumber((visits.indexOf(visit) + 1).toString(), travelDayMarkerColors(day))
                                     Text(title(visit), Modifier.weight(1f), style = OguriTheme.typography.cardSubtitle, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     visit.details.category?.let { Text(stringResource(it.label()), style = OguriTheme.typography.caption, color = OguriTheme.colors.textTertiary) }
                                 }

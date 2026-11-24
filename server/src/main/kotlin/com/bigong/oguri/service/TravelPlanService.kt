@@ -227,9 +227,10 @@ class TravelPlanService(
                 null
             }
 
+        val nextVisitRevision = plan.revision + 1
         when (command) {
             is TravelPlanCommand.AddVisit ->
-                plan.addVisit(requireNotNull(command.dayNumber), command.details.toDomain())
+                plan.addVisit(requireNotNull(command.dayNumber), command.details.toDomain(), command.additionalLodgingDays.orEmpty())
             is TravelPlanCommand.EditVisit ->
                 plan.editVisit(
                     visitId = command.visitId,
@@ -286,7 +287,7 @@ class TravelPlanService(
             changeKind.name,
             visitId =
                 when (command) {
-                    is TravelPlanCommand.AddVisit -> plan.orderedVisits().single { it.revision == plan.revision }.id
+                    is TravelPlanCommand.AddVisit -> plan.orderedVisits().single { it.revision == nextVisitRevision }.id
                     is TravelPlanCommand.EditVisit -> command.visitId
                     is TravelPlanCommand.RemoveVisit -> command.visitId
                     is TravelPlanCommand.UndoVisit -> undo?.second?.id

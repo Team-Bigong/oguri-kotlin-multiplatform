@@ -43,6 +43,7 @@ internal data class TravelPlannerUiState(
     val visitDraft: TravelVisitDraft? = null,
     val unappliedOrder: TravelVisitChange.Reorder? = null,
     val placeSearch: TravelPlaceSearchState? = null,
+    val lodgingAddition: TravelLodgingAddition? = null,
     val overview: TravelOverviewState? = null,
     val dayPlaces: Map<String, TravelPlace> = emptyMap(),
     val attemptedDayPlaceIds: Set<String> = emptySet(),
@@ -147,12 +148,34 @@ internal data class TravelVisitDraft(
     }
 }
 
+internal data class TravelLodgingAddition(
+    val change: TravelVisitChange.Add,
+    val place: TravelPlace?,
+    val offeredDays: List<Int>,
+)
+
 internal data class TravelPlaceSearchState(
     val query: String = "",
     val results: List<TravelPlace> = emptyList(),
-    val selected: TravelPlace? = null,
+    val selection: TravelPlaceSelection? = null,
     val isLoading: Boolean = false,
     val failure: TravelPlanFailure? = null,
+) {
+    fun select(placeId: String): TravelPlaceSearchState {
+        if (selection?.place?.id == placeId) return this
+        val place = results.firstOrNull { it.id == placeId } ?: return this
+        return copy(selection = TravelPlaceSelection(place))
+    }
+
+    fun selectCategory(category: TravelVisitCategory?): TravelPlaceSearchState {
+        val currentSelection = selection ?: return this
+        return copy(selection = currentSelection.copy(category = category))
+    }
+}
+
+internal data class TravelPlaceSelection(
+    val place: TravelPlace,
+    val category: TravelVisitCategory? = place.suggestedCategory ?: TravelVisitCategory.OTHER,
 )
 
 internal enum class TravelCity(

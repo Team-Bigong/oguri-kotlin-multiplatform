@@ -82,7 +82,14 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         for pin in scene.markers {
             let marker = GMSMarker(position: pin.coordinates.coordinate)
             marker.title = pin.title ?? pin.label
-            marker.icon = makeIcon(label: pin.label, colorArgb: pin.colorArgb, labelColorArgb: pin.labelColorArgb, highlightColorArgb: pin.highlightColorArgb, selected: pin.selected, style: pinStyle)
+            marker.icon = makeIcon(
+                label: pin.label,
+                colorArgb: pin.colorArgb,
+                labelColorArgb: pin.labelColorArgb,
+                highlightColorArgb: pin.highlightColorArgb,
+                selected: pin.selected,
+                style: pinStyle
+            )
             marker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
             marker.zIndex = pin.selected ? 1 : 0
             marker.userData = pin.id

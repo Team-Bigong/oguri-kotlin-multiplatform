@@ -1,8 +1,8 @@
 # MVP_WIREFRAME
 
 ## 포지셔닝
-- 오구리는 `연차 전략 추천 앱`이다.
-- 여행 앱/연차 기록 앱/단순 공휴일 달력이 아니라, 연차 조합과 그 시기에 맞는 여행지를 한 흐름으로 추천한다.
+- 오구리는 연차 조합과 그 시기에 맞는 여행지를 추천하고, 실제 여행 계획으로 이어 준다.
+- 여행에서는 동행자와 일차별 장소·순서·메모를 함께 정리한다.
 
 ## 현재 화면 목록
 1. Splash
@@ -17,11 +17,14 @@
 10. MyPage
 11. Display Settings
 12. Web Document (건의하기/약관/개인정보)
+13. 여행 목록, 여행 만들기, 여행 상세
+14. 여행 멤버·관리, 초대 확인, 여행 전용 로그인·온보딩
 
-## 바텀 네비게이션
-- 메인 탭은 `Home` / `Calendar` / `MyPage`이다.
-- `Search`, `Place Detail`, `Photo Detail`, `Period Detail`, `Display Settings`, `Web Document`는 push 화면으로 진입한다.
-- 메인 탭 재선택은 해당 탭을 최상단으로 스크롤한다.
+## 하단 내비게이션
+
+- 메인 탭은 홈, 캘린더, 여행, 마이 순서다.
+- 검색, 여행지·사진·기간 상세, 여행 생성·상세·관리, 화면 설정, 외부 문서는 현재 화면 위에 연다.
+- 홈·캘린더·마이 탭을 다시 누르면 각 화면을 최상단으로 스크롤한다.
 - 메인 탭 이동 시 백스택은 초기화한다.
 
 ## 핵심 UX 규칙
@@ -34,6 +37,9 @@
 - Place Detail은 이미지, 여행 정보, 액티비티, 항공권 카드, 같은 기간 추천 장소를 보여준다.
 - Photo Detail은 이미지를 확대/축소할 수 있고, zoom 중에는 pager swipe를 막는다.
 - MyPage는 guest/member 상태를 분기하고 저장 일정/저장 여행지/연차 설정/문서 링크/계정 작업을 제공한다.
+- 여행 탭은 회원의 예정·진행 중 여행과 접을 수 있는 지난 여행을 보여 준다. 비회원은 로그인 안내를 본다.
+- 여행지·기간 상세에서 추천 도시나 날짜를 가져와 여행을 만들 수 있다. 홈에서 예정·진행 중 여행을 이어 본다.
+- 여행 상세에서 일차별 지도·방문 목록을 보고, 검색하거나 직접 입력한 장소를 선택 날짜에 추가한다. 초대 링크로 동행자를 추가할 수 있다. [여행 화면 명세](../plan/TRAVEL_PLANNER_SPEC.md)
 - 저장 토글 버튼은 재사용 가능한 공용 컴포넌트로 둔다.
 - 클릭은 기본적으로 `noRippleClickable`을 사용한다.
 
@@ -42,8 +48,8 @@
 - AdMob App Open 광고는 메인 탭 진입 이후 화면 전환 시 foreground session당 최대 1회 노출한다.
 - Calendar는 추천 카드 index 3 뒤에 첫 inline banner를 노출하고 이후 12개 카드마다 반복한다.
 - Photo Detail은 하단 banner를 노출한다.
-- MyPage는 guest/member 상태 모두 하단 banner를 노출한다.
-- Splash / Login / Onboarding / Search / Web Document에는 광고를 노출하지 않는다.
+- 마이페이지와 여행 탭은 하단 배너를 사용한다. 여행 탭의 최초 로딩·조회 실패에는 배너를 표시하지 않는다.
+- Splash, Login, Onboarding, Search, Web Document, TravelLogin, TravelOnboarding은 App Open 광고 전환에서 제외한다.
 
 ## BM
 - 배너 광고: 운영비 보조
@@ -55,10 +61,10 @@
 - 인증 토큰이 없으면 guest header로 API를 호출한다.
 - 문자열은 `composeResources`로 분리하고 영어/한국어/일본어/중국어 리소스를 함께 유지한다.
 - 내비게이션은 타입 세이프 `RouteModel`을 사용한다.
-- 딥링크는 `oguri://open/place`, `oguri://open/period`, KakaoLink nested deeplink를 지원한다.
+- 도시·기간 공유는 `oguri://open/place`, `oguri://open/period`를 사용한다. 여행 초대는 `https://www.oguri.kr/trip-invite/`의 URL 조각에 토큰을 담는다. [초대 배포 안내](../web/README.md#여행-초대-링크-배포)
 
 ## Calendar 개편 메모
-- 상단 헤더 + 연차 입력 바텀시트 유지, 본문은 카드 리스트 기반으로 전환한다.
+- 상단 헤더와 연차 선택 바텀시트 아래에 추천 카드 목록을 표시한다.
 - 한 번에 1개 카드만 펼치고, 카드 전체 탭으로 확장/축소한다.
 - 카드 내부 달력은 최소 3주 이상 노출하며, 추천 날짜가 가장 많은 주가 중앙에 오도록 배치한다.
 - 추천 구간의 비휴일 날짜는 `Neutral70`, 휴일 날짜는 `Orange50`, 일반 날짜는 `Neutral50`을 사용한다.

@@ -29,6 +29,7 @@
 - PostgreSQL
 - Flyway
 - springdoc-openapi
+- Spring Boot Actuator와 Micrometer
 - JWT(`jjwt`)
 - Google/Apple/Kakao 인증 연동
 - `shared` Gradle 모듈 의존
@@ -130,7 +131,7 @@ Controller -> Service -> Repository -> Domain(Entity)
 
 ## 9. 현재 프로젝트 컨텍스트
 
-Oguri 서버는 모바일 앱과 웹 어드민에 데이터를 제공하는 API 서버이다. 서버는 View 렌더링을 하지 않는다.
+Oguri 서버는 모바일 앱과 웹 어드민의 JSON API를 제공한다. 여행 초대 웹 안내는 [별도의 정적 페이지](../web/trip-invite/index.html)에서 제공한다.
 
 ### 핵심 패키지
 
@@ -218,6 +219,13 @@ server/src/main/kotlin/com/bigong/oguri
 - 랜덤 닉네임 생성을 위한 단어 테이블이다.
 - 닉네임 형식은 `형용사 명사_숫자5자리`이다.
 
+#### 여행 플래너
+
+- `TravelPlan`이 여행 기간·시간대·정렬된 도시와 방문 변경 규칙을 관리한다. `TravelPlanMembership`이 멤버십을, `TravelVisit`가 일차·순서·시각·메모·장소를 나타낸다.
+- `TravelPlanService`와 `TravelCollaborationService`가 회원·여행 권한을 확인하고 행 잠금 안에서 변경과 중복 방지 기록을 함께 처리한다.
+- `TravelCatalogCity`와 `city_aliases`가 GeoNames 도시 검색을 담당한다. 여행의 방문 장소 검색과 상세 조회는 Google Places를 사용한다.
+- 계정 삭제와 관리자 삭제는 여행 소유권·멤버십 정리를 거친다. [여행 구현 가이드](../plan/TRAVEL_PLANNER_IMPLEMENTATION.md)
+
 ------------------------------------------------------------------------
 
 ## 10. 현재 API 구조
@@ -253,6 +261,13 @@ server/src/main/kotlin/com/bigong/oguri
 - `DELETE /api/v1/members/saved-destinations/{id}`
 - `DELETE /api/v1/members/me`
 
+### 여행 API
+
+- `/api/v1/trips`는 생성·목록·상세, 홈 이어보기, 방문 변경, 멤버·최근 변경과 장소 검색을 제공한다.
+- `GET /api/v1/trips/{tripId}?knownRevision=…`는 현재 권한을 다시 확인한 뒤 변경이 없으면 `204 No Content`를 반환한다. 최초 조회와 변경된 상태에는 `200`으로 일정을 반환한다.
+- `/api/v1/trip-invites/{preview,join}`은 초대 토큰을 요청 본문에서 받아 각각 미리보기·참여를 처리한다. 미리보기는 비회원도 가능하며, 참여는 회원 전용이다.
+- `/api/v1/travel-places/cities`는 도시 검색과 시간대 확인을 제공한다. 전체 API와 기존 알림 경로는 [구현 가이드](../plan/TRAVEL_PLANNER_IMPLEMENTATION.md)에 있다.
+
 ### Admin API
 
 - Prefix: `/api/admin/v1`
@@ -270,7 +285,8 @@ server/src/main/kotlin/com/bigong/oguri
 - Authorization header가 없으면 guest member id로 처리한다.
 - 보호된 member 저장/삭제/온보딩/회원 정보 엔드포인트는 guest 접근 시 `401`을 반환한다.
 - `AdminAuthInterceptor`는 `/api/admin/**`에 적용하고 admin login만 예외로 둔다.
-- CORS는 현재 모든 origin/method/header를 허용한다.
+- CORS는 모든 출처·헤더에서 `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`를 허용한다. [WebConfig.kt](../server/src/main/kotlin/com/bigong/oguri/config/WebConfig.kt)
+- 운영 설정과 PostgreSQL 검증은 [여행 검증 가이드](../plan/TRAVEL_PLANNER_TESTING.md)를 따른다.
 
 ------------------------------------------------------------------------
 
