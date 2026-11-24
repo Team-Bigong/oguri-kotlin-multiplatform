@@ -3,10 +3,11 @@
 ## 목적
 - 오구리 공식 웹(`/`)에서 앱 핵심 가치를 빠르게 전달하고 스토어 설치로 자연스럽게 전환한다.
 - 앱 내 UX 라이팅 톤(`...해볼까요?`, 부담 없는 제안형)을 웹에서도 일관되게 사용한다.
-- 공식 웹은 어드민 웹과 같은 Vite 앱 안에서 path/hash 기준으로 분기된다.
+- 공식 사이트와 어드민이 React 진입점을 공유한다. `/trip-invite/`는 앱 열기·설치를 안내하는 별도 HTML 진입점이다. [초대 배포 안내](../web/README.md#여행-초대-링크-배포)
 
 ## 현재 구조
 - 라우팅 분기: `web/src/App.tsx`, `web/src/features/routing/pathResolver.ts`
+- 여행 초대: [trip-invite/index.html](../web/trip-invite/index.html), [travelInviteModel.ts](../web/src/features/routing/travelInviteModel.ts)
 - 공식 홈: `web/src/features/official/OfficialHomePage.tsx`
 - 스토어 버튼: `web/src/features/official/components/StoreButtons.tsx`
 - 문구/링크 데이터: `web/src/features/official/data/officialContent.ts`
@@ -54,7 +55,7 @@
 - `web/public/assets/official/store/app-store-logo.png`
 - `web/public/assets/official/app-icon.png`
 - `web/public/assets/official/share-thumbnail.png`
-- 상세 가이드: `web/public/assets/official/README.md`
+- 앱 여행 초대 공유는 같은 에셋 디렉터리의 `travel-invite-thumbnail.png`를 사용한다. 초대 전용 이미지와 Open Graph 태그는 웹 배포 브랜치 `release-web`에서 관리한다. [에셋 가이드](../web/public/assets/official/README.md)
 
 ## 푸터 외부 링크
 - 건의하기: Google Form
@@ -67,7 +68,8 @@
 - 배포 후 모바일/데스크톱에서 CTA 클릭 동작 확인
 - `/admin` 직접 접근을 위해 Render rewrite rule 확인
 - `/#/admin` fallback 진입 확인
-- `public/app-ads.txt` 배포 결과 확인
+- `/trip-invite/` 페이지, Android·iOS 연결 파일과 초대 공유 썸네일 응답 확인
+- `/app-ads.txt` 배포 결과 확인
 - 푸터 외부 링크 확인
 
 ## 레퍼런스 반영 포인트

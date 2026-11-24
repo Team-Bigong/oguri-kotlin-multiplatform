@@ -77,8 +77,21 @@ data class TravelPlan(
 ) {
     fun orderRevision(dayNumber: Int): Long = dayOrderRevisions[dayNumber] ?: 0
 
+    internal fun additionalLodgingDays(dayNumber: Int, googlePlaceId: String?): List<Int> {
+        val visitsByDay = visits.groupBy(TravelVisit::dayNumber)
+        return (1..summary.details.dates.dayCount).filter { candidate ->
+            candidate != dayNumber && visitsByDay[candidate].orEmpty().let { dayVisits ->
+                dayVisits.none {
+                    it.details.category == TravelVisitCategory.LODGING ||
+                        (googlePlaceId != null && it.details.googlePlaceId == googlePlaceId)
+                } && (googlePlaceId == null || dayVisits.count { it.details.googlePlaceId != null } < MAX_GOOGLE_VISITS_PER_DAY)
+            }
+        }
+    }
+
     companion object {
         const val UNASSIGNED_DAY: Int = 0
+        private const val MAX_GOOGLE_VISITS_PER_DAY: Int = 30
     }
 }
 
@@ -113,6 +126,7 @@ sealed interface TravelVisitChange {
         val dayNumber: Int,
         val details: TravelVisitDetails,
         val structureRevision: Long = 0,
+        val additionalLodgingDays: List<Int> = emptyList(),
     ) : TravelVisitChange
 
     @Serializable

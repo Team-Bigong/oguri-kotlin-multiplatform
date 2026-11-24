@@ -38,6 +38,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint5
 import com.bigong.oguri.core.designsystem.Mint50
@@ -132,6 +134,8 @@ internal fun TravelVisitEditor(
         onDismissRequest = { if (canDismiss) dismissDraft() },
         sheetState = sheetState,
     ) {
+        val sheetFocus = LocalFocusManager.current
+        val sheetKeyboard = LocalSoftwareKeyboardController.current
         Column(
             modifier =
                 Modifier
@@ -242,7 +246,16 @@ internal fun TravelVisitEditor(
                 else if (draft.visit != null) TravelTextButton(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), enabled = canEdit, onClick = { confirmRemoval = true }) {
                     Text(stringResource(Res.string.travel_delete_visit_action), style = OguriTheme.typography.labelMedium, color = OguriTheme.colors.orange)
                 }
-                TravelPrimaryButton(enabled = canEdit && (placeId != null || draft.name.isNotBlank()), onClick = onApply, modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp), textStyle = OguriTheme.typography.cardTitle) {
+                TravelPrimaryButton(
+                    enabled = canEdit && (placeId != null || draft.name.isNotBlank()),
+                    onClick = {
+                        sheetFocus.clearFocus(force = true)
+                        sheetKeyboard?.hide()
+                        onApply()
+                    },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                    textStyle = OguriTheme.typography.cardTitle,
+                ) {
                     Text(stringResource(if (comparing) Res.string.travel_apply_mine else Res.string.travel_apply))
                 }
             }

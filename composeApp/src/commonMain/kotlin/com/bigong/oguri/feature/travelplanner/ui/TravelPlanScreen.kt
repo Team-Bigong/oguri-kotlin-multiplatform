@@ -85,7 +85,6 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange20
 import com.bigong.oguri.core.designsystem.Orange5
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelIssueCard
-import com.bigong.oguri.feature.travelplanner.ui.component.travelAccentForeground
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlanSkeleton
 import com.bigong.oguri.core.ui.component.SkeletonBox
 import com.bigong.oguri.feature.travelplanner.ui.component.travelLoadingSemantics
@@ -109,6 +108,8 @@ import com.bigong.oguri.feature.travelplanner.ui.component.TravelPlannerPage
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelTextButton
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitDetailsSheet
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitEditor
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitNumber
+import com.bigong.oguri.feature.travelplanner.ui.component.TravelVisitNumberSize
 import com.bigong.oguri.feature.travelplanner.ui.component.label
 import com.bigong.oguri.feature.travelplanner.ui.component.travelTextStyle
 import com.bigong.oguri.feature.travelplanner.ui.component.travelConnectionColor
@@ -119,6 +120,7 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
 import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
+import com.bigong.oguri.feature.travelplanner.ui.model.travelVisitMarkerColors
 import kotlin.time.Clock
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
@@ -729,9 +731,7 @@ private fun TravelVisitRow(
                     .padding(horizontal = VisitRowHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Box(Modifier.size(VisitPinSize).background(OguriTheme.colors.mint, androidx.compose.foundation.shape.CircleShape), contentAlignment = Alignment.Center) {
-                    Text(number?.toString().orEmpty(), style = OguriTheme.typography.labelMedium, color = travelAccentForeground)
-                }
+                TravelVisitNumber(number?.toString().orEmpty(), travelVisitMarkerColors(visit.details.category))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (title == null) {
                         SkeletonBox(
@@ -804,8 +804,7 @@ private fun TravelDistanceConnector(label: String) {
 }
 
 private val VisitRowHorizontalPadding = 12.dp
-private val VisitPinSize = 24.dp
-private val VisitPinCenter = VisitRowHorizontalPadding + VisitPinSize / 2
+private val VisitPinCenter = VisitRowHorizontalPadding + TravelVisitNumberSize / 2
 private val DistanceConnectorPadding = 4.dp
 
 private fun DrawScope.drawVisitConnection(startY: Float, endY: Float) {
