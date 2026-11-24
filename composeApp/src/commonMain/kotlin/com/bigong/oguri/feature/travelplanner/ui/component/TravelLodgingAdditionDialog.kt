@@ -14,8 +14,6 @@ import org.jetbrains.compose.resources.stringResource
 
 @Composable
 internal fun TravelLodgingAdditionDialog(
-    dayNumber: Int,
-    otherDayCount: Int,
     onDismiss: () -> Unit,
     onAddOnlyThisDay: () -> Unit,
     onAddOtherDays: () -> Unit,
@@ -23,9 +21,9 @@ internal fun TravelLodgingAdditionDialog(
     ConfirmAlertDialog(
         iconResource = Res.drawable.ic_travel_pin,
         titleText = stringResource(Res.string.travel_lodging_extra_days_title),
-        messageText = stringResource(Res.string.travel_lodging_extra_days_message, otherDayCount),
+        messageText = stringResource(Res.string.travel_lodging_extra_days_message),
         confirmButtonText = stringResource(Res.string.travel_lodging_add_other_days),
-        cancelButtonText = stringResource(Res.string.travel_lodging_add_this_day_only, dayNumber),
+        cancelButtonText = stringResource(Res.string.travel_lodging_add_this_day_only),
         onDismissRequest = onDismiss,
         onConfirmClick = onAddOtherDays,
         onCancelClick = onAddOnlyThisDay,

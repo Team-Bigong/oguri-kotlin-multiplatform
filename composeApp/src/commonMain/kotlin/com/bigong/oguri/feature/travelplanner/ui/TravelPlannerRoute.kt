@@ -277,11 +277,8 @@ internal fun TravelPlanRoute(
             onApplyManual = viewModel::applyVisit,
             onSearchCity = { viewModel.selectSearchCity(it, language) },
         )
-        val addition = state.lodgingAddition
-        if (addition != null && !state.isOffline && !state.isSaving && !state.needsLatestPlan) {
+        if (state.lodgingAddition != null && !state.isOffline && !state.isSaving && !state.needsLatestPlan) {
             TravelLodgingAdditionDialog(
-                dayNumber = addition.change.dayNumber,
-                otherDayCount = addition.offeredDays.size,
                 onDismiss = viewModel::dismissLodgingAddition,
                 onAddOnlyThisDay = { viewModel.confirmLodgingAddition(includeOtherDays = false) },
                 onAddOtherDays = { viewModel.confirmLodgingAddition(includeOtherDays = true) },

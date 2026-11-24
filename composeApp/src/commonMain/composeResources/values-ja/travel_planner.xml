@@ -53,9 +53,9 @@
     <string name="travel_search_results">検索結果に戻る</string>
     <string name="travel_add_to_day">%1$d日目に追加</string>
     <string name="travel_lodging_extra_days_title">この宿泊先をほかの日にも追加しますか？</string>
-    <string name="travel_lodging_extra_days_message">あと%1$d日分追加できます。宿泊先が決まっている日はスキップします。</string>
-    <string name="travel_lodging_add_this_day_only">%1$d日目だけ追加</string>
-    <string name="travel_lodging_add_other_days">ほかの日にも追加</string>
+    <string name="travel_lodging_extra_days_message">同じ宿泊先をまとめて追加できます。</string>
+    <string name="travel_lodging_add_this_day_only">この日だけ</string>
+    <string name="travel_lodging_add_other_days">追加</string>
     <string name="travel_add_without_date">日付を決めずに追加</string>
     <string name="travel_manual_add">手動で追加</string>
     <string name="travel_add_again">もう一度訪問する予定を追加</string>
