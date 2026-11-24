@@ -1,12 +1,16 @@
 package com.bigong.oguri.feature.travelplanner.ui.model
 
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TravelMapSceneTest {
@@ -71,11 +75,12 @@ class TravelMapSceneTest {
     }
 
     @Test
-    fun overviewLabelsDaysKeepsRepeatedVisitsAndNeverConnectsDates() {
+    fun overviewKeepsTheCategoryFillAndUsesBordersToDistinguishDates() {
+        val first = visit("first", station).let { it.copy(details = it.details.copy(category = TravelVisitCategory.TRANSPORT)) }
         val visits =
             listOf(
-                visit("first", station),
-                visit("repeat", station).copy(dayNumber = 2),
+                first,
+                first.copy(id = "repeat", dayNumber = 2),
                 visit("third", park).copy(dayNumber = 3),
                 visit("manual", null).copy(dayNumber = 3),
             )
@@ -83,15 +88,41 @@ class TravelMapSceneTest {
         assertEquals(listOf("first", "repeat", "third"), scene.markers.map { it.id })
         assertEquals(listOf("1", "1", "1"), scene.markers.map { it.label })
         assertEquals(listOf(1, 2, 3), scene.markers.map { it.dayNumber })
-        assertEquals(
-            3,
-            scene.markers
-                .map { it.colorArgb }
-                .distinct()
-                .size,
-        )
+        val transport = travelVisitMarkerColors(TravelVisitCategory.TRANSPORT)
+        assertEquals(listOf(transport.fill.toArgb(), transport.fill.toArgb(), travelVisitMarkerColors(null).fill.toArgb()), scene.markers.map { it.colorArgb })
+        assertEquals(listOf(1, 2, 3).map(::travelDayColor), scene.markers.map { it.dayBorderColorArgb })
+        assertEquals(3, scene.markers.map { it.dayBorderColorArgb }.distinct().size)
         assertEquals(station.coordinates, scene.cityCenter)
         assertTrue(scene.lines.isEmpty())
+    }
+
+    @Test
+    fun selectingADailyMarkerPreservesItsCategoryColorAndNumberContrast() {
+        val visit = visit("museum", museum).let { it.copy(details = it.details.copy(category = TravelVisitCategory.SIGHTSEEING)) }
+        val marker = travelMapScene(1, listOf(visit), places, visit.id, null).markers.single()
+        val unselectedMarker = travelMapScene(1, listOf(visit), places, null, null).markers.single()
+        val colors = travelVisitMarkerColors(visit.details.category)
+
+        assertTrue(marker.selected)
+        assertEquals(colors.fill.toArgb(), marker.colorArgb)
+        assertEquals(unselectedMarker.colorArgb, marker.colorArgb)
+        assertEquals(colors.number.toArgb(), marker.labelColorArgb)
+        assertNull(marker.dayBorderColorArgb)
+    }
+
+    @Test
+    fun categoryNumbersHaveEnoughContrastOnEveryFill() {
+        val categories = TravelVisitCategory.entries.filterNot { it == TravelVisitCategory.FLIGHT }
+        val fills = categories.map { travelVisitMarkerColors(it).fill }
+        assertEquals(categories.size, fills.distinct().size)
+        assertEquals(travelVisitMarkerColors(TravelVisitCategory.TRANSPORT), travelVisitMarkerColors(TravelVisitCategory.FLIGHT))
+        assertEquals(travelVisitMarkerColors(TravelVisitCategory.OTHER), travelVisitMarkerColors(null))
+        for (category in categories) {
+            val colors = travelVisitMarkerColors(category)
+            val luminance = listOf(colors.fill.luminance(), colors.number.luminance()).sorted()
+            val contrast = (luminance[1] + 0.05f) / (luminance[0] + 0.05f)
+            assertTrue(contrast >= 4.5f, "$category marker number contrast: $contrast")
+        }
     }
 
     @Test

@@ -1,12 +1,16 @@
 package com.bigong.oguri.feature.travelplanner.ui.model
 
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import com.bigong.oguri.core.designsystem.*
+import com.bigong.oguri.core.designsystem.Mint70
+import com.bigong.oguri.core.designsystem.Mint90
+import com.bigong.oguri.core.designsystem.Neutral70
+import com.bigong.oguri.core.designsystem.Orange40
+import com.bigong.oguri.core.designsystem.Orange70
 import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
 import com.bigong.oguri.domain.model.TravelVisit
+import com.bigong.oguri.domain.model.TravelVisitCategory
 import kotlin.math.roundToInt
 
 data class TravelMapMarker(
@@ -16,27 +20,26 @@ data class TravelMapMarker(
     val selected: Boolean,
     val dayNumber: Int? = null,
     val title: String? = null,
+    val category: TravelVisitCategory? = null,
 ) {
-    val colorArgb: Int
-        get() = if (selected) Mint80.toArgb() else travelDayColor(dayNumber)
+    private val colors: TravelVisitMarkerColors = travelVisitMarkerColors(category)
 
-    val labelColorArgb: Int
-        get() = TravelMapMarkerForeground.toArgb()
+    val colorArgb: Int = colors.fill.toArgb()
+    val labelColorArgb: Int = colors.number.toArgb()
+    val highlightColorArgb: Int = colors.fill.copy(alpha = 0.28f).toArgb()
 
-    val highlightColorArgb: Int
-        get() = Mint70.copy(alpha = 0.28f).toArgb()
+    val dayBorderColorArgb: Int?
+        get() = dayNumber?.let(::travelDayColor)
 }
 
-internal fun travelDayColor(dayNumber: Int?): Int =
-    when (((dayNumber ?: 1).coerceAtLeast(1) - 1) % 5) {
+internal fun travelDayColor(dayNumber: Int): Int =
+    when ((dayNumber.coerceAtLeast(1) - 1) % 5) {
         0 -> Mint70
         1 -> Orange40
         2 -> Mint90
         3 -> Orange70
         else -> Neutral70
     }.toArgb()
-
-internal val TravelMapMarkerForeground: Color = LightOguriColorPalette.textOnMint
 
 @ConsistentCopyVisibility
 data class TravelMapLine internal constructor(
@@ -76,8 +79,15 @@ internal fun travelMapScene(
     val numbered = dayNumber != TravelPlan.UNASSIGNED_DAY
     val markers =
         visits.mapIndexedNotNull { index, visit ->
-            coordinates[index]?.let {
-                TravelMapMarker(visit.id, it, if (numbered) (index + 1).toString() else null, visit.id == selectedVisitId, title = visit.details.name ?: places[visit.details.googlePlaceId]?.name)
+            coordinates[index]?.let { point ->
+                TravelMapMarker(
+                    id = visit.id,
+                    coordinates = point,
+                    label = if (numbered) (index + 1).toString() else null,
+                    selected = visit.id == selectedVisitId,
+                    title = visit.details.name ?: places[visit.details.googlePlaceId]?.name,
+                    category = visit.details.category,
+                )
             }
         }
     val lines =
@@ -108,6 +118,7 @@ internal fun travelOverviewScene(
                         selected = false,
                         dayNumber = visit.dayNumber,
                         title = visit.details.name ?: places[visit.details.googlePlaceId]?.name,
+                        category = visit.details.category,
                     )
                 }
             },
