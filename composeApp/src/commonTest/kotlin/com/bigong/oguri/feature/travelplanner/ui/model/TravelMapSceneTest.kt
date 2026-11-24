@@ -10,7 +10,6 @@ import com.bigong.oguri.domain.model.TravelVisitCategory
 import com.bigong.oguri.domain.model.TravelVisitDetails
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class TravelMapSceneTest {
@@ -75,7 +74,7 @@ class TravelMapSceneTest {
     }
 
     @Test
-    fun overviewKeepsTheCategoryFillAndUsesBordersToDistinguishDates() {
+    fun overviewColorsPinsByDateAndKeepsRepeatedVisitsSeparate() {
         val first = visit("first", station).let { it.copy(details = it.details.copy(category = TravelVisitCategory.TRANSPORT)) }
         val visits =
             listOf(
@@ -88,10 +87,9 @@ class TravelMapSceneTest {
         assertEquals(listOf("first", "repeat", "third"), scene.markers.map { it.id })
         assertEquals(listOf("1", "1", "1"), scene.markers.map { it.label })
         assertEquals(listOf(1, 2, 3), scene.markers.map { it.dayNumber })
-        val transport = travelVisitMarkerColors(TravelVisitCategory.TRANSPORT)
-        assertEquals(listOf(transport.fill.toArgb(), transport.fill.toArgb(), travelVisitMarkerColors(null).fill.toArgb()), scene.markers.map { it.colorArgb })
-        assertEquals(listOf(1, 2, 3).map(::travelDayColor), scene.markers.map { it.dayBorderColorArgb })
-        assertEquals(3, scene.markers.map { it.dayBorderColorArgb }.distinct().size)
+        val colors = (1..3).map(::travelDayMarkerColors)
+        assertEquals(colors.map { it.fill.toArgb() }, scene.markers.map { it.colorArgb })
+        assertEquals(colors.map { it.number.toArgb() }, scene.markers.map { it.labelColorArgb })
         assertEquals(station.coordinates, scene.cityCenter)
         assertTrue(scene.lines.isEmpty())
     }
@@ -107,7 +105,23 @@ class TravelMapSceneTest {
         assertEquals(colors.fill.toArgb(), marker.colorArgb)
         assertEquals(unselectedMarker.colorArgb, marker.colorArgb)
         assertEquals(colors.number.toArgb(), marker.labelColorArgb)
-        assertNull(marker.dayBorderColorArgb)
+    }
+
+    @Test
+    fun overviewDateColorsCycleThroughTheSixVividPaletteColors() {
+        val categories = listOf(
+            TravelVisitCategory.SIGHTSEEING,
+            TravelVisitCategory.RESTAURANT,
+            TravelVisitCategory.TRANSPORT,
+            TravelVisitCategory.CAFE,
+            TravelVisitCategory.LODGING,
+            TravelVisitCategory.SHOPPING,
+        )
+        val expected = categories.map(::travelVisitMarkerColors)
+        assertEquals(expected, (1..6).map(::travelDayMarkerColors))
+        assertEquals(6, expected.map { it.fill }.distinct().size)
+        assertEquals(expected.first(), travelDayMarkerColors(7))
+        assertEquals(expected.first(), travelDayMarkerColors(TravelPlan.UNASSIGNED_DAY))
     }
 
     @Test

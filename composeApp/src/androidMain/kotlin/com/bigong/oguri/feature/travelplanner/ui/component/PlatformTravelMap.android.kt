@@ -239,9 +239,7 @@ private fun TravelMapMarker.bitmap(
     labelTypeface: Typeface,
     selectedLabelTypeface: Typeface,
 ): Bitmap {
-    val dayBorderColor = dayBorderColorArgb
-    val markerDiameter = if (dayBorderColor == null) 26 else 28
-    val size = ((if (selected) 44 else markerDiameter) * density).toInt().coerceAtLeast(1)
+    val size = ((if (selected) 44 else 26) * density).toInt().coerceAtLeast(1)
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
     val canvas = Canvas(bitmap)
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -250,18 +248,11 @@ private fun TravelMapMarker.bitmap(
         paint.color = highlightColorArgb
         canvas.drawCircle(middle, middle, middle, paint)
     }
-    val radius = (if (selected) 16f else markerDiameter / 2f) * density
+    val radius = (if (selected) 16 else 13) * density
     paint.color = outline
     canvas.drawCircle(middle, middle, radius, paint)
-    if (dayBorderColor != null) {
-        paint.color = dayBorderColor
-        canvas.drawCircle(middle, middle, radius - density, paint)
-        paint.color = outline
-        canvas.drawCircle(middle, middle, radius - 3 * density, paint)
-    }
     paint.color = colorArgb
-    val borderWidth = if (dayBorderColor == null) 2 else 4
-    canvas.drawCircle(middle, middle, radius - borderWidth * density, paint)
+    canvas.drawCircle(middle, middle, radius - 2 * density, paint)
     label?.let {
         paint.color = labelColorArgb
         paint.textAlign = Paint.Align.CENTER

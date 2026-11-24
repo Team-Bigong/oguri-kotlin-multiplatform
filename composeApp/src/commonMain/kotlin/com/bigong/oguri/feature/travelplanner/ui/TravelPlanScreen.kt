@@ -120,6 +120,7 @@ import com.bigong.oguri.feature.travelplanner.ui.model.TravelVisitDraft
 import com.bigong.oguri.feature.travelplanner.ui.model.hasEnded
 import com.bigong.oguri.feature.travelplanner.ui.model.isOutsideTrip
 import com.bigong.oguri.feature.travelplanner.ui.model.travelMapScene
+import com.bigong.oguri.feature.travelplanner.ui.model.travelVisitMarkerColors
 import kotlin.time.Clock
 import kotlinx.datetime.toLocalDateTime
 import oguri.composeapp.generated.resources.Res
@@ -730,7 +731,7 @@ private fun TravelVisitRow(
                     .padding(horizontal = VisitRowHorizontalPadding),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                TravelVisitNumber(number?.toString().orEmpty(), visit.details.category)
+                TravelVisitNumber(number?.toString().orEmpty(), travelVisitMarkerColors(visit.details.category))
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     if (title == null) {
                         SkeletonBox(

@@ -1,11 +1,6 @@
 package com.bigong.oguri.feature.travelplanner.ui.model
 
 import androidx.compose.ui.graphics.toArgb
-import com.bigong.oguri.core.designsystem.Mint70
-import com.bigong.oguri.core.designsystem.Mint90
-import com.bigong.oguri.core.designsystem.Neutral70
-import com.bigong.oguri.core.designsystem.Orange40
-import com.bigong.oguri.core.designsystem.Orange70
 import com.bigong.oguri.domain.model.TravelCoordinates
 import com.bigong.oguri.domain.model.TravelPlace
 import com.bigong.oguri.domain.model.TravelPlan
@@ -22,24 +17,12 @@ data class TravelMapMarker(
     val title: String? = null,
     val category: TravelVisitCategory? = null,
 ) {
-    private val colors: TravelVisitMarkerColors = travelVisitMarkerColors(category)
+    private val colors: TravelVisitMarkerColors = dayNumber?.let(::travelDayMarkerColors) ?: travelVisitMarkerColors(category)
 
     val colorArgb: Int = colors.fill.toArgb()
     val labelColorArgb: Int = colors.number.toArgb()
     val highlightColorArgb: Int = colors.fill.copy(alpha = 0.28f).toArgb()
-
-    val dayBorderColorArgb: Int?
-        get() = dayNumber?.let(::travelDayColor)
 }
-
-internal fun travelDayColor(dayNumber: Int): Int =
-    when ((dayNumber.coerceAtLeast(1) - 1) % 5) {
-        0 -> Mint70
-        1 -> Orange40
-        2 -> Mint90
-        3 -> Orange70
-        else -> Neutral70
-    }.toArgb()
 
 @ConsistentCopyVisibility
 data class TravelMapLine internal constructor(

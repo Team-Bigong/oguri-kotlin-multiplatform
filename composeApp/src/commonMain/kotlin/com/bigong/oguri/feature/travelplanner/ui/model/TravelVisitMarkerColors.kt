@@ -17,6 +17,12 @@ private val transportMarker = TravelVisitMarkerColors(Color(0xFF4AA8EB))
 private val shoppingMarker = TravelVisitMarkerColors(Color(0xFFEA74AB))
 private val otherMarker = TravelVisitMarkerColors(Color(0xFF9AA9BB))
 
+private val dayMarkers: List<TravelVisitMarkerColors> =
+    listOf(sightseeingMarker, restaurantMarker, transportMarker, cafeMarker, lodgingMarker, shoppingMarker)
+
+internal fun travelDayMarkerColors(dayNumber: Int): TravelVisitMarkerColors =
+    dayMarkers[(dayNumber.coerceAtLeast(1) - 1) % dayMarkers.size]
+
 internal fun travelVisitMarkerColors(category: TravelVisitCategory?): TravelVisitMarkerColors =
     when (category) {
         TravelVisitCategory.RESTAURANT -> restaurantMarker

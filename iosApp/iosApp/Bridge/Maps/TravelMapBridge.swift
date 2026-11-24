@@ -87,7 +87,6 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
                 colorArgb: pin.colorArgb,
                 labelColorArgb: pin.labelColorArgb,
                 highlightColorArgb: pin.highlightColorArgb,
-                dayBorderColorArgb: pin.dayBorderColorArgb?.int32Value,
                 selected: pin.selected,
                 style: pinStyle
             )
@@ -199,9 +198,8 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
         }
     }
 
-    private func makeIcon(label: String?, colorArgb: Int32, labelColorArgb: Int32, highlightColorArgb: Int32, dayBorderColorArgb: Int32?, selected: Bool, style: TravelMapPinStyle) -> UIImage {
-        let markerDiameter: CGFloat = dayBorderColorArgb == nil ? 26 : 28
-        let side: CGFloat = selected ? 44 : markerDiameter
+    private func makeIcon(label: String?, colorArgb: Int32, labelColorArgb: Int32, highlightColorArgb: Int32, selected: Bool, style: TravelMapPinStyle) -> UIImage {
+        let side: CGFloat = selected ? 44 : 26
         let size = CGSize(width: side, height: side)
         return UIGraphicsImageRenderer(size: size).image { _ in
             let color = UIColor(argb: colorArgb)
@@ -209,19 +207,12 @@ private final class GoogleTravelMap: NSObject, TravelMapHost, GMSMapViewDelegate
                 UIColor(argb: highlightColorArgb).setFill()
                 UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
             }
-            let diameter: CGFloat = selected ? 32 : markerDiameter
+            let diameter: CGFloat = selected ? 32 : 26
             let frame = CGRect(x: (side - diameter) / 2, y: (side - diameter) / 2, width: diameter, height: diameter)
             UIColor(argb: style.outlineArgb).setFill()
             UIBezierPath(ovalIn: frame).fill()
-            if let dayBorderColorArgb {
-                UIColor(argb: dayBorderColorArgb).setFill()
-                UIBezierPath(ovalIn: frame.insetBy(dx: 1, dy: 1)).fill()
-                UIColor(argb: style.outlineArgb).setFill()
-                UIBezierPath(ovalIn: frame.insetBy(dx: 3, dy: 3)).fill()
-            }
             color.setFill()
-            let borderWidth: CGFloat = dayBorderColorArgb == nil ? 2 : 4
-            UIBezierPath(ovalIn: frame.insetBy(dx: borderWidth, dy: borderWidth)).fill()
+            UIBezierPath(ovalIn: frame.insetBy(dx: 2, dy: 2)).fill()
             guard let label else { return }
             let text = NSAttributedString(string: label, attributes: [
                 .font: pinFont(uri: selected ? style.selectedLabelFontUri : style.labelFontUri, size: CGFloat(selected ? style.selectedLabelSize : style.labelSize)),
