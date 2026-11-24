@@ -142,6 +142,11 @@ class GoogleTravelPlacesClient(
                         )
                     }
                 },
+            suggestedCategory =
+                googleTravelPlaceCategory(
+                    primaryType = node.path("primaryType").textValue(),
+                    types = node.path("types").mapNotNull(JsonNode::textValue),
+                ),
         )
     }
 
@@ -150,7 +155,7 @@ class GoogleTravelPlacesClient(
         const val SEARCH_PAGE_SIZE: Int = 12
         const val CITY_SEARCH_RADIUS_METERS: Double = 25_000.0
         const val PLACE_FIELDS: String = "id,displayName,formattedAddress,location,attributions"
-        val SEARCH_FIELDS: String = PLACE_FIELDS.split(',').joinToString(",") { "places.$it" }
+        val SEARCH_FIELDS: String = "$PLACE_FIELDS,primaryType,types".split(',').joinToString(",") { "places.$it" }
     }
 }
 
