@@ -9,10 +9,15 @@ import com.bigong.oguri.feature.onboarding.ui.model.OnboardingSideEffect
 import com.bigong.oguri.feature.onboarding.ui.model.OnboardingStep
 import com.bigong.oguri.feature.onboarding.ui.model.OnboardingUiState
 import dev.zacsweers.metro.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,10 +27,10 @@ class OnboardingViewModel(
     private val completeOnboardingUseCase: CompleteOnboardingUseCase,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(OnboardingUiState())
-    val uiState = _uiState.asStateFlow()
+    val uiState: StateFlow<OnboardingUiState> = _uiState.asStateFlow()
 
     private val _sideEffect = MutableSharedFlow<OnboardingSideEffect>(extraBufferCapacity = 1)
-    val sideEffect = _sideEffect.asSharedFlow()
+    val sideEffect: SharedFlow<OnboardingSideEffect> = _sideEffect.asSharedFlow()
 
     fun toggleServiceTermsChecked() {
         _uiState.update { currentUiState ->
@@ -137,11 +142,12 @@ class OnboardingViewModel(
     }
 
     fun completeOnboarding() {
-        if (uiState.value.isSubmitting) {
+        val currentUiState = uiState.value
+        if (!currentUiState.canStartSubmission) {
             return
         }
-        val remainingDayOff = uiState.value.remainingDayOffInput.toIntOrNull()
-        val preferredDayOff = uiState.value.preferredDayOffInput.toIntOrNull()
+        val remainingDayOff = currentUiState.remainingDayOffInput.toIntOrNull()
+        val preferredDayOff = currentUiState.preferredDayOffInput.toIntOrNull()
         val validation =
             validateOnboardingLeaveDaysUseCase(
                 remainingDayOff = remainingDayOff,
@@ -164,19 +170,6 @@ class OnboardingViewModel(
     }
 
     fun skipOnboardingLeaveDays() {
-        if (uiState.value.isSubmitting) {
-            return
-        }
-        _uiState.update { currentUiState ->
-            currentUiState.copy(
-                remainingDayOffInput = ValidateOnboardingLeaveDaysUseCase.DEFAULT_REMAINING_DAY_OFF.toString(),
-                preferredDayOffInput = ValidateOnboardingLeaveDaysUseCase.DEFAULT_PREFERRED_DAY_OFF.toString(),
-                isRemainingDayOffConfirmed = true,
-                isPreferredDayOffConfirmed = true,
-                remainingDayOffError = null,
-                preferredDayOffError = null,
-            )
-        }
         completeOnboardingWithDayOff(
             remainingDayOff = ValidateOnboardingLeaveDaysUseCase.DEFAULT_REMAINING_DAY_OFF,
             preferredDayOff = ValidateOnboardingLeaveDaysUseCase.DEFAULT_PREFERRED_DAY_OFF,
@@ -191,35 +184,31 @@ class OnboardingViewModel(
             return
         }
         viewModelScope.launch {
-            runCatching {
+            var isCompleted = false
+            try {
                 completeOnboardingUseCase(
                     preferredDayOff = preferredDayOff,
                     remainingDayOff = remainingDayOff,
                 )
-            }.onSuccess {
-                _sideEffect.tryEmit(OnboardingSideEffect.OnboardingCompleted)
-            }.onFailure {
+                ensureActive()
+                isCompleted = true
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
                 _sideEffect.tryEmit(OnboardingSideEffect.OnboardingFailed)
-            }.also {
+            } finally {
                 _uiState.update { currentUiState ->
-                    currentUiState.copy(isSubmitting = false)
+                    currentUiState.copy(isSubmitting = false, isCompleted = isCompleted)
                 }
             }
         }
     }
 
-    private fun startSubmitting(): Boolean {
-        var canSubmit = false
-        _uiState.update { currentUiState ->
-            if (currentUiState.isSubmitting) {
-                currentUiState
-            } else {
-                canSubmit = true
-                currentUiState.copy(isSubmitting = true)
-            }
-        }
-        return canSubmit
-    }
+    private fun startSubmitting(): Boolean =
+        _uiState
+            .getAndUpdate { currentUiState ->
+                if (currentUiState.canStartSubmission) currentUiState.copy(isSubmitting = true) else currentUiState
+            }.canStartSubmission
 
     private fun sanitizeDayOffInput(inputText: String): String = inputText.filter { character -> character.isDigit() }.take(2)
 }
