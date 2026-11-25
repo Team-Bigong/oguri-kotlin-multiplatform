@@ -88,7 +88,7 @@ fun OnboardingScreen(
                             .align(Alignment.CenterStart)
                             .noRippleClickable(onClick = onBackClick),
                 )
-                if (onboardingUiState.step == OnboardingStep.LEAVE_DAYS && !onboardingUiState.isSubmitting) {
+                if (onboardingUiState.canStartSubmission) {
                     Text(
                         text = stringResource(Res.string.onboarding_day_off_skip),
                         style = OguriTheme.typography.bodyMedium,

@@ -13,4 +13,8 @@ data class OnboardingUiState(
     val remainingDayOffError: OnboardingLeaveDaysValidationError? = null,
     val preferredDayOffError: OnboardingLeaveDaysValidationError? = null,
     val isSubmitting: Boolean = false,
-)
+    val isCompleted: Boolean = false,
+) {
+    internal val canStartSubmission: Boolean
+        get() = step == OnboardingStep.LEAVE_DAYS && !isSubmitting && !isCompleted
+}

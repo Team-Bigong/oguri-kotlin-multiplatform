@@ -3,8 +3,12 @@ package com.bigong.oguri.feature.onboarding.ui
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.withResumed
 import com.bigong.oguri.core.navigation.WebDocumentType
 import com.bigong.oguri.core.ui.component.OguriSnackBarType
 import com.bigong.oguri.core.ui.component.showOguriSnackbar
@@ -13,7 +17,6 @@ import com.bigong.oguri.feature.onboarding.ui.model.OnboardingStep
 import dev.zacsweers.metro.Provider
 import kotlinx.coroutines.flow.collectLatest
 import oguri.composeapp.generated.resources.Res
-import oguri.composeapp.generated.resources.snackbar_onboarding_completed
 import oguri.composeapp.generated.resources.snackbar_onboarding_failed
 import org.jetbrains.compose.resources.stringResource
 
@@ -22,28 +25,24 @@ fun OnboardingRoute(
     onboardingViewModelProvider: Provider<OnboardingViewModel>,
     snackbarHostState: SnackbarHostState,
     onBackClick: () -> Unit,
-    onHomeClick: () -> Unit,
+    onCompleted: () -> Unit,
     onOpenWebDocument: (WebDocumentType) -> Unit,
 ) {
-    val onboardingViewModel =
-        remember {
-            onboardingViewModelProvider()
-        }
-    val onboardingUiState = onboardingViewModel.uiState.collectAsStateWithLifecycle().value
-    val onboardingCompletedMessage = stringResource(Res.string.snackbar_onboarding_completed)
+    val onboardingViewModel: OnboardingViewModel = viewModel { onboardingViewModelProvider() }
+    val onboardingUiState by onboardingViewModel.uiState.collectAsStateWithLifecycle()
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val currentOnCompleted by rememberUpdatedState(onCompleted)
     val onboardingFailedMessage = stringResource(Res.string.snackbar_onboarding_failed)
+
+    LaunchedEffect(onboardingUiState.isCompleted, lifecycle) {
+        if (onboardingUiState.isCompleted) {
+            lifecycle.withResumed { currentOnCompleted() }
+        }
+    }
 
     LaunchedEffect(onboardingViewModel) {
         onboardingViewModel.sideEffect.collectLatest { sideEffect ->
             when (sideEffect) {
-                OnboardingSideEffect.OnboardingCompleted -> {
-                    snackbarHostState.showOguriSnackbar(
-                        message = onboardingCompletedMessage,
-                        type = OguriSnackBarType.SUCCESS,
-                    )
-                    onHomeClick()
-                }
-
                 OnboardingSideEffect.OnboardingFailed -> {
                     snackbarHostState.showOguriSnackbar(
                         message = onboardingFailedMessage,
