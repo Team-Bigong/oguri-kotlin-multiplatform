@@ -7,13 +7,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
@@ -24,6 +24,8 @@ import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
 import com.bigong.oguri.core.platform.PlatformBackGestureContainer
 import com.bigong.oguri.core.platform.PlatformBackHandler
+import com.bigong.oguri.core.ui.component.OguriSnackBarType
+import com.bigong.oguri.core.ui.component.showOguriSnackbar
 import com.bigong.oguri.domain.model.DisplayThemeMode
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.repository.TravelRecommendationEntry
@@ -43,18 +45,21 @@ import com.bigong.oguri.feature.placedetail.ui.PlaceDetailRoute
 import com.bigong.oguri.feature.search.ui.SearchRoute
 import com.bigong.oguri.feature.splash.ui.SplashRoute
 import com.bigong.oguri.feature.travelplanner.ui.CreateTravelPlanRoute
+import com.bigong.oguri.feature.travelplanner.ui.TravelHomeGuide
 import com.bigong.oguri.feature.travelplanner.ui.TravelInviteRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelMembersRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlanRoute
-import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelPlannerViewModel
+import com.bigong.oguri.feature.travelplanner.ui.TravelPlansRoute
 import com.bigong.oguri.feature.travelplanner.ui.TravelResumeEntry
-import com.bigong.oguri.feature.travelplanner.ui.TravelHomeGuide
 import com.bigong.oguri.feature.travelplanner.ui.component.TravelSignInRequired
 import com.bigong.oguri.feature.webdocument.ui.WebDocumentRoute
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
+import oguri.composeapp.generated.resources.Res
+import oguri.composeapp.generated.resources.snackbar_onboarding_completed
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
 fun MainNavHost(
@@ -76,6 +81,7 @@ fun MainNavHost(
     onDisplayThemeModeChange: (DisplayThemeMode) -> Unit,
 ) {
     val navigationScope = rememberCoroutineScope()
+    val onboardingCompletedMessage by rememberUpdatedState(stringResource(Res.string.snackbar_onboarding_completed))
     val travelSession by AuthTokenStore.sessions.collectAsStateWithLifecycle()
     val homeTravelViewModel by rememberUpdatedState(
         if (travelSession.tokens != null) {
@@ -109,6 +115,15 @@ fun MainNavHost(
                     else -> null
                 }
             if (source != null) recordRecommendation(source, TravelRecommendationEntry.LOGIN_RESUMED)
+        }
+    }
+
+    fun showOnboardingCompletion() {
+        navigationScope.launch {
+            snackbarHostState.showOguriSnackbar(
+                message = onboardingCompletedMessage,
+                type = OguriSnackBarType.SUCCESS,
+            )
         }
     }
 
@@ -150,7 +165,10 @@ fun MainNavHost(
                 onboardingViewModelProvider = appGraph.onboardingViewModelProvider,
                 snackbarHostState = snackbarHostState,
                 onBackClick = navigator::navigateToLogin,
-                onHomeClick = navigator::navigateToHomeFromOnboarding,
+                onCompleted = {
+                    navigator.navigateToHomeFromOnboarding()
+                    showOnboardingCompletion()
+                },
                 onOpenWebDocument = navigator::navigateToWebDocument,
             )
         }
@@ -181,8 +199,9 @@ fun MainNavHost(
                     onboardingViewModelProvider = appGraph.onboardingViewModelProvider,
                     snackbarHostState = snackbarHostState,
                     onBackClick = cancel,
-                    onHomeClick = {
+                    onCompleted = {
                         finishTravelAuthentication()
+                        showOnboardingCompletion()
                     },
                     onOpenWebDocument = navigator::navigateToWebDocument,
                 )
