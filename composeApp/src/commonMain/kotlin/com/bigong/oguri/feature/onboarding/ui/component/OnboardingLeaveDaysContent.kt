@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
 import com.bigong.oguri.core.designsystem.Neutral30
+import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.util.extension.noRippleClickable
@@ -81,6 +82,7 @@ fun OnboardingLeaveDaysContent(
             showLabel = false,
             value = remainingDayOffInput,
             placeholderText = REMAINING_DAY_OFF_HINT.toString(),
+            placeholderColor = Neutral40,
             unitText = unitText,
             warningText = remainingDayOffError.toWarningText(),
             onValueChange = onRemainingDayOffChange,
@@ -101,6 +103,7 @@ fun OnboardingLeaveDaysContent(
                     labelText = stringResource(Res.string.onboarding_day_off_title_almost_subtitle),
                     value = preferredDayOffInput,
                     placeholderText = PREFERRED_DAY_OFF_HINT.toString(),
+                    placeholderColor = Neutral40,
                     unitText = unitText,
                     warningText = preferredDayOffError.toWarningText(),
                     onValueChange = onPreferredDayOffChange,

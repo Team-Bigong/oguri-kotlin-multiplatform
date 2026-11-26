@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.contentDescription
@@ -36,6 +37,7 @@ fun OnboardingDayOffInputField(
     labelText: String,
     showLabel: Boolean = true,
     placeholderText: String = "0",
+    placeholderColor: Color = Neutral50,
 ) {
     val focusManager = LocalFocusManager.current
     val borderColor =
@@ -92,7 +94,7 @@ fun OnboardingDayOffInputField(
                         Text(
                             text = placeholderText,
                             style = OguriTheme.typography.bodyLarge,
-                            color = Neutral50,
+                            color = placeholderColor,
                         )
                     }
                     innerTextField()
