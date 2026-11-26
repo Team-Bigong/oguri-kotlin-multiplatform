@@ -19,6 +19,7 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.bigong.oguri.core.ad.tryShowHomeTransitionAd
 import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.di.AppGraph
 import com.bigong.oguri.core.network.AuthTokenStore
@@ -218,13 +219,20 @@ fun MainNavHost(
                 homeViewModel = homeViewModelProvider(),
                 snackbarHostState = snackbarHostState,
                 scrollToTopTrigger = homeTabReselectTrigger,
-                onPlaceClick = navigator::navigateToPlaceDetail,
-                onPeriodClick = navigator::navigateToPeriodDetail,
+                onPlaceClick = { placeId, startDate, endDate ->
+                    tryShowHomeTransitionAd()
+                    navigator.navigateToPlaceDetail(placeId, startDate, endDate)
+                },
+                onPeriodClick = { startDate, endDate ->
+                    tryShowHomeTransitionAd()
+                    navigator.navigateToPeriodDetail(startDate, endDate)
+                },
                 onMoveToCalendarClick = {
                     val calendarDestination =
                         bottomNavigationDestinations.first { destination ->
                             destination.routeModel == RouteModel.Calendar
                         }
+                    tryShowHomeTransitionAd()
                     navigator.navigateToBottomNavigationDestination(calendarDestination)
                 },
                 onSearchClick = navigator::navigateToSearch,

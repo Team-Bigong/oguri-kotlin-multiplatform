@@ -96,11 +96,11 @@
 - Home은 추천 기간의 `advertisements`를 `AdvertisementCard` 목록으로 표시한다.
 - Place Detail은 항공권 `flightUrl`을 Skyscanner `AdvertisementCard`로 표시한다.
 - AdMob은 플랫폼별 actual bridge에서 관리한다. Android는 Google Mobile Ads SDK를 직접 사용하고, iOS는 native host가 처리할 수 있도록 notification bridge를 사용한다.
-- App Open 광고는 앱 진입 후 메인 탭 진입이 완료된 뒤 화면 전환 시 foreground session당 최대 1회 노출한다.
+- 홈에서 다른 메인 탭으로 이동하거나 여행지·기간 상세를 열 때 전면 광고를 프로세스당 최대 한 번 시도한다. 첫 전환에 광고가 준비되지 않았으면 바로 이동한다. 백그라운드 복귀와 딥링크에는 광고를 띄우지 않는다.
+- 전면 광고는 디버그 빌드에서 Google 테스트 광고 ID를 사용한다. 배포용 ID는 Android에서 `ADMOB_ANDROID_INTERSTITIAL_AD_UNIT_ID` 환경 변수 또는 `local.properties`의 `admob.android.interstitial.ad.unit.id`, iOS에서 `ADMOB_IOS_INTERSTITIAL_AD_UNIT_ID` 빌드 설정으로 전달한다. 값이 비어 있으면 전면 광고를 요청하지 않는다.
 - Calendar는 추천 카드 index `3` 뒤에 첫 inline banner를 노출하고 이후 12개 카드 간격으로 노출한다.
 - Photo Detail은 하단 AdMob banner를 노출한다.
 - 마이페이지와 여행 탭은 하단 AdMob 배너를 사용한다. 여행 탭은 비회원 안내 또는 목록 조회에 성공한 화면에서 배너를 표시한다.
-- Splash, Login, Onboarding, Search, WebDocument, TravelLogin, TravelOnboarding은 App Open 광고의 화면 전환 조건에서 제외한다. 여행 탭·상세·초대는 공통 전환 조건을 적용한다.
 
 ## 분석/공유
 - Analytics는 `core.analytics` expect/actual bridge를 사용하고, `amplitude.api.key`가 비어 있으면 초기화하지 않는다.
