@@ -12,9 +12,16 @@ enum class AdMobBannerPlacement {
 
 expect fun initializeAdMob()
 
-expect fun preloadAppOpenAd()
+private var hasAttemptedHomeTransitionAd: Boolean = false
 
-expect fun showAppOpenAdIfAvailable(onImpression: () -> Unit)
+internal fun tryShowHomeTransitionAd() {
+    if (hasAttemptedHomeTransitionAd) return
+
+    hasAttemptedHomeTransitionAd = true
+    showInterstitialAdIfAvailable()
+}
+
+internal expect fun showInterstitialAdIfAvailable()
 
 @Composable
 expect fun AdMobBanner(

@@ -146,7 +146,6 @@ fun MyPageLeaveDaysBottomSheet(
                 },
                 unitText = stringResource(Res.string.mypage_leave_days_unit),
                 warningText = remainingLeaveDaysError.toWarningText(),
-                onInputCommitted = {},
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -159,7 +158,6 @@ fun MyPageLeaveDaysBottomSheet(
                 },
                 unitText = stringResource(Res.string.mypage_leave_days_unit),
                 warningText = preferredLeaveDaysError.toWarningText(),
-                onInputCommitted = {},
             )
 
             Spacer(modifier = Modifier.height(28.dp))

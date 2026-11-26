@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,14 +19,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.Transparent
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hasRoute
 import com.bigong.oguri.core.ad.initializeAdMob
-import com.bigong.oguri.core.ad.preloadAppOpenAd
-import com.bigong.oguri.core.ad.showAppOpenAdIfAvailable
+import com.bigong.oguri.core.ad.tryShowHomeTransitionAd
 import com.bigong.oguri.core.analytics.initializeOguriAnalytics
 import com.bigong.oguri.core.deeplink.TravelInviteIntent
 import com.bigong.oguri.core.deeplink.parseAppDeepLinkRoute
@@ -134,12 +129,7 @@ fun NavDisplay(
             appGraph.deepLinkStore.incomingUrl
                 .collectAsState()
                 .value
-        val lifecycleOwner = LocalLifecycleOwner.current
         var previousRouteText by remember { mutableStateOf<String?>(null) }
-        var hasHandledFirstForegroundStart by remember { mutableStateOf(false) }
-        var hasCompletedInitialMainTabEntry by remember { mutableStateOf(false) }
-        var hasShownAppOpenAdInCurrentForegroundSession by remember { mutableStateOf(false) }
-        var appOpenAdSession by remember { mutableIntStateOf(0) }
         var lastMainBackPressedMark by remember { mutableStateOf<TimeMark?>(null) }
         var homeTabReselectTrigger by remember { mutableIntStateOf(0) }
         var calendarTabReselectTrigger by remember { mutableIntStateOf(0) }
@@ -213,7 +203,6 @@ fun NavDisplay(
         LaunchedEffect(Unit) {
             initializeOguriAnalytics()
             initializeAdMob()
-            preloadAppOpenAd()
         }
         LaunchedEffect(currentDisplayThemeMode, isDarkTheme) {
             applyPlatformThemeMode(
@@ -221,50 +210,10 @@ fun NavDisplay(
                 shouldFollowSystemTheme = currentDisplayThemeMode == DisplayThemeMode.SYSTEM,
             )
         }
-        DisposableEffect(lifecycleOwner) {
-            val observer =
-                LifecycleEventObserver { _, event ->
-                    if (event != Lifecycle.Event.ON_START) {
-                        return@LifecycleEventObserver
-                    }
-
-                    preloadAppOpenAd()
-                    if (!hasHandledFirstForegroundStart) {
-                        hasHandledFirstForegroundStart = true
-                        return@LifecycleEventObserver
-                    }
-
-                    appOpenAdSession++
-                    hasShownAppOpenAdInCurrentForegroundSession = false
-                }
-            lifecycleOwner.lifecycle.addObserver(observer)
-            onDispose {
-                lifecycleOwner.lifecycle.removeObserver(observer)
-            }
-        }
         LaunchedEffect(currentDestination?.route) {
             val currentRouteText = currentDestination?.route
             val previousRoute = previousRouteText
-            val isMainTab = bottomNavigationDestinations.any { it.routeSerialName == routeName(currentRouteText) }
-
             if (currentRouteText != null && previousRoute != null) {
-                if (!hasCompletedInitialMainTabEntry && isMainTab) {
-                    hasCompletedInitialMainTabEntry = true
-                } else if (
-                    hasCompletedInitialMainTabEntry &&
-                    !hasShownAppOpenAdInCurrentForegroundSession &&
-                    previousRoute != currentRouteText &&
-                    routeName(previousRoute) !in appOpenAdExcludedRoutes &&
-                    routeName(currentRouteText) !in appOpenAdExcludedRoutes
-                ) {
-                    val requestedSession = appOpenAdSession
-                    showAppOpenAdIfAvailable {
-                        if (requestedSession == appOpenAdSession) {
-                            hasShownAppOpenAdInCurrentForegroundSession = true
-                        }
-                    }
-                }
-
                 if (isHomeRoute(currentRouteText) && !isHomeRoute(previousRoute)) {
                     if (homeViewModelLazy.isInitialized()) {
                         homeViewModelLazy.value.refreshRecommendPeriods()
@@ -283,9 +232,6 @@ fun NavDisplay(
                         calendarViewModelLazy.value.refreshWithPreferredLeaveDays(preferredLeaveDays)
                     }
                 }
-            }
-            if (currentRouteText != null && previousRoute == null && isMainTab) {
-                hasCompletedInitialMainTabEntry = true
             }
             previousRouteText = currentRouteText
         }
@@ -315,6 +261,14 @@ fun NavDisplay(
                 travelTabLabel = travelTabLabel,
             )
         }
+        val navigateToSelectedTab: (BottomNavigationDestination) -> Unit = { destination ->
+            if (destination.routeModel != RouteModel.Home &&
+                navigator.navHostController.currentDestination?.hasRoute<RouteModel.Home>() == true
+            ) {
+                tryShowHomeTransitionAd()
+            }
+            navigator.navigateToBottomNavigationDestination(destination)
+        }
         LaunchedEffect(floatingBottomNavigationEnabled, currentDestination?.route) {
             if (!floatingBottomNavigationEnabled) {
                 return@LaunchedEffect
@@ -330,7 +284,7 @@ fun NavDisplay(
                     onBottomNavigationReselected(destination)
                     return@collect
                 }
-                navigator.navigateToBottomNavigationDestination(destination)
+                navigateToSelectedTab(destination)
             }
         }
 
@@ -357,7 +311,7 @@ fun NavDisplay(
                                         onBottomNavigationReselected(destination)
                                         return@BottomNavigationBar
                                     }
-                                    navigator.navigateToBottomNavigationDestination(destination)
+                                    navigateToSelectedTab(destination)
                                 },
                             )
                         }
@@ -465,17 +419,6 @@ private val travelRouteNames: Set<String> =
         RouteModel.TravelOnboarding
             .serializer()
             .descriptor.serialName,
-    )
-
-private val appOpenAdExcludedRoutes: Set<String> =
-    setOf(
-        RouteModel.Splash.serializer().descriptor.serialName,
-        RouteModel.Login.serializer().descriptor.serialName,
-        RouteModel.Onboarding.serializer().descriptor.serialName,
-        RouteModel.Search.serializer().descriptor.serialName,
-        RouteModel.WebDocument.serializer().descriptor.serialName,
-        RouteModel.TravelLogin.serializer().descriptor.serialName,
-        RouteModel.TravelOnboarding.serializer().descriptor.serialName,
     )
 
 private fun routeName(routeText: String?): String? = routeText?.substringBefore('/')?.substringBefore('?')

@@ -217,6 +217,9 @@ android {
                 .toInt()
         versionCode = currentProjectVersionValue.toInt()
         versionName = marketingVersionValue
+        manifestPlaceholders["admobInterstitialAdUnitId"] =
+            providers.environmentVariable("ADMOB_ANDROID_INTERSTITIAL_AD_UNIT_ID").orNull
+                ?: localProperties.getProperty("admob.android.interstitial.ad.unit.id").orEmpty()
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
         manifestPlaceholders["googleMapsAndroidApiKey"] =
             providers.environmentVariable("GOOGLE_MAPS_ANDROID_API_KEY").orNull

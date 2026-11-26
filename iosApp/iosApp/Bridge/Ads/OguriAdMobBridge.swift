@@ -4,10 +4,10 @@ import GoogleMobileAds
 
 #if DEBUG
 private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
-private let iosAppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023"
+private let iosInterstitialAdUnitId: String? = "ca-app-pub-3940256099942544/4411468910"
 #else
 private let iosBannerAdUnitId = "ca-app-pub-9643550840413935/1095385664"
-private let iosAppOpenAdUnitId = "ca-app-pub-9643550840413935/1058191792"
+private let iosInterstitialAdUnitId = Bundle.main.object(forInfoDictionaryKey: "OguriInterstitialAdUnitId") as? String
 #endif
 private let iosTestDeviceIdentifier = "8ca04675fef46ae5bc7a3764ddea6526"
 
@@ -17,10 +17,7 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
 
     private let notificationCenter = NotificationCenter.default
     private var isMobileAdsInitialized = false
-    private var appOpenAd: AppOpenAd?
-    private var isLoadingAppOpenAd = false
-    private var isShowingAppOpenAd = false
-    private var appOpenAdRequest: AppOpenAdRequest?
+    private var interstitialAd: InterstitialAd?
     private var bannerByContainerId: [ObjectIdentifier: BannerView] = [:]
     private var bannerLoadRetryCountByContainerId: [ObjectIdentifier: Int] = [:]
 
@@ -37,14 +34,8 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         )
         notificationCenter.addObserver(
             self,
-            selector: #selector(handlePreloadAppOpenNotification),
-            name: Notification.Name("OguriAdMobPreloadAppOpen"),
-            object: nil,
-        )
-        notificationCenter.addObserver(
-            self,
-            selector: #selector(handleShowAppOpenNotification(_:)),
-            name: Notification.Name("OguriAdMobShowAppOpen"),
+            selector: #selector(handleShowInterstitialNotification),
+            name: Notification.Name("OguriAdMobShowInterstitial"),
             object: nil,
         )
         notificationCenter.addObserver(
@@ -66,13 +57,11 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         initializeMobileAdsIfNeeded()
     }
 
-    @objc private func handlePreloadAppOpenNotification() {
-        preloadAppOpenAd()
-    }
-
-    @objc private func handleShowAppOpenNotification(_ notification: Notification) {
-        guard let request = notification.object as? AppOpenAdRequest else { return }
-        showAppOpenAdIfAvailable(request)
+    @objc private func handleShowInterstitialNotification() {
+        guard UIApplication.shared.applicationState == .active,
+              let interstitialAd,
+              let rootViewController = UIApplication.shared.topMostViewController() else { return }
+        interstitialAd.present(from: rootViewController)
     }
 
     @objc private func handleAttachBannerNotification(_ notification: Notification) {
@@ -99,41 +88,19 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         MobileAds.shared.requestConfiguration.testDeviceIdentifiers = ["SIMULATOR", iosTestDeviceIdentifier]
         #endif
         MobileAds.shared.start(completionHandler: nil)
-        preloadAppOpenAd()
-    }
-
-    private func preloadAppOpenAd() {
-        if appOpenAd != nil || isLoadingAppOpenAd {
-            return
-        }
-
-        isLoadingAppOpenAd = true
-        AppOpenAd.load(
-            with: iosAppOpenAdUnitId,
+        guard let iosInterstitialAdUnitId, !iosInterstitialAdUnitId.isEmpty else { return }
+        InterstitialAd.load(
+            with: iosInterstitialAdUnitId,
             request: Request(),
             completionHandler: { [weak self] ad, error in
                 guard let self else { return }
                 if let error {
-                    print("OguriAdMobBridge: iOS app open failed to load: \(error.localizedDescription)")
+                    print("OguriAdMobBridge: iOS interstitial failed to load: \(error.localizedDescription)")
                 }
-                self.appOpenAd = ad
-                self.appOpenAd?.fullScreenContentDelegate = self
-                self.isLoadingAppOpenAd = false
+                self.interstitialAd = ad
+                self.interstitialAd?.fullScreenContentDelegate = self
             },
         )
-    }
-
-    private func showAppOpenAdIfAvailable(_ request: AppOpenAdRequest) {
-        guard !isShowingAppOpenAd else { return }
-        guard let appOpenAd else {
-            preloadAppOpenAd()
-            return
-        }
-        guard let rootViewController = UIApplication.shared.topMostViewController() else { return }
-
-        isShowingAppOpenAd = true
-        appOpenAdRequest = request
-        appOpenAd.present(from: rootViewController)
     }
 
     private func attachBanner(to containerView: UIView, placementKey: String) {
@@ -217,23 +184,11 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
     }
 
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        isShowingAppOpenAd = false
-        appOpenAdRequest = nil
-        appOpenAd = nil
-        preloadAppOpenAd()
+        interstitialAd = nil
     }
 
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: any Error) {
-        isShowingAppOpenAd = false
-        appOpenAdRequest = nil
-        appOpenAd = nil
-        preloadAppOpenAd()
-    }
-
-    func adDidRecordImpression(_ ad: FullScreenPresentingAd) {
-        let request = appOpenAdRequest
-        appOpenAdRequest = nil
-        request?.reportImpression()
+        interstitialAd = nil
     }
 }
 
