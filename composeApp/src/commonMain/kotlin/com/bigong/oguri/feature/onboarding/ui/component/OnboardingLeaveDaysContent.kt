@@ -42,6 +42,7 @@ import org.jetbrains.compose.resources.stringResource
 import com.bigong.oguri.domain.model.OnboardingLeaveDaysValidationError as LeaveDaysValidationError
 
 private const val REMAINING_DAY_OFF_HINT: Int = 15
+private const val PREFERRED_DAY_OFF_HINT: Int = 2
 private const val ONBOARDING_CONTENT_ANIMATION_DURATION_MILLIS = 240
 
 @Composable
@@ -99,6 +100,7 @@ fun OnboardingLeaveDaysContent(
                 OnboardingDayOffInputField(
                     labelText = stringResource(Res.string.onboarding_day_off_title_almost_subtitle),
                     value = preferredDayOffInput,
+                    placeholderText = PREFERRED_DAY_OFF_HINT.toString(),
                     unitText = unitText,
                     warningText = preferredDayOffError.toWarningText(),
                     onValueChange = onPreferredDayOffChange,

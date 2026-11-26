@@ -40,14 +40,18 @@ class OnboardingViewModelTest {
             val viewModel = createViewModel(repository)
             viewModel.agreeAllAndMoveToNext()
             assertEquals("", viewModel.uiState.value.remainingDayOffInput)
-            assertEquals("2", viewModel.uiState.value.preferredDayOffInput)
+            assertEquals("", viewModel.uiState.value.preferredDayOffInput)
             assertFalse(viewModel.uiState.value.shouldShowPreferredDayOffInput)
 
             viewModel.updateRemainingDayOffInput("12")
             assertTrue(viewModel.uiState.value.shouldShowPreferredDayOffInput)
-            assertTrue(viewModel.uiState.value.hasValidDayOffInputs)
+            assertFalse(viewModel.uiState.value.hasValidDayOffInputs)
+            viewModel.completeOnboarding()
+            runCurrent()
+            assertTrue(repository.submissions.isEmpty())
 
             viewModel.updatePreferredDayOffInput("3")
+            assertTrue(viewModel.uiState.value.hasValidDayOffInputs)
 
             viewModel.completeOnboarding()
             runCurrent()
@@ -69,6 +73,7 @@ class OnboardingViewModelTest {
             assertFalse(viewModel.uiState.value.shouldShowPreferredDayOffInput)
             viewModel.updateRemainingDayOffInput("1")
             assertTrue(viewModel.uiState.value.shouldShowPreferredDayOffInput)
+            viewModel.updatePreferredDayOffInput("2")
             assertFalse(viewModel.uiState.value.hasValidDayOffInputs)
             viewModel.completeOnboarding()
             runCurrent()

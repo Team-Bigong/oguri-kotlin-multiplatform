@@ -1,14 +1,13 @@
 package com.bigong.oguri.feature.onboarding.ui.model
 
 import com.bigong.oguri.domain.model.OnboardingLeaveDaysValidationError
-import com.bigong.oguri.domain.usecase.ValidateOnboardingLeaveDaysUseCase.Companion.DEFAULT_PREFERRED_DAY_OFF
 
 data class OnboardingUiState(
     val step: OnboardingStep = OnboardingStep.TERMS,
     val isServiceTermsChecked: Boolean = false,
     val isPrivacyPolicyChecked: Boolean = false,
     val remainingDayOffInput: String = "",
-    val preferredDayOffInput: String = DEFAULT_PREFERRED_DAY_OFF.toString(),
+    val preferredDayOffInput: String = "",
     val remainingDayOffError: OnboardingLeaveDaysValidationError? = null,
     val preferredDayOffError: OnboardingLeaveDaysValidationError? = null,
     val isSubmitting: Boolean = false,

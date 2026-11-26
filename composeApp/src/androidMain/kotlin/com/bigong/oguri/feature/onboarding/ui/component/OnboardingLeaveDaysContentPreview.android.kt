@@ -10,7 +10,7 @@ private fun OnboardingLeaveDaysContentWelcomePreview() {
     OguriTheme {
         OnboardingLeaveDaysContent(
             remainingDayOffInput = "",
-            preferredDayOffInput = "2",
+            preferredDayOffInput = "",
             remainingDayOffError = null,
             preferredDayOffError = null,
             onRemainingDayOffChange = {},
