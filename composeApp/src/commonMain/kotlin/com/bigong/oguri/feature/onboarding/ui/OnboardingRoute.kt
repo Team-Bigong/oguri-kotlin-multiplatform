@@ -72,9 +72,7 @@ fun OnboardingRoute(
         onPrivacyPolicyOpen = onboardingViewModel::openPrivacyPolicy,
         onAgreeAllClick = onboardingViewModel::agreeAllAndMoveToNext,
         onRemainingDayOffChange = onboardingViewModel::updateRemainingDayOffInput,
-        onRemainingDayOffCommit = onboardingViewModel::commitRemainingDayOffInput,
         onPreferredDayOffChange = onboardingViewModel::updatePreferredDayOffInput,
-        onPreferredDayOffCommit = onboardingViewModel::commitPreferredDayOffInput,
         onSkipClick = onboardingViewModel::skipOnboardingLeaveDays,
         onCompleteClick = onboardingViewModel::completeOnboarding,
     )

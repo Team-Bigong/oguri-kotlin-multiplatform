@@ -14,7 +14,6 @@ private fun OnboardingDayOffInputFieldPreview() {
             unitText = "일",
             warningText = null,
             onValueChange = {},
-            onInputCommitted = {},
         )
     }
 }
@@ -29,7 +28,6 @@ private fun OnboardingDayOffInputFieldWarningPreview() {
             unitText = "일",
             warningText = "남은 연차는 40일 이하로 입력해 주세요.",
             onValueChange = {},
-            onInputCommitted = {},
         )
     }
 }

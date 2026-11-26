@@ -39,10 +39,15 @@ class OnboardingViewModelTest {
             val repository = RecordingAuthRepository()
             val viewModel = createViewModel(repository)
             viewModel.agreeAllAndMoveToNext()
+            assertEquals("", viewModel.uiState.value.remainingDayOffInput)
+            assertEquals("2", viewModel.uiState.value.preferredDayOffInput)
+            assertFalse(viewModel.uiState.value.shouldShowPreferredDayOffInput)
+
             viewModel.updateRemainingDayOffInput("12")
-            viewModel.commitRemainingDayOffInput()
+            assertTrue(viewModel.uiState.value.shouldShowPreferredDayOffInput)
+            assertTrue(viewModel.uiState.value.hasValidDayOffInputs)
+
             viewModel.updatePreferredDayOffInput("3")
-            viewModel.commitPreferredDayOffInput()
 
             viewModel.completeOnboarding()
             runCurrent()
@@ -51,6 +56,34 @@ class OnboardingViewModelTest {
             val state = viewModel.uiState.first()
             assertTrue(state.isCompleted)
             assertFalse(state.isSubmitting)
+        }
+
+    @Test
+    fun editingDayOffInputsUpdatesCompletionWithoutLeavingTheField() =
+        runTest {
+            val repository = RecordingAuthRepository()
+            val viewModel = createViewModel(repository)
+            viewModel.agreeAllAndMoveToNext()
+
+            viewModel.updateRemainingDayOffInput("41")
+            assertFalse(viewModel.uiState.value.shouldShowPreferredDayOffInput)
+            viewModel.updateRemainingDayOffInput("1")
+            assertTrue(viewModel.uiState.value.shouldShowPreferredDayOffInput)
+            assertFalse(viewModel.uiState.value.hasValidDayOffInputs)
+            viewModel.completeOnboarding()
+            runCurrent()
+            assertTrue(repository.submissions.isEmpty())
+
+            viewModel.updatePreferredDayOffInput("1")
+            assertTrue(viewModel.uiState.value.hasValidDayOffInputs)
+            viewModel.updatePreferredDayOffInput("")
+            assertFalse(viewModel.uiState.value.hasValidDayOffInputs)
+
+            viewModel.updateRemainingDayOffInput("15")
+            viewModel.updatePreferredDayOffInput("2")
+            assertTrue(viewModel.uiState.value.hasValidDayOffInputs)
+            viewModel.updateRemainingDayOffInput("0")
+            assertFalse(viewModel.uiState.value.hasValidDayOffInputs)
         }
 
     @Test
@@ -88,7 +121,6 @@ class OnboardingViewModelTest {
             val viewModel = createViewModel(repository)
             viewModel.agreeAllAndMoveToNext()
             viewModel.updateRemainingDayOffInput("11")
-            viewModel.commitRemainingDayOffInput()
             viewModel.updatePreferredDayOffInput("4")
             val editingState = viewModel.uiState.value
             val failure = async { viewModel.sideEffect.first() }
