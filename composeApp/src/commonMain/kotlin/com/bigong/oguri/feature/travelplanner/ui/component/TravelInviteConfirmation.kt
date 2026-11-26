@@ -29,6 +29,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint50
 import com.bigong.oguri.core.designsystem.Neutral40
 import com.bigong.oguri.core.designsystem.OguriTheme
+import com.bigong.oguri.core.ui.component.DialogActionRow
 import com.bigong.oguri.core.ui.component.dialogSecondaryButtonColor
 import com.bigong.oguri.domain.model.TravelDates
 import com.bigong.oguri.domain.model.TravelInvitePreview
@@ -113,22 +114,28 @@ internal fun TravelInviteConfirmation(
                         TravelInlineFailure(failure)
                     }
                     if (busy) TravelLoading(Modifier.fillMaxWidth())
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
-                        TravelTextButton(
-                            onClick = onDismiss,
-                            enabled = !busy,
-                            modifier = Modifier.weight(1f).background(dialogSecondaryButtonColor, shape),
-                        ) {
-                            Text(
-                                stringResource(Res.string.travel_invite_later),
-                                style = typography.bodyMedium,
-                                color = if (busy) Neutral40 else colors.textPrimary,
-                            )
-                        }
-                        TravelPrimaryButton(onClick = onJoin, enabled = !busy, modifier = Modifier.weight(1f), textStyle = typography.bodyMedium) {
-                            Text(stringResource(if (signedIn) Res.string.travel_invite_join_action else Res.string.travel_sign_in))
-                        }
-                    }
+                    DialogActionRow(
+                        horizontalSpacing = 10.dp,
+                        verticalAlignment = Alignment.CenterVertically,
+                        secondaryAction = {
+                            TravelTextButton(
+                                onClick = onDismiss,
+                                enabled = !busy,
+                                modifier = Modifier.weight(1f).background(dialogSecondaryButtonColor, shape),
+                            ) {
+                                Text(
+                                    stringResource(Res.string.travel_invite_later),
+                                    style = typography.bodyMedium,
+                                    color = if (busy) Neutral40 else colors.textPrimary,
+                                )
+                            }
+                        },
+                        primaryAction = {
+                            TravelPrimaryButton(onClick = onJoin, enabled = !busy, modifier = Modifier.weight(1f), textStyle = typography.bodyMedium) {
+                                Text(stringResource(if (signedIn) Res.string.travel_invite_join_action else Res.string.travel_sign_in))
+                            }
+                        },
+                    )
                 }
             }
             Image(

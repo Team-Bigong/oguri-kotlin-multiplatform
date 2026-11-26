@@ -3,10 +3,8 @@ package com.bigong.oguri.feature.mypage.ui.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,6 +29,7 @@ import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
 import com.bigong.oguri.core.designsystem.WarningAmber
+import com.bigong.oguri.core.ui.component.DialogActionRow
 import com.bigong.oguri.core.ui.component.dialogSecondaryButtonColor
 import com.bigong.oguri.core.util.extension.dismissKeyboardOnOutsideTouch
 import com.bigong.oguri.core.util.extension.noRippleClickable
@@ -144,50 +143,51 @@ fun MyPageWithdrawDialog(
                     )
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
-                ) {
-                    val confirmButtonBackground = if (isConfirmEnabled) Mint70 else Neutral30
-                    val confirmButtonTextColor = OguriTheme.colors.textOnMint
+                val confirmButtonBackground = if (isConfirmEnabled) Mint70 else Neutral30
+                val confirmButtonTextColor = OguriTheme.colors.textOnMint
 
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .background(color = dialogSecondaryButtonColor, shape = RoundedCornerShape(8.dp))
-                                .noRippleClickable(onClick = onDismissRequest)
-                                .padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.mypage_dialog_cancel),
-                            style = OguriTheme.typography.bodyMedium,
-                            color = Neutral90,
-                        )
-                    }
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .weight(1f)
-                                .background(color = confirmButtonBackground, shape = RoundedCornerShape(8.dp))
-                                .then(
-                                    if (isConfirmEnabled) {
-                                        Modifier.noRippleClickable(onClick = onConfirmClick)
-                                    } else {
-                                        Modifier
-                                    },
-                                ).padding(vertical = 14.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(Res.string.mypage_dialog_confirm),
-                            style = OguriTheme.typography.bodyMedium,
-                            color = confirmButtonTextColor,
-                        )
-                    }
-                }
+                DialogActionRow(
+                    modifier = Modifier.padding(top = 18.dp),
+                    secondaryAction = {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .background(color = dialogSecondaryButtonColor, shape = RoundedCornerShape(8.dp))
+                                    .noRippleClickable(onClick = onDismissRequest)
+                                    .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.mypage_dialog_cancel),
+                                style = OguriTheme.typography.bodyMedium,
+                                color = Neutral90,
+                            )
+                        }
+                    },
+                    primaryAction = {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .background(color = confirmButtonBackground, shape = RoundedCornerShape(8.dp))
+                                    .then(
+                                        if (isConfirmEnabled) {
+                                            Modifier.noRippleClickable(onClick = onConfirmClick)
+                                        } else {
+                                            Modifier
+                                        },
+                                    ).padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = stringResource(Res.string.mypage_dialog_confirm),
+                                style = OguriTheme.typography.bodyMedium,
+                                color = confirmButtonTextColor,
+                            )
+                        }
+                    },
+                )
             }
         }
     }
