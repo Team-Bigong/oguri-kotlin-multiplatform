@@ -284,7 +284,8 @@ internal fun TravelPlaceSearchSheet(
                             item(key = "place-search-results") {
                                 key(search.query, state.searchCity) {
                                     TravelPlaceSearchResults(search.results, selected, canEdit) { place ->
-                                        focus.clearFocus()
+                                        sheetFocus.clearFocus(force = true)
+                                        sheetKeyboard?.hide()
                                         onSelectPlace(place.id)
                                     }
                                 }
