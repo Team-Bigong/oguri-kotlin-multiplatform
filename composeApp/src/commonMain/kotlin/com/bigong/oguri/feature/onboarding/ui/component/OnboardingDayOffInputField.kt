@@ -12,15 +12,13 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -35,13 +33,13 @@ fun OnboardingDayOffInputField(
     unitText: String,
     warningText: String?,
     onValueChange: (String) -> Unit,
-    onInputCommitted: () -> Unit,
     modifier: Modifier = Modifier,
-    labelText: String? = null,
+    labelText: String,
+    showLabel: Boolean = true,
     placeholderText: String = "0",
+    placeholderColor: Color = Neutral50,
 ) {
     val focusManager = LocalFocusManager.current
-    var hasFocus by remember { mutableStateOf(false) }
     val borderColor =
         if (warningText.isNullOrBlank()) {
             Neutral90
@@ -52,7 +50,7 @@ fun OnboardingDayOffInputField(
     Column(
         modifier = modifier.fillMaxWidth(),
     ) {
-        if (!labelText.isNullOrBlank()) {
+        if (showLabel) {
             Text(
                 text = labelText,
                 style = OguriTheme.typography.labelMedium,
@@ -82,20 +80,13 @@ fun OnboardingDayOffInputField(
                     KeyboardActions(
                         onDone = {
                             focusManager.clearFocus(force = true)
-                            onInputCommitted()
                         },
                     ),
                 cursorBrush = SolidColor(Neutral90),
                 modifier =
                     Modifier
-                        .onFocusChanged { focusState ->
-                            if (focusState.isFocused) {
-                                hasFocus = true
-                            } else if (hasFocus) {
-                                hasFocus = false
-                                onInputCommitted()
-                            }
-                        }.align(Alignment.CenterStart)
+                        .semantics { contentDescription = labelText }
+                        .align(Alignment.CenterStart)
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 42.dp),
                 decorationBox = { innerTextField ->
@@ -103,7 +94,7 @@ fun OnboardingDayOffInputField(
                         Text(
                             text = placeholderText,
                             style = OguriTheme.typography.bodyLarge,
-                            color = Neutral50,
+                            color = placeholderColor,
                         )
                     }
                     innerTextField()

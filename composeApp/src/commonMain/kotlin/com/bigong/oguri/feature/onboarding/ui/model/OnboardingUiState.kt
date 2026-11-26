@@ -8,13 +8,17 @@ data class OnboardingUiState(
     val isPrivacyPolicyChecked: Boolean = false,
     val remainingDayOffInput: String = "",
     val preferredDayOffInput: String = "",
-    val isRemainingDayOffConfirmed: Boolean = false,
-    val isPreferredDayOffConfirmed: Boolean = false,
     val remainingDayOffError: OnboardingLeaveDaysValidationError? = null,
     val preferredDayOffError: OnboardingLeaveDaysValidationError? = null,
     val isSubmitting: Boolean = false,
     val isCompleted: Boolean = false,
 ) {
+    internal val shouldShowPreferredDayOffInput: Boolean
+        get() = remainingDayOffInput.toIntOrNull() != null && remainingDayOffError == null
+
+    internal val hasValidDayOffInputs: Boolean
+        get() = shouldShowPreferredDayOffInput && preferredDayOffInput.toIntOrNull() != null && preferredDayOffError == null
+
     internal val canStartSubmission: Boolean
         get() = step == OnboardingStep.LEAVE_DAYS && !isSubmitting && !isCompleted
 }

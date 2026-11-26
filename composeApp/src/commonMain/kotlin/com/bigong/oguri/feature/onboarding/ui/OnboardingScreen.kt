@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -49,9 +50,7 @@ fun OnboardingScreen(
     onPrivacyPolicyOpen: () -> Unit,
     onAgreeAllClick: () -> Unit,
     onRemainingDayOffChange: (String) -> Unit,
-    onRemainingDayOffCommit: () -> Unit,
     onPreferredDayOffChange: (String) -> Unit,
-    onPreferredDayOffCommit: () -> Unit,
     onSkipClick: () -> Unit,
     onCompleteClick: () -> Unit,
 ) {
@@ -138,14 +137,12 @@ fun OnboardingScreen(
                             remainingDayOffError = onboardingUiState.remainingDayOffError,
                             preferredDayOffError = onboardingUiState.preferredDayOffError,
                             onRemainingDayOffChange = onRemainingDayOffChange,
-                            onRemainingDayOffCommit = onRemainingDayOffCommit,
                             onPreferredDayOffChange = onPreferredDayOffChange,
-                            onPreferredDayOffCommit = onPreferredDayOffCommit,
-                            isRemainingDayOffConfirmed = onboardingUiState.isRemainingDayOffConfirmed,
-                            isPreferredDayOffConfirmed = onboardingUiState.isPreferredDayOffConfirmed,
-                            isSubmitting = onboardingUiState.isSubmitting,
+                            shouldShowPreferredDayOffInput = onboardingUiState.shouldShowPreferredDayOffInput,
+                            shouldShowCompleteButton = onboardingUiState.hasValidDayOffInputs,
+                            isCompleteButtonEnabled = onboardingUiState.canStartSubmission,
                             onCompleteClick = onCompleteClick,
-                            modifier = Modifier.padding(horizontal = 20.dp),
+                            modifier = Modifier.imePadding().padding(horizontal = 20.dp),
                         )
                     }
                 }

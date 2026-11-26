@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -15,19 +16,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.bigong.oguri.core.designsystem.Mint70
 import com.bigong.oguri.core.designsystem.Neutral0
-import com.bigong.oguri.core.designsystem.dialogSecondaryActionColor
 import com.bigong.oguri.core.designsystem.Neutral90
 import com.bigong.oguri.core.designsystem.OguriTheme
 import com.bigong.oguri.core.designsystem.Orange50
-import com.bigong.oguri.core.designsystem.WarningAmber
+import com.bigong.oguri.core.designsystem.dialogSecondaryActionColor
 import com.bigong.oguri.core.util.extension.noRippleClickable
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.painterResource
@@ -48,7 +49,6 @@ fun ConfirmAlertDialog(
     onCancelClick: () -> Unit,
     iconTint: androidx.compose.ui.graphics.Color = Orange50,
     messageColor: androidx.compose.ui.graphics.Color = Orange50,
-    confirmButtonFirst: Boolean = false,
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
@@ -96,47 +96,62 @@ fun ConfirmAlertDialog(
                     )
                 }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier.fillMaxWidth().padding(top = if (messageText.isNotBlank()) 18.dp else 14.dp),
-                ) {
-                    listOf(confirmButtonFirst, !confirmButtonFirst).forEach { isConfirmButton ->
-                        if (isConfirmButton) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .background(color = Mint70, shape = RoundedCornerShape(8.dp))
-                                        .noRippleClickable(onClick = onConfirmClick)
-                                        .padding(vertical = 14.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = confirmButtonText,
-                                    style = OguriTheme.typography.bodyMedium,
-                                    color = OguriTheme.colors.textOnMint,
-                                )
-                            }
-                        } else {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .weight(1f)
-                                        .background(color = dialogSecondaryButtonColor, shape = RoundedCornerShape(8.dp))
-                                        .noRippleClickable(onClick = onCancelClick)
-                                        .padding(vertical = 14.dp),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Text(
-                                    text = cancelButtonText,
-                                    style = OguriTheme.typography.bodyMedium,
-                                    color = Neutral90,
-                                )
-                            }
+                DialogActionRow(
+                    modifier = Modifier.padding(top = if (messageText.isNotBlank()) 18.dp else 14.dp),
+                    secondaryAction = {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .background(color = dialogSecondaryButtonColor, shape = RoundedCornerShape(8.dp))
+                                    .noRippleClickable(onClick = onCancelClick)
+                                    .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = cancelButtonText,
+                                style = OguriTheme.typography.bodyMedium,
+                                color = Neutral90,
+                            )
                         }
-                    }
-                }
+                    },
+                    primaryAction = {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .background(color = Mint70, shape = RoundedCornerShape(8.dp))
+                                    .noRippleClickable(onClick = onConfirmClick)
+                                    .padding(vertical = 14.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = confirmButtonText,
+                                style = OguriTheme.typography.bodyMedium,
+                                color = OguriTheme.colors.textOnMint,
+                            )
+                        }
+                    },
+                )
             }
         }
+    }
+}
+
+@Composable
+internal fun DialogActionRow(
+    secondaryAction: @Composable RowScope.() -> Unit,
+    primaryAction: @Composable RowScope.() -> Unit,
+    modifier: Modifier = Modifier,
+    horizontalSpacing: Dp = 12.dp,
+    verticalAlignment: Alignment.Vertical = Alignment.Top,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(horizontalSpacing),
+        verticalAlignment = verticalAlignment,
+    ) {
+        secondaryAction()
+        primaryAction()
     }
 }
