@@ -44,8 +44,9 @@ internal fun TravelDiscardConfirmation(onDiscard: () -> Unit, onKeep: () -> Unit
         messageText = stringResource(Res.string.travel_discard_message),
         confirmButtonText = stringResource(Res.string.travel_keep_writing),
         cancelButtonText = stringResource(Res.string.travel_search_close),
-        onDismissRequest = onKeep, onConfirmClick = onKeep, onCancelClick = onDiscard,
-        confirmButtonFirst = true,
+        onDismissRequest = onKeep,
+        onConfirmClick = onKeep,
+        onCancelClick = onDiscard,
     )
 }
 
