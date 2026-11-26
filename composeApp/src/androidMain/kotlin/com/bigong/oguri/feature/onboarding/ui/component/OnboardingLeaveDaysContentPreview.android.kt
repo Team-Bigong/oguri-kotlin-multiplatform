@@ -9,17 +9,15 @@ import com.bigong.oguri.core.designsystem.OguriTheme
 private fun OnboardingLeaveDaysContentWelcomePreview() {
     OguriTheme {
         OnboardingLeaveDaysContent(
-            remainingDayOffInput = "21",
+            remainingDayOffInput = "",
             preferredDayOffInput = "",
             remainingDayOffError = null,
             preferredDayOffError = null,
             onRemainingDayOffChange = {},
-            onRemainingDayOffCommit = {},
             onPreferredDayOffChange = {},
-            onPreferredDayOffCommit = {},
-            isRemainingDayOffConfirmed = false,
-            isPreferredDayOffConfirmed = false,
-            isSubmitting = false,
+            shouldShowPreferredDayOffInput = false,
+            shouldShowCompleteButton = false,
+            isCompleteButtonEnabled = true,
             onCompleteClick = {},
         )
     }
@@ -31,16 +29,14 @@ private fun OnboardingLeaveDaysContentAlmostPreview() {
     OguriTheme {
         OnboardingLeaveDaysContent(
             remainingDayOffInput = "21",
-            preferredDayOffInput = "3",
+            preferredDayOffInput = "",
             remainingDayOffError = null,
             preferredDayOffError = null,
             onRemainingDayOffChange = {},
-            onRemainingDayOffCommit = {},
             onPreferredDayOffChange = {},
-            onPreferredDayOffCommit = {},
-            isRemainingDayOffConfirmed = true,
-            isPreferredDayOffConfirmed = false,
-            isSubmitting = false,
+            shouldShowPreferredDayOffInput = true,
+            shouldShowCompleteButton = false,
+            isCompleteButtonEnabled = true,
             onCompleteClick = {},
         )
     }
@@ -56,12 +52,10 @@ private fun OnboardingLeaveDaysContentDonePreview() {
             remainingDayOffError = null,
             preferredDayOffError = null,
             onRemainingDayOffChange = {},
-            onRemainingDayOffCommit = {},
             onPreferredDayOffChange = {},
-            onPreferredDayOffCommit = {},
-            isRemainingDayOffConfirmed = true,
-            isPreferredDayOffConfirmed = true,
-            isSubmitting = false,
+            shouldShowPreferredDayOffInput = true,
+            shouldShowCompleteButton = true,
+            isCompleteButtonEnabled = true,
             onCompleteClick = {},
         )
     }

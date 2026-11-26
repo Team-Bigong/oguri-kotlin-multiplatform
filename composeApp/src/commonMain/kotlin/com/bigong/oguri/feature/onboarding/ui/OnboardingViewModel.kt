@@ -71,98 +71,23 @@ class OnboardingViewModel(
     fun updateRemainingDayOffInput(inputText: String) {
         val sanitizedInput = sanitizeDayOffInput(inputText)
         _uiState.update { currentUiState ->
-            currentUiState.copy(
-                remainingDayOffInput = sanitizedInput,
-                remainingDayOffError = null,
-            )
+            currentUiState.copy(remainingDayOffInput = sanitizedInput).withValidatedDayOffInputs()
         }
     }
 
     fun updatePreferredDayOffInput(inputText: String) {
         val sanitizedInput = sanitizeDayOffInput(inputText)
         _uiState.update { currentUiState ->
-            currentUiState.copy(
-                preferredDayOffInput = sanitizedInput,
-                preferredDayOffError = null,
-            )
-        }
-    }
-
-    fun commitRemainingDayOffInput() {
-        val currentUiState = uiState.value
-        val remainingDayOff = currentUiState.remainingDayOffInput.toIntOrNull()
-        val preferredDayOff = currentUiState.preferredDayOffInput.toIntOrNull()
-        val validation =
-            validateOnboardingLeaveDaysUseCase(
-                remainingDayOff = remainingDayOff,
-                preferredDayOff = preferredDayOff,
-            )
-
-        _uiState.update {
-            it.copy(
-                isRemainingDayOffConfirmed =
-                    it.isRemainingDayOffConfirmed ||
-                        (remainingDayOff != null && validation.remainingDayOffError == null),
-                remainingDayOffError = if (currentUiState.remainingDayOffInput.isBlank()) null else validation.remainingDayOffError,
-                preferredDayOffError =
-                    if (currentUiState.preferredDayOffInput.isBlank()) {
-                        null
-                    } else {
-                        validation.preferredDayOffError
-                    },
-                isPreferredDayOffConfirmed =
-                    if (currentUiState.preferredDayOffInput.isBlank()) {
-                        it.isPreferredDayOffConfirmed
-                    } else {
-                        it.isPreferredDayOffConfirmed && validation.preferredDayOffError == null
-                    },
-            )
-        }
-    }
-
-    fun commitPreferredDayOffInput() {
-        val currentUiState = uiState.value
-        val remainingDayOff = currentUiState.remainingDayOffInput.toIntOrNull()
-        val preferredDayOff = currentUiState.preferredDayOffInput.toIntOrNull()
-        val validation =
-            validateOnboardingLeaveDaysUseCase(
-                remainingDayOff = remainingDayOff,
-                preferredDayOff = preferredDayOff,
-            )
-
-        _uiState.update {
-            it.copy(
-                isPreferredDayOffConfirmed =
-                    it.isPreferredDayOffConfirmed ||
-                        (preferredDayOff != null && validation.preferredDayOffError == null),
-                preferredDayOffError = if (currentUiState.preferredDayOffInput.isBlank()) null else validation.preferredDayOffError,
-                remainingDayOffError = if (currentUiState.remainingDayOffInput.isBlank()) null else validation.remainingDayOffError,
-            )
+            currentUiState.copy(preferredDayOffInput = sanitizedInput).withValidatedDayOffInputs()
         }
     }
 
     fun completeOnboarding() {
         val currentUiState = uiState.value
-        if (!currentUiState.canStartSubmission) {
-            return
-        }
-        val remainingDayOff = currentUiState.remainingDayOffInput.toIntOrNull()
-        val preferredDayOff = currentUiState.preferredDayOffInput.toIntOrNull()
-        val validation =
-            validateOnboardingLeaveDaysUseCase(
-                remainingDayOff = remainingDayOff,
-                preferredDayOff = preferredDayOff,
-            )
-        val canComplete = validation.isValid && remainingDayOff != null && preferredDayOff != null
-        if (!canComplete) {
-            _uiState.update { currentUiState ->
-                currentUiState.copy(
-                    remainingDayOffError = validation.remainingDayOffError,
-                    preferredDayOffError = validation.preferredDayOffError,
-                )
-            }
-            return
-        }
+        if (!currentUiState.canStartSubmission || !currentUiState.hasValidDayOffInputs) return
+
+        val remainingDayOff = currentUiState.remainingDayOffInput.toIntOrNull() ?: return
+        val preferredDayOff = currentUiState.preferredDayOffInput.toIntOrNull() ?: return
         completeOnboardingWithDayOff(
             remainingDayOff = remainingDayOff,
             preferredDayOff = preferredDayOff,
@@ -202,6 +127,18 @@ class OnboardingViewModel(
                 }
             }
         }
+    }
+
+    private fun OnboardingUiState.withValidatedDayOffInputs(): OnboardingUiState {
+        val validation =
+            validateOnboardingLeaveDaysUseCase(
+                remainingDayOff = remainingDayOffInput.toIntOrNull(),
+                preferredDayOff = preferredDayOffInput.toIntOrNull(),
+            )
+        return copy(
+            remainingDayOffError = validation.remainingDayOffError,
+            preferredDayOffError = validation.preferredDayOffError,
+        )
     }
 
     private fun startSubmitting(): Boolean =

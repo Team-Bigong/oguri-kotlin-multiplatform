@@ -3,6 +3,7 @@ package com.bigong.oguri.core.ad
 import android.app.Activity
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
@@ -11,24 +12,25 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.bigong.oguri.core.platform.OguriPlatformContextHolder
+import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.FullScreenContentCallback
+import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.ads.appopen.AppOpenAd
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 
 private const val ANDROID_BANNER_AD_UNIT_ID_DEBUG = "ca-app-pub-3940256099942544/6300978111"
 private const val ANDROID_BANNER_AD_UNIT_ID_RELEASE = "ca-app-pub-9643550840413935/9847973658"
-private const val ANDROID_APP_OPEN_AD_UNIT_ID_DEBUG = "ca-app-pub-3940256099942544/9257395921"
-private const val ANDROID_APP_OPEN_AD_UNIT_ID_RELEASE = "ca-app-pub-9643550840413935/2949857964"
+private const val ANDROID_INTERSTITIAL_AD_UNIT_ID_DEBUG = "ca-app-pub-3940256099942544/1033173712"
+private const val ANDROID_INTERSTITIAL_AD_UNIT_ID_METADATA = "com.bigong.oguri.ADMOB_INTERSTITIAL_AD_UNIT_ID"
 private const val BANNER_MAX_HEIGHT_DP = 50
 
 private object AndroidAdMobManager {
     private var isInitialized: Boolean = false
-    private var appOpenAd: AppOpenAd? = null
-    private var isLoadingAppOpenAd: Boolean = false
-    private var isShowingAppOpenAd: Boolean = false
+    private var interstitialAd: InterstitialAd? = null
     private var currentActivity: Activity? = null
 
     fun initialize() {
@@ -38,64 +40,37 @@ private object AndroidAdMobManager {
         val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return
         isInitialized = true
         MobileAds.initialize(applicationContext)
-        preloadAppOpenAd()
-    }
-
-    fun preloadAppOpenAd() {
-        if (isLoadingAppOpenAd || appOpenAd != null) {
-            return
-        }
-        val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return
-        isLoadingAppOpenAd = true
-        AppOpenAd.load(
+        val adUnitId = getAndroidInterstitialAdUnitId(applicationContext) ?: return
+        InterstitialAd.load(
             applicationContext,
-            getAndroidAppOpenAdUnitId(),
+            adUnitId,
             AdRequest.Builder().build(),
-            object : AppOpenAd.AppOpenAdLoadCallback() {
-                override fun onAdLoaded(loadedAd: AppOpenAd) {
-                    appOpenAd = loadedAd
-                    isLoadingAppOpenAd = false
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(loadedAd: InterstitialAd) {
+                    interstitialAd = loadedAd
                 }
 
-                override fun onAdFailedToLoad(loadAdError: com.google.android.gms.ads.LoadAdError) {
-                    appOpenAd = null
-                    isLoadingAppOpenAd = false
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    interstitialAd = null
                 }
             },
         )
     }
 
-    fun showAppOpenAdIfAvailable(onImpression: () -> Unit) {
-        if (isShowingAppOpenAd) {
-            return
-        }
+    fun showInterstitialAdIfAvailable() {
         val activity = currentActivity ?: return
-        val cachedAd = appOpenAd
-        if (cachedAd == null) {
-            preloadAppOpenAd()
-            return
-        }
+        val cachedAd = interstitialAd ?: return
 
         cachedAd.fullScreenContentCallback =
             object : FullScreenContentCallback() {
                 override fun onAdDismissedFullScreenContent() {
-                    isShowingAppOpenAd = false
-                    appOpenAd = null
-                    preloadAppOpenAd()
+                    interstitialAd = null
                 }
 
-                override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                    isShowingAppOpenAd = false
-                    appOpenAd = null
-                    preloadAppOpenAd()
-                }
-
-                override fun onAdImpression() {
-                    onImpression()
+                override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                    interstitialAd = null
                 }
             }
-
-        isShowingAppOpenAd = true
         cachedAd.show(activity)
     }
 
@@ -112,12 +87,8 @@ actual fun initializeAdMob() {
     AndroidAdMobManager.initialize()
 }
 
-actual fun preloadAppOpenAd() {
-    AndroidAdMobManager.preloadAppOpenAd()
-}
-
-actual fun showAppOpenAdIfAvailable(onImpression: () -> Unit) {
-    AndroidAdMobManager.showAppOpenAdIfAvailable(onImpression)
+internal actual fun showInterstitialAdIfAvailable() {
+    AndroidAdMobManager.showInterstitialAdIfAvailable()
 }
 
 private fun getAndroidBannerAdUnitId(): String =
@@ -127,12 +98,16 @@ private fun getAndroidBannerAdUnitId(): String =
         ANDROID_BANNER_AD_UNIT_ID_RELEASE
     }
 
-private fun getAndroidAppOpenAdUnitId(): String =
-    if (isDebuggableApplication()) {
-        ANDROID_APP_OPEN_AD_UNIT_ID_DEBUG
-    } else {
-        ANDROID_APP_OPEN_AD_UNIT_ID_RELEASE
-    }
+@Suppress("DEPRECATION")
+private fun getAndroidInterstitialAdUnitId(context: Context): String? {
+    if (isDebuggableApplication()) return ANDROID_INTERSTITIAL_AD_UNIT_ID_DEBUG
+
+    return context.packageManager
+        .getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+        .metaData
+        ?.getString(ANDROID_INTERSTITIAL_AD_UNIT_ID_METADATA)
+        ?.takeIf { it.isNotBlank() }
+}
 
 private fun isDebuggableApplication(): Boolean {
     val applicationContext: Context = OguriPlatformContextHolder.applicationContext ?: return false
