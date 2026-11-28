@@ -1,14 +1,14 @@
-import ComposeApp
 import UIKit
 import GoogleMobileAds
 
 #if DEBUG
 private let iosBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
-private let iosInterstitialAdUnitId: String? = "ca-app-pub-3940256099942544/4411468910"
+private let iosAppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023"
 #else
 private let iosBannerAdUnitId = "ca-app-pub-9643550840413935/1095385664"
-private let iosInterstitialAdUnitId = Bundle.main.object(forInfoDictionaryKey: "OguriInterstitialAdUnitId") as? String
+private let iosAppOpenAdUnitId = "ca-app-pub-9643550840413935/1058191792"
 #endif
+private let appOpenAdMaxAge: TimeInterval = 4 * 60 * 60
 private let iosTestDeviceIdentifier = "8ca04675fef46ae5bc7a3764ddea6526"
 
 @objc(OguriAdMobBridge)
@@ -17,7 +17,8 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
 
     private let notificationCenter = NotificationCenter.default
     private var isMobileAdsInitialized = false
-    private var interstitialAd: InterstitialAd?
+    private var appOpenAd: AppOpenAd?
+    private var appOpenAdLoadedAt: Date?
     private var bannerByContainerId: [ObjectIdentifier: BannerView] = [:]
     private var bannerLoadRetryCountByContainerId: [ObjectIdentifier: Int] = [:]
 
@@ -34,8 +35,8 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         )
         notificationCenter.addObserver(
             self,
-            selector: #selector(handleShowInterstitialNotification),
-            name: Notification.Name("OguriAdMobShowInterstitial"),
+            selector: #selector(handleShowAppOpenNotification),
+            name: Notification.Name("OguriAdMobShowAppOpen"),
             object: nil,
         )
         notificationCenter.addObserver(
@@ -57,11 +58,13 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         initializeMobileAdsIfNeeded()
     }
 
-    @objc private func handleShowInterstitialNotification() {
+    @objc private func handleShowAppOpenNotification() {
         guard UIApplication.shared.applicationState == .active,
-              let interstitialAd,
+              let appOpenAd,
+              let appOpenAdLoadedAt,
+              Date().timeIntervalSince(appOpenAdLoadedAt) < appOpenAdMaxAge,
               let rootViewController = UIApplication.shared.topMostViewController() else { return }
-        interstitialAd.present(from: rootViewController)
+        appOpenAd.present(from: rootViewController)
     }
 
     @objc private func handleAttachBannerNotification(_ notification: Notification) {
@@ -88,17 +91,17 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
         MobileAds.shared.requestConfiguration.testDeviceIdentifiers = ["SIMULATOR", iosTestDeviceIdentifier]
         #endif
         MobileAds.shared.start(completionHandler: nil)
-        guard let iosInterstitialAdUnitId, !iosInterstitialAdUnitId.isEmpty else { return }
-        InterstitialAd.load(
-            with: iosInterstitialAdUnitId,
+        AppOpenAd.load(
+            with: iosAppOpenAdUnitId,
             request: Request(),
             completionHandler: { [weak self] ad, error in
                 guard let self else { return }
                 if let error {
-                    print("OguriAdMobBridge: iOS interstitial failed to load: \(error.localizedDescription)")
+                    print("OguriAdMobBridge: iOS app open ad failed to load: \(error.localizedDescription)")
                 }
-                self.interstitialAd = ad
-                self.interstitialAd?.fullScreenContentDelegate = self
+                self.appOpenAdLoadedAt = ad.map { _ in Date() }
+                self.appOpenAd = ad
+                self.appOpenAd?.fullScreenContentDelegate = self
             },
         )
     }
@@ -184,11 +187,11 @@ final class OguriAdMobBridge: NSObject, FullScreenContentDelegate {
     }
 
     func adDidDismissFullScreenContent(_ ad: FullScreenPresentingAd) {
-        interstitialAd = nil
+        appOpenAd = nil
     }
 
     func ad(_ ad: FullScreenPresentingAd, didFailToPresentFullScreenContentWithError error: any Error) {
-        interstitialAd = nil
+        appOpenAd = nil
     }
 }
 

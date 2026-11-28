@@ -10,7 +10,7 @@ import platform.Foundation.NSNotificationCenter
 import platform.UIKit.UIView
 
 private const val IOS_NOTIFICATION_ADMOB_INITIALIZE = "OguriAdMobInitialize"
-private const val IOS_NOTIFICATION_SHOW_INTERSTITIAL = "OguriAdMobShowInterstitial"
+private const val IOS_NOTIFICATION_SHOW_APP_OPEN = "OguriAdMobShowAppOpen"
 private const val IOS_NOTIFICATION_ATTACH_BANNER = "OguriAdMobAttachBanner"
 private const val IOS_NOTIFICATION_DETACH_BANNER = "OguriAdMobDetachBanner"
 
@@ -18,8 +18,8 @@ actual fun initializeAdMob() {
     NSNotificationCenter.defaultCenter.postNotificationName(IOS_NOTIFICATION_ADMOB_INITIALIZE, `object` = null)
 }
 
-internal actual fun showInterstitialAdIfAvailable() {
-    NSNotificationCenter.defaultCenter.postNotificationName(IOS_NOTIFICATION_SHOW_INTERSTITIAL, `object` = null)
+internal actual fun showAppOpenAdIfAvailable() {
+    NSNotificationCenter.defaultCenter.postNotificationName(IOS_NOTIFICATION_SHOW_APP_OPEN, `object` = null)
 }
 
 @OptIn(ExperimentalForeignApi::class)

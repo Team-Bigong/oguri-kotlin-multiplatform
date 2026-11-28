@@ -20,10 +20,6 @@
             android:value="${admobAndroidAppId}" />
 
         <meta-data
-            android:name="com.bigong.oguri.ADMOB_INTERSTITIAL_AD_UNIT_ID"
-            android:value="${admobInterstitialAdUnitId}" />
-
-        <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${googleMapsAndroidApiKey}" />
 
