@@ -18,10 +18,10 @@ internal fun tryShowHomeTransitionAd() {
     if (hasAttemptedHomeTransitionAd) return
 
     hasAttemptedHomeTransitionAd = true
-    showInterstitialAdIfAvailable()
+    showAppOpenAdIfAvailable()
 }
 
-internal expect fun showInterstitialAdIfAvailable()
+internal expect fun showAppOpenAdIfAvailable()
 
 @Composable
 expect fun AdMobBanner(

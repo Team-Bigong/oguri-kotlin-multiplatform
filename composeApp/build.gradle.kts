@@ -98,7 +98,6 @@ val googleWebClientIdValue: String = localProperties.getProperty("google.web.cli
 val amplitudeApiKeyValue: String = localProperties.getProperty("amplitude.api.key")?.trim().orEmpty()
 val admobAndroidAppIdDebugValue: String = "ca-app-pub-3940256099942544~3347511713"
 val admobAndroidAppIdReleaseValue: String = "ca-app-pub-9643550840413935~4120437007"
-val admobAndroidInterstitialAdUnitIdReleaseValue: String = "ca-app-pub-9643550840413935/7835058600"
 
 val generatedNetworkConfigDirectory =
     layout.buildDirectory
@@ -218,14 +217,6 @@ android {
                 .toInt()
         versionCode = currentProjectVersionValue.toInt()
         versionName = marketingVersionValue
-        manifestPlaceholders["admobInterstitialAdUnitId"] =
-            providers
-                .environmentVariable("ADMOB_ANDROID_INTERSTITIAL_AD_UNIT_ID")
-                .orNull
-                ?.trim()
-                ?.takeIf { it.isNotEmpty() }
-                ?: localProperties.getProperty("admob.android.interstitial.ad.unit.id")?.trim()?.takeIf { it.isNotEmpty() }
-                ?: admobAndroidInterstitialAdUnitIdReleaseValue
         manifestPlaceholders["kakaoNativeAppKey"] = kakaoNativeAppKeyValue
         manifestPlaceholders["googleMapsAndroidApiKey"] =
             providers.environmentVariable("GOOGLE_MAPS_ANDROID_API_KEY").orNull
